@@ -1,0 +1,150 @@
+/* Layout */
+.layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #ECECEC;
+}
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  height: 100vh;
+  background-color: #008DDA; /* กำหนดสีพื้นหลังให้กับ sidebar */
+  color: white;
+  padding-top: 20px;
+  border-top-right-radius: 15px;
+  border-bottom-right-radius: 15px;
+  overflow: hidden; /* ป้องกันการ overflow ที่อาจทำให้เกิดปัญหา */
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+}
+
+.user-img {
+  width: 50px; /* ขนาดรูปภาพ */
+  height: 50px;
+  border-radius: 50%; /* ทำให้รูปเป็นวงกลม */
+  object-fit: cover; /* ป้องกันไม่ให้รูปยืดหรือบิดเบี้ยว */
+  margin-right: 15px;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name, .user-position {
+  margin: 0;
+  padding: 0;
+}
+
+.user-name {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.user-position {
+  font-size: 14px;
+  color: #bdc3c7;
+}
+
+.divider {
+  border: 1px solid #f7f7f7;
+  margin: 4px ;
+  
+}
+
+/* Navigation Links */
+nav ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+nav ul li {
+  margin: 10px 0;
+}
+
+nav ul li a {
+  text-decoration: none; /* ลบขีดเส้นใต้ */
+  color: #333; /* สีของลิงค์ */
+  font-weight: bold; /* ตัวหนา */
+}
+
+nav ul li a:hover {
+  color: #444; /* สีเปลี่ยนเมื่อ hover */
+  text-decoration: none; /* ลบขีดเส้นใต้ตอน hover */
+}
+
+.no-style-link {
+  text-decoration: none; /* ลบขีดเส้นใต้ */
+  color: inherit; /* ให้สีเหมือนกับตัวหนังสือที่อยู่รอบๆ */
+}
+/* ปรับให้ icon และ text อยู่ในบรรทัดเดียวกัน */
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px 20px; /* เพิ่มระยะห่างรอบๆ */
+  transition: backgrounf-color 0.3s ease, color 0.3s ease;
+}
+.sidebar-item:hover {
+  background-color: #16a085; /* สีพื้นหลังที่เปลี่ยน */
+  color: white; /* เปลี่ยนสีตัวหนังสือ */
+  border-radius: 16px;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+.sidebar-icon {
+  font-size: 20px; /* ขนาดไอคอน */
+  transition: transform 0.3 ease;
+}
+
+.sidebar-text {
+  font-size: 16px; /* ขนาดข้อความ */
+}
+.sidebar-item:hover .sidebar-icon{
+  transform: scale(1.2);
+}
+/* Main Content */
+.main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 20px;
+  background-color: #ECECEC; /* กำหนดสีพื้นหลังของเนื้อหา */
+  overflow-y: auto;
+}
+
+.header {
+  display: flex; /* ใช้ flexbox */
+  justify-content: space-between; /* จัดให้อยู่ขอบทั้งสองข้าง */
+  align-items: center; /* จัดแนวตั้งให้ตรงกลาง */
+  height: 80px; /* ความสูงของ header */
+  background-color: #008DDA; /* สีพื้นหลัง */
+  border-radius: 20px; /* มุมมน */
+  padding: 0 20px; /* ระยะห่างภายใน */
+}
+
+.header-title {
+  font-size: 24px; /* ขนาดตัวอักษร */
+  font-weight: bold; /* ตัวอักษรหนา */
+  flex-grow: 1; /* ทำให้ข้อความขยายพื้นที่ที่ว่าง */
+  text-align: center; /* จัดข้อความตรงกลาง */
+  color: #ffffff;
+}
+
+.header-icons {
+  display: flex; /* ใช้ flexbox */
+  gap: 15px; /* ระยะห่างระหว่างไอคอน */
+}
+
+.icon-button {
+  background: none; /* ไม่ให้พื้นหลัง */
+  border: none; /* ไม่มีขอบ */
+  font-size: 24px; /* ขนาดของไอคอน */
+  cursor: pointer; /* เปลี่ยนเคอร์เซอร์เมื่อเลื่อนเมาส์ไปที่ปุ่ม */
+}
