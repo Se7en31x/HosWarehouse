@@ -123,7 +123,7 @@ nav ul li a:hover {
   display: flex; /* ใช้ flexbox */
   justify-content: space-between; /* จัดให้อยู่ขอบทั้งสองข้าง */
   align-items: center; /* จัดแนวตั้งให้ตรงกลาง */
-  height: 80px; /* ความสูงของ header */
+  height: 60px; /* ความสูงของ header */
   background-color: #008DDA; /* สีพื้นหลัง */
   border-radius: 20px; /* มุมมน */
   padding: 0 20px; /* ระยะห่างภายใน */
@@ -147,4 +147,16 @@ nav ul li a:hover {
   border: none; /* ไม่มีขอบ */
   font-size: 24px; /* ขนาดของไอคอน */
   cursor: pointer; /* เปลี่ยนเคอร์เซอร์เมื่อเลื่อนเมาส์ไปที่ปุ่ม */
+}
+
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
 }
