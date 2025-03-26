@@ -1,0 +1,39 @@
+
+.dataDashboard {
+  margin-top: 20px;
+  display: flex;
+  gap: 30px;
+}
+
+.dashboardData {
+  border-radius: 12px;
+  padding: 20px;
+  background-color: blue;
+  color: white;
+  height: 250px;
+  width: 100%;
+  text-align: center;
+}
+
+/* page.module.css */
+.customHr {
+  width: 100%; /* กำหนดความกว้างของ hr */
+  margin: 10px 0; /* เพิ่มช่องว่างด้านบนและด้านล่าง */
+  border: none;
+  height: 1px;
+  background-color: white; /* เปลี่ยนสีของ hr */
+  padding: 0px;
+}
+ 
+
+.chartdata{
+  margin-top: 20px;
+  background-color: rgb(195, 197, 197);
+  width: 1000px;
+  height: 550px;
+  border-radius: 12px;
+}
+
+.block{
+  display: flex;
+}

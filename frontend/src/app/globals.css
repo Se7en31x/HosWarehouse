@@ -15,6 +15,7 @@
   border-top-right-radius: 15px;
   border-bottom-right-radius: 15px;
   overflow: hidden; /* ป้องกันการ overflow ที่อาจทำให้เกิดปัญหา */
+  flex-shrink: 0;
 }
 
 .user-info {
@@ -52,7 +53,7 @@
 }
 
 .divider {
-  border: 1px solid #f7f7f7;
+  border: 1px solid #ECECEC;
   margin: 4px ;
   
 }
@@ -115,7 +116,7 @@ nav ul li a:hover {
   flex-direction: column;
   height: 100vh;
   padding: 20px;
-  background-color: #ECECEC; /* กำหนดสีพื้นหลังของเนื้อหา */
+  background-color: #f7f7f7; /* กำหนดสีพื้นหลังของเนื้อหา */
   overflow-y: auto;
 }
 
@@ -159,4 +160,11 @@ nav ul li a:hover {
 html, body {
   width: 100%;
   height: 100%;
+}
+
+.page-container {
+  flex: 1; /* ทำให้ main-content ใช้พื้นที่ที่เหลือจาก Sidebar */
+  min-width: 0; /* ป้องกัน main-content จากการขยายเกิน */
+  overflow-x: hidden; /* ป้องกันเนื้อหา overflow */
+  background-color: #312929;
 }
