@@ -1,5 +1,5 @@
 import Layout from "./layout.js";
-import styles from "./page.module.css";  
+import styles from "./page.module.css";
 
 export default function Home() {
   return (
@@ -25,11 +25,18 @@ export default function Home() {
         <div className={styles.infoContainer}>
           <div className={styles.requestStatus}>
             <div className={styles.cardHeader}>สถานะคำขอทั้งหมด</div>
-            <p>📅 วันที่: 07/03/2023</p>
-            <p>⏳ รอดำเนินการ: 15 รายการ</p>
-            <p>✅ อนุมัติแล้ว: 45 รายการ</p>
-            <p>❌ ถูกปฏิเสธ: 5 รายการ</p>
+            <p className={styles.dateRightTop}>📅 วันที่: 07/03/2023</p>
+            <p className={styles.requestStatusItem}>
+              ⏳ รอดำเนินการ <span className={styles.pending}>15 รายการ</span>
+            </p>
+            <p className={styles.requestStatusItem}>
+              ✅ อนุมัติแล้ว <span className={styles.approved}>45 รายการ</span>
+            </p>
+            <p className={styles.requestStatusItem}>
+              ❌ ถูกปฏิเสธ <span className={styles.rejected}>5 รายการ</span>
+            </p>
           </div>
+
           <div className={styles.recentActivity}>
             <div className={styles.cardHeader}>กิจกรรมล่าสุด</div>
             <table>

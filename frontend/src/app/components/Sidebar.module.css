@@ -1,0 +1,133 @@
+/* src/app/components/Sidebar.module.css */
+
+.sidebar {
+  width: 250px;
+  height: 100vh;
+  background-color: #008DDA;
+  color: white;
+  padding-top: 20px;
+  border-top-right-radius: 15px;
+  border-bottom-right-radius: 15px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 4px 0px 8px rgba(0, 0, 0, 0.1); /* เพิ่มเงาเพื่อให้ดูมีมิติ */
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+}
+
+.userImg {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 15px;
+}
+
+.userDetails {
+  display: flex;
+  flex-direction: column;
+}
+
+.userName, .userPosition {
+  margin: 0;
+  padding: 0;
+}
+
+.userName {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.userPosition {
+  font-size: 14px;
+  color: #bdc3c7;
+}
+
+.divider {
+  border: 1px solid #ECECEC;
+  margin-top: 15px;
+}
+
+.navLinks {
+  list-style-type: none;
+  padding: 0;
+}
+
+.navLinks li {
+  margin: 10px 0;
+}
+
+.navLinks li a {
+  text-decoration: none;
+  color: #333;
+  font-weight: bold;
+  padding: 8px 12px;
+  display: block;
+  border-radius: 4px; /* เพิ่มขอบมน */
+}
+
+/* .navLinks li a:hover {
+  background-color: #ffffff; 
+  color: white;
+  text-decoration: none;
+} */
+
+.noStyleLink {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* สไตล์สำหรับ .sidebarItem */
+.sidebarItem {
+  display: flex;
+  align-items: center;
+  height: 45px; /* ความสูงปกติ */
+  padding-left: 20px; 
+
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease, height 0.3s ease, padding 0.3s ease; /* เพิ่ม transition สำหรับ height และ padding */
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px; /* เพิ่มขอบมน */
+  cursor: pointer; /* เปลี่ยนเคอร์เซอร์เป็นมือเมื่อ hover */
+}
+
+.sidebarItem:hover {
+  background-color: #f7f7f7; /* เปลี่ยนสีพื้นหลังเมื่อ hover */
+  color: white;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); /* เพิ่มเงา */
+  transform: translateX(5px); /* ขยับเมนูเล็กน้อยเมื่อ hover */
+}
+
+/* เพิ่มสถานะเมื่อมีการคลิก */
+.sidebarItem:active {
+  height: 50px; /* ความสูงเมื่อคลิก */
+  background-color: #1abc9c; /* เปลี่ยนสีพื้นหลังเมื่อคลิก */
+  padding-left: 10px; /* เพิ่ม padding เล็กน้อยเพื่อให้คลิกดูชัดเจนยิ่งขึ้น */
+  transform: scale(0.98); /* ขยับขนาดเล็กน้อยเพื่อให้ดูเหมือนกดลง */
+  transition: height 0.2s ease, padding 0.2s ease, transform 0.2s ease, background-color 0.2s ease; /* ใช้ transition ที่เร็วขึ้นเมื่อคลิก */
+}
+
+
+.sidebarIcon {
+  font-size: 22px;
+  transition: transform 0.3s ease, color 0.3s ease;
+  color: inherit;
+}
+
+.sidebarText {
+  font-size: 16px;
+  font-weight: 500;
+  color: inherit;
+}
+
+.sidebarItem:hover .sidebarIcon {
+  transform: scale(1.2); /* ขยายไอคอนเมื่อ hover */
+}
+
+.sidebarItem:focus {
+  background-color: #16a085; /* สีเมื่อมีการ focus */
+  outline: none; 
+}

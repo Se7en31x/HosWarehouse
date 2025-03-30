@@ -44,7 +44,10 @@
   margin-bottom: 20px;
 }
 
-.dashboardData, .chartdata, .requestStatus, .recentActivity {
+.dashboardData,
+.chartdata,
+.requestStatus,
+.recentActivity {
   background: #fff;
   padding: 15px;
   border-radius: 15px;
@@ -53,10 +56,7 @@
   padding-top: 50px;
 }
 
-.requestStatus {
-  height: 180px;
-  width: 587px;
-}
+
 
 .recentActivity {
   height: 300px;
@@ -95,6 +95,79 @@
   border-collapse: collapse;
 }
 
-.recentActivity th, .recentActivity td {
+.recentActivity th,
+.recentActivity td {
   border: 1px solid
 }
+
+.requestStatus {
+  display: grid;
+  grid-template-columns: 1fr; /* คอลัมน์เดียว */
+  gap: 8px; /* ลดระยะห่างระหว่างรายการ */
+  padding: 15px 20px; /* เพิ่ม padding ข้างในให้สมดุล */
+  background: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  height: auto;
+  width: 100%;
+  max-width: 587px; /* จำกัดความกว้างสูงสุด */
+  margin: 0 auto; /* กำหนดให้กึ่งกลางหน้า */
+}
+
+.cardHeader {
+  grid-column: span 1;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.dateRightTop {
+  grid-column: span 1;
+  text-align: right;
+  font-size: 14px;
+  font-weight: normal;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.requestStatusItem {
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* จัดกลางเนื้อหาภายใน */
+  padding: 6px 10px; /* เพิ่ม padding ซ้าย-ขวา ให้อยู่ไม่ติดขอบ */
+  background-color: #f7f7f7;
+  border-radius: 8px;
+}
+
+.pending {
+  color: #ffa500;
+}
+
+.approved {
+  color: #28a745;
+}
+
+.rejected {
+  color: #dc3545;
+}
+
+.summary {
+  margin-top: 10px;
+  padding: 10px;
+  font-size: 14px;
+  font-style: italic;
+  color: #555;
+  text-align: center;
+  background: #eef2f7;
+  border-radius: 8px;
+}
+
+
+
+
+
+

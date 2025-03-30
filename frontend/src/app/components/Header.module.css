@@ -1,0 +1,34 @@
+/* src/app/components/Header.module.css */
+
+.header {
+    display: flex; /* ใช้ flexbox */
+    justify-content: space-between; /* จัดให้อยู่ขอบทั้งสองข้าง */
+    align-items: center; /* จัดแนวตั้งให้ตรงกลาง */
+    height: 60px; /* ความสูงของ header */
+    background-color: #008DDA; /* สีพื้นหลัง */
+    border-radius: 20px; /* มุมมน */
+    padding: 0 20px; /* ระยะห่างภายใน */
+  }
+  
+  .headerTitle { /* เปลี่ยนเป็น .headerTitle */
+    font-size: 24px; /* ขนาดตัวอักษร */
+    font-weight: bold; /* ตัวอักษรหนา */
+    flex-grow: 1; /* ทำให้ข้อความขยายพื้นที่ที่ว่าง */
+    text-align: center; /* จัดข้อความตรงกลาง */
+    color: #ffffff;
+    line-height: 60px; /* ควบคุมความสูงของข้อความ */
+  }
+  
+  .headerIcons { /* เปลี่ยนเป็น .headerIcons */
+    display: flex; /* ใช้ flexbox */
+    gap: 15px; /* ระยะห่างระหว่างไอคอน */
+    align-items: center; /* จัดแนวตั้งของไอคอน */
+  }
+  
+  .iconButton { /* เปลี่ยนเป็น .iconButton */
+    background: none; /* ไม่ให้พื้นหลัง */
+    border: none; /* ไม่มีขอบ */
+    font-size: 24px; /* ขนาดของไอคอน */
+    cursor: pointer; /* เปลี่ยนเคอร์เซอร์เมื่อเลื่อนเมาส์ไปที่ปุ่ม */
+  }
+  
