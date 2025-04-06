@@ -1,0 +1,145 @@
+.mainHome {
+    padding: 20px;
+    background-color: #f0f4f8;
+}
+
+/* แถบบน */
+.bar {
+    background-color: #ffff;
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    width: 1550px;
+    height: 60px;
+}
+
+.navList {
+    display: flex;
+    list-style-type: none;
+    justify-content: space-around;
+    padding: 0;
+    margin: 0;
+  }
+  
+.navItem {
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+  
+.navItem:hover {
+    background-color: #dadada;
+}
+
+/* ตรงกลาง */
+.infoContainer {
+    margin: 20px 0;
+    width: 1550px;
+    height: 880px;
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 5px;
+ }
+  
+/* ตัวกรอง */
+.filterContainer {
+    display: flex;
+    justify-content: flex-start;
+    gap: 20px;
+    align-items: center;
+}
+  
+.filterGroup {
+    display: flex;
+    flex-direction: column;
+}
+  
+.filterLabel {
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+  
+.filterSelect, .filterInput {
+    padding: 8px;
+    font-size: 14px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+  
+.filterInput {
+    width: 200px;
+}
+  
+.filterSelect {
+    width: 150px;
+}
+
+/* ตัวกรองช่องค้นหาอยู่ขวาสุด */
+.filterGroupSearch {
+    margin-left: auto; /* ทำให้ช่องค้นหาถูกจัดไปขวาสุด */
+}
+  
+.filterInput {
+    width: 250px; /* ความกว้างของช่องค้นหา */
+}
+
+/* แถบหัวข้อ */
+.tableHeader {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns:  100px 150px 200px 100px 80px 150px 200px 200px 150px 100px; /* 9 คอลัมน์ */
+    gap: 10px;
+    padding: 5px;
+    background-color: #fff;
+    font-weight: bold;
+    border-bottom: 1px solid #ccc;
+}
+  
+.headerItem {
+    padding: 10px;
+    text-align: center;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.headerItem:last-child {
+    border-right: none;
+}
+  
+  /* สไตล์สำหรับแถวในตาราง */
+.tableRow {
+    display: grid;
+    grid-template-columns: 100px 150px 200px 100px 80px 150px 200px 200px 150px 100px;
+    gap: 10px;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+ }
+  
+.tableCell {
+    padding: 10px;
+    text-align: center;
+    border-right: 1px solid #ccc;
+}
+  
+.tableCell:last-child {
+    border-right: none;
+}
+  
+.imageCell img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+}
+  
+.actionButton {
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+  
+.actionButton:hover {
+    background-color: #0056b3;
+}
