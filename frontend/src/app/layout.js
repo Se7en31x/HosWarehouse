@@ -1,4 +1,4 @@
-// src/app/layout.js
+'use client'; // ถ้าจะใช้ useEffect ต้องใส่
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import './globals.css';

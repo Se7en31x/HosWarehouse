@@ -3,7 +3,7 @@
   display: flex;
   height: 100vh;
   overflow: hidden;
-  background-color: #ECECEC;
+  background-color: #ffffff;
 }
 
 /* Main Content */
@@ -32,5 +32,4 @@ html, body {
   flex: 1; /* ทำให้ main-content ใช้พื้นที่ที่เหลือจาก Sidebar */
   min-width: 0; /* ป้องกัน main-content จากการขยายเกิน */
   overflow-x: hidden; /* ป้องกันเนื้อหา overflow */
-  background-color: #312929;
 }

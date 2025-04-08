@@ -1,14 +1,33 @@
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import styles from './Sidebar.module.css'; // นำเข้า CSS Module
+import axiosInstance from '../utils/axiosInstance';
 
 export default function Sidebar() {
+  const [userData, setUserData] = useState(null);
+
+  useEffect(() => {
+    // ดึงข้อมูลผู้ใช้งานจาก API
+    axiosInstance.get('/profile/1')  // เปลี่ยนเป็น API ที่คุณใช้
+      .then((response) => {
+        setUserData(response.data);  // เก็บข้อมูลใน state
+      })
+      .catch((error) => {
+        console.error('Error fetching user data:', error);
+      });
+  }, []);
+
+  if (!userData) {
+    return <div>Loading...</div>;  // หากยังไม่ได้ข้อมูลแสดงข้อความ Loading
+  }
+
   return (
     <aside className={styles.sidebar}> {/* ใช้ className จาก styles */}
       <div className={styles.userInfo}> {/* ใช้ className จาก styles */}
         <img src="https://s.isanook.com/ca/0/ud/284/1423051/821547.jpg?ip/resize/w728/q80/jpg" alt="User Profile" className={styles.userImg} /> {/* ใช้ className จาก styles */}
         <div className={styles.userDetails}> {/* ใช้ className จาก styles */}
-          <p className={styles.userName}>ชื่อผู้ใช้งาน</p> {/* ใช้ className จาก styles */}
-          <p className={styles.userPosition}>ตำแหน่ง</p> {/* ใช้ className จาก styles */}
+          <p className={styles.userName}> {userData.name} </p> {/* ใช้ className จาก styles */}
+          <p className={styles.userPosition}> {userData.role} </p> {/* ใช้ className จาก styles */}
         </div>
       </div>
 
