@@ -1,0 +1,81 @@
+.mainHome {
+    padding: 20px;
+    background-color: #f0f4f8;
+}
+
+.bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffff;
+    padding: 10px 20px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    width: 1550px;
+    height: 60px;
+}
+
+.filterGroupSearch {
+    display: flex;
+    flex-direction: column;
+}
+
+.filterLabel {
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.filterSelect, .filterInput {
+    padding: 8px;
+    font-size: 14px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+  
+.filterInput {
+    width: 200px;
+}
+  
+.filterSelect {
+    width: 150px;
+}
+
+/* ตัวกรองช่องค้นหาอยู่ขวาสุด */
+.filterGroupSearch {
+    margin-left: auto; /* ทำให้ช่องค้นหาถูกจัดไปขวาสุด */
+}
+  
+.filterInput {
+    width: 250px; /* ความกว้างของช่องค้นหา */
+}
+
+.mainbody {
+    margin: 20px 0;
+    width: 1550px;
+    height: 880px;
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 5px;
+}
+
+.tableHeader {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns:  100px 1000px 200px ; /* 9 คอลัมน์ */
+    gap: 10px;
+    padding: 5px;
+    background-color: #fff;
+    font-weight: bold;
+    border-bottom: 1px solid #ccc;
+}
+  
+.headerItem {
+    padding: 10px;
+    text-align: center;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.headerItem:last-child {
+    border-right: none;
+}
