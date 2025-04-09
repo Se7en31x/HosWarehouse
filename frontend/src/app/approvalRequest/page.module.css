@@ -1,0 +1,55 @@
+.mainHome {
+    padding: 20px;
+    background-color: #f0f4f8;
+}
+
+.dashboardContainer {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  
+.dashboardData,
+.chartdata,
+.requestStatus,
+.recentActivity {
+  background: #fff;
+  padding: 15px;
+  border-radius: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  padding-top: 50px;
+}
+    
+.recentActivity {
+  height: 300px;
+  width: 587px;
+}
+  
+.dashboardData {
+  flex: 1;
+  text-align: center;
+}
+  
+.chartdata {
+  flex: 2;
+  padding: 20px;
+}
+  
+.chartPlaceholder {
+  margin-top: 50px;
+  height: 400px;
+  background: #aaaaaa;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+  
+.infoContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+  
