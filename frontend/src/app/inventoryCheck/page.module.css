@@ -1,6 +1,7 @@
 .mainHome {
     padding: 20px;
-    background-color: #f0f4f8;
+    background-color: #ffffff;
+    height: 100%;
 }
 
 /* แถบบน */
@@ -9,7 +10,7 @@
     padding: 10px;
     margin-bottom: 20px;
     border-radius: 10px;
-    width: 1550px;
+    width: 100%;
     height: 60px;
 }
 
@@ -19,28 +20,31 @@
     justify-content: space-around;
     padding: 0;
     margin: 0;
-  }
-  
+}
+
 .navItem {
     padding: 10px 20px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    border-radius: 4px;
 }
-  
+
 .navItem:hover {
-    background-color: #dadada;
+    background-color: #1182af;
 }
 
 /* ตรงกลาง */
 .infoContainer {
     margin: 20px 0;
-    width: 1550px;
-    height: 880px;
+    width: 100%;
+    height: 860px;
+    /* height: 0%; */
     padding: 10px;
-    background-color: #fff;
+    background-color: #ffffff;
     border-radius: 5px;
- }
-  
+
+}
+
 /* ตัวกรอง */
 .filterContainer {
     display: flex;
@@ -48,89 +52,107 @@
     gap: 20px;
     align-items: center;
 }
-  
+
 .filterGroup {
     display: flex;
     flex-direction: column;
 }
-  
+
 .filterLabel {
     font-size: 14px;
     margin-bottom: 5px;
 }
-  
-.filterSelect, .filterInput {
+
+.filterSelect,
+.filterInput {
     padding: 8px;
     font-size: 14px;
     border-radius: 5px;
     border: 1px solid #ccc;
 }
-  
+
 .filterInput {
     width: 200px;
 }
-  
+
 .filterSelect {
     width: 150px;
 }
 
 /* ตัวกรองช่องค้นหาอยู่ขวาสุด */
 .filterGroupSearch {
-    margin-left: auto; /* ทำให้ช่องค้นหาถูกจัดไปขวาสุด */
-}
-  
-.filterInput {
-    width: 250px; /* ความกว้างของช่องค้นหา */
+    margin-left: auto;
+    /* ทำให้ช่องค้นหาถูกจัดไปขวาสุด */
 }
 
-/* แถบหัวข้อ */
+.filterInput {
+    width: 250px;
+    /* ความกว้างของช่องค้นหา */
+}
+
+.tableGrid {
+    display: grid;
+    grid-template-columns: 60px 160px 210px 200px 90px 160px 110px 210px 160px 110px
+    ;
+    gap: 10px;
+    /* overflow-x: auto; */
+    width: 100%;
+}
+
+/* หัวตาราง */
 .tableHeader {
     margin-top: 10px;
-    display: grid;
-    grid-template-columns:  100px 150px 200px 100px 80px 150px 200px 200px 150px 100px; /* 9 คอลัมน์ */
-    gap: 10px;
-    padding: 5px;
-    background-color: #fff;
+    padding: 10px 0;
+    background-color: #E9EBFF;
     font-weight: bold;
-    border-bottom: 1px solid #ccc;
+    /* border-bottom: 1px solid #ccc; */
+    border-radius: 12px;
 }
-  
+
+/* ช่องในหัวตาราง */
 .headerItem {
     padding: 10px;
-    text-align: center;
-    border-radius: 5px;
-    font-weight: bold;
+    text-align: left;
 }
 
 .headerItem:last-child {
     border-right: none;
 }
-  
-  /* สไตล์สำหรับแถวในตาราง */
+
+/* สไตล์สำหรับแถวในตาราง */
 .tableRow {
-    display: grid;
-    grid-template-columns: 100px 150px 200px 100px 80px 150px 200px 200px 150px 100px;
-    gap: 10px;
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
- }
-  
-.tableCell {
-    padding: 10px;
-    text-align: center;
-    border-right: 1px solid #ccc;
+    /* border-bottom: 0.2px solid #ddd; */
+    height: 80px;
+    width: 100%;
+    border-radius: 8px;
 }
+
+.tableRow:nth-child(even) {
+    background-color: #F1F2F6; /* สีสำหรับแถวคู่ */
+  }
   
+  .tableRow:nth-child(odd) {
+    background-color: #ffffff; /* สีสำหรับแถวคี่ */
+  }
+  
+
+.tableCell {
+    display: flex;
+    align-items: center;
+    padding: 0px 10px; /* บน-ล่าง 2px, ซ้าย-ขวา 10px */
+    text-align: left;
+    
+}
+
 .tableCell:last-child {
     border-right: none;
 }
-  
+
 .imageCell img {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
+    width: 100% !important;
+    height: 100% !important;
 }
-  
+
 .actionButton {
     padding: 5px 10px;
     background-color: #007bff;
@@ -139,7 +161,70 @@
     border-radius: 5px;
     cursor: pointer;
 }
-  
+
 .actionButton:hover {
     background-color: #0056b3;
 }
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    gap: 10px;
+  }
+  
+  .pageButton {
+    padding: 8px 16px;
+    border: none;
+    background-color: #1976d2;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .pageButton:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+  
+  .pageNumber {
+    font-size: 18px;
+  }
+  
+
+
+  /* /////////////////////////////////////////////////////////////////////////////////////////////////////// */
+  /* สไตล์สำหรับปุ่มย้อนกลับและหน้าถัดไป */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  
+  .prevButton,
+  .nextButton {
+    background-color: #007bff; /* สีพื้นหลังปุ่ม */
+    color: white; /* สีข้อความ */
+    border: none; /* กำหนดไม่ให้มีขอบ */
+    padding: 10px 20px; /* ขนาดของปุ่ม */
+    font-size: 16px; /* ขนาดตัวอักษร */
+    cursor: pointer; /* แสดงสัญลักษณ์ของการคลิก */
+    border-radius: 5px; /* มุมโค้ง */
+    transition: background-color 0.3s ease; /* การเปลี่ยนสีเมื่อ hover */
+    margin: 0 10px; /* ระยะห่างระหว่างปุ่ม */
+  }
+  
+  /* เมื่อวางเมาส์ที่ปุ่ม */
+  .prevButton:hover,
+  .nextButton:hover {
+    background-color: #0056b3; /* สีพื้นหลังเมื่อ hover */
+  }
+  
+  /* เมื่อปุ่มถูกปิดใช้งาน */
+  .prevButton:disabled,
+  .nextButton:disabled {
+    background-color: #ccc; /* สีพื้นหลังเมื่อปิดใช้งาน */
+    cursor: not-allowed; /* ไม่สามารถคลิกได้ */
+  }
+  
