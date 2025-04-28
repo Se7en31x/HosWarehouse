@@ -1,0 +1,46 @@
+.detailContainer {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .title {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .image {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    margin-bottom: 20px;
+    border-radius: 10px;
+  }
+  
+  .info {
+    width: 100%;
+  }
+  
+  .info p {
+    font-size: 1rem;
+    margin: 8px 0;
+  }
+  
+  .notFound {
+    text-align: center;
+    margin-top: 50px;
+    font-size: 1.5rem;
+    color: red;
+  }
+  

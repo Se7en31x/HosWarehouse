@@ -3,14 +3,14 @@
 import { useState } from "react";
 import styles from "./page.module.css";
 
-export default function approvalRequest(){
+export default function ApprovalRequest(){
     const [filter, setFilter] = useState("");
     const [category, setCategory] = useState("");
     const [unit, setUnit] = useState("");
     const [storage, setStorage] = useState("");
   
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 11; // จำนวนรายการที่แสดงต่อหน้า
+    const itemsPerPage = 10; // จำนวนรายการที่แสดงต่อหน้า
     const handleFilterChange = (event) => {
       setFilter(event.target.value);
     };
@@ -32,7 +32,7 @@ export default function approvalRequest(){
       id: "1",
       date: "30-02-2025", 
       time: "10:30 AM",
-      name: "มดตะนอย",
+      name: "มดตะนอย ตัวน้อยตัวนิด",
       department: "ฉุกเฉิน",
       list: "2 รายการ",
       type: "เบิก",
@@ -44,7 +44,7 @@ export default function approvalRequest(){
       id: "2",
       date: "30-02-2025", 
       time: "10:30 AM",
-      name: "มดตะนอย",
+      name: "มดตะนอย ตัวน้อยตัวนิด",
       department: "ฉุกเฉิน",
       list: "2 รายการ",
       type: "เบิก",
@@ -56,7 +56,7 @@ export default function approvalRequest(){
       id: "3",
       date: "30-02-2025", 
       time: "10:30 AM",
-      name: "มดตะนอย",
+      name: "มดตะนอย ตัวน้อยตัวนิด",
       department: "ฉุกเฉิน",
       list: "2 รายการ",
       type: "เบิก",
@@ -68,7 +68,7 @@ export default function approvalRequest(){
       id: "4",
       date: "30-02-2025", 
       time: "10:30 AM",
-      name: "มดตะนอย",
+      name: "มดตะนอย ตัวน้อยตัวนิด",
       department: "ฉุกเฉิน",
       list: "2 รายการ",
       type: "เบิก",
@@ -79,7 +79,7 @@ export default function approvalRequest(){
       id: "5",
       date: "30-02-2025", 
       time: "10:30 AM",
-      name: "มดตะนอย",
+      name: "มดตะนอย ตัวน้อยตัวนิด",
       department: "ฉุกเฉิน",
       list: "2 รายการ",
       type: "เบิก",
@@ -91,7 +91,7 @@ export default function approvalRequest(){
       id: "6",
       date: "30-02-2025", 
       time: "10:30 AM",
-      name: "มดตะนอย",
+      name: "มดตะนอย ตัวน้อยตัวนิด",
       department: "ฉุกเฉิน",
       list: "2 รายการ",
       type: "เบิก",
@@ -103,7 +103,7 @@ export default function approvalRequest(){
       id: "7",
       date: "30-02-2025", 
       time: "10:30 AM",
-      name: "มดตะนอย",
+      name: "มดตะนอย ตัวน้อยตัวนิด",
       department: "ฉุกเฉิน",
       list: "2 รายการ",
       type: "เบิก",
@@ -115,7 +115,7 @@ export default function approvalRequest(){
       id: "8",
       date: "30-02-2025", 
       time: "10:30 AM",
-      name: "มดตะนอย",
+      name: "มดตะนอย ตัวน้อยตัวนิด",
       department: "ฉุกเฉิน",
       list: "2 รายการ",
       type: "เบิก",
@@ -127,7 +127,7 @@ export default function approvalRequest(){
       id: "9",
       date: "30-02-2025", 
       time: "10:30 AM",
-      name: "มดตะนอย",
+      name: "มดตะนอย ตัวน้อยตัวนิด",
       department: "ฉุกเฉิน",
       list: "2 รายการ",
       type: "เบิก",
@@ -139,7 +139,7 @@ export default function approvalRequest(){
       id: "10",
       date: "30-02-2025", 
       time: "10:30 AM",
-      name: "มดตะนอย",
+      name: "มดตะนอย ตัวน้อยตัวนิด",
       department: "ฉุกเฉิน",
       list: "2 รายการ",
       type: "เบิก",
@@ -151,7 +151,7 @@ export default function approvalRequest(){
       id: "11",
       date: "30-02-2025", 
       time: "10:30 AM",
-      name: "มดตะนอย",
+      name: "มดตะนอย ตัวน้อยตัวนิด",
       department: "ฉุกเฉิน",
       list: "2 รายการ",
       type: "เบิก",
@@ -252,9 +252,9 @@ export default function approvalRequest(){
 
                 {/* แถบหัวข้อคล้าย Excel */}
                 <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
-                    <div className={styles.headerItem}>หมายเลขคำขอ</div>
-                    <div className={styles.headerItem}>วันที่เบิก</div>
-                    <div className={styles.headerItem}>เวลาขอเบิก</div>
+                    <div className={styles.headerItem}>No.</div>
+                    <div className={styles.headerItem}>วันที่</div>
+                    <div className={styles.headerItem}>เวลา</div>
                     <div className={styles.headerItem}>ผู้ขอเบิก</div>
                     <div className={styles.headerItem}>แผนก</div>
                     <div className={styles.headerItem}>จำนวนรายการ</div>
@@ -299,6 +299,7 @@ export default function approvalRequest(){
                     </button>
                 </div>
             </div>
+
         </div>
     );
 }

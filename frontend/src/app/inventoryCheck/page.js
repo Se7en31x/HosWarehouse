@@ -2,8 +2,9 @@
 import { useState } from "react";
 import styles from "./page.module.css";
 import axiosInstance from '../utils/axiosInstance';
+import Link from "next/link";
 
-export default function inventoryCheck() {
+export default function InventoryCheck() {
 
   const [filter, setFilter] = useState();
   const [category, setCategory] = useState();
@@ -32,7 +33,7 @@ export default function inventoryCheck() {
   const inventoryData = [
     {
       id: 1,
-      image: "https://example.com/bandage.jpg", // ลิงก์ของรูปภาพ
+      image: "https://example.com/bandage.jpg",
       category: "ผ้าพันแผล",
       type: "อุปกรณ์ทางการแพทย์",
       quantity: 100,
@@ -42,10 +43,9 @@ export default function inventoryCheck() {
       lastUpdated: "2025-12-31",
       action: "ตรวจสอบ",
     },
-    // คุณสามารถเพิ่มข้อมูลตัวอย่างเพิ่มได้ที่นี่
     {
       id: 2,
-      image: "https://example.com/medical_supplies.jpg", // ตัวอย่างอีกภาพ
+      image: "https://example.com/medical_supplies.jpg",
       category: "เวชภัณฑ์",
       type: "อุปกรณ์ทางการแพทย์",
       quantity: 50,
@@ -57,116 +57,187 @@ export default function inventoryCheck() {
     },
     {
       id: 3,
-      image: "https://example.com/bandage.jpg", // ลิงก์ของรูปภาพ
+      image: "https://example.com/bandage.jpg",
       category: "ผ้าพันแผล",
       type: "อุปกรณ์ทางการแพทย์",
-      quantity: 100,
+      quantity: 120,
       unit: "กล่อง",
       status: "พร้อมใช้งาน",
       storage: "คลังกลาง",
-      lastUpdated: "2025-12-31",
+      lastUpdated: "2025-12-29",
       action: "ตรวจสอบ",
     },
-    // คุณสามารถเพิ่มข้อมูลตัวอย่างเพิ่มได้ที่นี่
     {
       id: 4,
-      image: "https://example.com/medical_supplies.jpg", // ตัวอย่างอีกภาพ
+      image: "https://example.com/medical_supplies.jpg",
       category: "เวชภัณฑ์",
       type: "อุปกรณ์ทางการแพทย์",
-      quantity: 50,
+      quantity: 75,
       unit: "ชุด",
       status: "พร้อมใช้งาน",
       storage: "คลังกลาง",
-      lastUpdated: "2025-12-25",
+      lastUpdated: "2025-12-22",
       action: "ตรวจสอบ",
     },
     {
       id: 5,
-      image: "https://example.com/bandage.jpg", // ลิงก์ของรูปภาพ
+      image: "https://example.com/medical_supplies.jpg",
+      category: "เวชภัณฑ์",
+      type: "อุปกรณ์ทางการแพทย์",
+      quantity: 60,
+      unit: "ชุด",
+      status: "พร้อมใช้งาน",
+      storage: "คลังกลาง",
+      lastUpdated: "2025-12-24",
+      action: "ตรวจสอบ",
+    },
+    {
+      id: 6,
+      image: "https://example.com/bandage.jpg",
+      category: "ผ้าพันแผล",
+      type: "อุปกรณ์ทางการแพทย์",
+      quantity: 150,
+      unit: "กล่อง",
+      status: "พร้อมใช้งาน",
+      storage: "คลังกลาง",
+      lastUpdated: "2025-12-30",
+      action: "ตรวจสอบ",
+    },
+    {
+      id: 7,
+      image: "https://example.com/medical_supplies.jpg",
+      category: "เวชภัณฑ์",
+      type: "อุปกรณ์ทางการแพทย์",
+      quantity: 90,
+      unit: "ชุด",
+      status: "พร้อมใช้งาน",
+      storage: "คลังกลาง",
+      lastUpdated: "2025-12-18",
+      action: "ตรวจสอบ",
+    },
+    {
+      id: 8,
+      image: "https://example.com/bandage.jpg",
+      category: "ผ้าพันแผล",
+      type: "อุปกรณ์ทางการแพทย์",
+      quantity: 110,
+      unit: "กล่อง",
+      status: "พร้อมใช้งาน",
+      storage: "คลังกลาง",
+      lastUpdated: "2025-12-20",
+      action: "ตรวจสอบ",
+    },
+    {
+      id: 9,
+      image: "https://example.com/medical_supplies.jpg",
+      category: "เวชภัณฑ์",
+      type: "อุปกรณ์ทางการแพทย์",
+      quantity: 80,
+      unit: "ชุด",
+      status: "พร้อมใช้งาน",
+      storage: "คลังกลาง",
+      lastUpdated: "2025-12-23",
+      action: "ตรวจสอบ",
+    },
+    {
+      id: 10,
+      image: "https://example.com/medical_supplies.jpg",
+      category: "เวชภัณฑ์",
+      type: "อุปกรณ์ทางการแพทย์",
+      quantity: 70,
+      unit: "ชุด",
+      status: "พร้อมใช้งาน",
+      storage: "คลังกลาง",
+      lastUpdated: "2025-12-27",
+      action: "ตรวจสอบ",
+    },
+    {
+      id: 11,
+      image: "https://example.com/bandage.jpg",
+      category: "ผ้าพันแผล",
+      type: "อุปกรณ์ทางการแพทย์",
+      quantity: 130,
+      unit: "กล่อง",
+      status: "พร้อมใช้งาน",
+      storage: "คลังกลาง",
+      lastUpdated: "2025-12-28",
+      action: "ตรวจสอบ",
+    },
+    {
+      id: 12,
+      image: "https://example.com/medical_supplies.jpg",
+      category: "เวชภัณฑ์",
+      type: "อุปกรณ์ทางการแพทย์",
+      quantity: 40,
+      unit: "ชุด",
+      status: "พร้อมใช้งาน",
+      storage: "คลังกลาง",
+      lastUpdated: "2025-12-21",
+      action: "ตรวจสอบ",
+    },
+    {
+      id: 13,
+      image: "https://example.com/bandage.jpg",
       category: "ผ้าพันแผล",
       type: "อุปกรณ์ทางการแพทย์",
       quantity: 100,
       unit: "กล่อง",
       status: "พร้อมใช้งาน",
       storage: "คลังกลาง",
-      lastUpdated: "2025-12-31",
+      lastUpdated: "2025-12-19",
       action: "ตรวจสอบ",
     },
-    // คุณสามารถเพิ่มข้อมูลตัวอย่างเพิ่มได้ที่นี่
     {
-      id: 6,
-      image: "https://example.com/medical_supplies.jpg", // ตัวอย่างอีกภาพ
+      id: 14,
+      image: "https://example.com/medical_supplies.jpg",
       category: "เวชภัณฑ์",
       type: "อุปกรณ์ทางการแพทย์",
       quantity: 50,
       unit: "ชุด",
       status: "พร้อมใช้งาน",
       storage: "คลังกลาง",
-      lastUpdated: "2025-12-25",
+      lastUpdated: "2025-12-15",
       action: "ตรวจสอบ",
     },
     {
-      id: 7,
-      image: "https://example.com/medical_supplies.jpg", // ตัวอย่างอีกภาพ
+      id: 15,
+      image: "https://example.com/medical_supplies.jpg",
       category: "เวชภัณฑ์",
       type: "อุปกรณ์ทางการแพทย์",
-      quantity: 50,
+      quantity: 65,
       unit: "ชุด",
       status: "พร้อมใช้งาน",
       storage: "คลังกลาง",
-      lastUpdated: "2025-12-25",
+      lastUpdated: "2025-12-10",
+      action: "ตรวจสอบ",
+    },
+    {
+      id: 16,
+      image: "https://example.com/bandage.jpg",
+      category: "ผ้าพันแผล",
+      type: "อุปกรณ์ทางการแพทย์",
+      quantity: 95,
+      unit: "กล่อง",
+      status: "พร้อมใช้งาน",
+      storage: "คลังกลาง",
+      lastUpdated: "2025-12-17",
+      action: "ตรวจสอบ",
+    },
+    {
+      id: 17,
+      image: "https://example.com/medical_supplies.jpg",
+      category: "เวชภัณฑ์",
+      type: "อุปกรณ์ทางการแพทย์",
+      quantity: 55,
+      unit: "ชุด",
+      status: "พร้อมใช้งาน",
+      storage: "คลังกลาง",
+      lastUpdated: "2025-12-13",
       action: "ตรวจสอบ",
     },
 
-    {
-      id: 8,
-      image: "https://example.com/medical_supplies.jpg", // ตัวอย่างอีกภาพ
-      category: "เวชภัณฑ์",
-      type: "อุปกรณ์ทางการแพทย์",
-      quantity: 50,
-      unit: "ชุด",
-      status: "พร้อมใช้งาน",
-      storage: "คลังกลาง",
-      lastUpdated: "2025-12-25",
-      action: "ตรวจสอบ",
-    },
-    {
-      id: 9,
-      image: "https://example.com/medical_supplies.jpg", // ตัวอย่างอีกภาพ
-      category: "เวชภัณฑ์",
-      type: "อุปกรณ์ทางการแพทย์",
-      quantity: 50,
-      unit: "ชุด",
-      status: "พร้อมใช้งาน",
-      storage: "คลังกลาง",
-      lastUpdated: "2025-12-25",
-      action: "ตรวจสอบ",
-    },
-    {
-      id: 10,
-      image: "https://example.com/medical_supplies.jpg", // ตัวอย่างอีกภาพ
-      category: "เวชภัณฑ์",
-      type: "อุปกรณ์ทางการแพทย์",
-      quantity: 50,
-      unit: "ชุด",
-      status: "พร้อมใช้งาน",
-      storage: "คลังกลาง",
-      lastUpdated: "2025-12-25",
-      action: "ตรวจสอบ",
-    },
-    {
-      id: 11,
-      image: "https://example.com/medical_supplies.jpg", // ตัวอย่างอีกภาพ
-      category: "เวชภัณฑ์",
-      type: "อุปกรณ์ทางการแพทย์",
-      quantity: 50,
-      unit: "ชุด",
-      status: "พร้อมใช้งาน",
-      storage: "คลังกลาง",
-      lastUpdated: "2025-12-25",
-      action: "ตรวจสอบ",
-    },
   ];
+
 
   const currentItems = inventoryData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -175,7 +246,7 @@ export default function inventoryCheck() {
       setCurrentPage(currentPage - 1);
     }
   };
-  
+
   const handleNextPage = () => {
     if (currentPage * itemsPerPage < inventoryData.length) {
       setCurrentPage(currentPage + 1);
@@ -247,7 +318,7 @@ export default function inventoryCheck() {
 
           {/* ช่องค้นหา */}
           <div className={styles.filterGroupSearch}>
-            <label htmlFor="filter" className={styles.filterLabel}>ค้นหาข้อมูล:</label>
+            <label htmlFor="filter" className={styles.filterLabel}></label>
             <input
               type="text"
               id="filter"
@@ -260,7 +331,7 @@ export default function inventoryCheck() {
         </div>
         {/* แถบหัวข้อคล้าย Excel */}
         <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
-          <div className={styles.headerItem}>ลำดับ</div>
+          <div className={styles.headerItem}>No.</div>
           <div className={styles.headerItem}>รูปภาพ</div>
           <div className={styles.headerItem}>รายการ</div>
           <div className={styles.headerItem}>หมวดหมู่</div>
@@ -292,32 +363,32 @@ export default function inventoryCheck() {
               <div className={styles.tableCell}>{item.storage}</div>
               <div className={styles.tableCell}>{item.lastUpdated}</div>
               <div className={styles.tableCell}>
-                <button className={styles.actionButton}>{item.action}</button>
+                <Link href="/inventoryDetail">
+                  <button className={styles.actionButton}>{item.action}</button>
+                </Link>
               </div>
             </div>
           ))}
         </div>
-
-        <div className={styles.pagination}>
-          {/* ปุ่มย้อนกลับ */}
-          <button
-            className={styles.prevButton}
-            onClick={handlePrevPage}
-            disabled={currentPage === 1}>
-            หน้าก่อนหน้า
-          </button>
-
-          {/* ปุ่มหน้าถัดไป */}
-          <button
-            className={styles.nextButton}
-            onClick={handleNextPage}
-            disabled={currentPage * itemsPerPage >= inventoryData.length}>
-            หน้าถัดไป
-          </button>
-        </div>
-
       </div>
 
+      <div className={styles.pagination}>
+        {/* ปุ่มย้อนกลับ */}
+        <button
+          className={styles.prevButton}
+          onClick={handlePrevPage}
+          disabled={currentPage === 1}>
+          หน้าก่อนหน้า
+        </button>
+
+        {/* ปุ่มหน้าถัดไป */}
+        <button
+          className={styles.nextButton}
+          onClick={handleNextPage}
+          disabled={currentPage * itemsPerPage >= inventoryData.length}>
+          หน้าถัดไป
+        </button>
+      </div>
 
     </div>
   );

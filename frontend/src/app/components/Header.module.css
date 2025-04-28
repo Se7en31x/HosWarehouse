@@ -3,19 +3,20 @@
 .header {
     display: flex; /* ใช้ flexbox */
     justify-content: space-between; /* จัดให้อยู่ขอบทั้งสองข้าง */
-    align-items: center; /* จัดแนวตั้งให้ตรงกลาง */
+    align-items: cenlter; /* จัดแนวตั้งให้ตรงกลาง */
     height: 60px; /* ความสูงของ header */
-    background-color: #008DDA; /* สีพื้นหลัง */
-    border-radius: 20px; /* มุมมน */
-    padding: 0 20px; /* ระยะห่างภายใน */
+    background-color: #fdfdfd; /* สีพื้นหลัง */
+    padding: 0 20px; 
+    /* margin: 10px; */
+    border-bottom: 2px solid rgb(218, 218, 218) ;
   }
   
   .headerTitle { /* เปลี่ยนเป็น .headerTitle */
-    font-size: 24px; /* ขนาดตัวอักษร */
-    font-weight: bold; /* ตัวอักษรหนา */
+    font-size: 22px; /* ขนาดตัวอักษร */
+    font-weight: lighter; /* ตัวอักษรหนา */
     flex-grow: 1; /* ทำให้ข้อความขยายพื้นที่ที่ว่าง */
-    text-align: center; /* จัดข้อความตรงกลาง */
-    color: #ffffff;
+    text-align: left; /* จัดข้อความตรงกลาง */
+    color: #000000;
     line-height: 60px; /* ควบคุมความสูงของข้อความ */
   }
   

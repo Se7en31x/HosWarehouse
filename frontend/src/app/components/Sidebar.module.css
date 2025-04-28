@@ -3,11 +3,11 @@
 .sidebar {
   width: 250px;
   height: 100vh;
-  background-color: #008DDA;
+  background-color: #1596db;
   color: white;
   padding-top: 20px;
-  border-top-right-radius: 15px;
-  border-bottom-right-radius: 15px;
+  /* border-top-right-radius: 15px;
+  border-bottom-right-radius: 15px; */
   overflow: hidden;
   flex-shrink: 0;
   box-shadow: 4px 0px 8px rgba(0, 0, 0, 0.1); /* เพิ่มเงาเพื่อให้ดูมีมิติ */

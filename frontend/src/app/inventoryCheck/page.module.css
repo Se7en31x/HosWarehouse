@@ -1,14 +1,14 @@
 .mainHome {
-    padding: 20px;
-    background-color: #ffffff;
+    padding: 15px;
+    background-color: #e3e8ec;
     height: 100%;
 }
 
 /* แถบบน */
 .bar {
-    background-color: #ffff;
+    background-color: #106db9;
     padding: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     border-radius: 10px;
     width: 100%;
     height: 60px;
@@ -19,7 +19,8 @@
     list-style-type: none;
     justify-content: space-around;
     padding: 0;
-    margin: 0;
+    /* background-color: #bd7f23; */
+    color: white;
 }
 
 .navItem {
@@ -27,10 +28,11 @@
     cursor: pointer;
     transition: background-color 0.3s ease;
     border-radius: 4px;
+    /* background-color: #9e0000; */
 }
 
 .navItem:hover {
-    background-color: #1182af;
+    background-color: #ca8f0f;
 }
 
 /* ตรงกลาง */
@@ -41,8 +43,9 @@
     /* height: 0%; */
     padding: 10px;
     background-color: #ffffff;
-    border-radius: 5px;
-
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    box-shadow: inset 0 -1px 0 #e0e0e0;
 }
 
 /* ตัวกรอง */
@@ -92,8 +95,7 @@
 
 .tableGrid {
     display: grid;
-    grid-template-columns: 60px 160px 210px 200px 90px 160px 110px 210px 160px 110px
-    ;
+    grid-template-columns: 60px 160px 210px 200px 90px 160px 110px 210px 160px 110px;
     gap: 10px;
     /* overflow-x: auto; */
     width: 100%;
@@ -124,11 +126,11 @@
     /* border-bottom: 0.2px solid #ddd; */
     height: 80px;
     width: 100%;
-    border-radius: 8px;
 }
 
 .tableRow:nth-child(even) {
     background-color: #F1F2F6; /* สีสำหรับแถวคู่ */
+    border-radius: 8px;
   }
   
   .tableRow:nth-child(odd) {
@@ -199,7 +201,7 @@
 .pagination {
     display: flex;
     justify-content: center;
-    margin-top: 20px;
+    /* margin: 2px; */
   }
   
   .prevButton,
@@ -207,7 +209,7 @@
     background-color: #007bff; /* สีพื้นหลังปุ่ม */
     color: white; /* สีข้อความ */
     border: none; /* กำหนดไม่ให้มีขอบ */
-    padding: 10px 20px; /* ขนาดของปุ่ม */
+    padding: 5px 10px; /* ขนาดของปุ่ม */
     font-size: 16px; /* ขนาดตัวอักษร */
     cursor: pointer; /* แสดงสัญลักษณ์ของการคลิก */
     border-radius: 5px; /* มุมโค้ง */
