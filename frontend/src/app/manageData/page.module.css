@@ -2,10 +2,11 @@
   padding: 20px;
   background-color: #f0f4f8;
 }
+
 .infoContainer {
   margin: 20px 0;
   width: 1580px;
-  height: 880px;
+  min-height: 880px;
   padding: 10px;
   background-color: #fff;
   border-radius: 5px;
@@ -73,48 +74,143 @@
   width: 250px; /* ความกว้างของช่องค้นหา */
 }
 
+.tableGrid {
+  display: grid;
+  grid-template-columns: 80px 160px 250px 150px 100px 100px 160px 160px 160px 100px;
+  gap: 10px;
+}
+
 /* แถบหัวข้อ */
 .tableHeader {
   margin-top: 10px;
-  display: grid;
-  grid-template-columns: 100px 100px 250px 100px 80px 80px 120px 140px 140px 140px 200px; /* คอลัมน์ */
-  gap: 10px;
-  padding: 5px;
-  background-color: #fff;
+  padding: 10px 0px;
+  background-color: #E9EBFF;
   font-weight: bold;
-  border-bottom: 1px solid #ccc;
+  /* border-bottom: 1px solid #ccc; */
+  border-radius: 12px;
 }
 
 .headerItem {
   padding: 10px;
-  text-align: center;
-  border-radius: 5px;
-  font-weight: bold;
+  text-align: left;
 }
 
 .headerItem:last-child {
   border-right: none;
 }
 
-
 /* สไตล์สำหรับแถวในตาราง */
 .tableRow {
-  display: grid;
-  grid-template-columns: 100px 100px 250px 100px 80px 80px 120px 140px 140px 140px 200px; /* คอลัมน์ */
-  gap: 10px;
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
+  height: 80px;
+  width: 100%;
+  border-radius: 8px;
+}
+
+.tableRow:nth-child(even) {
+  background-color: #F1F2F6; /* สีสำหรับแถวคู่ */
+}
+
+.tableRow:nth-child(odd) {
+  background-color: #ffffff; /* สีสำหรับแถวคี่ */
 }
 
 .tableCell {
-  padding: 10px;
-  text-align: center;
-  border-right: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  width: 100%;
+  gap: 0.5rem;
 }
+
+/* .centerCell { ถ้าจะเอารูปตรงกลาง
+  justify-content: center;
+} */
 
 .tableCell:last-child {
   border-right: none;
 }
+
+.imageCell img {
+  width: 70px;
+  height: 70px;
+  object-fit: cover; /* ตัดภาพให้พอดี */
+  border-radius: 8px; /* เพิ่มมุมโค้งให้รูปภาพ */
+}
+
+
+.actionButton {
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.actionButton:hover {
+  background-color: #0056b3;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  gap: 10px;
+}
+  
+.pageButton {
+  padding: 8px 16px;
+  border: none;
+  background-color: #1976d2;
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+}
+  
+.pageButton:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+  
+.pageNumber {
+  font-size: 18px;
+}
+
+/* /////////////////////////////////////////////////////////////////////////////////////////////////////// */
+  /* สไตล์สำหรับปุ่มย้อนกลับและหน้าถัดไป */
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+  
+.prevButton,
+.nextButton {
+  background-color: #007bff; /* สีพื้นหลังปุ่ม */
+  color: white; /* สีข้อความ */
+  border: none; /* กำหนดไม่ให้มีขอบ */
+  padding: 10px 20px; /* ขนาดของปุ่ม */
+  font-size: 16px; /* ขนาดตัวอักษร */
+  cursor: pointer; /* แสดงสัญลักษณ์ของการคลิก */
+  border-radius: 5px; /* มุมโค้ง */
+  transition: background-color 0.3s ease; /* การเปลี่ยนสีเมื่อ hover */
+  margin: 0 10px; /* ระยะห่างระหว่างปุ่ม */
+}
+  
+  /* เมื่อวางเมาส์ที่ปุ่ม */
+.prevButton:hover,
+.nextButton:hover {
+  background-color: #0056b3; /* สีพื้นหลังเมื่อ hover */
+}
+  
+  /* เมื่อปุ่มถูกปิดใช้งาน */
+.prevButton:disabled,
+.nextButton:disabled {
+  background-color: #ccc; /* สีพื้นหลังเมื่อปิดใช้งาน */
+  cursor: not-allowed; /* ไม่สามารถคลิกได้ */
+}
+
 
 /*ปุ่มเพิ่มรายการ*/
 .addButton {
@@ -162,13 +258,6 @@
 }
 .editButton:hover {
   background-color: #2563eb; 
-}
-
-.tableCell {
-  justify-content: center;  
-  align-items: center;
-  display: flex;       
-  gap: 0.5rem;        
 }
 
 /* ปุ่มลบ (สีแดง) */
