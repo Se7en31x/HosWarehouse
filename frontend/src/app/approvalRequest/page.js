@@ -3,13 +3,14 @@
 import { useState } from "react";
 import styles from "./page.module.css";
 
-
 export default function approvalRequest(){
     const [filter, setFilter] = useState("");
     const [category, setCategory] = useState("");
     const [unit, setUnit] = useState("");
     const [storage, setStorage] = useState("");
   
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 11; // จำนวนรายการที่แสดงต่อหน้า
     const handleFilterChange = (event) => {
       setFilter(event.target.value);
     };
@@ -28,8 +29,8 @@ export default function approvalRequest(){
 // ตัวอย่าง
     const inventoryData = [
     {
-      id: "12345",
-      date: "30-02-2025", // ลิงก์ของรูปภาพ
+      id: "1",
+      date: "30-02-2025", 
       time: "10:30 AM",
       name: "มดตะนอย",
       department: "ฉุกเฉิน",
@@ -38,7 +39,152 @@ export default function approvalRequest(){
       status: "รอดำเนินการ",
       action: "รายละเอียด",
     },
-    ]
+
+    {
+      id: "2",
+      date: "30-02-2025", 
+      time: "10:30 AM",
+      name: "มดตะนอย",
+      department: "ฉุกเฉิน",
+      list: "2 รายการ",
+      type: "เบิก",
+      status: "รอดำเนินการ",
+      action: "รายละเอียด",
+    },
+
+    {
+      id: "3",
+      date: "30-02-2025", 
+      time: "10:30 AM",
+      name: "มดตะนอย",
+      department: "ฉุกเฉิน",
+      list: "2 รายการ",
+      type: "เบิก",
+      status: "รอดำเนินการ",
+      action: "รายละเอียด",
+    },
+
+    {
+      id: "4",
+      date: "30-02-2025", 
+      time: "10:30 AM",
+      name: "มดตะนอย",
+      department: "ฉุกเฉิน",
+      list: "2 รายการ",
+      type: "เบิก",
+      status: "รอดำเนินการ",
+      action: "รายละเอียด",
+    },
+    {
+      id: "5",
+      date: "30-02-2025", 
+      time: "10:30 AM",
+      name: "มดตะนอย",
+      department: "ฉุกเฉิน",
+      list: "2 รายการ",
+      type: "เบิก",
+      status: "รอดำเนินการ",
+      action: "รายละเอียด",
+    },
+
+    {
+      id: "6",
+      date: "30-02-2025", 
+      time: "10:30 AM",
+      name: "มดตะนอย",
+      department: "ฉุกเฉิน",
+      list: "2 รายการ",
+      type: "เบิก",
+      status: "รอดำเนินการ",
+      action: "รายละเอียด",
+    },
+
+    {
+      id: "7",
+      date: "30-02-2025", 
+      time: "10:30 AM",
+      name: "มดตะนอย",
+      department: "ฉุกเฉิน",
+      list: "2 รายการ",
+      type: "เบิก",
+      status: "รอดำเนินการ",
+      action: "รายละเอียด",
+    },
+
+    {
+      id: "8",
+      date: "30-02-2025", 
+      time: "10:30 AM",
+      name: "มดตะนอย",
+      department: "ฉุกเฉิน",
+      list: "2 รายการ",
+      type: "เบิก",
+      status: "รอดำเนินการ",
+      action: "รายละเอียด",
+    },
+
+    {
+      id: "9",
+      date: "30-02-2025", 
+      time: "10:30 AM",
+      name: "มดตะนอย",
+      department: "ฉุกเฉิน",
+      list: "2 รายการ",
+      type: "เบิก",
+      status: "รอดำเนินการ",
+      action: "รายละเอียด",
+    },
+
+    {
+      id: "10",
+      date: "30-02-2025", 
+      time: "10:30 AM",
+      name: "มดตะนอย",
+      department: "ฉุกเฉิน",
+      list: "2 รายการ",
+      type: "เบิก",
+      status: "รอดำเนินการ",
+      action: "รายละเอียด",
+    },
+
+    {
+      id: "11",
+      date: "30-02-2025", 
+      time: "10:30 AM",
+      name: "มดตะนอย",
+      department: "ฉุกเฉิน",
+      list: "2 รายการ",
+      type: "เบิก",
+      status: "รอดำเนินการ",
+      action: "รายละเอียด",
+    },
+
+    {
+      id: "12",
+      date: "30-02-2025", 
+      time: "10:30 AM",
+      name: "มดตะนอย",
+      department: "ฉุกเฉิน",
+      list: "2 รายการ",
+      type: "เบิก",
+      status: "รอดำเนินการ",
+      action: "รายละเอียด",
+    },
+]
+    const currentItems = inventoryData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    const handlePrevPage = () => {
+    if (currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+    }
+    };
+
+    const handleNextPage = () => {
+    if (currentPage * itemsPerPage < inventoryData.length) {
+        setCurrentPage(currentPage + 1);
+    }
+    };
+
     return(
         <div className={styles.mainHome}>
             <div className={styles.infoContainer}>
@@ -105,7 +251,7 @@ export default function approvalRequest(){
                 </div>
 
                 {/* แถบหัวข้อคล้าย Excel */}
-                <div className={styles.tableHeader}>
+                <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
                     <div className={styles.headerItem}>หมายเลขคำขอ</div>
                     <div className={styles.headerItem}>วันที่เบิก</div>
                     <div className={styles.headerItem}>เวลาขอเบิก</div>
@@ -119,8 +265,8 @@ export default function approvalRequest(){
               
                 {/* แสดงข้อมูลในตาราง */}
                 <div className={styles.inventory}>
-                    {inventoryData.map((item) => (
-                    <div className={styles.tableRow} key={item.id}>
+                    {currentItems.map((item) => (
+                    <div className={`${styles.tableGrid} ${styles.tableRow}`} key={item.id}>
                         <div className={styles.tableCell}>{item.id}</div>
                         <div className={styles.tableCell}>{item.date}</div>
                         <div className={styles.tableCell}>{item.time}</div>
@@ -134,8 +280,25 @@ export default function approvalRequest(){
                         </div>
                     </div>
                     ))}
-                    </div>
+                </div>
+                <div className={styles.pagination}>
+                    {/* ปุ่มย้อนกลับ */}
+                    <button
+                        className={styles.prevButton}
+                        onClick={handlePrevPage}
+                        disabled={currentPage === 1}>
+                        หน้าก่อนหน้า
+                    </button>
+
+                    {/* ปุ่มหน้าถัดไป */}
+                    <button
+                        className={styles.nextButton}
+                        onClick={handleNextPage}
+                        disabled={currentPage * itemsPerPage >= inventoryData.length}>
+                        หน้าถัดไป
+                    </button>
                 </div>
             </div>
+        </div>
     );
 }
