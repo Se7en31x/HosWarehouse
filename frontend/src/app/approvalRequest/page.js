@@ -1,7 +1,7 @@
 "use client";
-
 import { useState } from "react";
 import styles from "./page.module.css";
+import Link from "next/link";
 
 export default function ApprovalRequest(){
     const [filter, setFilter] = useState("");
@@ -276,7 +276,9 @@ export default function ApprovalRequest(){
                         <div className={styles.tableCell}>{item.type}</div>
                         <div className={styles.tableCell}>{item.status}</div>
                         <div className={styles.tableCell}>
-                            <button className={styles.actionButton}>{item.action}</button>
+                          <Link href= "/approvalDetail">
+                          <button className={styles.actionButton}>{item.action}</button>
+                          </Link>
                         </div>
                     </div>
                     ))}
