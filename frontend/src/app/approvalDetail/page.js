@@ -13,6 +13,7 @@ export default function ApprovalDetail() {
     items: [
       {
         id: "00123",
+        img: "s",
         name: "ผ้าพันแผล",
         quantity: 5,
         unit: "กล่อง",
@@ -22,6 +23,7 @@ export default function ApprovalDetail() {
       },
       {
         id: "00456",
+        img: "s",
         name: "ยาพาราเซตามอล",
         quantity: 10,
         unit: "กระปุก",
@@ -31,6 +33,7 @@ export default function ApprovalDetail() {
       },
       {
         id: "00789",
+        img: "s",
         name: "เข็มฉีดยา",
         quantity: 3,
         unit: "กล่อง",
@@ -40,6 +43,7 @@ export default function ApprovalDetail() {
       },
       {
         id: "01012",
+        img: "s",
         name: "น้ำเกลือ 0.9%",
         quantity: 30,
         unit: "ขวด",
@@ -57,47 +61,42 @@ export default function ApprovalDetail() {
     ],
   };
 
+  const currentItems = requestDetails.items;
+
   return (
     <div className={styles.container}>
       <h1 className={styles.heading}>ตรวจสอบรายละเอียดคำร้องขอ</h1>
-      
+
       <div className={styles.flexBox}>
         {/* ตารางรายการ */}
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>หมายเลข</th>
-              <th>รูปภาพ</th>
-              <th>ชื่อ</th>
-              <th>จำนวน</th>
-              <th>หน่วย</th>
-              <th>หมวดหมู่</th>
-              <th>สถานะ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {requestDetails.items.map((item) => (
-              <tr key={item.id}>
-                <td>{item.id}</td>
-                <td>
-                  <img src={item.image} alt={item.name} width="40" height="40" />
-                </td>
-                <td>{item.name}</td>
-                <td>{item.quantity}</td>
-                <td>{item.unit}</td>
-                <td>{item.category}</td>
-                <td>
-                  {item.available ? <span style={{ color: "green" }}>✔ มีของ</span> : "✖ ไม่มี"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className={styles.maindata}>
+          <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+            <div className={styles.headerItem}>รายการที่</div>
+            <div className={styles.headerItem}>รูปภาพ</div>
+            <div className={styles.headerItem}>รายการ</div>
+            <div className={styles.headerItem}>จำนวน</div>
+            <div className={styles.headerItem}>หน่วย</div>
+            <div className={styles.headerItem}>หมวดหมู่</div>
+            <div className={styles.headerItem}>สถานะ</div>
+          </div>
 
+          <div className={styles.inventory}>
+            {currentItems.map((item) => (
+              <div className={`${styles.tableGrid} ${styles.tableRow}`} key={item.id}>
+                <div className={styles.tableCell}>{item.id}</div>
+                <div className={styles.tableCell}>{item.img}</div>
+                <div className={styles.tableCell}>{item.name}</div>
+                <div className={styles.tableCell}>{item.quantity}</div>
+                <div className={styles.tableCell}>{item.unit}</div>
+                <div className={styles.tableCell}>{item.category}</div>
+                <div className={styles.tableCell}>{item.available ? "พร้อมเบิก" : "ไม่มีในคลัง"}</div>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* กล่องขวา: ข้อมูลคำร้อง + สถานะ */}
         <div className={styles.detailsBox}>
-          {/* กล่องข้อมูลคำร้อง */}
           <div className={styles.infoBox}>
             <h3>ข้อมูลคำร้อง</h3>
             <p><strong>หมายเลขคำร้อง:</strong> {requestDetails.requestId}</p>
@@ -109,14 +108,13 @@ export default function ApprovalDetail() {
             <p><strong>วันที่ต้องการรับวัสดุ:</strong> {requestDetails.dueDate}</p>
           </div>
 
-          {/* กล่องสถานะการนำส่ง */}
           <div className={styles.timelineBox}>
             <h3>สถานะการนำส่ง</h3>
             <ul>
               {requestDetails.timeline.map((step, index) => (
                 <li key={index}>
                   <span style={{ color: step.completed ? "green" : "gray" }}>●</span>{" "}
-                  {step.step} {step.time ? `(${step.time})` : ""}
+                  {step.step} {step.time && <span>({step.time})</span>}
                 </li>
               ))}
             </ul>
@@ -124,7 +122,6 @@ export default function ApprovalDetail() {
         </div>
       </div>
 
-      {/* ปุ่มอนุมัติ/ยกเลิก */}
       <div className={styles.buttonBox}>
         <button className={styles.cancelButton}>ยกเลิก</button>
         <button className={styles.approveButton}>อนุมัติ</button>
