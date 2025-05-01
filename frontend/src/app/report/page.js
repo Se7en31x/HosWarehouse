@@ -3,7 +3,7 @@
 import { useState } from "react";
 import styles from "./page.module.css";
 
-export default function report() {
+export default function Report() {
     const [filter, setFilter] = useState("");
     const [category, setCategory] = useState("");
     const [unit, setUnit] = useState("");
