@@ -1,10 +1,10 @@
-const { client } = require('../config/db');
+const { pool } = require('../config/db');
 
 exports.getProfile = async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await client.query(
-      `SELECT user_fname, user_lname, user_role FROM public."user" WHERE user_id = $1`,
+    const result = await pool.query(
+      `SELECT user_fname, user_lname, user_role FROM public."users" WHERE user_id = $1`,
       [id]
     );
 
@@ -27,8 +27,8 @@ exports.getProfile = async (req, res) => {
 exports.getAllProfile = async (req ,res) =>{
   try {
     // คำสั่ง SQL ดึงข้อมูลทั้งหมดจากตาราง user
-    const result = await client.query(
-      `SELECT user_fname, user_lname, user_role FROM public."user"`
+    const result = await pool.query(
+      `SELECT user_fname, user_lname, user_role FROM public."users"`
     );
 
     if (result.rows.length === 0) {
