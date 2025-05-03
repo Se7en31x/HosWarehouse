@@ -139,7 +139,7 @@ export default function transactionHistory(){
       processing: "30-02-2025 10:30 AM",
     },
     {
-      id: "8",
+      id: "11",
       date: "30-02-2025", 
       time: "10:30 AM",
       list: "ผ้าผันแผล",
@@ -150,7 +150,7 @@ export default function transactionHistory(){
       processing: "30-02-2025 10:30 AM",
     },
     {
-      id: "9",
+      id: "12",
       date: "30-02-2025", 
       time: "10:30 AM",
       list: "ผ้าผันแผล",
