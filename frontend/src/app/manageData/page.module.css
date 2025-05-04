@@ -1,17 +1,16 @@
 .mainHome {
-  padding: 20px;
+  padding: 15px;
   background-color: #f0f4f8;
 }
 
 .infoContainer {
-  margin: 20px 0;
-  width: 1580px;
-  min-height: 880px;
+  width: 100%px;
+  min-height: 100vh;
   padding: 10px;
   background-color: #fff;
   border-radius: 5px;
   position: relative; /* ให้ลูกที่ absolute อิงตำแหน่งจากตรงนี้ */
-  padding-top: 60px;  /* เผื่อพื้นที่ให้ header ลอยอยู่ข้างบน */
+  padding-top: 40px;  /* เผื่อพื้นที่ให้ header ลอยอยู่ข้างบน */
 
 }
 
