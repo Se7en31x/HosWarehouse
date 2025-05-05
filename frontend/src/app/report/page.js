@@ -52,6 +52,7 @@ export default function Report() {
                         <div className={styles.headerItem}>รายงาน</div>
                         <div className={styles.headerItem}>จัดการ</div>
                     </div>
+                    
                </div>
 
         </div>

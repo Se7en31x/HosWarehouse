@@ -15,7 +15,7 @@ export default function ManageDataPage() {
   const [storage, setStorage] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 9; // จำนวนรายการที่แสดงต่อหน้า
+  const itemsPerPage = 8; // จำนวนรายการที่แสดงต่อหน้า
 
   const handleFilterChange = (event) => {
     setFilter(event.target.value);
