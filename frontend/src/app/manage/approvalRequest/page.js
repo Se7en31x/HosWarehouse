@@ -276,7 +276,7 @@ export default function ApprovalRequest(){
                         <div className={styles.tableCell}>{item.type}</div>
                         <div className={styles.tableCell}>{item.status}</div>
                         <div className={styles.tableCell}>
-                          <Link href= "/approvalDetail">
+                          <Link href= "/manage/approvalDetail">
                           <button className={styles.actionButton}>{item.action}</button>
                           </Link>
                         </div>

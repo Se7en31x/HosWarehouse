@@ -37,27 +37,27 @@ export default function Sidebar() {
         <ul className={styles.navLinks}> {/* ใช้ className จาก styles */}
           <li className={styles.sidebarItem}> {/* ใช้ sidebarItem สำหรับเมนู */}
             <span className={styles.sidebarIcon}>🏠</span> {/* ใช้ sidebarIcon สำหรับไอคอน */}
-            <span className={styles.sidebarText}><Link href="/">หน้าแรก</Link></span> {/* ใช้ sidebarText สำหรับข้อความ */}
+            <span className={styles.sidebarText}><Link href="/staff">หน้าแรก</Link></span> {/* ใช้ sidebarText สำหรับข้อความ */}
           </li>
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>📦</span>
-            <span className={styles.sidebarText}><Link href="/inventoryCheck">ตรวจสอบยอดคงคลัง</Link></span>
+            <span className={styles.sidebarText}><Link href="/staff">เบิก ยืม</Link></span>
           </li>
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>✅</span>
-            <span className={styles.sidebarText}><Link href="/approvalRequest">ตรวจสอบคำขอเบิก</Link></span>
+            <span className={styles.sidebarText}><Link href="/staff">ตรวจสอบคำขอเบิก</Link></span>
           </li>
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>⚙️</span>
-            <span className={styles.sidebarText}><Link href="/manageData">จัดการข้อมูล</Link></span>
+            <span className={styles.sidebarText}><Link href="/staff">จัดการข้อมูล</Link></span>
           </li>
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>📜</span>
-            <span className={styles.sidebarText}><Link href="/transactionHistory">ประวัติการนำเข้านำออก</Link></span>
+            <span className={styles.sidebarText}><Link href="/staff">ประวัติการนำเข้านำออก</Link></span>
           </li>
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>📊</span>
-            <span className={styles.sidebarText}><Link href="/report">ออกรายงาน</Link></span>
+            <span className={styles.sidebarText}><Link href="/staff">ออกรายงาน</Link></span>
           </li>
         </ul>
       </nav>

@@ -292,7 +292,7 @@ export default function ManageDataPage() {
 
           {/* ปุ่ม + สำหรับเพิ่มข้อมูล */}
           <div className={styles.filterAddData}>
-            <Link href="/addItem">
+            <Link href="/manage/addItem">
               <div className={styles.addButton}>+</div>
             </Link>
             <span className={styles.addLabel}>เพิ่มข้อมูล</span>
@@ -333,7 +333,7 @@ export default function ManageDataPage() {
               <div className={styles.tableCell}>{item.location}</div>
               <div className={styles.tableCell}>{item.edited}</div>
               <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                <Link href="/editItem" className={`${styles.actionButton} ${styles.editButton}`}>แก้ไข</Link>
+                <Link href="/manage/editItem" className={`${styles.actionButton} ${styles.editButton}`}>แก้ไข</Link>
                 <button className={`${styles.actionButton} ${styles.deleteButton}`}>ลบ</button>
               </div>
             </div>

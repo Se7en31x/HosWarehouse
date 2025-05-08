@@ -1,0 +1,34 @@
+/* Layout */
+.layout {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  /* Main Content */
+  .main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    /* padding: 20px; */
+    background-color: #ffffff; /* กำหนดสีพื้นหลังของเนื้อหา */
+    overflow-y: auto;
+  }
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  html, body {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .page-container {
+    flex: 1; /* ทำให้ main-content ใช้พื้นที่ที่เหลือจาก Sidebar */
+    min-width: 0; /* ป้องกัน main-content จากการขยายเกิน */
+    overflow-x: hidden; /* ป้องกันเนื้อหา overflow */
+  }

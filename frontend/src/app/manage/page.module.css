@@ -1,0 +1,173 @@
+.mainHome {
+  padding: 15px;
+  background-color: #e3e8ec;
+}
+
+.customHr {
+  height: 2px;
+  background: #ccc;
+  margin-top: 10px;
+}
+
+.textchart {
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Dashboard */
+.dataDashboard {
+  height: 329px;
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.cardHeader {
+  background: #007bff;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 8px 8px 0 0;
+  width: 100%;
+  box-sizing: border-box;
+  display: block;
+  height: 40px;
+  padding: 10px 0;
+  text-align: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.dashboardContainer {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.dashboardData,
+.chartdata,
+.requestStatus,
+.recentActivity {
+  background: #fff;
+  padding: 15px;
+  border-radius: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  padding-top: 50px;
+}
+
+
+
+.recentActivity {
+  height: 300px;
+  width: 587px;
+}
+
+.dashboardData {
+  flex: 1;
+  text-align: center;
+}
+
+.chartdata {
+  flex: 2;
+  padding: 20px;
+}
+
+.chartPlaceholder {
+  margin-top: 50px;
+  height: 400px;
+  background: #aaaaaa;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.infoContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recentActivity table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.recentActivity th,
+.recentActivity td {
+  border: 1px solid
+}
+
+.requestStatus {
+  display: grid;
+  grid-template-columns: 1fr; /* คอลัมน์เดียว */
+  gap: 8px; /* ลดระยะห่างระหว่างรายการ */
+  padding: 15px 20px; /* เพิ่ม padding ข้างในให้สมดุล */
+  background: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  height: auto;
+  width: 100%;
+  max-width: 587px; /* จำกัดความกว้างสูงสุด */
+  margin: 0 auto; /* กำหนดให้กึ่งกลางหน้า */
+}
+
+.cardHeader {
+  grid-column: span 1;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.dateRightTop {
+  grid-column: span 1;
+  text-align: right;
+  font-size: 14px;
+  font-weight: normal;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.requestStatusItem {
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* จัดกลางเนื้อหาภายใน */
+  padding: 6px 10px; /* เพิ่ม padding ซ้าย-ขวา ให้อยู่ไม่ติดขอบ */
+  background-color: #f7f7f7;
+  border-radius: 8px;
+}
+
+.pending {
+  color: #ffa500;
+}
+
+.approved {
+  color: #28a745;
+}
+
+.rejected {
+  color: #dc3545;
+}
+
+.summary {
+  margin-top: 10px;
+  padding: 10px;
+  font-size: 14px;
+  font-style: italic;
+  color: #555;
+  text-align: center;
+  background: #eef2f7;
+  border-radius: 8px;
+}
+
+
+
+
+
+

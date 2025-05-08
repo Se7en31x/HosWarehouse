@@ -1,0 +1,38 @@
+/* src/app/components/Header.module.css */
+
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 1000; /* ให้ลอยอยู่บน element อื่น */
+    background-color: #fdfdfd; /* ควรกำหนดสีพื้นหลังไม่ให้โปร่งใส */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60px;
+    padding: 0 20px;
+    border-bottom: 1px solid rgb(218, 218, 218);
+  }
+  
+    
+    .headerTitle { /* เปลี่ยนเป็น .headerTitle */
+      font-size: 22px; /* ขนาดตัวอักษร */
+      font-weight: lighter; /* ตัวอักษรหนา */
+      flex-grow: 1; /* ทำให้ข้อความขยายพื้นที่ที่ว่าง */
+      text-align: left; /* จัดข้อความตรงกลาง */
+      color: #000000;
+      line-height: 60px; /* ควบคุมความสูงของข้อความ */
+    }
+    
+    .headerIcons { /* เปลี่ยนเป็น .headerIcons */
+      display: flex; /* ใช้ flexbox */
+      gap: 15px; /* ระยะห่างระหว่างไอคอน */
+      align-items: center; /* จัดแนวตั้งของไอคอน */
+    }
+    
+    .iconButton { /* เปลี่ยนเป็น .iconButton */
+      background: none; /* ไม่ให้พื้นหลัง */
+      border: none; /* ไม่มีขอบ */
+      font-size: 24px; /* ขนาดของไอคอน */
+      cursor: pointer; /* เปลี่ยนเคอร์เซอร์เมื่อเลื่อนเมาส์ไปที่ปุ่ม */
+    }
+    

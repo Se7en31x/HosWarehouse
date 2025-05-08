@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import styles from "./page.module.css";
 import axiosInstance from '../utils/axiosInstance';
 import Link from "next/link";
-// import { connectSocket, disconnectSocket, sendMessage, joinRoom } from '../utils/socket';
+import { connectSocket, disconnectSocket, sendMessage, joinRoom } from '../utils/socket';
 export default function InventoryCheck() {
 
   const [filter, setFilter] = useState();
@@ -65,20 +65,20 @@ export default function InventoryCheck() {
 
 
   ///////////////////// API///////////////////////////
-  // useEffect(() => {
-  //   const socket = connectSocket(); // ได้ socket กลับมา
+  useEffect(() => {
+    const socket = connectSocket(); // ได้ socket กลับมา
 
-  //   socket.emit('requestInventoryData'); // 👈 ขอข้อมูลจาก backend
+    socket.emit('requestInventoryData'); // 👈 ขอข้อมูลจาก backend
 
-  //   socket.on('itemsData', (items) => {
-  //     console.log('📦 Received inventory:', items);
-  //     setInventoryData(items); // แสดงผลใน UI
-  //   });
+    socket.on('itemsData', (items) => {
+      console.log('📦 Received inventory:', items);
+      setInventoryData(items); // แสดงผลใน UI
+    });
 
-  //   return () => {
-  //     disconnectSocket();
-  //   };
-  // }, []);
+    return () => {
+      disconnectSocket();
+    };
+  }, []);
 
   console.log(inventoryData.map(item => item.id));
   return (
@@ -200,7 +200,7 @@ export default function InventoryCheck() {
                 })}
               </div>
               <div className={styles.tableCell}>
-                <Link href={`/inventoryDetail/${item.item_id}`} className={styles.actionButton}>
+                <Link href={`/manage/inventoryDetail/${item.item_id}`} className={styles.actionButton}>
                   ตรวจสอบ
                 </Link>
               </div>
