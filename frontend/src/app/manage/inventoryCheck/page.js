@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import styles from "./page.module.css";
 import axiosInstance from '../utils/axiosInstance';
 import Link from "next/link";
-import { connectSocket, disconnectSocket, sendMessage, joinRoom } from '../utils/socket';
+
+// import { connectSocket, disconnectSocket, sendMessage, joinRoom } from '../utils/socket';
 export default function InventoryCheck() {
 
   const [filter, setFilter] = useState();
@@ -65,20 +66,20 @@ export default function InventoryCheck() {
 
 
   ///////////////////// API///////////////////////////
-  useEffect(() => {
-    const socket = connectSocket(); // ได้ socket กลับมา
+  // useEffect(() => {
+  //   const socket = connectSocket(); // ได้ socket กลับมา
 
-    socket.emit('requestInventoryData'); // 👈 ขอข้อมูลจาก backend
+  //   socket.emit('requestInventoryData'); // 👈 ขอข้อมูลจาก backend
 
-    socket.on('itemsData', (items) => {
-      console.log('📦 Received inventory:', items);
-      setInventoryData(items); // แสดงผลใน UI
-    });
+  //   socket.on('itemsData', (items) => {
+  //     console.log('📦 Received inventory:', items);
+  //     setInventoryData(items); // แสดงผลใน UI
+  //   });
 
-    return () => {
-      disconnectSocket();
-    };
-  }, []);
+  //   return () => {
+  //     disconnectSocket();
+  //   };
+  // }, []);
 
   console.log(inventoryData.map(item => item.id));
   return (
@@ -100,7 +101,6 @@ export default function InventoryCheck() {
         {/* ตัวกรอง */}
         <div className={styles.filterContainer}>
           <div className={styles.filterGroup}>
-            <label htmlFor="category" className={styles.filterLabel}>หมวดหมู่:</label>
             <select
               id="category"
               className={styles.filterSelect}
@@ -116,7 +116,6 @@ export default function InventoryCheck() {
           </div>
 
           <div className={styles.filterGroup}>
-            <label htmlFor="unit" className={styles.filterLabel}>หน่วย:</label>
             <select
               id="unit"
               className={styles.filterSelect}
@@ -131,7 +130,6 @@ export default function InventoryCheck() {
           </div>
 
           <div className={styles.filterGroup}>
-            <label htmlFor="storage" className={styles.filterLabel}>สถานที่จัดเก็บ:</label>
             <select
               id="storage"
               className={styles.filterSelect}
@@ -146,16 +144,15 @@ export default function InventoryCheck() {
 
           {/* ช่องค้นหา */}
           <div className={styles.filterGroupSearch}>
-            <label htmlFor="filter" className={styles.filterLabel}></label>
-            <input
-              type="text"
-              id="filter"
-              className={styles.filterInput}
-              value={filter}
-              onChange={handleFilterChange}
-              placeholder="กรอกเพื่อค้นหา..."
-            />
-          </div>
+              <input
+                type="text"
+                id="filter"
+                className={styles.filterInput}
+                value={filter}
+                onChange={handleFilterChange}
+                placeholder="กรอกเพื่อค้นหา..."
+              />
+            </div>
         </div>
         {/* แถบหัวข้อคล้าย Excel */}
         <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
@@ -200,7 +197,7 @@ export default function InventoryCheck() {
                 })}
               </div>
               <div className={styles.tableCell}>
-                <Link href={`/manage/inventoryDetail/${item.item_id}`} className={styles.actionButton}>
+                <Link href={`/inventoryDetail/${item.item_id}`} className={styles.actionButton}>
                   ตรวจสอบ
                 </Link>
               </div>

@@ -53,22 +53,18 @@
     display: flex;
     justify-content: flex-start;
     gap: 20px;
-    align-items: center;
+    /* align-items: center; */
 }
 
 .filterGroup {
+    margin-top: 8px;
     display: flex;
     flex-direction: column;
 }
 
-.filterLabel {
-    font-size: 14px;
-    margin-bottom: 5px;
-}
-
 .filterSelect,
 .filterInput {
-    padding: 8px;
+    padding: 10px 14px;
     font-size: 14px;
     border-radius: 5px;
     border: 1px solid #ccc;
@@ -79,11 +75,39 @@
 }
 
 .filterSelect {
-    width: 150px;
+    width: 180px;
+    padding: 10px 14px;
+    font-size: 15px;
+    border-radius: 8px;
+    border: 1px solid #d0d0d0;
+    background-color: #ffffff;
+    color: #333;
+    transition: all 0.2s ease;
+    appearance: none;
+
+    /* เพิ่มไอคอนลูกศร dropdown */
+    background-image: url("data:image/svg+xml,%3Csvg fill='gray' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px 16px;
+    padding-right: 36px; /* ระยะห่างลูกศร */
+}
+
+.filterSelect:hover {
+    background-color: #ffffff;
+    border-color: #106db9;
+    box-shadow: 0 0 4px rgba(16, 109, 185, 0.2);
+}
+
+.filterSelect:focus {
+    outline: none;
+    border-color: #106db9;
+    box-shadow: 0 0 6px rgba(16, 109, 185, 0.3);
 }
 
 /* ตัวกรองช่องค้นหาอยู่ขวาสุด */
 .filterGroupSearch {
+    margin-top: 8px;
     margin-left: auto;
     /* ทำให้ช่องค้นหาถูกจัดไปขวาสุด */
 }
