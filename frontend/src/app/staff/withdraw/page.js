@@ -6,6 +6,10 @@ import Link from "next/link";
 
 export default function InventoryWithdraw() {
   const router = useRouter();
+ // pop up
+ const [actionType, setActionType] = useState(""); // "withdraw" หรือ "borrow"
+  const [showModal, setShowModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null); 
 
   const [filter, setFilter] = useState("");
   const [category, setCategory] = useState("");
@@ -76,8 +80,58 @@ export default function InventoryWithdraw() {
     }
   };
 
+  //pop up function
+  const handleWithdrawClick = (item) => {
+    setSelectedItem(item);
+    setActionType("withdraw");
+    setShowModal(true);
+  };
+  
+  const handleBorrowClick = (item) => {
+    setSelectedItem(item);
+    setActionType("borrow");
+    setShowModal(true);
+  };
+  
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedItem(null);
+    setActionType("");
+  };
+
   return (
     <div className={styles.mainHome}>
+         {/* Popup Modal อยู่ตรงนี้ */}
+         {showModal && selectedItem && (
+            <div className={styles.modalOverlay}>
+                <div className={styles.modal}>
+                <h2>{actionType === "withdraw" ? "เบิกวัสดุ" : "ยืมวัสดุ"}</h2>
+                <p>ชื่อวัสดุ: <strong>{selectedItem.name}</strong></p>
+                <p>จำนวนคงเหลือ: {selectedItem.quantity} {selectedItem.unit}</p>
+
+                <label htmlFor="withdrawAmount">
+                    จำนวนที่ต้องการ{actionType === "withdraw" ? "เบิก" : "ยืม"}:
+                </label>
+                <input
+                    type="number"
+                    id="withdrawAmount"
+                    className={styles.modalInput}
+                    min="1"
+                    max={selectedItem.quantity}
+                />
+
+                <div className={styles.modalActions}>
+                    <button
+                    className={styles.modalConfirm}
+                    onClick={() => alert(`ยืนยันการ${actionType === "withdraw" ? "เบิก" : "ยืม"}`)}>
+                    ยืนยัน
+                    </button>
+                    <button className={styles.modalCancel} onClick={closeModal}>ยกเลิก</button>
+                </div>
+                </div>
+            </div>
+        )}
+
       {/* แถบบน */}
       <div className={styles.bar}>
         <ul className={styles.navList}>
@@ -182,8 +236,13 @@ export default function InventoryWithdraw() {
               <div className={styles.tableCell}>{item.location}</div>
               <div className={styles.tableCell}>{item.edited}</div>
               <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                <button className={`${styles.actionButton} ${styles.editButton}`}>เบิก</button>
-                <button className={`${styles.actionButton} ${styles.deleteButton}`}>ยืม</button>
+              <button 
+                className={`${styles.actionButton} ${styles.editButton}`}
+                onClick={() => handleWithdrawClick(item)}>เบิก</button>
+
+              <button 
+                className={`${styles.actionButton} ${styles.deleteButton}`}
+                onClick={() => handleBorrowClick(item)}>ยืม</button>
               </div>
             </div>
           ))}
