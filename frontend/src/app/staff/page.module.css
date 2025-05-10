@@ -1,174 +1,349 @@
 .mainHome {
-    padding: 15px;
-    background-color: #e3e8ec;
-  }
+  padding: 15px;
+  background-color: #e3e8ec;
+  height: 100%;
+}
+
+/* แถบบน */
+.bar {
+  background-color: #106db9;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  width: 100%;
+  height: 60px;
+}
+
+.navList {
+  display: flex;
+  list-style-type: none;
+  justify-content: space-around;
+  padding: 0;
+  /* background-color: #bd7f23; */
+  color: white;
+}
+
+.navItem {
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  border-radius: 4px;
+  /* background-color: #9e0000; */
+}
+
+.navItem:hover {
+  background-color: #ca8f0f;
+}
+
+/* ตรงกลาง */
+.infoContainer {
+  margin: 20px 0;
+  width: 100%;
+  height: 860px;
+  /* height: 0%; */
+  padding: 10px;
+  background-color: #ffffff;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  box-shadow: inset 0 -1px 0 #e0e0e0;
+}
+
+/* ตัวกรอง */
+.filterContainer {
+  display: flex;
+  justify-content: flex-start;
+  gap: 20px;
+  /* align-items: center; */
+}
+
+.filterGroup {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.filterSelect,
+.filterInput {
+  padding: 10px 14px;
+  font-size: 14px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.filterInput {
+  width: 200px;
+}
+
+.filterSelect {
+  width: 180px;
+  padding: 10px 14px;
+  font-size: 15px;
+  border-radius: 8px;
+  border: 1px solid #d0d0d0;
+  background-color: #ffffff;
+  color: #333;
+  transition: all 0.2s ease;
+  appearance: none;
+
+  /* เพิ่มไอคอนลูกศร dropdown */
+  background-image: url("data:image/svg+xml,%3Csvg fill='gray' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px 16px;
+  padding-right: 36px; /* ระยะห่างลูกศร */
+}
+
+.filterSelect:hover {
+  background-color: #ffffff;
+  border-color: #106db9;
+  box-shadow: 0 0 4px rgba(16, 109, 185, 0.2);
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: #106db9;
+  box-shadow: 0 0 6px rgba(16, 109, 185, 0.3);
+}
+
+/* ตัวกรองช่องค้นหาอยู่ขวาสุด */
+.filterGroupSearch {
+  margin-top: 8px;
+  margin-left: auto;
+  /* ทำให้ช่องค้นหาถูกจัดไปขวาสุด */
+}
+
+.filterInput {
+  width: 250px;
+  /* ความกว้างของช่องค้นหา */
+}
+
+.tableGrid {
+  display: grid;
+  grid-template-columns: 60px 160px 210px 200px 90px 160px 110px 210px 160px 110px;
+  gap: 10px;
+  /* overflow-x: auto; */
+  width: 100%;
+}
+
+/* หัวตาราง */
+.tableHeader {
+  margin-top: 10px;
+  padding: 10px 0;
+  background-color: #E9EBFF;
+  font-weight: bold;
+  /* border-bottom: 1px solid #ccc; */
+  border-radius: 12px;
+}
+
+/* ช่องในหัวตาราง */
+.headerItem {
+  padding: 10px;
+  text-align: left;
+}
+
+.headerItem:last-child {
+  border-right: none;
+}
+
+/* สไตล์สำหรับแถวในตาราง */
+.tableRow {
+  /* border-bottom: 0.2px solid #ddd; */
+  height: 80px;
+  width: 100%;
+}
+
+.tableRow:nth-child(even) {
+  background-color: #F1F2F6; /* สีสำหรับแถวคู่ */
+  border-radius: 8px;
+}
+
+.tableRow:nth-child(odd) {
+  background-color: #ffffff; /* สีสำหรับแถวคี่ */
+}
+
+
+.tableCell {
+  display: flex;
+  align-items: center;
+  padding: 0px 10px; /* บน-ล่าง 2px, ซ้าย-ขวา 10px */
+  text-align: left;
   
-  .customHr {
-    height: 2px;
-    background: #ccc;
-    margin-top: 10px;
-  }
-  
-  .textchart {
-    font-weight: bold;
-    text-align: center;
-  }
-  
-  /* Dashboard */
-  .dataDashboard {
-    height: 329px;
-    display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  
-  .cardHeader {
-    background: #007bff;
-    color: #fff;
-    font-weight: bold;
-    border-radius: 8px 8px 0 0;
-    width: 100%;
-    box-sizing: border-box;
-    display: block;
-    height: 40px;
-    padding: 10px 0;
-    text-align: center;
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
-  
-  .dashboardContainer {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  
-  .dashboardData,
-  .chartdata,
-  .requestStatus,
-  .recentActivity {
-    background: #fff;
-    padding: 15px;
-    border-radius: 15px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: relative;
-    padding-top: 50px;
-  }
-  
-  
-  
-  .recentActivity {
-    height: 300px;
-    width: 587px;
-  }
-  
-  .dashboardData {
-    flex: 1;
-    text-align: center;
-  }
-  
-  .chartdata {
-    flex: 2;
-    padding: 20px;
-  }
-  
-  .chartPlaceholder {
-    margin-top: 50px;
-    height: 400px;
-    background: #aaaaaa;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .infoContainer {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  
-  .recentActivity table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .recentActivity th,
-  .recentActivity td {
-    border: 1px solid
-  }
-  
-  .requestStatus {
-    display: grid;
-    grid-template-columns: 1fr; /* คอลัมน์เดียว */
-    gap: 8px; /* ลดระยะห่างระหว่างรายการ */
-    padding: 15px 20px; /* เพิ่ม padding ข้างในให้สมดุล */
-    background: #ffffff;
-    border-radius: 15px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: relative;
-    height: auto;
-    width: 100%;
-    max-width: 587px; /* จำกัดความกว้างสูงสุด */
-    margin: 0 auto; /* กำหนดให้กึ่งกลางหน้า */
-  }
-  
-  .cardHeader {
-    grid-column: span 1;
-    font-size: 18px;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 8px;
-  }
-  
-  .dateRightTop {
-    grid-column: span 1;
-    text-align: right;
-    font-size: 14px;
-    font-weight: normal;
-    color: #555;
-    margin-bottom: 8px;
-  }
-  
-  .requestStatusItem {
-    font-size: 18px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center; /* จัดกลางเนื้อหาภายใน */
-    padding: 6px 10px; /* เพิ่ม padding ซ้าย-ขวา ให้อยู่ไม่ติดขอบ */
-    background-color: #f7f7f7;
-    border-radius: 8px;
-  }
-  
-  .pending {
-    color: #ffa500;
-  }
-  
-  .approved {
-    color: #28a745;
-  }
-  
-  .rejected {
-    color: #dc3545;
-  }
-  
-  .summary {
-    margin-top: 10px;
-    padding: 10px;
-    font-size: 14px;
-    font-style: italic;
-    color: #555;
-    text-align: center;
-    background: #eef2f7;
-    border-radius: 8px;
-  }
-  
-  
-  
-  
-  
-  
-  
+}
+
+.tableCell:last-child {
+  border-right: none;
+}
+
+.imageCell img {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.actionButton {
+padding: 0.25rem 0.5rem;
+border: none;
+border-radius: 0.375rem;
+font-size: 0.875rem;
+cursor: pointer;
+transition: background-color 0.2s;
+}
+/* ปุ่มเบิก (สีน้ำเงิน) */
+.editButton {
+background-color: #027845;
+color: white;
+}
+
+.editButton:hover {
+background-color: #029254;
+}
+
+/* ปุ่มยืม (สีแดง) */
+.deleteButton {
+background-color: #007BFF;
+color: white;
+}
+
+.deleteButton:hover {
+background-color: #023a75;
+}
+
+
+.pagination {
+display: flex;
+justify-content: center;
+align-items: center;
+margin-top: 20px;
+gap: 10px;
+}
+
+.pageButton {
+padding: 8px 16px;
+border: none;
+background-color: #1976d2;
+color: white;
+cursor: pointer;
+border-radius: 5px;
+}
+
+.pageButton:disabled {
+background-color: #cccccc;
+cursor: not-allowed;
+}
+
+.pageNumber {
+font-size: 18px;
+}
+
+
+/* /////////////////////////////////////////////////////////////////////////////////////////////////////// */
+/* สไตล์สำหรับปุ่มย้อนกลับและหน้าถัดไป */
+.pagination {
+  display: flex;
+  justify-content: center;
+  /* margin: 2px; */
+}
+
+.prevButton,
+.nextButton {
+  background-color: #007bff; /* สีพื้นหลังปุ่ม */
+  color: white; /* สีข้อความ */
+  border: none; /* กำหนดไม่ให้มีขอบ */
+  padding: 5px 10px; /* ขนาดของปุ่ม */
+  font-size: 16px; /* ขนาดตัวอักษร */
+  cursor: pointer; /* แสดงสัญลักษณ์ของการคลิก */
+  border-radius: 5px; /* มุมโค้ง */
+  transition: background-color 0.3s ease; /* การเปลี่ยนสีเมื่อ hover */
+  margin: 0 10px; /* ระยะห่างระหว่างปุ่ม */
+}
+
+/* เมื่อวางเมาส์ที่ปุ่ม */
+.prevButton:hover,
+.nextButton:hover {
+  background-color: #0056b3; /* สีพื้นหลังเมื่อ hover */
+}
+
+/* เมื่อปุ่มถูกปิดใช้งาน */
+.prevButton:disabled,
+.nextButton:disabled {
+  background-color: #ccc; /* สีพื้นหลังเมื่อปิดใช้งาน */
+  cursor: not-allowed; /* ไม่สามารถคลิกได้ */
+}
+
+
+/*pop up*/
+.modalOverlay {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0, 0, 0, 0.5);
+display: flex;
+align-items: center;
+justify-content: center;
+z-index: 999;
+}
+
+.modal {
+background: white;
+padding: 2rem;
+border-radius: 12px;
+width: 400px;
+max-width: 90%;
+box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+}
+
+.modal h2 {
+margin-top: 0;
+}
+
+.modalInput {
+width: 100%;
+padding: 8px;
+margin-top: 8px;
+margin-bottom: 1rem;
+border-radius: 6px;
+border: 1px solid #ccc;
+}
+
+.modalActions {
+display: flex;
+justify-content: space-between;
+}
+
+.modalConfirm {
+background-color: #4CAF50;
+color: white;
+padding: 8px 16px;
+border-radius: 6px;
+border: none;
+cursor: pointer;
+}
+
+.modalCancel {
+background-color: #f44336;
+color: white;
+padding: 8px 16px;
+border-radius: 6px;
+border: none;
+cursor: pointer;
+}
+
+.modalImage {
+display: block;
+margin: 0 auto;
+}
+
+.modalDetails {
+margin-top: 1rem;
+text-align: left;
+font-size: 14px;
+line-height: 1.5;
+}
+
+.modalInput {
+width: 100%;
+padding: 6px 8px;
+border: 1px solid #ccc;
+border-radius: 4px;
+}
