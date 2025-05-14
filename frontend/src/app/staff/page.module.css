@@ -119,7 +119,7 @@
 
 .tableGrid {
   display: grid;
-  grid-template-columns: 60px 160px 210px 200px 90px 160px 110px 210px 160px 110px;
+  grid-template-columns: 60px 160px 210px 200px 90px 150px 110px 180px 160px 110px;
   gap: 10px;
   /* overflow-x: auto; */
   width: 100%;
@@ -180,32 +180,41 @@
 }
 
 .actionButton {
-padding: 0.25rem 0.5rem;
-border: none;
-border-radius: 0.375rem;
-font-size: 0.875rem;
-cursor: pointer;
-transition: background-color 0.2s;
-}
-/* ปุ่มเบิก (สีน้ำเงิน) */
-.editButton {
-background-color: #027845;
-color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-right: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.editButton:hover {
-background-color: #029254;
+/* ปุ่มเบิก (ฟ้าอมเขียว) */
+.withdrawButton {
+  background-color: #17a2b8;
+  color: #ffffff;
 }
 
-/* ปุ่มยืม (สีแดง) */
-.deleteButton {
-background-color: #007BFF;
-color: white;
+.withdrawButton:hover {
+  background-color: #138496;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
 }
 
-.deleteButton:hover {
-background-color: #023a75;
+/* ปุ่มยืม (น้ำเงินสด) */
+.borrowButton {
+  background-color: #007bff;
+  color: #ffffff;
 }
+
+.borrowButton:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
 
 
 .pagination {
@@ -272,78 +281,158 @@ font-size: 18px;
 
 /*pop up*/
 .modalOverlay {
-position: fixed;
-top: 0;
-left: 0;
-width: 100%;
-height: 100%;
-background-color: rgba(0, 0, 0, 0.5);
-display: flex;
-align-items: center;
-justify-content: center;
-z-index: 999;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.3); /* สีดำจางๆ ธรรมดา */
+  /* backdrop-filter: none; <- ลบหรืออย่าใส่ */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
+/* .modalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 50, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+} */
 
 .modal {
-background: white;
-padding: 2rem;
-border-radius: 12px;
-width: 400px;
-max-width: 90%;
-box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  background-color: #ffffff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px; /* เพิ่มความกว้าง */
+  padding: 2rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #cbe4fb;
+  font-family: 'Segoe UI', sans-serif;
 }
 
-.modal h2 {
-margin-top: 0;
-}
-
-.modalInput {
-width: 100%;
-padding: 8px;
-margin-top: 8px;
-margin-bottom: 1rem;
-border-radius: 6px;
-border: 1px solid #ccc;
-}
-
-.modalActions {
-display: flex;
-justify-content: space-between;
-}
-
-.modalConfirm {
-background-color: #4CAF50;
-color: white;
-padding: 8px 16px;
-border-radius: 6px;
-border: none;
-cursor: pointer;
-}
-
-.modalCancel {
-background-color: #f44336;
-color: white;
-padding: 8px 16px;
-border-radius: 6px;
-border: none;
-cursor: pointer;
+.modalTitle {
+  font-size: 1.6rem;
+  font-weight: 600;
+  text-align: center;
+  color: #0d47a1;
+  margin-bottom: 1.5rem;
 }
 
 .modalImage {
-display: block;
-margin: 0 auto;
+  display: block;
+  margin: 0 auto 1.2rem;
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid #bbdefb;
 }
 
 .modalDetails {
-margin-top: 1rem;
-text-align: left;
-font-size: 14px;
-line-height: 1.5;
+  background-color: #f4faff;
+  border: 1px solid #d3e8fc;
+  border-radius: 10px;
+  padding: 1.2rem;
+  margin-bottom: 1.8rem;
+}
+
+.modalDetails div {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-size: 1rem;
+  color: #444;
+  border-bottom: 1px solid #e8f2fc;
+}
+
+.modalDetails div:last-child {
+  border-bottom: none;
+}
+
+.modalDetails strong {
+  color: #1976d2;
+  font-weight: 600;
+}
+
+.modalForm label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+  color: #0d47a1;
 }
 
 .modalInput {
-width: 100%;
-padding: 6px 8px;
-border: 1px solid #ccc;
-border-radius: 4px;
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  font-size: 1rem;
+  border: 1px solid #90caf9;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #333;
+  margin-bottom: 1rem;
+  box-sizing: border-box;
 }
+
+.formRow {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.formGroup {
+  flex: 1;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.modalConfirm,
+.modalCancel {
+  padding: 0.65rem 1.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modalConfirm {
+  background-color: #2196f3;
+  color: white;
+}
+
+.modalConfirm:hover {
+  background-color: #1976d2;
+  box-shadow: 0 0 6px rgba(33, 150, 243, 0.4);
+}
+
+.modalCancel {
+  background-color: #e57373;
+  color: white;
+}
+
+.modalCancel:hover {
+  background-color: #d32f2f;
+  box-shadow: 0 0 6px rgba(244, 67, 54, 0.3);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+

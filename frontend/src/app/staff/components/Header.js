@@ -7,17 +7,27 @@ export default function Header() {
     <header className={styles.header}>
       <h1 className={styles.headerTitle}>ระบบคลังโรงพยาบาล</h1>
       <div className={styles.headerIcons}>
-        <Link href="/staff/SelectedItem"> {/* ลิงก์ไปยังหน้า SelectedItem */}
-        <button className={styles.iconButton}>
+        {/* ลิงก์ไปยังหน้าตะกร้า */}
+        <Link href="/staff/cart" className={styles.iconButtonLink}>
           <Image
             src="/icons/shopping-cart (1).png"
             alt="ตะกร้า"
             width={24}
             height={24}
           />
-        </button>
-      </Link>
+        </Link>
+        <Link href="/staff/SelectedItem" className={styles.iconButtonLink}>
+          <Image
+            src="/icons/shopping-cart (1).png"
+            alt="ตะกร้า"
+            width={24}
+            height={24}
+          />
+        </Link>
+
+        {/* ไอคอนแจ้งเตือน */}
         <button className={styles.iconButton}>🔔</button>
+        {/* ไอคอนตั้งค่า */}
         <button className={styles.iconButton}>⚙️</button>
       </div>
     </header>

@@ -1,15 +1,17 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
-import Link from "next/link";
+import { CartContext } from "./context/CartContext";
+import { toast } from "react-toastify";
+// import Link from "next/link";
 
 export default function InventoryWithdraw() {
   const router = useRouter();
- // pop up
- const [actionType, setActionType] = useState(""); // "withdraw" หรือ "borrow"
+  // pop up
+  const [actionType, setActionType] = useState(""); // "withdraw" หรือ "borrow"
   const [showModal, setShowModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null); 
+  const [selectedItem, setSelectedItem] = useState(null);
 
   const [filter, setFilter] = useState("");
   const [category, setCategory] = useState("");
@@ -35,10 +37,12 @@ export default function InventoryWithdraw() {
     setStorage(event.target.value);
   };
   // ตัวอย่าง
+  const [inputQuantity, setInputQuantity] = useState(1); // ค่าเริ่มต้นคือ 1
+
   const manageData = [
     {
       id: "1",
-      image: "", // ลิงก์ของรูปภาพ
+      image: "https://medthai.com/wp-content/uploads/2016/11/%E0%B8%8B%E0%B8%B5%E0%B8%A1%E0%B8%AD%E0%B8%A5.jpg", // ลิงก์ของรูปภาพ
       name: "ผ้าผันแผล",
       type: "เวชภัณฑ์",
       quantity: 100,
@@ -52,7 +56,91 @@ export default function InventoryWithdraw() {
     },
     {
       id: "2",
-      image: "", // ลิงก์ของรูปภาพ
+      image: "https://medthai.com/wp-content/uploads/2016/11/%E0%B8%8B%E0%B8%B5%E0%B8%A1%E0%B8%AD%E0%B8%A5.jpg", // ลิงก์ของรูปภาพ
+      name: "ผ้าผันแผล",
+      type: "เวชภัณฑ์",
+      quantity: 100,
+      unit: "กล่อง",
+      status: "พร้อมใช้งาน",
+      location: "คลังกลาง",
+      dateexd: "30-02-2025",
+      edited: "30-02-2025",
+      action: "เบิก",
+      action2: "ยืม",
+    },
+        {
+      id: "3",
+      image: "https://medthai.com/wp-content/uploads/2016/11/%E0%B8%8B%E0%B8%B5%E0%B8%A1%E0%B8%AD%E0%B8%A5.jpg", // ลิงก์ของรูปภาพ
+      name: "ผ้าผันแผล",
+      type: "เวชภัณฑ์",
+      quantity: 100,
+      unit: "กล่อง",
+      status: "พร้อมใช้งาน",
+      location: "คลังกลาง",
+      dateexd: "30-02-2025",
+      edited: "30-02-2025",
+      action: "เบิก",
+      action2: "ยืม",
+    },
+        {
+      id: "4",
+      image: "https://medthai.com/wp-content/uploads/2016/11/%E0%B8%8B%E0%B8%B5%E0%B8%A1%E0%B8%AD%E0%B8%A5.jpg", // ลิงก์ของรูปภาพ
+      name: "ผ้าผันแผล",
+      type: "เวชภัณฑ์",
+      quantity: 100,
+      unit: "กล่อง",
+      status: "พร้อมใช้งาน",
+      location: "คลังกลาง",
+      dateexd: "30-02-2025",
+      edited: "30-02-2025",
+      action: "เบิก",
+      action2: "ยืม",
+    },
+        {
+      id: "5",
+      image: "https://medthai.com/wp-content/uploads/2016/11/%E0%B8%8B%E0%B8%B5%E0%B8%A1%E0%B8%AD%E0%B8%A5.jpg", // ลิงก์ของรูปภาพ
+      name: "ผ้าผันแผล",
+      type: "เวชภัณฑ์",
+      quantity: 100,
+      unit: "กล่อง",
+      status: "พร้อมใช้งาน",
+      location: "คลังกลาง",
+      dateexd: "30-02-2025",
+      edited: "30-02-2025",
+      action: "เบิก",
+      action2: "ยืม",
+    },
+            {
+      id: "6",
+      image: "https://medthai.com/wp-content/uploads/2016/11/%E0%B8%8B%E0%B8%B5%E0%B8%A1%E0%B8%AD%E0%B8%A5.jpg", // ลิงก์ของรูปภาพ
+      name: "ผ้าผันแผล",
+      type: "เวชภัณฑ์",
+      quantity: 100,
+      unit: "กล่อง",
+      status: "พร้อมใช้งาน",
+      location: "คลังกลาง",
+      dateexd: "30-02-2025",
+      edited: "30-02-2025",
+      action: "เบิก",
+      action2: "ยืม",
+    },
+            {
+      id: "7",
+      image: "https://medthai.com/wp-content/uploads/2016/11/%E0%B8%8B%E0%B8%B5%E0%B8%A1%E0%B8%AD%E0%B8%A5.jpg", // ลิงก์ของรูปภาพ
+      name: "ผ้าผันแผล",
+      type: "เวชภัณฑ์",
+      quantity: 100,
+      unit: "กล่อง",
+      status: "พร้อมใช้งาน",
+      location: "คลังกลาง",
+      dateexd: "30-02-2025",
+      edited: "30-02-2025",
+      action: "เบิก",
+      action2: "ยืม",
+    },
+                {
+      id: "8",
+      image: "https://medthai.com/wp-content/uploads/2016/11/%E0%B8%8B%E0%B8%B5%E0%B8%A1%E0%B8%AD%E0%B8%A5.jpg", // ลิงก์ของรูปภาพ
       name: "ผ้าผันแผล",
       type: "เวชภัณฑ์",
       quantity: 100,
@@ -86,7 +174,7 @@ export default function InventoryWithdraw() {
     setActionType("withdraw");
     setShowModal(true);
   };
-  
+
   const handleBorrowClick = (item) => {
     setSelectedItem(item);
     setActionType("borrow");
@@ -99,54 +187,81 @@ export default function InventoryWithdraw() {
     setActionType("");
   };
 
+  const { addToCart } = useContext(CartContext);
+
+  const handleConfirm = () => {
+    if (!inputQuantity || inputQuantity <= 0) {
+      toast.error("กรุณากรอกจำนวนให้ถูกต้อง");
+      return;
+    }
+    if (inputQuantity > selectedItem.quantity) {
+      toast.error("จำนวนไม่เพียงพอ");
+      return;
+    }
+    console.warn("Missing fields:", selectedItem);
+    addToCart({
+      id: selectedItem.id,
+      image: selectedItem.image,
+      name: selectedItem.name,
+      quantity: inputQuantity,
+      unit: selectedItem.unit,
+      type: selectedItem.type,
+      location: selectedItem.location,
+      action: actionType
+    });
+
+    toast.success("เพิ่มรายการเข้าตะกร้าเรียบร้อยแล้ว");
+    closeModal();
+  };
+
   return (
     <div className={styles.mainHome}>
-         {/* Popup Modal อยู่ตรงนี้ */}
-        {showModal && selectedItem && (
+      {/* Popup Modal อยู่ตรงนี้ */}
+      {showModal && selectedItem && (
         <div className={styles.modalOverlay}>
-            <div className={styles.modal}>
+          <div className={styles.modal}>
             <h2 className={styles.modalTitle}>
-                ทำรายการ{actionType === "withdraw" ? "เบิก" : "ยืม"}
+              ทำรายการ{actionType === "withdraw" ? "เบิก" : "ยืม"}
             </h2>
 
-            <img
-                src="https://medthai.com/wp-content/uploads/2016/11/%E0%B8%8B%E0%B8%B5%E0%B8%A1%E0%B8%AD%E0%B8%A5.jpg"
-                alt="item"
+            {/* กล่องรวมภาพและรายละเอียด */}
+            <div className={styles.modalContentRow}>
+              <img
+                src={selectedItem.image}
+                alt={selectedItem.name}
                 className={styles.modalImage}
-                style={{ width: "150px", height: "150px", objectFit: "cover", borderRadius: "8px", margin: "0 auto" }}
-            />
+              />
 
-            <div className={styles.modalDetails}>
+              <div className={styles.modalDetails}>
                 <div><strong>ชื่อ:</strong> {selectedItem.name}</div>
-                <div><strong>รหัสสินค้า:</strong> A123</div>
+                <div><strong>รหัสสินค้า:</strong> {selectedItem.id}</div>
                 <div><strong>หมวดหมู่:</strong> {selectedItem.type}</div>
-                <div><strong>จำนวนคงเหลือ:</strong> {selectedItem.quantity}</div>
+                <div><strong>จำนวนคงเหลือ:</strong> {selectedItem.quantity} {selectedItem.unit}</div>
+              </div>
             </div>
 
+            {/* แบบฟอร์มกรอกจำนวน */}
             <div className={styles.modalForm}>
-                <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-                <div>
-                    <label>จำนวน</label>
-                    <input type="number" className={styles.modalInput} min="1" max={selectedItem.quantity} />
-                </div>
-                <div>
-                    <label>หน่วย</label>
-                    <input type="text" className={styles.modalInput} value={selectedItem.unit} readOnly />
-                </div>
-                </div>
+              <label htmlFor="quantity">จำนวนที่ต้องการ</label>
+              <input
+                id="quantity"
+                type="number"
+                className={styles.modalInput}
+                min="1"
+                max={selectedItem.quantity}
+                value={inputQuantity}
+                onChange={(e) => setInputQuantity(Number(e.target.value))}
+              />
             </div>
 
-            <div style={{ marginTop: "1.5rem", textAlign: "center" }}>
-                <button className={styles.modalConfirm} style={{ backgroundColor: "green", color: "white" }}>
-                บันทึก
-                </button>
-                <button className={styles.modalCancel} onClick={closeModal} style={{ marginLeft: "1rem" }}>
-                ยกเลิก
-                </button>
+            {/* ปุ่มกด */}
+            <div className={styles.modalActions}>
+              <button className={styles.modalConfirm} onClick={handleConfirm}>บันทึก</button>
+              <button className={styles.modalCancel} onClick={closeModal}>ยกเลิก</button>
             </div>
-            </div>
+          </div>
         </div>
-        )}
+      )}
 
       {/* แถบบน */}
       <div className={styles.bar}>
@@ -208,15 +323,15 @@ export default function InventoryWithdraw() {
 
           {/* ช่องค้นหา */}
           <div className={styles.filterGroupSearch}>
-              <input
-                type="text"
-                id="filter"
-                className={styles.filterInput}
-                value={filter}
-                onChange={handleFilterChange}
-                placeholder="กรอกเพื่อค้นหา..."
-              />
-            </div>
+            <input
+              type="text"
+              id="filter"
+              className={styles.filterInput}
+              value={filter}
+              onChange={handleFilterChange}
+              placeholder="กรอกเพื่อค้นหา..."
+            />
+          </div>
         </div>
         {/* แถบหัวข้อคล้าย Excel */}
         <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
@@ -252,13 +367,13 @@ export default function InventoryWithdraw() {
               <div className={styles.tableCell}>{item.location}</div>
               <div className={styles.tableCell}>{item.edited}</div>
               <div className={`${styles.tableCell} ${styles.centerCell}`}>
-              <button 
-                className={`${styles.actionButton} ${styles.editButton}`}
-                onClick={() => handleWithdrawClick(item)}>เบิก</button>
+                <button
+                  className={`${styles.actionButton} ${styles.withdrawButton}`}
+                  onClick={() => handleWithdrawClick(item)}>เบิก</button>
 
-              <button 
-                className={`${styles.actionButton} ${styles.deleteButton}`}
-                onClick={() => handleBorrowClick(item)}>ยืม</button>
+                <button
+                  className={`${styles.actionButton} ${styles.borrowButton}`}
+                  onClick={() => handleBorrowClick(item)}>ยืม</button>
               </div>
             </div>
           ))}

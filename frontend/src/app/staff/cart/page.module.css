@@ -1,0 +1,150 @@
+
+.container {
+    padding: 15px;
+    background-color: #f6f9fb;
+    max-height: 30vh;
+}
+
+.header {
+    background-color: #106db9;
+    color: white;
+    padding: 1rem;
+    border-radius: 8px 8px 0 0;
+    font-size: 1.25rem;
+    text-align: center;
+}
+
+.tableContainer {
+    height: 60%;
+    margin-top: 15px;
+    background-color: white;
+    border-radius: 8px;
+    /* border: 1px solid #ddd; */
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th{
+    padding: 10px 12px; /* ลดการ padding ให้พอดี */
+    border-bottom: 1px solid #eee;
+    text-align: left;
+    vertical-align: middle;
+    background-color: #E9EBFF !important;
+    position: sticky ;
+}
+.table td {
+    padding: 5px 12px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+    vertical-align: middle;
+    border-bottom: 1px solid #ddd;
+}
+
+.table tbody tr:nth-child(even) {
+    background-color: #F1F2F6;
+}
+
+.table tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.footer {
+    margin-top: 20px;
+}
+
+.options {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.datePicker {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    resize: none;
+    margin-bottom: 1rem;
+}
+
+.buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem; /* ช่องว่างระหว่างปุ่ม */
+}
+
+.cancel, .draft, .confirm {
+    padding: 0.75rem 1.5rem; /* เพิ่มขนาดปุ่ม */
+    border-radius: 8px; /* มุมปุ่มโค้งมน */
+    font-size: 1rem; /* ขนาดตัวอักษร */
+    font-weight: 600; /* หนักขึ้นเล็กน้อยเพื่อให้ดูเด่น */
+    cursor: pointer; /* เปลี่ยนเคอร์เซอร์ให้เป็นมือ */
+    transition: all 0.3s ease; /* เพิ่มการเปลี่ยนแปลงแบบนุ่มนวล */
+    text-transform: uppercase; /* ตัวพิมพ์ใหญ่ */
+}
+
+/* ปุ่มยกเลิก */
+.cancel {
+    background-color: #ffffff; /* พื้นหลังขาว */
+    color: #d9534f; /* สีแดง */
+    border: 1px solid #d9534f; /* กรอบสีแดง */
+}
+
+.cancel:hover {
+    background-color: #f8d7da; /* เปลี่ยนพื้นหลังเมื่อ hover */
+    color: #721c24; /* เปลี่ยนสีตัวอักษร */
+}
+
+.cancel:active {
+    background-color: #f5c6cb; /* เมื่อคลิก */
+}
+
+/* ปุ่มฉบับร่าง */
+.draft {
+    background-color: #f0f0f0; /* พื้นหลังสีเทาอ่อน */
+    color: #6c757d; /* สีเทาเข้ม */
+    border: 1px solid #ddd; /* กรอบสีเทา */
+}
+
+.draft:hover {
+    background-color: #e2e6ea; /* เปลี่ยนพื้นหลังเมื่อ hover */
+    color: #343a40; /* เปลี่ยนสีตัวอักษร */
+}
+
+.draft:active {
+    background-color: #dae0e5; /* เมื่อคลิก */
+}
+
+/* ปุ่มยืนยัน */
+.confirm {
+    background-color: #007bff; /* พื้นหลังสีน้ำเงิน */
+    color: white; /* สีขาว */
+    border: 1px solid #007bff; /* กรอบสีน้ำเงิน */
+}
+
+.confirm:hover {
+    background-color: #0056b3; /* เปลี่ยนพื้นหลังเมื่อ hover */
+    border-color: #004085; /* เปลี่ยนกรอบเมื่อ hover */
+}
+
+.confirm:active {
+    background-color: #004085; /* เมื่อคลิก */
+}
+
