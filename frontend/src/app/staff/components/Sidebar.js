@@ -52,8 +52,12 @@ export default function Sidebar() {
             <span className={styles.sidebarText}><Link href="/staff">จัดการข้อมูล</Link></span>
           </li>
           <li className={styles.sidebarItem}>
+            <span className={styles.sidebarIcon}>⚙️</span>
+            <span className={styles.sidebarText}><Link href="/staff/status">ติดตามสถานะคำขอ</Link></span>
+          </li>
+          <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>📜</span>
-            <span className={styles.sidebarText}><Link href="/staff">ประวัติการนำเข้านำออก</Link></span>
+            <span className={styles.sidebarText}><Link href="/staff/transactionHistory">ประวัติรายการเบิก</Link></span>
           </li>
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>📊</span>
