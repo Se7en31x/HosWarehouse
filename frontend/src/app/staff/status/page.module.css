@@ -1,0 +1,141 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #e3e8ec; /* พื้นหลัง */
+}
+
+/* กำหนดให้ .mainHome เต็มความสูงเต็มจอ และจัดเนื้อหาให้อยู่กลางแนวตั้ง-แนวนอน */
+.mainHome {
+    min-height: 100vh; /* ความสูงขั้นต่ำเท่าความสูงหน้าจอ */
+    display: flex;
+    justify-content: center; /* กึ่งกลางแนวนอน */
+    align-items: flex-start; /* กึ่งกลางแนวตั้ง (ถ้าต้องการให้อยู่บนสุดเปลี่ยนเป็น flex-start) */
+    padding: 30px 15px;
+    box-sizing: border-box;
+}
+
+/* container ยังคง max-width เอาไว้เพื่อไม่ให้กว้างเกิน */
+.container {
+    max-width: 960px;
+    width: 100%; /* ให้เต็ม container */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+}
+/* Header */
+.header {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #005f73; /* สีน้ำเงินเข้ม ดูน่าเชื่อถือ */
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+/* Grid layout */
+.cardGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Card */
+.card {
+    background-color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(0, 95, 115, 0.1);
+    padding: 1.5rem 1.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: default;
+}
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 95, 115, 0.15);
+}
+
+/* Card header */
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #0a9396;
+}
+
+/* Order code */
+.orderCode {
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+/* Status badge */
+.statusBadge {
+    padding: 6px 14px;
+    border-radius: 25px;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    user-select: none;
+    transition: background-color 0.3s ease;
+}
+
+/* Items */
+.itemRow {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    border-top: 1px solid #e0e0e0;
+    padding-top: 1rem;
+}
+
+.itemImage {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 1.5px solid #94d2bd;
+    box-shadow: 0 1px 5px rgba(0, 95, 115, 0.1);
+}
+
+.itemInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.itemName {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #001219;
+    margin-bottom: 0.2rem;
+}
+
+.itemQty {
+    font-size: 0.9rem;
+    color: #555;
+    font-weight: 500;
+}
+
+/* Responsive for smaller screens */
+@media (max-width: 480px) {
+    .cardGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .card {
+        padding: 1.2rem 1.4rem;
+    }
+
+    .itemImage {
+        width: 48px;
+        height: 48px;
+    }
+
+    .header {
+        font-size: 1.5rem;
+    }
+}
