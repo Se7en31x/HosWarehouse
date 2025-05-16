@@ -1,4 +1,3 @@
-
 .container {
     padding: 15px;
     background-color: #f6f9fb;
@@ -28,14 +27,16 @@
     border-collapse: collapse;
 }
 
-.table th{
-    padding: 10px 12px; /* ลดการ padding ให้พอดี */
+.table th {
+    padding: 10px 12px;
+    /* ลดการ padding ให้พอดี */
     border-bottom: 1px solid #eee;
     text-align: left;
     vertical-align: middle;
     background-color: #E9EBFF !important;
-    position: sticky ;
+    position: sticky;
 }
+
 .table td {
     padding: 5px 12px;
     border-bottom: 1px solid #eee;
@@ -87,64 +88,112 @@
 .buttons {
     display: flex;
     justify-content: flex-end;
-    gap: 1rem; /* ช่องว่างระหว่างปุ่ม */
+    gap: 1rem;
+    /* ช่องว่างระหว่างปุ่ม */
 }
 
-.cancel, .draft, .confirm {
-    padding: 0.75rem 1.5rem; /* เพิ่มขนาดปุ่ม */
-    border-radius: 8px; /* มุมปุ่มโค้งมน */
-    font-size: 1rem; /* ขนาดตัวอักษร */
-    font-weight: 600; /* หนักขึ้นเล็กน้อยเพื่อให้ดูเด่น */
-    cursor: pointer; /* เปลี่ยนเคอร์เซอร์ให้เป็นมือ */
-    transition: all 0.3s ease; /* เพิ่มการเปลี่ยนแปลงแบบนุ่มนวล */
-    text-transform: uppercase; /* ตัวพิมพ์ใหญ่ */
+.cancel,
+.draft,
+.confirm {
+    padding: 0.75rem 1.5rem;
+    /* เพิ่มขนาดปุ่ม */
+    border-radius: 8px;
+    /* มุมปุ่มโค้งมน */
+    font-size: 1rem;
+    /* ขนาดตัวอักษร */
+    font-weight: 600;
+    /* หนักขึ้นเล็กน้อยเพื่อให้ดูเด่น */
+    cursor: pointer;
+    /* เปลี่ยนเคอร์เซอร์ให้เป็นมือ */
+    transition: all 0.3s ease;
+    /* เพิ่มการเปลี่ยนแปลงแบบนุ่มนวล */
+    text-transform: uppercase;
+    /* ตัวพิมพ์ใหญ่ */
 }
 
 /* ปุ่มยกเลิก */
 .cancel {
-    background-color: #ffffff; /* พื้นหลังขาว */
-    color: #d9534f; /* สีแดง */
-    border: 1px solid #d9534f; /* กรอบสีแดง */
+    background-color: #ffffff;
+    /* พื้นหลังขาว */
+    color: #d9534f;
+    /* สีแดง */
+    border: 1px solid #d9534f;
+    /* กรอบสีแดง */
 }
 
 .cancel:hover {
-    background-color: #f8d7da; /* เปลี่ยนพื้นหลังเมื่อ hover */
-    color: #721c24; /* เปลี่ยนสีตัวอักษร */
+    background-color: #f8d7da;
+    /* เปลี่ยนพื้นหลังเมื่อ hover */
+    color: #721c24;
+    /* เปลี่ยนสีตัวอักษร */
 }
 
 .cancel:active {
-    background-color: #f5c6cb; /* เมื่อคลิก */
+    background-color: #f5c6cb;
+    /* เมื่อคลิก */
 }
 
 /* ปุ่มฉบับร่าง */
 .draft {
-    background-color: #f0f0f0; /* พื้นหลังสีเทาอ่อน */
-    color: #6c757d; /* สีเทาเข้ม */
-    border: 1px solid #ddd; /* กรอบสีเทา */
+    background-color: #f0f0f0;
+    /* พื้นหลังสีเทาอ่อน */
+    color: #6c757d;
+    /* สีเทาเข้ม */
+    border: 1px solid #ddd;
+    /* กรอบสีเทา */
 }
 
 .draft:hover {
-    background-color: #e2e6ea; /* เปลี่ยนพื้นหลังเมื่อ hover */
-    color: #343a40; /* เปลี่ยนสีตัวอักษร */
+    background-color: #e2e6ea;
+    /* เปลี่ยนพื้นหลังเมื่อ hover */
+    color: #343a40;
+    /* เปลี่ยนสีตัวอักษร */
 }
 
 .draft:active {
-    background-color: #dae0e5; /* เมื่อคลิก */
+    background-color: #dae0e5;
+    /* เมื่อคลิก */
 }
 
 /* ปุ่มยืนยัน */
 .confirm {
-    background-color: #007bff; /* พื้นหลังสีน้ำเงิน */
-    color: white; /* สีขาว */
-    border: 1px solid #007bff; /* กรอบสีน้ำเงิน */
+    background-color: #007bff;
+    /* พื้นหลังสีน้ำเงิน */
+    color: white;
+    /* สีขาว */
+    border: 1px solid #007bff;
+    /* กรอบสีน้ำเงิน */
 }
 
 .confirm:hover {
-    background-color: #0056b3; /* เปลี่ยนพื้นหลังเมื่อ hover */
-    border-color: #004085; /* เปลี่ยนกรอบเมื่อ hover */
+    background-color: #0056b3;
+    /* เปลี่ยนพื้นหลังเมื่อ hover */
+    border-color: #004085;
+    /* เปลี่ยนกรอบเมื่อ hover */
 }
 
 .confirm:active {
-    background-color: #004085; /* เมื่อคลิก */
+    background-color: #004085;
+    /* เมื่อคลิก */
 }
 
+.delete {
+    background-color: #fff;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.delete:hover {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.delete:active {
+    background-color: #f5c6cb;
+}
