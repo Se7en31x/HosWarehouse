@@ -1,0 +1,132 @@
+/* Container หลักของหน้ารายละเอียดพัสดุ */
+.container {
+  max-width: 900px;
+  margin: 1.5rem auto;
+  padding: 1rem 2rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgb(0 0 0 / 0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+/* หัวเรื่อง */
+.title {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: #004a99;
+  text-align: center;
+}
+
+/* ข้อความโหลดข้อมูล */
+.loading,
+.error,
+.noData {
+  text-align: center;
+  font-size: 1.2rem;
+  padding: 2rem;
+  color: #666;
+}
+
+/* ข้อความ error เน้นสีแดง */
+.error {
+  color: #d9534f;
+  font-weight: 600;
+}
+
+/* กล่องปุ่มกลับ */
+.buttonContainer {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+/* ปุ่มกลับ */
+.backButton {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.4rem;
+  font-size: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.backButton:hover {
+  background-color: #0056b3;
+}
+
+/* ----- สำหรับ BasicDetail ----- */
+
+/* แต่ละส่วน fieldset */
+.section {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 1rem 1.2rem 1.5rem;
+  margin-bottom: 1.6rem;
+  background-color: #fff;
+}
+
+/* legend ของ fieldset */
+.section legend {
+  padding: 0 0.6rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #007bff;
+}
+
+/* Grid layout ของกล่องข้อมูล */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.2rem 1.6rem;
+  margin-top: 1rem;
+}
+
+/* แต่ละ field แสดง label กับ input */
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Label */
+.field label {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+/* Input แบบ disabled */
+.field input {
+  padding: 0.45rem 0.6rem;
+  font-size: 1rem;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  background-color: #eee;
+  color: #444;
+  cursor: not-allowed;
+}
+
+/* รูปภาพตัวอย่างพัสดุ */
+.imagePreview {
+  text-align: center;
+  margin-top: 0.8rem;
+}
+
+.imagePreview img {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  object-fit: contain;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+}
+
+/* ข้อความไม่มีรูป */
+.section p {
+  color: #888;
+  font-style: italic;
+  text-align: center;
+  margin-top: 0.6rem;
+}

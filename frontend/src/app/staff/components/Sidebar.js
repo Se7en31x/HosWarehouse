@@ -34,22 +34,26 @@ export default function Sidebar() {
       <hr className={styles.divider} /> {/* ใช้ className จาก styles */}
 
       <nav>
-        <ul className={styles.navLinks}> 
+        <ul className={styles.navLinks}>
           {/* {<li className={styles.sidebarItem}> 
             <span className={styles.sidebarIcon}>🏠</span> 
             <span className={styles.sidebarText}><Link href="/staff">หน้าแรก</Link></span> 
           </li>} */}
+          <li className={styles.sidebarItem}>
+            <span className={styles.sidebarIcon}>🏠</span>
+            <span className={styles.sidebarText}><Link href="/staff">หน้าแรก</Link></span>
+          </li>
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>📦</span>
             <span className={styles.sidebarText}><Link href="/staff">เบิก ยืม</Link></span>
           </li>
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>✅</span>
-            <span className={styles.sidebarText}><Link href="/staff">ตรวจสอบคำขอเบิก</Link></span>
+            <span className={styles.sidebarText}><Link href="/staff">คืนพัสดุ</Link></span>
           </li>
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>⚙️</span>
-            <span className={styles.sidebarText}><Link href="/staff">จัดการข้อมูล</Link></span>
+            <span className={styles.sidebarText}><Link href="/staff">ร้องขอการสั่งซื้อ</Link></span>
           </li>
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>⚙️</span>

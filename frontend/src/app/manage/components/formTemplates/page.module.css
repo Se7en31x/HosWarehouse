@@ -1,7 +1,8 @@
 .container {
     width: 100%;
-    padding: 20px;
+    padding: 28px;
     background-color: #fff;
+    
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     min-height: 100vh; /* ความสูงขั้นต่ำเท่ากับ viewport */
   }
@@ -124,51 +125,4 @@
   box-shadow: 0 0 5px rgba(0, 112, 243, 0.5);
 }
 
-.imgsection {
-  border: 1px solid #ccc;
-  border-radius: 12px;
-  padding: 16px;
-  background-color: #f9f9f9;
-  margin-bottom: 20px;
-}
-
-
-
-.uploadLabel {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  background-color: #e0f2fe;
-  border: 2px dashed #38bdf8;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-}
-
-.uploadLabel:hover {
-  background-color: #bae6fd;
-}
-
-.uploadIcon {
-  width: 20px;
-  height: 20px;
-  color: #0ea5e9;
-}
-
-.uploadInput {
-  display: none;
-}
-
-.previewWrapper {
-  margin-top: 14px;
-}
-
-.previewImage {
-  max-width: 100%;
-  max-height: 250px;
-  border-radius: 10px;
-  object-fit: contain;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
 

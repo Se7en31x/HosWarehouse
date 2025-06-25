@@ -1,8 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useState , useContext } from "react";
+import { CartContext } from "../context/CartContext";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
 import Link from "next/link";
+
 
 
 export default function SelectedItem() {
@@ -226,6 +228,20 @@ export default function SelectedItem() {
         }
     };
 
+
+    const translateAction = (action) => {
+        switch (action) {
+            case "เบิก":
+                return "Withdraw";
+            case "ยืม":
+                return "Borrow";
+            case "คืน":
+                return "Return";
+            default:
+                return action;
+        }
+    };
+
     return (
         <div className={styles.mainHome}>
             <div className={styles.infoContainer}>
@@ -237,10 +253,10 @@ export default function SelectedItem() {
                     <div className={styles.headerItem}>รูปภาพ</div>
                     <div className={styles.headerItem}>ชื่อ</div>
                     <div className={styles.headerItem}>หมวดหมู่</div>
-                    <div className={styles.headerItem}>จำนวน</div>
                     <div className={styles.headerItem}>หน่วย</div>
                     <div className={styles.headerItem}>สถานที่จัดเก็บ</div>
                     <div className={styles.headerItem}>แก้ไขล่าสุด</div>
+                    <div className={styles.headerItem}>จำนวน</div>
                     <div className={styles.headerItem}>การจัดการ</div>
                 </div>
 
@@ -258,10 +274,10 @@ export default function SelectedItem() {
                             </div>
                             <div className={styles.tableCell}>{item.name}</div>
                             <div className={styles.tableCell}>{item.type}</div>
-                            <div className={styles.tableCell}>{item.quantity}</div>
                             <div className={styles.tableCell}>{item.unit}</div>
                             <div className={styles.tableCell}>{item.location}</div>
                             <div className={styles.tableCell}>{item.edited}</div>
+                            <div className={styles.tableCell}>{item.quantity}</div>
                             <div className={`${styles.tableCell} ${styles.centerCell}`}>
                                 <Link href="/manage/editItem" className={`${styles.actionButton} ${styles.editButton}`}>แก้ไข</Link>
                                 <button className={`${styles.actionButton} ${styles.deleteButton}`}>ลบ</button>
