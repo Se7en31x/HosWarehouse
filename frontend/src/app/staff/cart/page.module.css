@@ -1,7 +1,7 @@
 .container {
     padding: 15px;
     background-color: #f6f9fb;
-    max-height: 30vh;
+    max-height: 100vh;
 }
 
 .header {
@@ -65,30 +65,111 @@
 
 .options {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 1rem;
     margin-bottom: 1rem;
+    background-color: #ffffff;
+    padding: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.options label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.formRow {
+    display: flex;
+    gap: 1rem;
+    /* ปรับค่าตรงนี้เพื่อเพิ่ม/ลดช่องว่างระหว่าง leftColumn กับ rightColumn */
+    align-items: stretch;
+    /* หรือ flex-start แล้วแต่ดีไซน์ */
+    flex-wrap: wrap;
+}
+
+.leftColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.topRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.checkboxGroup {
+    display: flex;
+    gap: 1.5rem;
+    /* ถ้าอยากให้ checkbox เรียงในบรรทัดเดียว */
+}
+
+.checkboxGroup label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.rightColumn {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    /* ดันปุ่มลงล่างสุด */
+    min-width: 200px;
+}
+
+.checkboxGroup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.checkboxGroup label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    color: #333;
 }
 
 .datePicker {
-    padding: 0.5rem;
+    padding: 0.5rem 1rem;
     border: 1px solid #ccc;
-    border-radius: 6px;
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: #fff;
 }
 
 .textarea {
     width: 100%;
-    padding: 0.75rem;
-    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border-radius: 8px;
     border: 1px solid #ccc;
+    background-color: #fdfdfd;
     resize: none;
-    margin-bottom: 1rem;
+    transition: border 0.3s ease;
+}
+
+.textarea:focus {
+    border-color: #007bff;
+    outline: none;
 }
 
 .buttons {
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
+    flex-wrap: wrap;
     /* ช่องว่างระหว่างปุ่ม */
 }
 

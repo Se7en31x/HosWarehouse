@@ -68,7 +68,7 @@ export default function Cart() {
 
                                 <td>
                                     {/* <button onClick={() => editCartItem(item.id)}>✏️</button> */}
-                                    <button onClick={() => removeFromCart(item.id)}>ลบ</button>
+                                    <button className={styles.delete} onClick={() => removeFromCart(item.id)}>ลบ</button>
                                 </td>
                             </tr>
                         ))}
@@ -77,26 +77,37 @@ export default function Cart() {
             </div>
 
             <div className={styles.footer}>
-                <div className={styles.options}>
-                    <label>
-                        <input type="checkbox" /> ต้องการเร่งด่วน
-                    </label>
-                    <label>
-                        <input type="checkbox" /> จัดส่งตามปกติ
-                    </label>
-                    <input type="date" className={styles.datePicker} />
-                </div>
+                <div className={styles.formRow}>
+                    <div className={styles.leftColumn}>
+                        <div className={styles.topRow}>
+                            <div className={styles.checkboxGroup}>
+                                <label>
+                                    <input type="checkbox" />
+                                    <span>ต้องการเร่งด่วน</span>
+                                </label>
+                                <label>
+                                    <input type="checkbox" />
+                                    <span>จัดส่งตามปกติ</span>
+                                </label>
+                            </div>
 
-                <textarea
-                    className={styles.textarea}
-                    placeholder="หมายเหตุ"
-                    rows={3}
-                />
+                            <input type="date" className={styles.datePicker} />
+                        </div>
 
-                <div className={styles.buttons}>
-                    <button className={styles.cancel}>ยกเลิก</button>
-                    <button className={styles.draft}>ฉบับร่าง</button>
-                    <button className={styles.confirm}>ยืนยัน</button>
+                        <textarea
+                            className={styles.textarea}
+                            placeholder="หมายเหตุ"
+                            rows={3}
+                        />
+                    </div>
+
+                    <div className={styles.rightColumn}>
+                        <div className={styles.buttons}>
+                            <button className={styles.cancel}>ยกเลิก</button>
+                            <button className={styles.draft}>ฉบับร่าง</button>
+                            <button className={styles.confirm}>ยืนยัน</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
