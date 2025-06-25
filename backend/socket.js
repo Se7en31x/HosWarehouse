@@ -1,7 +1,8 @@
 const { Server } = require('socket.io');
-const { getItems } = require('./controllers/inventoryController'); // 👈 เพิ่มส่วนนี้
+const { getItems } = require('./controllers/inventoryController'); // ฟังก์ชัน getItems ตอนนี้รับ (socket, io)
 
 let io;
+
 function socketSetup(server) {
   io = new Server(server, {
     cors: {
@@ -22,10 +23,11 @@ function socketSetup(server) {
       io.to(room).emit('receiveMessage', message);
     });
 
-    // 👇 เพิ่มส่วนนี้ เพื่อให้ client ขอข้อมูล inventory ได้
+    // เพิ่มส่วนนี้ เพื่อให้ client ขอข้อมูล inventory ได้
     socket.on('requestInventoryData', async () => {
       console.log(`📥 ${socket.id} requested inventory data`);
-      await getItems(socket); // เรียก controller เพื่อส่งข้อมูลกลับไป
+      // เรียก controller พร้อมส่ง io ไปด้วย เพื่อ broadcast ให้ทุก client
+      await getItems(socket, io);
     });
 
     socket.on('disconnect', () => {
@@ -33,6 +35,7 @@ function socketSetup(server) {
     });
   });
 }
+
 function getIO() {
   if (!io) throw new Error("Socket.io not initialized");
   return io;

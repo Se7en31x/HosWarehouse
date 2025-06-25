@@ -1,10 +1,9 @@
+// routes/inventory.js
 const express = require('express');
 const router = express.Router();
-const inventoryController = require('../controllers/inventoryController');
+const inventoryController = require('../controllers/manageDataController');
 
-// router.get('/inventory', inventoryController.getItems);
-// router.post('/inventory', inventoryController.addItem);
-// router.put('/inventory/:id', inventoryController.updateItem);
-// router.delete('/inventory/:id', inventoryController.deleteItem);
+// ดึงข้อมูลรายการเดียว
+router.get('/inventoryCheck/:id', inventoryController.getItemById);
 
-module.exports = router
+module.exports = router;
