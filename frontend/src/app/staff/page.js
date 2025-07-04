@@ -1,183 +1,137 @@
 "use client";
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
 import { CartContext } from "./context/CartContext";
 import { toast } from "react-toastify";
-// import Link from "next/link";
+import { io } from "socket.io-client";
+import Image from "next/image";
 
 export default function InventoryWithdraw() {
   const router = useRouter();
-  // pop up
+  const { addToCart } = useContext(CartContext);
+
+  const socketRef = useRef(null);
+
+  // Modal
   const [actionType, setActionType] = useState(""); // "withdraw" หรือ "borrow"
   const [showModal, setShowModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [inputQuantity, setInputQuantity] = useState(1);
 
+  // ตัวกรอง
   const [filter, setFilter] = useState("");
   const [category, setCategory] = useState("");
   const [unit, setUnit] = useState("");
   const [storage, setStorage] = useState("");
 
+  // ข้อมูลทั้งหมดและแบ่งหน้า
+  const [allItems, setAllItems] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8; // จำนวนรายการที่แสดงต่อหน้า
+  const itemsPerPage = 8;
 
-  const handleFilterChange = (event) => {
-    setFilter(event.target.value);
-  };
+  useEffect(() => {
+    socketRef.current = io("http://localhost:5000");
 
-  const handleCategoryChange = (event) => {
-    setCategory(event.target.value);
-  };
+    socketRef.current.on("connect", () => {
+      console.log("🟢 Connected to WebSocket server");
+      socketRef.current.emit("requestInventoryData");
+    });
 
-  const handleUnitChange = (event) => {
-    setUnit(event.target.value);
-  };
+    socketRef.current.on("itemsData", (items) => {
+      // ตรวจสอบข้อมูลที่รับมา กรองค่าที่เป็น null หรือ undefined
+      if (Array.isArray(items)) {
+        const filteredValidItems = items.filter((item) => item != null);
+        setAllItems(filteredValidItems);
+      } else {
+        setAllItems([]);
+      }
+    });
 
-  const handleStorageChange = (event) => {
-    setStorage(event.target.value);
-  };
-  // ตัวอย่าง
-  const [inputQuantity, setInputQuantity] = useState(1); // ค่าเริ่มต้นคือ 1
+    socketRef.current.on("disconnect", () => {
+      console.log("🔴 Disconnected from WebSocket server");
+    });
 
-  const manageData = [
-    {
-      id: "1",
-      image: "https://medthai.com/wp-content/uploads/2016/11/%E0%B8%8B%E0%B8%B5%E0%B8%A1%E0%B8%AD%E0%B8%A5.jpg", // ลิงก์ของรูปภาพ
-      name: "ผ้าผันแผล",
-      type: "เวชภัณฑ์",
-      quantity: 100,
-      unit: "กล่อง",
-      status: "พร้อมใช้งาน",
-      location: "คลังกลาง",
-      dateexd: "30-02-2025",
-      edited: "30-02-2025",
-      action: "เบิก",
-      action2: "ยืม",
-    },
-    {
-      id: "2",
-      image: "https://medthai.com/wp-content/uploads/2016/11/%E0%B8%8B%E0%B8%B5%E0%B8%A1%E0%B8%AD%E0%B8%A5.jpg", // ลิงก์ของรูปภาพ
-      name: "ผ้าผันแผล",
-      type: "เวชภัณฑ์",
-      quantity: 100,
-      unit: "กล่อง",
-      status: "พร้อมใช้งาน",
-      location: "คลังกลาง",
-      dateexd: "30-02-2025",
-      edited: "30-02-2025",
-      action: "เบิก",
-      action2: "ยืม",
-    },
-        {
-      id: "3",
-      image: "https://medthai.com/wp-content/uploads/2016/11/%E0%B8%8B%E0%B8%B5%E0%B8%A1%E0%B8%AD%E0%B8%A5.jpg", // ลิงก์ของรูปภาพ
-      name: "ผ้าผันแผล",
-      type: "เวชภัณฑ์",
-      quantity: 100,
-      unit: "กล่อง",
-      status: "พร้อมใช้งาน",
-      location: "คลังกลาง",
-      dateexd: "30-02-2025",
-      edited: "30-02-2025",
-      action: "เบิก",
-      action2: "ยืม",
-    },
-        {
-      id: "4",
-      image: "https://medthai.com/wp-content/uploads/2016/11/%E0%B8%8B%E0%B8%B5%E0%B8%A1%E0%B8%AD%E0%B8%A5.jpg", // ลิงก์ของรูปภาพ
-      name: "ผ้าผันแผล",
-      type: "เวชภัณฑ์",
-      quantity: 100,
-      unit: "กล่อง",
-      status: "พร้อมใช้งาน",
-      location: "คลังกลาง",
-      dateexd: "30-02-2025",
-      edited: "30-02-2025",
-      action: "เบิก",
-      action2: "ยืม",
-    },
-        {
-      id: "5",
-      image: "https://medthai.com/wp-content/uploads/2016/11/%E0%B8%8B%E0%B8%B5%E0%B8%A1%E0%B8%AD%E0%B8%A5.jpg", // ลิงก์ของรูปภาพ
-      name: "ผ้าผันแผล",
-      type: "เวชภัณฑ์",
-      quantity: 100,
-      unit: "กล่อง",
-      status: "พร้อมใช้งาน",
-      location: "คลังกลาง",
-      dateexd: "30-02-2025",
-      edited: "30-02-2025",
-      action: "เบิก",
-      action2: "ยืม",
-    },
-            {
-      id: "6",
-      image: "https://medthai.com/wp-content/uploads/2016/11/%E0%B8%8B%E0%B8%B5%E0%B8%A1%E0%B8%AD%E0%B8%A5.jpg", // ลิงก์ของรูปภาพ
-      name: "ผ้าผันแผล",
-      type: "เวชภัณฑ์",
-      quantity: 100,
-      unit: "กล่อง",
-      status: "พร้อมใช้งาน",
-      location: "คลังกลาง",
-      dateexd: "30-02-2025",
-      edited: "30-02-2025",
-      action: "เบิก",
-      action2: "ยืม",
-    },
-            {
-      id: "7",
-      image: "https://medthai.com/wp-content/uploads/2016/11/%E0%B8%8B%E0%B8%B5%E0%B8%A1%E0%B8%AD%E0%B8%A5.jpg", // ลิงก์ของรูปภาพ
-      name: "ผ้าผันแผล",
-      type: "เวชภัณฑ์",
-      quantity: 100,
-      unit: "กล่อง",
-      status: "พร้อมใช้งาน",
-      location: "คลังกลาง",
-      dateexd: "30-02-2025",
-      edited: "30-02-2025",
-      action: "เบิก",
-      action2: "ยืม",
-    },
-                {
-      id: "8",
-      image: "https://medthai.com/wp-content/uploads/2016/11/%E0%B8%8B%E0%B8%B5%E0%B8%A1%E0%B8%AD%E0%B8%A5.jpg", // ลิงก์ของรูปภาพ
-      name: "ผ้าผันแผล",
-      type: "เวชภัณฑ์",
-      quantity: 100,
-      unit: "กล่อง",
-      status: "พร้อมใช้งาน",
-      location: "คลังกลาง",
-      dateexd: "30-02-2025",
-      edited: "30-02-2025",
-      action: "เบิก",
-      action2: "ยืม",
-    },
-  ]
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        console.log("🔴 Socket disconnected");
+      }
+    };
+  }, []);
 
-  const currentItems = manageData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  // ฟังก์ชันแสดงรูปภาพ มี fallback รูป default
+  function ItemImage({ item_img, alt }) {
+    const defaultImg = "http://localhost:5000/public/defaults/landscape.png";
 
+    const [imgSrc, setImgSrc] = useState(
+      item_img && typeof item_img === "string" && item_img.trim() !== ""
+        ? `http://localhost:5000/uploads/${item_img}`
+        : defaultImg
+    );
+
+    return (
+      <Image
+        src={imgSrc}
+        alt={alt || "ไม่มีคำอธิบายภาพ"}
+        width={70}
+        height={70}
+        style={{ objectFit: "cover" }}
+        onError={() => setImgSrc(defaultImg)}
+      />
+    );
+  }
+
+  // ฟังก์ชันกรองข้อมูล
+  const filteredItems = useMemo(() => {
+    return allItems.filter((item) => {
+      if (!item) return false; // skip null/undefined
+
+      const matchCategory = category ? item.item_category === category : true;
+      const matchUnit = unit ? item.item_unit === unit : true;
+      const matchStorage = storage ? item.item_location === storage : true;
+      const matchFilterText = filter
+        ? item.item_name?.toLowerCase().includes(filter.toLowerCase())
+        : true;
+
+      return matchCategory && matchUnit && matchStorage && matchFilterText;
+    });
+  }, [allItems, category, unit, storage, filter]);
+
+  // แบ่งหน้าจาก filteredItems
+  const currentItems = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredItems.slice(start, start + itemsPerPage);
+  }, [filteredItems, currentPage, itemsPerPage]);
+
+  // หน้าเปลี่ยนหน้า
   const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
 
   const handleNextPage = () => {
-    if (currentPage * itemsPerPage < manageData.length) {
+    if (currentPage * itemsPerPage < filteredItems.length) {
       setCurrentPage(currentPage + 1);
     }
   };
 
-  //pop up function
+  // รีเซ็ตหน้าเมื่อ filter เปลี่ยน
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, category, unit, storage]);
+
+  // Modal เปิด-ปิด และจัดการเพิ่มเข้าตะกร้า
   const handleWithdrawClick = (item) => {
     setSelectedItem(item);
     setActionType("withdraw");
+    setInputQuantity(1);
     setShowModal(true);
   };
 
   const handleBorrowClick = (item) => {
     setSelectedItem(item);
     setActionType("borrow");
+    setInputQuantity(1);
     setShowModal(true);
   };
 
@@ -187,83 +141,131 @@ export default function InventoryWithdraw() {
     setActionType("");
   };
 
-  const { addToCart } = useContext(CartContext);
-
   const handleConfirm = () => {
     if (!inputQuantity || inputQuantity <= 0) {
       toast.error("กรุณากรอกจำนวนให้ถูกต้อง");
       return;
     }
-    if (inputQuantity > selectedItem.quantity) {
+    if (!selectedItem) {
+      toast.error("ไม่พบข้อมูลสินค้า");
+      return;
+    }
+    if (inputQuantity > selectedItem.item_qty) {
       toast.error("จำนวนไม่เพียงพอ");
       return;
     }
-    console.warn("Missing fields:", selectedItem);
     addToCart({
-      id: selectedItem.id,
-      image: selectedItem.image,
-      name: selectedItem.name,
+      id: selectedItem.item_id,
+      item_img: selectedItem.item_img
+        ? `http://localhost:5000/uploads/${selectedItem.item_img}`
+        : "/defaults/landscape.png",
+      number: selectedItem.item_number,
+      code: getItemCode(selectedItem), // ✅ ใช้ฟังก์ชันนี้
+      name: selectedItem.item_name,
       quantity: inputQuantity,
-      unit: selectedItem.unit,
-      type: selectedItem.type,
-      location: selectedItem.location,
-      action: actionType
+      unit: selectedItem.item_unit,
+      type: selectedItem.item_category,
+      location: selectedItem.item_location,
+      action: actionType,
     });
+
 
     toast.success("เพิ่มรายการเข้าตะกร้าเรียบร้อยแล้ว");
     closeModal();
   };
 
+  const getItemCode = (item) => {
+    if (!item) return "-";
+    switch (item.item_category) {
+      case "medicine":
+        return item.med_code || "-";
+      case "medsup":
+        return item.medsup_code || "-";
+      case "equipment":
+        return item.equip_code || "-";
+      case "meddevice":
+        return item.meddevice_code || "-";
+      case "general":
+        return item.gen_code || "-";
+      default:
+        return "-";
+    }
+  };
+  const translateCategory = (cat) => {
+    switch (cat) {
+      case "medicine":
+        return "ยา";
+      case "medsup":
+        return "เวชภัณฑ์";
+      case "equipment":
+        return "ครุภัณฑ์";
+      case "meddevice":
+        return "อุปกรณ์ทางการแพทย์";
+      case "general":
+        return "ของใช้ทั่วไป";
+      default:
+        return cat;
+    }
+  };
   return (
     <div className={styles.mainHome}>
-      {/* Popup Modal อยู่ตรงนี้ */}
+      {/* Modal */}
       {showModal && selectedItem && (
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>
             <h2 className={styles.modalTitle}>
-              ทำรายการ{actionType === "withdraw" ? "เบิก" : "ยืม"}
+              ทำรายการ {actionType === "withdraw" ? "เบิก" : "ยืม"}
             </h2>
 
-            {/* กล่องรวมภาพและรายละเอียด */}
-            <div className={styles.modalContentRow}>
-              <img
-                src={selectedItem.image}
-                alt={selectedItem.name}
-                className={styles.modalImage}
+            <div className={styles.modalContentRow} style={{ display: "flex", gap: "1rem" }}>
+              <ItemImage
+                item_img={selectedItem.item_img || ""}
+                alt={selectedItem.item_name || "ไม่มีชื่อ"}
               />
 
               <div className={styles.modalDetails}>
-                <div><strong>ชื่อ:</strong> {selectedItem.name}</div>
-                <div><strong>รหัสสินค้า:</strong> {selectedItem.id}</div>
-                <div><strong>หมวดหมู่:</strong> {selectedItem.type}</div>
-                <div><strong>จำนวนคงเหลือ:</strong> {selectedItem.quantity} {selectedItem.unit}</div>
+                <div>
+                  <strong>ชื่อ:</strong> {selectedItem.item_name || "-"}
+                </div>
+                <div>
+                  <strong>รหัสสินค้า:</strong> {selectedItem.item_id || "-"}
+                </div>
+                <div>
+                  <strong>หมวดหมู่:</strong> {translateCategory(selectedItem.item_category) || "-"}
+                </div>
+                <div>
+                  <strong>จำนวนคงเหลือ:</strong> {selectedItem.item_qty || 0}{" "}
+                  {selectedItem.item_unit || ""}
+                </div>
               </div>
             </div>
 
-            {/* แบบฟอร์มกรอกจำนวน */}
             <div className={styles.modalForm}>
               <label htmlFor="quantity">จำนวนที่ต้องการ</label>
               <input
                 id="quantity"
                 type="number"
                 className={styles.modalInput}
-                min="1"
-                max={selectedItem.quantity}
+                min={1}
+                max={selectedItem.item_qty || 1}
                 value={inputQuantity}
                 onChange={(e) => setInputQuantity(Number(e.target.value))}
               />
             </div>
 
-            {/* ปุ่มกด */}
             <div className={styles.modalActions}>
-              <button className={styles.modalConfirm} onClick={handleConfirm}>บันทึก</button>
-              <button className={styles.modalCancel} onClick={closeModal}>ยกเลิก</button>
+              <button className={styles.modalConfirm} onClick={handleConfirm}>
+                บันทึก
+              </button>
+              <button className={styles.modalCancel} onClick={closeModal}>
+                ยกเลิก
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* แถบบน */}
+      {/* แถบเมนู */}
       <div className={styles.bar}>
         <ul className={styles.navList}>
           <li className={styles.navItem}>ตรวจสอบยอดคงคลัง</li>
@@ -275,22 +277,22 @@ export default function InventoryWithdraw() {
         </ul>
       </div>
 
-      {/* ส่วนของ infoContainer */}
+      {/* ตัวกรอง */}
       <div className={styles.infoContainer}>
-        {/* ตัวกรอง */}
         <div className={styles.filterContainer}>
           <div className={styles.filterGroup}>
             <select
               id="category"
               className={styles.filterSelect}
               value={category}
-              onChange={handleCategoryChange}>
+              onChange={(e) => setCategory(e.target.value)}
+            >
               <option value="">เลือกหมวดหมู่</option>
-              <option value="ยา">ยา</option>
-              <option value="เวชภัณฑ์">เวชภัณฑ์</option>
-              <option value="ครุภัณฑ์">ครุภัณฑ์</option>
-              <option value="อุปกรณ์ทางการแพทย์">อุปกรณ์ทางการแพทย์</option>
-              <option value="ของใช้ทั่วไป">ของใช้ทั่วไป</option>
+              <option value="medicine">ยา</option>
+              <option value="medsup">เวชภัณฑ์</option>
+              <option value="equipment">ครุภัณฑ์</option>
+              <option value="meddevice">อุปกรณ์ทางการแพทย์</option>
+              <option value="general">ของใช้ทั่วไป</option>
             </select>
           </div>
 
@@ -299,12 +301,14 @@ export default function InventoryWithdraw() {
               id="unit"
               className={styles.filterSelect}
               value={unit}
-              onChange={handleUnitChange}>
+              onChange={(e) => setUnit(e.target.value)}
+            >
               <option value="">เลือกหน่วย</option>
               <option value="ขวด">ขวด</option>
               <option value="แผง">แผง</option>
               <option value="ชุด">ชุด</option>
               <option value="ชิ้น">ชิ้น</option>
+              <option value="กล่อง">กล่อง</option>
             </select>
           </div>
 
@@ -313,29 +317,33 @@ export default function InventoryWithdraw() {
               id="storage"
               className={styles.filterSelect}
               value={storage}
-              onChange={handleStorageChange}>
+              onChange={(e) => setStorage(e.target.value)}
+            >
               <option value="">เลือกสถานที่จัดเก็บ</option>
               <option value="ห้องเก็บยา">ห้องเก็บยา</option>
               <option value="คลังสินค้า">คลังสินค้า</option>
               <option value="ห้องเวชภัณฑ์">ห้องเวชภัณฑ์</option>
+              <option value="ห้อง1">ห้อง1</option>
+              <option value="1">1</option>
             </select>
           </div>
 
-          {/* ช่องค้นหา */}
           <div className={styles.filterGroupSearch}>
             <input
               type="text"
               id="filter"
               className={styles.filterInput}
               value={filter}
-              onChange={handleFilterChange}
+              onChange={(e) => setFilter(e.target.value)}
               placeholder="กรอกเพื่อค้นหา..."
             />
           </div>
         </div>
-        {/* แถบหัวข้อคล้าย Excel */}
+
+        {/* ตารางหัวข้อ */}
         <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
-          <div className={styles.headerItem}>หมายเลข</div>
+          <div className={styles.headerItem}>ลำดับ</div>
+          <div className={styles.headerItem}>รหัส</div>
           <div className={styles.headerItem}>รูปภาพ</div>
           <div className={styles.headerItem}>ชื่อ</div>
           <div className={styles.headerItem}>หมวดหมู่</div>
@@ -347,56 +355,79 @@ export default function InventoryWithdraw() {
           <div className={styles.headerItem}>การจัดการ</div>
         </div>
 
-        {/* แสดงข้อมูลในตาราง */}
+        {/* แสดงรายการ */}
         <div className={styles.inventory}>
-          {currentItems.map((item) => (
-            <div className={`${styles.tableGrid} ${styles.tableRow}`} key={item.id}>
-              <div className={styles.tableCell}>{item.id}</div>
-              <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                <img src="https://medthai.com/wp-content/uploads/2016/11/%E0%B8%8B%E0%B8%B5%E0%B8%A1%E0%B8%AD%E0%B8%A5.jpg"
-                  alt={item.category}
-                  className={styles.imageCell}
-                  style={{ width: '70px', height: '70px', objectFit: 'cover' }} // กำหนดขนาดที่นี่} 
-                />
-              </div>
-              <div className={styles.tableCell}>{item.name}</div>
-              <div className={styles.tableCell}>{item.type}</div>
-              <div className={styles.tableCell}>{item.quantity}</div>
-              <div className={styles.tableCell}>{item.unit}</div>
-              <div className={styles.tableCell}>{item.status}</div>
-              <div className={styles.tableCell}>{item.location}</div>
-              <div className={styles.tableCell}>{item.edited}</div>
-              <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                <button
-                  className={`${styles.actionButton} ${styles.withdrawButton}`}
-                  onClick={() => handleWithdrawClick(item)}>เบิก</button>
-
-                <button
-                  className={`${styles.actionButton} ${styles.borrowButton}`}
-                  onClick={() => handleBorrowClick(item)}>ยืม</button>
-              </div>
-            </div>
-          ))}
+          {currentItems && currentItems.length > 0 ? (
+            currentItems.map((item, index) =>
+              item ? (
+                <div
+                  className={`${styles.tableGrid} ${styles.tableRow}`}
+                  key={item.item_id || index}
+                >
+                  {/* แสดงลำดับ */}
+                  <div className={styles.tableCell}>
+                    {index + 1 + (currentPage - 1) * itemsPerPage}
+                  </div>
+                  {/* แสดงรหัส */}
+                  <div className={styles.tableCell}>{getItemCode(item)}</div>
+                  <div className={`${styles.tableCell} ${styles.imageCell}`}>
+                    <ItemImage
+                      item_img={item.item_img || ""}
+                      alt={item.item_name || "ไม่มีชื่อ"}
+                    />
+                  </div>
+                  <div className={styles.tableCell}>{item.item_name || "-"}</div>
+                  <div className={styles.tableCell}>
+                    {translateCategory(item.item_category)}
+                  </div>
+                  <div className={styles.tableCell}>{item.item_qty || 0}</div>
+                  <div className={styles.tableCell}>{item.item_unit || "-"}</div>
+                  <div className={styles.tableCell}>{item.item_status || "-"}</div>
+                  <div className={styles.tableCell}>{item.item_location || "-"}</div>
+                  <div className={styles.tableCell}>
+                    {item.item_update
+                      ? new Date(item.item_update).toLocaleDateString()
+                      : ""}
+                  </div>
+                  <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                    <button
+                      className={`${styles.actionButton} ${styles.withdrawButton}`}
+                      onClick={() => handleWithdrawClick(item)}
+                    >
+                      เบิก
+                    </button>
+                    <button
+                      className={`${styles.actionButton} ${styles.borrowButton}`}
+                      onClick={() => handleBorrowClick(item)}
+                    >
+                      ยืม
+                    </button>
+                  </div>
+                </div>
+              ) : null
+            )
+          ) : (
+            <div style={{ padding: "20px", textAlign: "center" }}>ไม่พบข้อมูล</div>
+          )}
         </div>
 
+        {/* pagination */}
         <div className={styles.pagination}>
-          {/* ปุ่มย้อนกลับ */}
           <button
             className={styles.prevButton}
             onClick={handlePrevPage}
-            disabled={currentPage === 1}>
+            disabled={currentPage === 1}
+          >
             หน้าก่อนหน้า
           </button>
-
-          {/* ปุ่มหน้าถัดไป */}
           <button
             className={styles.nextButton}
             onClick={handleNextPage}
-            disabled={currentPage * itemsPerPage >= manageData.length}>
+            disabled={currentPage * itemsPerPage >= filteredItems.length}
+          >
             หน้าถัดไป
           </button>
         </div>
-
       </div>
     </div>
   );

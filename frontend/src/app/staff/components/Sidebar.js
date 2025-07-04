@@ -1,71 +1,70 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import styles from './Sidebar.module.css'; // นำเข้า CSS Module
-import axiosInstance from '../utils/axiosInstance';
+import styles from './Sidebar.module.css';
+import axiosInstance from '../../utils/axiosInstance';
 
 export default function Sidebar() {
-  // const [userData, setUserData] = useState(null);
+  const [userData, setUserData] = useState(null);
 
-  // useEffect(() => {
-  //   // ดึงข้อมูลผู้ใช้งานจาก API
-  //   axiosInstance.get('/profile/1')  // เปลี่ยนเป็น API ที่คุณใช้
-  //     .then((response) => {
-  //       setUserData(response.data);  // เก็บข้อมูลใน state
-  //     })
-  //     .catch((error) => {
-  //       console.error('Error fetching user data:', error);
-  //     });
-  // }, []);
+  useEffect(() => {
+    axiosInstance.get('/profile/1')
+      .then((res) => setUserData(res.data))
+      .catch((err) => console.error('Error fetching user data:', err));
+  }, []);
 
-  // if (!userData) {
-  //   return <div>Loading...</div>;  // หากยังไม่ได้ข้อมูลแสดงข้อความ Loading
-  // }
+  if (!userData) {
+    return <div className={styles.loading}>Loading...</div>;
+  }
 
   return (
-    <aside className={styles.sidebar}> {/* ใช้ className จาก styles */}
-      <div className={styles.userInfo}> {/* ใช้ className จาก styles */}
-        <img src="https://s.isanook.com/ca/0/ud/284/1423051/821547.jpg?ip/resize/w728/q80/jpg" alt="User Profile" className={styles.userImg} /> {/* ใช้ className จาก styles */}
-        <div className={styles.userDetails}> {/* ใช้ className จาก styles */}
-          <p className={styles.userName}> </p> {/* ใช้ className จาก styles */}
-          <p className={styles.userPosition}>  </p> {/* ใช้ className จาก styles */}
+    <aside className={styles.sidebar}>
+      <div className={styles.userInfo}>
+        <img
+          src="https://s.isanook.com/ca/0/ud/284/1423051/821547.jpg?ip/resize/w728/q80/jpg"
+          alt="User Profile"
+          className={styles.userImg}
+        />
+        <div className={styles.userDetails}>
+          <p className={styles.userName}>{userData.name || 'ชื่อผู้ใช้'}</p>
+          <p className={styles.userPosition}>{userData.position || 'ตำแหน่ง'}</p>
         </div>
       </div>
 
-      <hr className={styles.divider} /> {/* ใช้ className จาก styles */}
+      <hr className={styles.divider} />
 
       <nav>
         <ul className={styles.navLinks}>
-          {/* {<li className={styles.sidebarItem}> 
-            <span className={styles.sidebarIcon}>🏠</span> 
-            <span className={styles.sidebarText}><Link href="/staff">หน้าแรก</Link></span> 
-          </li>} */}
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>🏠</span>
-            <span className={styles.sidebarText}><Link href="/staff">หน้าแรก</Link></span>
+            <Link href="/staff" className={styles.sidebarText}>หน้าแรก</Link>
           </li>
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>📦</span>
-            <span className={styles.sidebarText}><Link href="/staff">เบิก ยืม</Link></span>
+            <Link href="/staff/borrow" className={styles.sidebarText}>เบิก ยืม</Link>
           </li>
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>✅</span>
-            <span className={styles.sidebarText}><Link href="/staff">คืนพัสดุ</Link></span>
+            <Link href="/staff/return" className={styles.sidebarText}>คืนพัสดุ</Link>
+          </li>
+          <li className={styles.sidebarItem}>
+            <span className={styles.sidebarIcon}>🛒</span>
+            <Link href="/staff/my-requests" className={styles.sidebarText}>รายการคำขอของฉัน</Link>
           </li>
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>⚙️</span>
-            <span className={styles.sidebarText}><Link href="/staff">ร้องขอการสั่งซื้อ</Link></span>
+            <Link href="/staff/request-purchase" className={styles.sidebarText}>ร้องขอการสั่งซื้อ</Link>
           </li>
           <li className={styles.sidebarItem}>
-            <span className={styles.sidebarIcon}>⚙️</span>
-            <span className={styles.sidebarText}><Link href="/staff/status">ติดตามสถานะคำขอ</Link></span>
+            <span className={styles.sidebarIcon}>📋</span>
+            <Link href="/staff/status" className={styles.sidebarText}>ติดตามสถานะคำขอ</Link>
           </li>
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>📜</span>
-            <span className={styles.sidebarText}><Link href="/staff/transactionHistory">ประวัติรายการเบิก</Link></span>
+            <Link href="/staff/transactionHistory" className={styles.sidebarText}>ประวัติรายการเบิก</Link>
           </li>
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>📊</span>
-            <span className={styles.sidebarText}><Link href="/staff">ออกรายงาน</Link></span>
+            <Link href="/staff/reports" className={styles.sidebarText}>ออกรายงาน</Link>
           </li>
         </ul>
       </nav>

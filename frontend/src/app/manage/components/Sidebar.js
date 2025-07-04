@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import styles from './Sidebar.module.css'; // นำเข้า CSS Module
-import axiosInstance from '../utils/axiosInstance';
+import axiosInstance from '../../utils/axiosInstance';
 
 export default function Sidebar() {
   const [userData, setUserData] = useState(null);
@@ -46,6 +46,10 @@ export default function Sidebar() {
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>✅</span>
             <span className={styles.sidebarText}><Link href="/manage/approvalRequest">ตรวจสอบคำขอเบิก</Link></span>
+          </li>
+          <li className={styles.sidebarItem}>
+            <span className={styles.sidebarIcon}>⚙️</span>
+            <span className={styles.sidebarText}><Link href={`/manage/request-status-manager`}>จัดการสถานะคำขอ</Link></span>
           </li>
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>⚙️</span>

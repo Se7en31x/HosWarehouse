@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import styles from "./page.module.css";
-import axiosInstance from "@/app/manage/utils/axiosInstance";
+import axiosInstance from "../../../../utils/axiosInstance";
 
 import BasicDetail from "../../../components/inventoryDetail/BasicDetail";
 import MedicineDetail from "../../../components/inventoryDetail/MedicineDetail";

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
-import { connectSocket, disconnectSocket } from '../utils/socket';
+import { connectSocket, disconnectSocket } from '../../utils/socket';
 import Link from "next/link";
 
 export default function InventoryCheck() {

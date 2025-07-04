@@ -1,0 +1,112 @@
+.container {
+  max-width: 90%;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+.heading {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  color: #106db9;
+  font-weight: 700;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+  table-layout: fixed;
+  word-wrap: break-word;
+}
+
+.table th,
+.table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
+}
+
+.table th {
+  background-color: #106db9;
+  color: white;
+  font-weight: 600;
+}
+
+/* สีสลับกันระหว่างแถว */
+.table tbody tr:nth-child(odd) {
+  background-color: #f9f9f9;
+}
+
+.table tbody tr:nth-child(even) {
+  background-color: #ffffff;
+}
+
+/* เมื่อ hover แถว */
+.table tr:hover {
+  background-color: #e6f2ff;
+  cursor: pointer;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: white;
+  white-space: nowrap;
+}
+
+/* สีของสถานะ */
+.รอดำเนินการ {
+  background-color: #f0ad4e;
+}
+.กำลังจัดเตรียม {
+  background-color: #5bc0de;
+}
+.นำส่งแล้ว {
+  background-color: #5cb85c;
+}
+.เสร็จสิ้น {
+  background-color: #292b2c;
+}
+.อนุมัติทั้งหมด {
+  background-color: #28a745;
+}
+.อนุมัติบางส่วน {
+  background-color: #17a2b8;
+}
+.ปฏิเสธทั้งหมด {
+  background-color: #d9534f;
+}
+
+.manageBtn {
+  background-color: #106db9;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background-color 0.3s ease;
+}
+
+.manageBtn:hover {
+  background-color: #0b4e8a;
+  cursor: pointer;
+}
+
+.loading,
+.noData {
+  max-width: 600px;
+  margin: 3rem auto;
+  text-align: center;
+  font-size: 1.25rem;
+  color: #555;
+}

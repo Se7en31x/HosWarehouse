@@ -16,14 +16,14 @@ export default function Header() {
             height={24}
           />
         </Link>
-        <Link href="/staff/SelectedItem" className={styles.iconButtonLink}>
+        {/* <Link href="/staff/SelectedItem" className={styles.iconButtonLink}>
           <Image
             src="/icons/shopping-cart (1).png"
             alt="ตะกร้า"
             width={24}
             height={24}
           />
-        </Link>
+        </Link> */}
 
         {/* ไอคอนแจ้งเตือน */}
         <button className={styles.iconButton}>🔔</button>

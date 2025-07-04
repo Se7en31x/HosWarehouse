@@ -1,116 +1,95 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import axiosInstance from '../../utils/axiosInstance';
 import styles from './page.module.css';
-import Image from 'next/image';
 
-export default function StatusPage() {
-    const orders = [
-        {
-            id: 1,
-            code: 'REQ-00123',
-            status: 'รอดำเนินการ',
-            items: [
-                {
-                    name: 'ยาแก้ปวด',
-                    imageUrl: 'https://example.com/images/painkiller.jpg',
-                    quantity: 10,
-                    unit: 'เม็ด',
-                }
-            ],
-        },
-        {
-            id: 2,
-            code: 'REQ-00124',
-            status: 'กำลังจัดส่ง',
-            items: [
-                {
-                    name: 'หน้ากากอนามัย',
-                    imageUrl: 'https://example.com/images/mask.jpg',
-                    quantity: 50,
-                    unit: 'ชิ้น',
-                }
-            ],
-        },
-        {
-            id: 3,
-            code: 'REQ-00125',
-            status: 'เสร็จสิ้น',
-            items: [
-                {
-                    name: 'เจลล้างมือ',
-                    imageUrl: 'https://example.com/images/handgel.jpg',
-                    quantity: 30,
-                    unit: 'ขวด',
-                }
-            ],
-        },
-        {
-            id: 4,
-            code: 'REQ-00126',
-            status: 'ยกเลิก',
-            items: [
-                {
-                    name: 'เครื่องวัดอุณหภูมิ',
-                    imageUrl: 'https://example.com/images/thermometer.jpg',
-                    quantity: 5,
-                    unit: 'เครื่อง',
-                }
-            ],
-        },
-    ];
+const STATUS_STEPS = [
+  { key: 'รอดำเนินการ', label: 'รอดำเนินการ', icon: '⏳' },
+  { key: 'กำลังจัดเตรียม', label: 'กำลังจัดเตรียม', icon: '📦' },
+  { key: 'รอส่ง', label: 'รอส่ง', icon: '🚚' },
+  { key: 'ส่งแล้ว', label: 'ส่งแล้ว', icon: '📬' },
+  { key: 'เสร็จสิ้น', label: 'เสร็จสิ้น', icon: '✅' },
+  { key: 'ปฏิเสธ', label: 'ปฏิเสธ', icon: '❌' },
+  { key: 'ยกเลิกโดยผู้ใช้', label: 'ยกเลิกโดยผู้ใช้', icon: '🚫' },
+];
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'รอดำเนินการ':
-                return '#ffc107';
-            case 'กำลังจัดส่ง':
-                return '#17a2b8';
-            case 'เสร็จสิ้น':
-                return '#28a745';
-            case 'ยกเลิก':
-                return '#dc3545';
-            default:
-                return '#6c757d';
-        }
+function getStepIndex(status) {
+  return STATUS_STEPS.findIndex(s => s.key === status);
+}
+
+export default function MyRequestsPage() {
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const fetchRequests = async () => {
+    try {
+      const res = await axiosInstance.get('/my-requests?user_id=1');
+      setRequests(res.data);
+    } catch (err) {
+      console.error(err);
+      alert('ไม่สามารถโหลดรายการคำขอได้');
+    } finally {
+      setLoading(false);
     }
+  };
 
-    return (
-        <div className={styles.mainHome}>
-            <div className={styles.container}>
-                <h2 className={styles.header}>ติดตามสถานะคำขอ</h2>
+  const sortedRequests = [...requests].sort(
+    (a, b) => new Date(b.request_date) - new Date(a.request_date)
+  );
 
-                <div className={styles.cardGrid}>
-                    {orders.map((order) => (
-                        <div key={order.id} className={styles.card}>
-                            <div className={styles.cardHeader}>
-                                <span className={styles.orderCode}>เลขคำขอ: {order.code}</span>
-                                <span
-                                    className={styles.statusBadge}
-                                    style={{ backgroundColor: getStatusColor(order.status) }}
-                                >
-                                    {order.status}
-                                </span>
-                            </div>
+  return (
+    <div className={styles.container}>
+      <h2 className={styles.header}>📦 ติดตามสถานะคำขอ</h2>
 
-                            {order.items.map((item, idx) => (
-                                <div key={idx} className={styles.itemRow}>
-                                    <img
-                                        src={item.imageUrl}
-                                        alt={item.name}
-                                        className={styles.itemImage}
-                                    />
-                                    <div className={styles.itemInfo}>
-                                        <div className={styles.itemName}>{item.name}</div>
-                                        <div className={styles.itemQty}>
-                                            {item.quantity} {item.unit}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ))}
+      {loading ? (
+        <p className={styles.loading}>กำลังโหลด...</p>
+      ) : sortedRequests.length === 0 ? (
+        <p className={styles.noData}>ไม่พบคำขอของคุณ</p>
+      ) : (
+        <div className={styles.requestsList}>
+          {sortedRequests.map((req) => {
+            const currentStep = getStepIndex(req.request_status);
+            return (
+              <div key={req.request_id} className={styles.requestCard}>
+                <div className={styles.requestHeader}>
+                  <div><strong>รหัสคำขอ:</strong> {req.request_code}</div>
+                  <div><strong>วันที่ขอ:</strong> {new Date(req.request_date).toLocaleDateString('th-TH')}</div>
+                  <div><strong>ประเภท:</strong> {req.request_types}</div>
+                  <div><strong>จำนวนรายการ:</strong> {req.item_count}</div>
+                  <div>
+                    <strong>เร่งด่วน:</strong>{' '}
+                    <span className={req.is_urgent ? styles.urgent : ''}>
+                      {req.is_urgent ? '✓' : '—'}
+                    </span>
+                  </div>
                 </div>
-            </div>
+
+                {/* Step Tracker */}
+                <div className={styles.stepTracker}>
+                  {STATUS_STEPS.map((step, i) => {
+                    let stepClass = '';
+                    if (i < currentStep) stepClass = styles.completed;
+                    else if (i === currentStep) stepClass = styles.current;
+                    else stepClass = styles.pending;
+
+                    return (
+                      <div key={step.key} className={`${styles.step} ${stepClass}`}>
+                        <div className={styles.stepCircle}>{step.icon}</div>
+                        <div>{step.label}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
-    );
+      )}
+    </div>
+  );
 }

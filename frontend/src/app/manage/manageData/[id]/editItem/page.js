@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import styles from './page.module.css';
 import BasicForm from '../../../components/formTemplates/BasicForm';
-import axiosInstance from '../../../utils/axiosInstance';
+import axiosInstance from '../../../../utils/axiosInstance';
 
 export default function EditItem() {
   const { id } = useParams();
