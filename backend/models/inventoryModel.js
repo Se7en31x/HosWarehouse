@@ -1,6 +1,5 @@
 const { pool } = require('../config/db');
 
-
 exports.getAllItemsDetailed = async () => {
   const query = `
     SELECT 

@@ -26,11 +26,11 @@ app.use(cors({
 // ให้เข้าถึงไฟล์ใน public
 app.use('/public', express.static('public'));
 // app
-readdirSync('./Routes').map((r) => app.use('/api', require('./Routes/' + r)))
-
 // app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+readdirSync('./Routes').map((r) => app.use('/api', require('./Routes/' + r)))
 
 socketSetup(server); // ✨ เรียกใช้แยก
 

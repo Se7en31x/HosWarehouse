@@ -1,5 +1,5 @@
 const { Server } = require('socket.io');
-const { getItems } = require('./controllers/inventoryController'); // ฟังก์ชัน getItems ตอนนี้รับ (socket, io)
+const { getItems } = require('./socket/inventorySocket'); // ฟังก์ชัน getItems ตอนนี้รับ (socket, io)
 
 let io;
 
