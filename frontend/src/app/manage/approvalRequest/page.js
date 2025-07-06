@@ -5,6 +5,24 @@ import Link from "next/link";
 import { connectSocket, disconnectSocket } from "../../utils/socket";
 import axiosInstance from "../../utils/axiosInstance";
 
+const mapStatusToThai = (status) => {
+  switch (status) {
+    case 'waiting_approval':
+      return 'รอการอนุมัติ';
+    case 'approved_all':
+      return 'อนุมัติทั้งหมด';
+    case 'rejected_all':
+      return 'ปฏิเสธทั้งหมด';
+    case 'approved':
+      return 'อนุมัติบางรายการ';
+    case 'rejected':
+      return 'ปฏิเสธบางรายการ';
+    default:
+      return status;
+  }
+};
+
+
 export default function ApprovalRequest() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -24,7 +42,7 @@ export default function ApprovalRequest() {
     setLoading(true);
     setError(null);
     try {
-      const res = await axiosInstance.get("/requests?status=รอดำเนินการ");
+      const res = await axiosInstance.get("/requests?status=waiting_approval,approved_all,rejected_all");
       setRequests(res.data);
     } catch (err) {
       setError("เกิดข้อผิดพลาดในการโหลดข้อมูล");
@@ -209,8 +227,11 @@ export default function ApprovalRequest() {
                 <div className={styles.tableCell}>{item.department}</div>
                 <div className={styles.tableCell}>{item.item_count}</div>
                 <div className={styles.tableCell}>{item.request_types}</div>
-
-                <div className={styles.tableCell}>{item.request_status}</div>
+                <div className={styles.tableCell}>
+                  <div className={styles.tableCell}>
+                    {mapStatusToThai(item.request_status)}
+                  </div>
+                </div>
                 <div className={styles.tableCell}>
                   <Link href={`/manage/approvalDetail/${item.request_id}`}>
                     <button className={styles.actionButton}>รายละเอียด</button>

@@ -3,10 +3,16 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import axiosInstance from '../../../utils/axiosInstance';
-import styles from './page.module.css';
 import Swal from 'sweetalert2';
+import styles from './page.module.css';
 
-// แปลสถานะ
+import {
+  MdAccessTime,
+  MdBuild,
+  MdLocalShipping,
+  MdCheckCircle,
+} from 'react-icons/md';
+
 const translateStatus = (status) => {
   const map = {
     pending: 'รอดำเนินการ',
@@ -19,9 +25,16 @@ const translateStatus = (status) => {
   return map[status] || status;
 };
 
-// Component แสดงสถานะไล่ระดับ
+const statusSteps = ['pending', 'preparing', 'delivering', 'completed'];
+
+const statusIconMap = {
+  pending: <MdAccessTime size={24} />,
+  preparing: <MdBuild size={24} />,
+  delivering: <MdLocalShipping size={24} />,
+  completed: <MdCheckCircle size={24} />,
+};
+
 const StatusTrack = ({ currentStatus }) => {
-  const statusSteps = ['รอดำเนินการ', 'กำลังจัดเตรียม', 'นำส่งแล้ว', 'เสร็จสิ้น'];
   const currentIndex = statusSteps.indexOf(currentStatus);
 
   return (
@@ -29,21 +42,27 @@ const StatusTrack = ({ currentStatus }) => {
       {statusSteps.map((status, index) => {
         const isActive = index === currentIndex;
         const isDone = index < currentIndex;
+        const isLast = index === statusSteps.length - 1;
 
         return (
           <div key={status} className={styles.stepContainer}>
             <div
-              className={`${styles.stepCircle} ${
-                isDone ? styles.done : isActive ? styles.active : ''
-              }`}
+              className={`${styles.stepCircle} ${isDone ? styles.done : isActive ? styles.active : ''
+                }`}
             >
-              {isDone ? '✔' : index + 1}
+              {statusIconMap[status]}
             </div>
-            {index !== statusSteps.length - 1 && (
-              <div className={`${styles.stepBar} ${isDone ? styles.barDone : ''}`} />
+            {!isLast && (
+              <div
+                className={`${styles.stepBar} ${isDone ? styles.barDone : ''
+                  }`}
+              />
             )}
-            <div className={`${styles.stepLabel} ${isActive ? styles.labelActive : ''}`}>
-              {status}
+            <div
+              className={`${styles.stepLabel} ${isActive ? styles.labelActive : ''
+                }`}
+            >
+              {translateStatus(status)}
             </div>
           </div>
         );
@@ -58,15 +77,18 @@ export default function RequestDetailClient() {
 
   const [details, setDetails] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
   const [currentStatus, setCurrentStatus] = useState('');
 
-  const statusSteps = ['รอดำเนินการ', 'กำลังจัดเตรียม', 'นำส่งแล้ว', 'เสร็จสิ้น'];
+  const itemsPerPage = 10;
 
-  const calculateOverallStatus = (details, steps) => {
+  const calculateOverallStatus = (details) => {
     if (!details.length) return '';
-    const indexes = details.map((d) => steps.indexOf(d.request_detail_status));
+    const indexes = details.map((d) =>
+      statusSteps.indexOf(d.request_detail_status)
+    );
     const minIndex = Math.min(...indexes);
-    return steps[minIndex];
+    return statusSteps[minIndex];
   };
 
   useEffect(() => {
@@ -76,10 +98,14 @@ export default function RequestDetailClient() {
   const fetchRequestDetails = async () => {
     setLoading(true);
     try {
-      const res = await axiosInstance.get(`/requestStstus/${request_id}`);
+      // เพิ่ม timestamp query เพื่อกัน cache
+      const res = await axiosInstance.get(`/requestStatus/${request_id}`, {
+        params: { t: Date.now() }, // <-- แก้ตรงนี้
+      });
+
       if (res.data.details && Array.isArray(res.data.details)) {
         setDetails(res.data.details);
-        const overallStatus = calculateOverallStatus(res.data.details, statusSteps);
+        const overallStatus = calculateOverallStatus(res.data.details);
         setCurrentStatus(overallStatus);
       } else {
         setDetails([]);
@@ -95,13 +121,14 @@ export default function RequestDetailClient() {
   };
 
   const handleStatusChange = async (newStatus, detailId) => {
+    setUpdating(true);
     try {
-      await axiosInstance.put(`/requestStstus/${request_id}/status`, {
+      await axiosInstance.put(`/requestStatus/${request_id}/detail-status`, {
         newStatus,
         detailId,
       });
 
-      await Swal.fire({
+      Swal.fire({
         icon: 'success',
         title: 'อัปเดตสถานะเรียบร้อย',
         timer: 1500,
@@ -110,9 +137,11 @@ export default function RequestDetailClient() {
 
       setDetails((prev) => {
         const updated = prev.map((d) =>
-          d.request_detail_id === detailId ? { ...d, request_detail_status: newStatus } : d
+          d.request_detail_id === detailId
+            ? { ...d, request_detail_status: newStatus }
+            : d
         );
-        const newOverall = calculateOverallStatus(updated, statusSteps);
+        const newOverall = calculateOverallStatus(updated);
         setCurrentStatus(newOverall);
         return updated;
       });
@@ -122,10 +151,13 @@ export default function RequestDetailClient() {
         title: 'เกิดข้อผิดพลาด',
         text: err.message || 'ลองใหม่อีกครั้ง',
       });
+    } finally {
+      setUpdating(false);
     }
   };
 
-  if (loading) return <p className={styles.loading}>กำลังโหลด...</p>;
+  if (loading)
+    return <p className={styles.loading}>กำลังโหลดข้อมูล...</p>;
 
   return (
     <div className={styles.container}>
@@ -133,40 +165,58 @@ export default function RequestDetailClient() {
 
       <StatusTrack currentStatus={currentStatus} />
 
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>ชื่อพัสดุ</th>
-            <th>จำนวน</th>
-            <th>หน่วย</th>
-            <th>สถานะ</th>
-            <th>อัปเดตสถานะ</th>
-          </tr>
-        </thead>
-        <tbody>
-          {details.map((d) => (
-            <tr key={d.request_detail_id}>
-              <td>{d.item_name}</td>
-              <td>{d.requested_qty}</td>
-              <td>{d.item_unit}</td>
-              <td>{translateStatus(d.request_detail_status)}</td>
-              <td>
-                <select
-                  value={d.request_detail_status}
-                  onChange={(e) => handleStatusChange(e.target.value, d.request_detail_id)}
-                  className={styles.selectStatus}
-                >
-                  {statusSteps.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </td>
+      <div className={styles.tableContainer}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>ชื่อพัสดุ</th>
+              <th>จำนวน</th>
+              <th>หน่วย</th>
+              <th>สถานะ</th>
+              <th>อัปเดตสถานะ</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {details.map((d) => (
+              <tr key={d.request_detail_id}>
+                <td>{d.item_name}</td>
+                <td>{d.requested_qty}</td>
+                <td>{d.item_unit}</td>
+                <td>
+                  <span
+                    className={`${styles.statusBadge} ${styles[d.request_detail_status]}`}
+                  >
+                    {translateStatus(d.request_detail_status)}
+                  </span>
+                </td>
+                <td>
+                  <select
+                    value={d.request_detail_status}
+                    onChange={(e) =>
+                      handleStatusChange(e.target.value, d.request_detail_id)
+                    }
+                    disabled={updating}
+                    className={styles.selectStatus}
+                  >
+                    {statusSteps.map((status) => (
+                      <option key={status} value={status}>
+                        {translateStatus(status)}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+              </tr>
+            ))}
+            {Array.from({ length: itemsPerPage - details.length }).map(
+              (_, idx) => (
+                <tr key={`empty-${idx}`}>
+                  <td colSpan="5">&nbsp;</td>
+                </tr>
+              )
+            )}
+          </tbody>
+        </table>
+      </div>
 
       <button
         className={styles.backBtn}
