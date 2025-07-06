@@ -4,10 +4,8 @@ const { getIO } = require("../socket");
 exports.handleCreateRequest = async (req, res) => {
   try {
     const requestResult = await RequestModel.createRequest(req.body);
-    console.log("Created requestResult:", requestResult);
 
     if (!requestResult || !requestResult.request_id) {
-      console.error("Failed to create request, no request_id returned");
       return res.status(500).json({ error: "Failed to create request" });
     }
 
@@ -20,7 +18,7 @@ exports.handleCreateRequest = async (req, res) => {
         item_id: item.id || item.item_id,
         quantity: item.quantity,
         request_detail_type: item.action || 'withdraw',
-      }); 
+      });
     }
 
     const io = getIO();
@@ -39,18 +37,20 @@ exports.createRequest = async ({ user_id, note, urgent, date, type }) => {
     const code = await generateRequestCode();
 
     const result = await pool.query(
-      `INSERT INTO requests (request_code, user_id, request_status, request_note, is_urgent, request_due_date, request_date, request_type)
-       VALUES ($1, $2, 'รอดำเนินการ', $3, $4, $5, NOW(), $6)
+      `INSERT INTO requests 
+       (request_code, user_id, request_status, request_note, is_urgent, request_due_date, request_date, request_type)
+       VALUES ($1, $2, 'pending', $3, $4, $5, NOW(), $6)
        RETURNING request_id, request_code`,
       [code, user_id, note, urgent, date, type]
     );
 
-    return result.rows[0]; // คืนทั้ง request_id และ request_code
+    return result.rows[0];
   } catch (err) {
     console.error("Error in createRequest:", err);
     throw err;
   }
 };
+
 
 const generateRequestCode = async () => {
   const result = await pool.query(`SELECT COUNT(*) FROM requests`);
@@ -62,11 +62,13 @@ const generateRequestCode = async () => {
 
 exports.getRequests = async (req, res) => {
   try {
-    const status = req.query.status || 'รอดำเนินการ'; // ค่าดีฟอลต์ตรงกับใน DB ภาษาไทย
-    const data = await RequestModel.getPendingRequests(status);
+    const statusParam = req.query.status || 'waiting_approval,approved_all,rejected_all';
+    const statuses = statusParam.split(',');
+    const data = await RequestModel.getPendingRequests(statuses);
     res.json(data);
   } catch (err) {
     console.error('Error fetching requests:', err);
     res.status(500).json({ error: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
   }
 };
+

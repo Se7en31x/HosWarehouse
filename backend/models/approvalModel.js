@@ -56,11 +56,13 @@ exports.calculateOverallStatus = async (request_id) => {
   const approved = statuses.filter(s => s === 'approved').length;
   const rejected = statuses.filter(s => s === 'rejected').length;
 
-  if (approved === total) return 'อนุมัติทั้งหมด';
-  if (rejected === total) return 'ปฏิเสธทั้งหมด';
-  if (approved > 0 || rejected > 0) return 'อนุมัติบางส่วน';
-  return 'รอดำเนินการ';
+  // ✅ แก้เป็นภาษาอังกฤษ
+  if (approved === total) return 'approved_all';
+  if (rejected === total) return 'rejected_all';
+  if (approved > 0 || rejected > 0) return 'approved_partial';
+  return 'pending';
 };
+
 
 // อัปเดตสถานะคำขอหลักโดยอิงจากสถานะรายการย่อยทั้งหมด
 exports.updateRequestStatusByDetails = async (request_id) => {

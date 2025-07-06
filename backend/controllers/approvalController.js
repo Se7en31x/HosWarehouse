@@ -67,19 +67,19 @@ exports.approveRequestDetail = async (req, res) => {
   const { request_detail_id } = req.params;
 
   try {
-    // เช็คสถานะปัจจุบันก่อน ถ้าไม่ใช่ 'pending' ห้ามแก้ไขซ้ำ
-    const currentStatus = await ApprovalModel.getRequestDetailStatus(request_detail_id);
-    if (currentStatus !== 'pending') {
-      return res.status(400).json({ error: "รายการนี้ได้รับการดำเนินการแล้ว" });
+    const request_id = await ApprovalModel.getRequestIdByDetailId(request_detail_id);
+    const request = await ApprovalModel.getRequestForApproval(request_id);
+
+    // ✅ ป้องกันการแก้ไขหากสถานะรวมเลยขั้นตอนอนุมัติไปแล้ว
+    if (!['pending', 'waiting_approval'].includes(request.request_status)) {
+      return res.status(400).json({ error: "ไม่สามารถอนุมัติได้ เนื่องจากคำขออยู่ระหว่างการจัดเตรียมแล้ว" });
     }
 
+    // ✅ อนุมัติซ้ำได้ ไม่ต้องเช็คสถานะเดิม
     const success = await ApprovalModel.updateRequestDetailStatus(request_detail_id, "approved");
     if (!success) return res.status(404).json({ error: "ไม่พบรายการ" });
 
-    const request_id = await ApprovalModel.getRequestIdByDetailId(request_detail_id);
-    if (request_id) {
-      await ApprovalModel.updateRequestStatusByDetails(request_id);
-    }
+    await ApprovalModel.updateRequestStatusByDetails(request_id);
 
     const io = getIO();
     io.emit("requestUpdated");
@@ -96,13 +96,19 @@ exports.rejectRequestDetail = async (req, res) => {
   const { request_detail_id } = req.params;
 
   try {
+    const request_id = await ApprovalModel.getRequestIdByDetailId(request_detail_id);
+    const request = await ApprovalModel.getRequestForApproval(request_id);
+
+    // ✅ ป้องกันการแก้ไขหากสถานะรวมเลยขั้นตอนอนุมัติไปแล้ว
+    if (!['pending', 'waiting_approval'].includes(request.request_status)) {
+      return res.status(400).json({ error: "ไม่สามารถปฏิเสธได้ เนื่องจากคำขออยู่ระหว่างการจัดเตรียมแล้ว" });
+    }
+
+    // ✅ ปฏิเสธซ้ำได้ ไม่ต้องเช็คสถานะเดิม
     const success = await ApprovalModel.updateRequestDetailStatus(request_detail_id, "rejected");
     if (!success) return res.status(404).json({ error: "ไม่พบรายการ" });
 
-    const request_id = await ApprovalModel.getRequestIdByDetailId(request_detail_id);
-    if (request_id) {
-      await ApprovalModel.updateRequestStatusByDetails(request_id);
-    }
+    await ApprovalModel.updateRequestStatusByDetails(request_id);
 
     const io = getIO();
     io.emit("requestUpdated");

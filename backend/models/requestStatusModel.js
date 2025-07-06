@@ -6,11 +6,13 @@ exports.getAllRequestsWithUser = async () => {
     SELECT r.*, u.user_name, u.department
     FROM requests r
     JOIN users u ON r.user_id = u.user_id
+    WHERE r.request_status != 'pending'
     ORDER BY r.request_date DESC
   `;
   const result = await pool.query(query);
   return result.rows;
 };
+
 
 // อัปเดตสถานะ request หลัก
 exports.updateRequestStatus = async (request_id, newStatus) => {
@@ -43,4 +45,15 @@ exports.getRequestDetails = async (request_id) => {
   `;
   const result = await pool.query(query, [request_id]);
   return result.rows;
+};
+
+// อัปเดตสถานะ request_details ทั้งหมดใน request_id
+exports.updateRequestDetailStatus = async (request_detail_id, newStatus) => {
+  console.log("🛠 กำลังอัปเดต request_detail:", request_detail_id, "->", newStatus);
+  const result = await pool.query(
+    `UPDATE request_details SET request_detail_status = $1 WHERE request_detail_id = $2`,
+    [newStatus, request_detail_id]
+  );
+  console.log("🟢 ผลลัพธ์ rowCount:", result.rowCount);
+  return result.rowCount > 0;
 };

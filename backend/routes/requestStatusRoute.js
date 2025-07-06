@@ -3,12 +3,14 @@ const router = express.Router();
 const requestStatusController = require("../controllers/requestStatusController");
 
 // ดึงคำขอทั้งหมดพร้อมข้อมูลผู้ใช้
-router.get("/requestStstus", requestStatusController.getAllRequestsWithUser);
+router.get("/requestStatus", requestStatusController.getAllRequestsWithUser);
 
 // อัปเดตสถานะคำขอหลัก
-router.put("/requestStstus/:request_id/status", requestStatusController.updateRequestStatus);
+router.put("/requestStatus/:request_id/status", requestStatusController.updateRequestStatus);
 
 // ดึงคำขอหลักพร้อมรายละเอียด
-router.get("/requestStstus/:request_id", requestStatusController.getRequestWithDetails);
+router.get("/requestStatus/:request_id", requestStatusController.getRequestWithDetails);
+// อัปเดตสถานะคำขอย่อย (request_details)
+router.put("/requestStatus/:request_id/detail-status", requestStatusController.updateRequestDetailStatus);
 
 module.exports = router;
