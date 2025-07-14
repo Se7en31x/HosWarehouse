@@ -1,0 +1,463 @@
+/* General Page Layout */
+.pageBackground {
+  background-color: #f8f9fa; /* Very light grey for a clean look */
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+  box-sizing: border-box;
+}
+
+.container {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.08); /* Softer, slightly larger shadow */
+  padding: 30px 40px;
+  width: 90%;
+  box-sizing: border-box;
+}
+
+/* Headings */
+.title {
+  font-size: 2.4em; /* Slightly larger title */
+  color: #343a40; /* Darker text for better contrast */
+  text-align: center;
+  margin-bottom: 35px;
+  font-weight: 700;
+  border-bottom: 3px solid #e9ecef; /* Lighter, thicker bottom border */
+  padding-bottom: 18px;
+}
+
+.subtitle {
+  font-size: 1.7em;
+  color: #495057;
+  margin-top: 35px;
+  margin-bottom: 25px;
+  font-weight: 600;
+  text-align: left;
+}
+
+/* Loading and Error States */
+.loading, .error {
+  text-align: center;
+  font-size: 1.4em;
+  color: #6c757d;
+  padding: 50px;
+}
+
+.error {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+/* Info Grid for Request Details */
+.infoGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #f8f9fa; /* Consistent light background */
+  border-radius: 10px;
+  border: 1px solid #e2e6ea; /* Subtle border */
+}
+
+.infoLeft {
+  flex: 2;
+  min-width: 300px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px; /* Slightly more space */
+  font-size: 1.05em;
+  color: #495057;
+}
+
+.infoLeft strong {
+  color: #343a40;
+}
+
+.status {
+  font-weight: bold;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background-color: #e0f7fa; /* Very light cyan for status */
+  color: #00796b; /* Darker teal for text */
+  display: inline-block; /* Ensure padding applies correctly */
+}
+
+.noteBox {
+  flex: 1;
+  min-width: 250px;
+  background-color: #e9ecef; /* Light grey for note box */
+  border-radius: 10px;
+  padding: 20px 25px;
+  font-size: 1.0em;
+  color: #495057;
+  border: 1px solid #dcdfe3;
+  line-height: 1.6; /* Better readability */
+}
+
+.noteBox strong {
+  display: block;
+  margin-bottom: 10px;
+  color: #343a40;
+  font-size: 1.15em;
+}
+
+.summary {
+  grid-column: 1 / -1;
+  font-weight: 600;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px dashed #ced4da; /* Softer dashed line */
+  color: #6c757d;
+}
+
+/* Table Styles - Adjusted for a cleaner look */
+.table {
+  width: 100%;
+  border-collapse: separate; /* Allows border-radius on cells */
+  border-spacing: 0; /* Remove space between cell borders */
+  margin-bottom: 30px;
+  font-size: 0.95em;
+  border-radius: 8px; /* Rounded corners for the entire table */
+  overflow: hidden; /* Ensures rounded corners are visible */
+}
+
+.table th, .table td {
+  padding: 14px 18px; /* More padding for spacious feel */
+  text-align: left;
+  border-bottom: 1px solid #eceff1; /* Very light horizontal borders */
+  /* Remove vertical borders for a cleaner look */
+  border-right: none;
+}
+
+.table th {
+  background-color: #f2f4f6; /* Slightly darker header background */
+  color: #495057;
+  font-weight: 600;
+  text-transform: uppercase;
+  border-top: 1px solid #eceff1; /* Top border for header */
+}
+
+/* First and last child adjustments for rounded corners */
+.table thead tr th:first-child { border-top-left-radius: 8px; }
+.table thead tr th:last-child { border-top-right-radius: 8px; }
+
+.table tbody tr:last-child td {
+  border-bottom: none; /* No bottom border for the last row */
+}
+
+.table tbody tr:nth-child(odd) { /* Consistent background for odd rows */
+  background-color: #ffffff;
+}
+
+.table tbody tr:nth-child(even) { /* Consistent background for even rows */
+  background-color: #fdfdfd;
+}
+
+.table tbody tr:hover {
+  background-color: #e9f7fe; /* Light blue hover effect */
+}
+
+/* Styling for empty rows (no data) */
+.emptyRow td {
+  background-color: #fdfdfd; /* Same as even rows for consistency */
+  color: #b0b0b0; /* Lighter text for empty rows */
+  font-style: italic;
+  padding: 14px 18px; /* Maintain consistent padding */
+  border-bottom: 1px solid #eceff1; /* Consistent border */
+}
+
+.table tbody tr:last-child.emptyRow td {
+  border-bottom: none; /* No bottom border for the last row */
+}
+
+/* Item Image within Table */
+.table td img {
+  border-radius: 6px; /* Slightly larger radius for images */
+  vertical-align: middle;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Subtle shadow for images */
+}
+
+/* Buttons for Table Actions */
+
+/* ปุ่มที่ใช้งานได้ */
+.activeButton {
+  background: none;
+  border: 1px solid;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 600;
+  transition: all 0.3s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.activeButton:first-of-type {
+  border-color: #28a745;
+  color: #28a745;
+}
+.activeButton:first-of-type:hover {
+  background-color: #28a745;
+  color: white;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+}
+
+.activeButton:last-of-type {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+.activeButton:last-of-type:hover {
+  background-color: #dc3545;
+  color: white;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
+}
+
+/* ปุ่มที่ถูกปิดการใช้งานแต่ยังแสดง */
+.disabledButton {
+  background: none;
+  border: 1px solid #dcdcdc;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.9em;
+  color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+  pointer-events: auto; /* ให้ tooltip แสดงได้ */
+  transition: none;
+}
+
+/* Main Action Buttons (Save and Cancel) */
+.actions {
+  text-align: center;
+  margin-top: 40px;
+  display: flex; /* Use flexbox to align buttons */
+  justify-content: center; /* Center the buttons */
+  gap: 20px; /* Space between Save and Cancel buttons */
+}
+
+.saveButton {
+  background-color: #007bff;
+  color: white;
+  padding: 14px 30px; /* Adjusted padding for balanced size */
+  border: none;
+  border-radius: 8px; /* Slightly less rounded */
+  cursor: pointer;
+  font-size: 1.15em; /* Adjusted font size */
+  font-weight: 600;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2); /* Softer shadow */
+}
+
+.saveButton:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px); /* Slightly less pronounced lift */
+  box-shadow: 0 6px 15px rgba(0, 123, 255, 0.3);
+}
+
+.saveButton:disabled {
+  background-color: #ced4da;
+  color: #6c757d;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.cancelButton {
+  background-color: #6c757d; /* Muted grey for cancel */
+  color: white;
+  padding: 14px 30px; /* Consistent padding with save button */
+  border: none;
+  border-radius: 8px; /* Consistent border-radius */
+  font-size: 1.15em; /* Consistent font size */
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 10px rgba(108, 117, 125, 0.2); /* Consistent shadow style */
+}
+
+.cancelButton:hover {
+  background-color: #5a6268;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(108, 117, 125, 0.3);
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 35px;
+  gap: 15px; /* Slightly less gap */
+  font-size: 1.1em; /* Slightly smaller font */
+  color: #6c757d;
+}
+
+.pageButton {
+  background-color: #e9ecef;
+  color: #495057;
+  border: 1px solid #ced4da;
+  padding: 10px 18px; /* Slightly smaller padding */
+  border-radius: 6px; /* Slightly less rounded */
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  font-weight: 600;
+}
+
+.pageButton:hover {
+  background-color: #dee2e6;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.pageButton:disabled {
+  background-color: #f8f9fa;
+  color: #adb5bd;
+  cursor: not-allowed;
+  border-color: #e9ecef;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding: 25px 30px;
+  }
+
+  .title {
+    font-size: 2em;
+  }
+
+  .subtitle {
+    font-size: 1.5em;
+  }
+
+  .infoGrid {
+    flex-direction: column;
+    gap: 20px;
+    padding: 15px;
+  }
+
+  .infoLeft, .noteBox {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .table th, .table td {
+    padding: 12px 15px;
+    font-size: 0.9em;
+  }
+
+  .table td button {
+    padding: 7px 10px; /* Adjusted for smaller screens */
+    font-size: 0.8em;
+    margin-right: 4px;
+    margin-bottom: 4px;
+    gap: 2px;
+  }
+  
+  .actions {
+    flex-direction: column; /* Stack buttons on smaller screens */
+    gap: 15px; /* Space between stacked buttons */
+  }
+
+  .saveButton, .cancelButton {
+    width: 100%; /* Full width when stacked */
+    max-width: 300px; /* Limit max width for readability */
+    margin: 0 auto; /* Center buttons */
+    padding: 12px 25px;
+    font-size: 1em;
+  }
+
+  .pagination {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.6em;
+    margin-bottom: 25px;
+  }
+
+  .subtitle {
+    font-size: 1.3em;
+    margin-top: 25px;
+    margin-bottom: 15px;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table, .table tbody, .table tr, .table td {
+    display: block;
+    width: 100%;
+  }
+
+  .table tr {
+    margin-bottom: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .table td {
+    text-align: right;
+    padding-left: 50%;
+    position: relative;
+    border-bottom: 1px dashed #e0e0e0;
+  }
+
+  .table td:last-child {
+    border-bottom: none;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 15px;
+    width: calc(50% - 30px);
+    padding-right: 10px;
+    white-space: nowrap;
+    text-align: left;
+    font-weight: bold;
+    color: #6c757d;
+  }
+  
+  .table td:nth-child(7) {
+    text-align: center;
+    padding-left: 15px;
+    padding-right: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .table td button {
+    flex-grow: 1;
+    width: auto;
+    max-width: 120px; /* Slightly smaller max-width for consistency */
+    padding: 6px 8px; /* Further reduced padding */
+    font-size: 0.75em;
+  }
+
+  .saveButton, .cancelButton {
+    padding: 10px 20px; /* Even smaller on very small screens */
+    font-size: 0.9em;
+  }
+  
+  .pagination {
+    flex-direction: column;
+    gap: 10px;
+  }
+}

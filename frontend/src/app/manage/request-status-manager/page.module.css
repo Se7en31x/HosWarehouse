@@ -1,5 +1,5 @@
 .container {
-  max-width: 90%px;
+  width: 90%; /* แก้ไขจาก max เป็น max-width */
   margin: 2rem auto;
   padding: 2rem;
   background-color: #f8fafc;
@@ -17,7 +17,7 @@
 }
 
 .tableContainer {
-  max-height: 900px;
+  /* max-height: 900px; */ /* คอมเมนต์ไว้ ถ้าต้องการใช้ ให้เปิด */
   overflow-y: auto;
   border-radius: 12px;
   background-color: white;
@@ -27,7 +27,7 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
+  table-layout: fixed; /* ช่วยให้คอลัมน์กว้างเท่ากัน และจัดการ word-wrap ได้ดีขึ้น */
 }
 
 .table thead tr {
@@ -41,8 +41,8 @@
   text-align: left;
   font-size: 0.95rem;
   color: #1e293b;
-  height: 54px;
-  word-wrap: break-word;
+  height: 54px; /* กำหนดความสูงคงที่สำหรับแต่ละแถว */
+  word-wrap: break-word; /* เพื่อจัดการข้อความยาวๆ ไม่ให้ล้น */
 }
 
 .table tbody tr:nth-child(even) {
@@ -51,84 +51,104 @@
 
 .statusBadge {
   padding: 0.35rem 0.75rem;
-  border-radius: 9999px;
+  border-radius: 9999px; /* ทำให้มุมโค้งมนสุดๆ (Pill shape) */
   font-size: 0.85rem;
   font-weight: 600;
   display: inline-block;
-  white-space: nowrap;
+  white-space: nowrap; /* ป้องกันไม่ให้ข้อความขึ้นบรรทัดใหม่ */
 }
 
-/* Status Colors */
-.pending {
-  background-color: #fef08a;
-  color: #78350f;
+/* --- Status Colors --- */
+.statusBadge.pending { /* เพิ่ม .statusBadge เพื่อความเฉพาะเจาะจง */
+  background-color: #fef08a; /* Yellow-200 */
+  color: #78350f; /* Amber-900 */
 }
 
-.preparing {
-  background-color: #bae6fd;
-  color: #0369a1;
+.statusBadge.preparing {
+  background-color: #bae6fd; /* Light Blue-300 */
+  color: #0369a1; /* Sky Blue-800 */
 }
 
-.delivering {
-  background-color: #fcd34d;
-  color: #92400e;
+.statusBadge.delivering {
+  background-color: #fcd34d; /* Amber-300 */
+  color: #92400e; /* Orange-900 */
 }
 
-.completed {
-  background-color: #bbf7d0;
-  color: #166534;
+.statusBadge.completed {
+  background-color: #bbf7d0; /* Green-200 */
+  color: #166534; /* Green-800 */
 }
 
-.approved_all {
-  background-color: #d1fae5;
-  color: #065f46;
+.statusBadge.approved_all {
+  background-color: #d1fae5; /* Emerald-100 */
+  color: #065f46; /* Emerald-800 */
 }
 
-.approved_partial {
-  background-color: #fde68a;
-  color: #92400e;
+.statusBadge.approved_partial {
+  background-color: #fde68a; /* Yellow-200 */
+  color: #92400e; /* Orange-900 - เลือกสีที่แตกต่างจาก approved_all เล็กน้อย */
 }
 
-.rejected_all {
-  background-color: #fecaca;
-  color: #991b1b;
+.statusBadge.rejected_all { /* ลบ .rejected_all ซ้ำออกไป */
+  background-color: #fecaca; /* Red-200 */
+  color: #991b1b; /* Red-800 */
 }
 
-.waiting_approval {
-  background-color: #f3f4f6;  /* สีเทาอ่อน เหมือนรออนุมัติ */
-  color: #374151;             /* สีเทาเข้ม */
+.statusBadge.rejected_partial { /* เพิ่มสไตล์สำหรับ rejected_partial */
+  background-color: #f87171; /* Red-400, เลือกสีแดงที่ต่างจาก rejected_all เล็กน้อย */
+  color: #7f1d1d; /* Red-900 */
 }
 
-
-.rejected_all {
-  background-color: #fecaca;
-  color: #991b1b;
+.statusBadge.waiting_approval {
+  background-color: #f3f4f6; /* Gray-100 */
+  color: #374151; /* Gray-700 */
 }
 
+.statusBadge.defaultStatus { /* เพิ่มสไตล์สำหรับสถานะ default */
+  background-color: #e2e8f0; /* Gray-200 */
+  color: #475569; /* Slate-700 */
+}
+
+/* --- Buttons --- */
 .manageBtn {
-  background-color: #3b82f6;
+  background-color: #3b82f6; /* Blue-500 */
   color: white;
   padding: 0.4rem 1rem;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease; /* เพิ่ม box-shadow transition */
 }
 
 .manageBtn:hover {
-  background-color: #2563eb;
+  background-color: #2563eb; /* Blue-600 */
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2); /* เพิ่มเงาเมื่อ hover */
 }
 
+.manageBtn.disabledManageBtn {
+  background-color: #cbd5e1; /* Gray-300 */
+  color: #64748b; /* Gray-500 */
+  cursor: not-allowed;
+  opacity: 0.8; /* ทำให้ดูจางลงเล็กน้อย */
+  pointer-events: none; /* ป้องกันการคลิก */
+  box-shadow: none; /* ไม่มีเงาเมื่อ disabled */
+}
+
+/* --- Loading States --- */
 .loadingContainer {
   text-align: center;
   margin-top: 3rem;
+  padding: 2rem;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .spinner {
   margin: 0 auto 0.75rem;
-  border: 4px solid #cbd5e1;
-  border-top: 4px solid #3b82f6;
+  border: 4px solid #e2e8f0; /* Gray-200 */
+  border-top: 4px solid #3b82f6; /* Blue-500 */
   border-radius: 50%;
   width: 36px;
   height: 36px;
@@ -143,15 +163,18 @@
 
 .loading {
   font-size: 1.1rem;
-  color: #64748b;
+  color: #475569; /* Slate-700 */
+  font-weight: 500;
 }
 
+/* --- Pagination --- */
 .pagination {
   margin-top: 1.5rem;
   display: flex;
   justify-content: center;
   gap: 0.5rem;
-  flex-wrap: wrap;
+  flex-wrap: wrap; /* เพื่อให้ปุ่มขึ้นบรรทัดใหม่เมื่อหน้าจอเล็ก */
+  padding: 0.5rem; /* เพิ่ม padding เล็กน้อย */
 }
 
 .pageInfo {
@@ -159,35 +182,57 @@
   color: #64748b;
   margin: 0.75rem 0 0.5rem;
   font-size: 0.9rem;
-  user-select: none;
+  user-select: none; /* ป้องกันการเลือกข้อความ */
 }
 
 .pageBtn {
   padding: 0.45rem 0.85rem;
   font-size: 0.9rem;
-  background-color: #f8fafc;
-  border: 1px solid #cbd5e1;
+  background-color: #ffffff; /* White */
+  border: 1px solid #cbd5e1; /* Gray-300 */
   border-radius: 6px;
   cursor: pointer;
-  color: #334155;
+  color: #334155; /* Slate-800 */
   transition: all 0.2s ease;
+  min-width: 40px; /* กำหนดความกว้างขั้นต่ำให้ปุ่ม */
+  display: flex; /* ใช้ flexbox เพื่อจัดกึ่งกลางข้อความ */
+  align-items: center;
+  justify-content: center;
 }
 
 .pageBtn:hover {
-  background-color: #e2e8f0;
-  border-color: #94a3b8;
+  background-color: #f1f5f9; /* Gray-100 */
+  border-color: #94a3b8; /* Slate-400 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* เพิ่มเงาเล็กน้อยเมื่อ hover */
 }
 
-.activePage {
-  background-color: #3b82f6;
+.pageBtn.activePage {
+  background-color: #3b82f6; /* Blue-500 */
   color: white;
   border-color: #3b82f6;
+  font-weight: 600; /* ทำให้ตัวหนาขึ้น */
 }
 
-.disabledBtn {
-  background-color: #f1f5f9;
-  color: #94a3b8;
+.pageBtn.disabledBtn {
+  background-color: #f8fafc; /* Gray-50 */
+  color: #94a3b8; /* Gray-400 */
   cursor: not-allowed;
-  border-color: #e2e8f0;
-  pointer-events: none;
+  border-color: #e2e8f0; /* Gray-200 */
+  pointer-events: none; /* ป้องกันการคลิก */
+  opacity: 0.7;
+}
+
+/* --- Empty Table Row --- */
+.emptyRow td {
+  height: 100px; /* เพิ่มความสูงของแถวว่างเพื่อให้ดูดีขึ้น */
+  color: #94a3b8; /* Gray-400 */
+  text-align: center;
+  font-style: italic; /* ตัวเอียงเล็กน้อย */
+  background-color: #fdfdfd; /* สีพื้นหลังอ่อนๆ */
+}
+
+.emptyFillerRow td { /* สไตล์สำหรับแถวว่างที่ใช้เติมความสูงตาราง */
+  border-bottom: none; /* ไม่มีเส้นขอบด้านล่าง */
+  height: 54px; /* กำหนดความสูงเท่ากับแถวข้อมูลปกติ */
+  background-color: transparent; /* พื้นหลังโปร่งใส */
 }

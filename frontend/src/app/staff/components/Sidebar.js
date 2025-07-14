@@ -40,7 +40,7 @@ export default function Sidebar() {
           </li>
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>📦</span>
-            <Link href="/staff/borrow" className={styles.sidebarText}>เบิก ยืม</Link>
+            <Link href="/staff/inventoryWithdraw" className={styles.sidebarText}>เบิก ยืม</Link>
           </li>
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>✅</span>

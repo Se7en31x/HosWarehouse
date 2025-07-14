@@ -45,7 +45,7 @@ export default function Sidebar() {
           </li>
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>✅</span>
-            <span className={styles.sidebarText}><Link href="/manage/approvalRequest">ตรวจสอบคำขอเบิก</Link></span>
+            <span className={styles.sidebarText}><Link href="/manage/requestList">ตรวจสอบคำขอเบิก</Link></span>
           </li>
           <li className={styles.sidebarItem}>
             <span className={styles.sidebarIcon}>⚙️</span>

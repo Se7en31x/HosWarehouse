@@ -80,11 +80,21 @@
 
 .tableGrid {
   display: grid;
-  grid-template-columns: 100px 150px 150px 250px 180px 150px 150px 180px 150px;;
+  grid-template-columns:
+    100px    /* No. */
+    150px    /* วันที่ */
+    200px    /* รหัสคำขอ (ใหม่) */
+    150px    /* เวลา */
+    250px    /* ผู้ขอเบิก */
+    180px    /* แผนก */
+    150px    /* จำนวนรายการ */
+    150px    /* ประเภท */
+    180px    /* สถานะ */
+    150px;   /* ตรวจสอบ */
   gap: 10px;
-  /* overflow-x: auto; */
   width: 100%;
 }
+
 
 /* แถบหัวข้อ */
 .tableHeader {
