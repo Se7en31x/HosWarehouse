@@ -1,7 +1,12 @@
-const ApprovalModel = require("../models/approvalModel");
-const { getIO } = require("../socket");
+const ApprovalModel = require("../models/approvalModel"); // ตรวจสอบว่าเส้นทางถูกต้อง
+const { getIO } = require("../socket"); // สำหรับ Socket.IO notification
 
-// ดึงรายละเอียดคำขอสำหรับอนุมัติ
+/**
+ * ดึงรายละเอียดคำขอสำหรับหน้าอนุมัติ (ทั้งคำขอหลักและรายการย่อย)
+ *
+ * @param {object} req - Express request object.
+ * @param {object} res - Express response object.
+ */
 exports.getApprovalDetail = async (req, res) => {
   const { request_id } = req.params;
   try {
@@ -16,106 +21,43 @@ exports.getApprovalDetail = async (req, res) => {
   }
 };
 
-// อนุมัติคำขอทั้งหมด
-exports.approveRequest = async (req, res) => {
+/**
+ * อัปเดตสถานะการอนุมัติ (approval_status) ของรายการย่อยหลายรายการพร้อมกัน
+ *
+ * @param {object} req - Express request object.
+ * @param {object} res - Express response object.
+ */
+exports.bulkUpdateRequestDetails = async (req, res) => {
   const { request_id } = req.params;
-  try {
-    const details = await ApprovalModel.getRequestDetails(request_id);
-    if (details.length === 0) return res.status(404).json({ error: "ไม่พบรายการคำขอ" });
-
-    for (const detail of details) {
-      await ApprovalModel.updateRequestDetailStatus(detail.request_detail_id, "approved");
-    }
-
-    await ApprovalModel.updateRequestStatusByDetails(request_id);
-
-    const io = getIO();
-    io.emit("requestUpdated");
-
-    res.json({ message: "อนุมัติคำขอเรียบร้อยแล้ว" });
-  } catch (err) {
-    console.error("Error approving request:", err);
-    res.status(500).json({ error: "เกิดข้อผิดพลาดในการอนุมัติ" });
-  }
-};
-
-// ปฏิเสธคำขอทั้งหมด
-exports.rejectRequest = async (req, res) => {
-  const { request_id } = req.params;
-  try {
-    const details = await ApprovalModel.getRequestDetails(request_id);
-    if (details.length === 0) return res.status(404).json({ error: "ไม่พบรายการคำขอ" });
-
-    for (const detail of details) {
-      await ApprovalModel.updateRequestDetailStatus(detail.request_detail_id, "rejected");
-    }
-
-    await ApprovalModel.updateRequestStatusByDetails(request_id);
-
-    const io = getIO();
-    io.emit("requestUpdated");
-
-    res.json({ message: "ปฏิเสธคำขอเรียบร้อยแล้ว" });
-  } catch (err) {
-    console.error("Error rejecting request:", err);
-    res.status(500).json({ error: "เกิดข้อผิดพลาดในการปฏิเสธ" });
-  }
-};
-
-// อนุมัติรายการย่อย
-exports.approveRequestDetail = async (req, res) => {
-  const { request_detail_id } = req.params;
+  const { updates, userId } = req.body; // updates: [{ request_detail_id, status, note }]
 
   try {
-    const request_id = await ApprovalModel.getRequestIdByDetailId(request_detail_id);
+    // 1. ตรวจสอบสถานะคำขอหลักก่อนดำเนินการ
     const request = await ApprovalModel.getRequestForApproval(request_id);
+    if (!request) return res.status(404).json({ error: "ไม่พบคำขอ" });
 
-    // ✅ ป้องกันการแก้ไขหากสถานะรวมเลยขั้นตอนอนุมัติไปแล้ว
-    if (!['pending', 'waiting_approval'].includes(request.request_status)) {
-      return res.status(400).json({ error: "ไม่สามารถอนุมัติได้ เนื่องจากคำขออยู่ระหว่างการจัดเตรียมแล้ว" });
+    // ป้องกันการแก้ไขคำขอที่เข้าสู่ขั้นตอนการดำเนินการแล้ว
+    if (["preparing", "delivering", "completed", "canceled"].includes(request.request_status)) {
+      return res.status(400).json({ error: "ไม่สามารถแก้ไขคำขอได้ เนื่องจากอยู่ในสถานะขั้นตอนถัดไป" });
     }
 
-    // ✅ อนุมัติซ้ำได้ ไม่ต้องเช็คสถานะเดิม
-    const success = await ApprovalModel.updateRequestDetailStatus(request_detail_id, "approved");
-    if (!success) return res.status(404).json({ error: "ไม่พบรายการ" });
-
-    await ApprovalModel.updateRequestStatusByDetails(request_id);
-
-    const io = getIO();
-    io.emit("requestUpdated");
-
-    res.json({ message: "อนุมัติรายการย่อยเรียบร้อยแล้ว" });
-  } catch (err) {
-    console.error("Error approving request detail:", err);
-    res.status(500).json({ error: "เกิดข้อผิดพลาดในการอนุมัติรายการย่อย" });
-  }
-};
-
-// ปฏิเสธรายการย่อย
-exports.rejectRequestDetail = async (req, res) => {
-  const { request_detail_id } = req.params;
-
-  try {
-    const request_id = await ApprovalModel.getRequestIdByDetailId(request_detail_id);
-    const request = await ApprovalModel.getRequestForApproval(request_id);
-
-    // ✅ ป้องกันการแก้ไขหากสถานะรวมเลยขั้นตอนอนุมัติไปแล้ว
-    if (!['pending', 'waiting_approval'].includes(request.request_status)) {
-      return res.status(400).json({ error: "ไม่สามารถปฏิเสธได้ เนื่องจากคำขออยู่ระหว่างการจัดเตรียมแล้ว" });
+    // 2. วนลูปอัปเดตแต่ละรายการย่อย
+    for (const update of updates) {
+      const { request_detail_id, status, note } = update; // status คือ 'approved' หรือ 'rejected'
+      await ApprovalModel.updateRequestDetailApprovalStatus(request_detail_id, status, userId, note || null);
     }
 
-    // ✅ ปฏิเสธซ้ำได้ ไม่ต้องเช็คสถานะเดิม
-    const success = await ApprovalModel.updateRequestDetailStatus(request_detail_id, "rejected");
-    if (!success) return res.status(404).json({ error: "ไม่พบรายการ" });
+    // 3. หลังจากอัปเดตรายการย่อยทั้งหมดแล้ว ให้คำนวณและอัปเดตสถานะคำขอหลัก
+    // Logic การคำนวณสถานะรวมที่ได้รับการปรับปรุง จะอยู่ใน ApprovalModel
+    await ApprovalModel.updateRequestOverallStatusByDetails(request_id, userId);
 
-    await ApprovalModel.updateRequestStatusByDetails(request_id);
-
+    // 4. ส่ง Socket.IO notification
     const io = getIO();
-    io.emit("requestUpdated");
+    io.emit("requestUpdated"); // อาจจะส่ง request_id ไปด้วย
 
-    res.json({ message: "ปฏิเสธรายการย่อยเรียบร้อยแล้ว" });
+    res.json({ message: "บันทึกการอนุมัติ/ปฏิเสธรายการย่อยเรียบร้อยแล้ว" });
   } catch (err) {
-    console.error("Error rejecting request detail:", err);
-    res.status(500).json({ error: "เกิดข้อผิดพลาดในการปฏิเสธรายการย่อย" });
+    console.error("Error in bulkUpdateRequestDetails:", err);
+    res.status(500).json({ error: err.message || "เกิดข้อผิดพลาดในการบันทึก" }); // ส่ง err.message เพื่อให้เห็นข้อความ error ที่ชัดเจนขึ้น
   }
 };

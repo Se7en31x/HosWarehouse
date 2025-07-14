@@ -1,6 +1,21 @@
 const { pool } = require("../config/db");
 
-// ดึงข้อมูลคำขอสำหรับการอนุมัติ
+// Helper function เพื่อดึง user_id จาก request_detail_id
+// (อาจจะซ้ำกับที่อื่น แต่แยกไว้เพื่อให้ Model นี้พึ่งตัวเองได้)
+const getUserIdByRequestDetailId = async (request_detail_id) => {
+  const result = await pool.query(
+    `SELECT r.user_id FROM request_details rd JOIN requests r ON rd.request_id = r.request_id WHERE rd.request_detail_id = $1`,
+    [request_detail_id]
+  );
+  return result.rows[0]?.user_id || null;
+};
+
+/**
+ * ดึงข้อมูลคำขอหลักสำหรับการแสดงผลในหน้าอนุมัติ
+ *
+ * @param {number} request_id - ID ของคำขอ
+ * @returns {Promise<object>} ข้อมูลคำขอหลักพร้อมชื่อผู้ใช้และแผนก
+ */
 exports.getRequestForApproval = async (request_id) => {
   const query = `
     SELECT r.*, u.user_name, u.department
@@ -12,7 +27,12 @@ exports.getRequestForApproval = async (request_id) => {
   return result.rows[0];
 };
 
-// ดึงรายละเอียดรายการคำขอ พร้อมชื่อและหน่วย และชื่อไฟล์รูปภาพ
+/**
+ * ดึงรายละเอียดรายการคำขอทั้งหมดสำหรับคำขอที่ระบุ
+ *
+ * @param {number} request_id - ID ของคำขอ
+ * @returns {Promise<object[]>} Array ของ object รายละเอียดรายการคำขอ
+ */
 exports.getRequestDetails = async (request_id) => {
   const query = `
     SELECT rd.*, i.item_name, i.item_unit, i.item_img
@@ -24,8 +44,14 @@ exports.getRequestDetails = async (request_id) => {
   return result.rows;
 };
 
-// อัปเดตสถานะคำขอหลัก
-exports.updateRequestStatus = async (request_id, newStatus) => {
+/**
+ * อัปเดตสถานะของคำขอหลักในตาราง 'requests'
+ *
+ * @param {number} request_id - ID ของคำขอ
+ * @param {string} newStatus - สถานะใหม่ที่จะตั้ง
+ * @returns {Promise<boolean>} true หากอัปเดตสำเร็จ
+ */
+exports.updateRequestOverallStatus = async (request_id, newStatus) => {
   const result = await pool.query(
     `UPDATE requests SET request_status = $1 WHERE request_id = $2`,
     [newStatus, request_id]
@@ -33,57 +59,176 @@ exports.updateRequestStatus = async (request_id, newStatus) => {
   return result.rowCount > 0;
 };
 
-// อัปเดตสถานะรายละเอียดคำขอ
-exports.updateRequestDetailStatus = async (request_detail_id, newStatus) => {
-  const result = await pool.query(
-    `UPDATE request_details SET request_detail_status = $1 WHERE request_detail_id = $2`,
-    [newStatus, request_detail_id]
-  );
-  return result.rowCount > 0;
+/**
+ * อัปเดตสถานะการอนุมัติ (approval_status) ของรายการย่อย
+ * และบันทึกเหตุผลถ้ามี พร้อมทั้งบันทึกประวัติ
+ *
+ * @param {number} request_detail_id - ID ของรายการย่อย
+ * @param {string} newApprovalStatus - สถานะการอนุมัติใหม่ ('approved', 'rejected', 'waiting_approval_detail')
+ * @param {number} changed_by - ID ผู้ใช้งานที่ทำการเปลี่ยนแปลง
+ * @param {string} note - หมายเหตุ/เหตุผลในการเปลี่ยนแปลง (optional)
+ * @returns {Promise<boolean>} true หากอัปเดตสำเร็จ
+ */
+exports.updateRequestDetailApprovalStatus = async (request_detail_id, newApprovalStatus, changed_by, note = null) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // 1. ดึงสถานะ approval_status เดิม
+    const oldStatusResult = await client.query(
+      `SELECT approval_status, request_id FROM request_details WHERE request_detail_id = $1`,
+      [request_detail_id]
+    );
+    if (oldStatusResult.rows.length === 0) {
+      throw new Error(`Request detail with ID ${request_detail_id} not found.`);
+    }
+    const oldApprovalStatus = oldStatusResult.rows[0].approval_status;
+    const request_id_from_detail = oldStatusResult.rows[0].request_id; // ใช้ชื่อใหม่เพื่อไม่ให้ซ้ำกับ parameter
+
+    // 2. อัปเดต approval_status และ request_detail_note
+    let query, params;
+    if (note) {
+      query = `
+        UPDATE request_details
+        SET approval_status = $1, request_detail_note = $2
+        WHERE request_detail_id = $3
+      `;
+      params = [newApprovalStatus, note, request_detail_id];
+    } else {
+      query = `
+        UPDATE request_details
+        SET approval_status = $1, request_detail_note = NULL -- ตั้งเป็น NULL ถ้าไม่มี note
+        WHERE request_detail_id = $2
+      `;
+      params = [newApprovalStatus, request_detail_id];
+    }
+    const result = await client.query(query, params);
+
+    // 3. บันทึกประวัติสถานะการอนุมัติของรายการย่อย
+    if (result.rowCount > 0 && oldApprovalStatus !== newApprovalStatus) { // เพิ่มเงื่อนไขให้บันทึกประวัติเฉพาะเมื่อสถานะเปลี่ยน
+      await client.query(
+        `INSERT INTO request_status_history
+          (request_id, request_detail_id, old_status, new_status, changed_by, changed_at, note, status_type)
+          VALUES ($1, $2, $3, $4, $5, NOW(), $6, 'approval_detail')`,
+        [request_id_from_detail, request_detail_id, oldApprovalStatus, newApprovalStatus, changed_by, note || `อัปเดตสถานะอนุมัติรายการย่อย ID: ${request_detail_id}`]
+      );
+    }
+
+    await client.query('COMMIT');
+    return result.rowCount > 0;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error("Error in updateRequestDetailApprovalStatus:", err);
+    throw err;
+  } finally {
+    client.release();
+  }
 };
 
-// ฟังก์ชันตรวจสอบสถานะรวม (pending, approved, rejected)
-exports.calculateOverallStatus = async (request_id) => {
+
+/**
+ * คำนวณและคืนค่าการนับสถานะของรายการย่อยทั้งหมดสำหรับคำขอที่ระบุ
+ *
+ * @param {number} request_id - ID ของคำขอ
+ * @returns {Promise<object>} Object ที่มีจำนวน approved, rejected, waiting และ total ของรายการย่อย
+ */
+exports.calculateOverallApprovalStatus = async (request_id) => {
   const query = `
-    SELECT request_detail_status
-    FROM request_details
-    WHERE request_id = $1
-  `;
+        SELECT approval_status
+        FROM request_details
+        WHERE request_id = $1
+    `;
   const result = await pool.query(query, [request_id]);
-  const statuses = result.rows.map(row => row.request_detail_status);
+  const statuses = result.rows.map(row => row.approval_status);
 
   const total = statuses.length;
-  const approved = statuses.filter(s => s === 'approved').length;
-  const rejected = statuses.filter(s => s === 'rejected').length;
+  const approvedCount = statuses.filter(s => s === 'approved').length;
+  const rejectedCount = statuses.filter(s => s === 'rejected').length;
+  const waitingCount = statuses.filter(s => s === 'waiting_approval_detail').length;
 
-  // ✅ แก้เป็นภาษาอังกฤษ
-  if (approved === total) return 'approved_all';
-  if (rejected === total) return 'rejected_all';
-  if (approved > 0 || rejected > 0) return 'approved_partial';
-  return 'pending';
+  return { total, approvedCount, rejectedCount, waitingCount };
 };
 
 
-// อัปเดตสถานะคำขอหลักโดยอิงจากสถานะรายการย่อยทั้งหมด
-exports.updateRequestStatusByDetails = async (request_id) => {
-  const newStatus = await exports.calculateOverallStatus(request_id);
-  return await exports.updateRequestStatus(request_id, newStatus);
-};
+/**
+ * อัปเดตสถานะคำขอหลัก (requests.request_status) ตามสถานะ approval_status ของรายการย่อย
+ * และบันทึกประวัติการเปลี่ยนแปลง
+ *
+ * @param {number} request_id - ID ของคำขอ
+ * @param {number} changed_by - ID ผู้ใช้งานที่ทำการเปลี่ยนแปลง (ผู้ที่อนุมัติ/ปฏิเสธ)
+ * @returns {Promise<boolean>} true หากอัปเดตสำเร็จ
+ */
+exports.updateRequestOverallStatusByDetails = async (request_id, changed_by) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
 
-// ใช้เพื่อค้นหา request_id จาก request_detail_id
-exports.getRequestIdByDetailId = async (request_detail_id) => {
-  const result = await pool.query(
-    `SELECT request_id FROM request_details WHERE request_detail_id = $1`,
-    [request_detail_id]
-  );
-  return result.rows[0]?.request_id || null;
-};
+    // 1. ดึงสถานะปัจจุบันของคำขอหลัก
+    const oldRequestStatusResult = await client.query(
+      `SELECT request_status FROM requests WHERE request_id = $1`,
+      [request_id]
+    );
+    if (oldRequestStatusResult.rows.length === 0) {
+      throw new Error(`Request with ID ${request_id} not found.`);
+    }
+    const oldRequestStatus = oldRequestStatusResult.rows[0].request_status;
 
-// ตรวจสอบสถานะปัจจุบันของรายการย่อย
-exports.getRequestDetailStatus = async (request_detail_id) => {
-  const result = await pool.query(
-    `SELECT request_detail_status FROM request_details WHERE request_detail_id = $1`,
-    [request_detail_id]
-  );
-  return result.rows[0]?.request_detail_status || null;
+    // 2. คำนวณสถานะใหม่จากรายการย่อย
+    const { total, approvedCount, rejectedCount, waitingCount } = await exports.calculateOverallApprovalStatus(request_id);
+
+    // 3. กำหนด finalOverallStatus ตามผลการนับ
+    let finalOverallStatus;
+
+    if (total === 0) {
+      finalOverallStatus = 'waiting_approval';
+    } else if (approvedCount === total) {
+      // ถ้าทุกรายการย่อยเป็น 'approved'
+      finalOverallStatus = 'approved_all';
+    } else if (rejectedCount === total) {
+      // ถ้าทุกรายการย่อยเป็น 'rejected'
+      finalOverallStatus = 'rejected_all';
+    } else if (approvedCount > 0 && rejectedCount > 0) {
+      // มีทั้ง 'approved' และ 'rejected' ปนกัน (ไม่ว่าจะมี waiting หรือไม่)
+      finalOverallStatus = 'approved_partial_and_rejected_partial';
+    } else if (approvedCount > 0) {
+      // มี 'approved' อย่างน้อย 1 รายการ และไม่มี 'rejected' เลย
+      // (สถานะนี้จะถูกตั้งแม้ว่าจะมี 'waiting' อยู่ด้วยก็ตาม)
+      finalOverallStatus = 'approved_partial';
+    } else if (rejectedCount > 0) {
+      // มี 'rejected' อย่างน้อย 1 รายการ และไม่มี 'approved' เลย
+      // (สถานะนี้จะถูกตั้งแม้ว่าจะมี 'waiting' อยู่ด้วยก็ตาม)
+      finalOverallStatus = 'rejected_partial';
+    } else if (waitingCount > 0) {
+      // กรณีสุดท้าย: มีแต่รายการที่รออนุมัติเท่านั้น (ไม่มี approved หรือ rejected เลย)
+      finalOverallStatus = 'waiting_approval';
+    } else {
+      finalOverallStatus = 'unknown_status';
+    }
+    // ... (ส่วนที่เหลือ)
+    // 4. อัปเดตสถานะคำขอหลัก หากมีการเปลี่ยนแปลงจากสถานะเดิม
+    let updateSuccess = false;
+    if (oldRequestStatus !== finalOverallStatus) {
+      updateSuccess = await exports.updateRequestOverallStatus(request_id, finalOverallStatus);
+    } else {
+      updateSuccess = true; // ไม่มีอะไรเปลี่ยนแปลง ถือว่าดำเนินการสำเร็จ
+    }
+
+    // 5. บันทึกประวัติสถานะของคำขอหลัก หากมีการเปลี่ยนแปลงและอัปเดตสำเร็จ
+    if (updateSuccess && oldRequestStatus !== finalOverallStatus) {
+      await client.query(
+        `INSERT INTO request_status_history
+                  (request_id, old_status, new_status, changed_by, changed_at, note, status_type, request_detail_id)
+                  VALUES ($1, $2, $3, $4, NOW(), 'อัปเดตสถานะคำขอรวมจากการอนุมัติ/ปฏิเสธรายการย่อย', 'request_overall', NULL)`,
+        [request_id, oldRequestStatus, finalOverallStatus, changed_by]
+      );
+    }
+    await client.query('COMMIT');
+    return updateSuccess;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error("Error in updateRequestOverallStatusByDetails:", err);
+    throw err;
+  } finally {
+    client.release();
+  }
 };

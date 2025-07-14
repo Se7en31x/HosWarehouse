@@ -1,9 +1,19 @@
-const RequestModel = require("../models/requestModel");
-const { getIO } = require("../socket");
+const RequestModel = require("../models/requestModel"); // ตรวจสอบว่าเส้นทางถูกต้อง
+const { getIO } = require("../socket"); // สำหรับ Socket.IO notification
 
+/**
+ * จัดการการสร้างคำขอใหม่และรายการย่อยที่เกี่ยวข้อง
+ *
+ * @param {object} req - Express request object.
+ * @param {object} res - Express response object.
+ */
 exports.handleCreateRequest = async (req, res) => {
   try {
-    const requestResult = await RequestModel.createRequest(req.body);
+    const { user_id, note, urgent, date, type, items } = req.body;
+
+    // 1. สร้างคำขอหลักโดยเรียกใช้ Model
+    // (date ที่ส่งมานี้จะไปลง request_due_date ใน requests table ซึ่งเป็นวันที่ครบกำหนดโดยรวมของคำขอ)
+    const requestResult = await RequestModel.createRequest({ user_id, note, urgent, date, type });
 
     if (!requestResult || !requestResult.request_id) {
       return res.status(500).json({ error: "Failed to create request" });
@@ -11,18 +21,26 @@ exports.handleCreateRequest = async (req, res) => {
 
     const { request_id, request_code } = requestResult;
 
-    const items = req.body.items || [];
-    for (const item of items) {
-      await RequestModel.addRequestDetail({
-        request_id,
-        item_id: item.id || item.item_id,
-        quantity: item.quantity,
-        request_detail_type: item.action || 'withdraw',
-      });
+    // 2. เพิ่มรายการย่อยทั้งหมดโดยเรียกใช้ Model
+    if (items && Array.isArray(items)) {
+      for (const item of items) {
+        // กำหนด expected_return_date สำหรับแต่ละรายการยืม
+        const itemExpectedReturnDate = item.action === 'borrow' ? item.returnDate : null; // <--- ดึงค่า returnDate ของแต่ละ item
+
+        await RequestModel.addRequestDetail({
+          request_id,
+          item_id: item.id || item.item_id,
+          quantity: item.quantity,
+          request_detail_type: item.action || 'withdraw',
+          user_id: user_id, // ส่ง user_id ไปเพื่อบันทึกในประวัติสถานะรายการย่อย
+          expected_return_date: itemExpectedReturnDate, // <--- **เพิ่มตรงนี้!**
+        });
+      }
     }
 
+    // ส่ง notification ผ่าน Socket.IO
     const io = getIO();
-    io.emit('requestUpdated');
+    io.emit('requestUpdated', { requestId: request_id, requestCode: request_code });
 
     res.status(201).json({ requestId: request_id, requestCode: request_code });
   } catch (err) {
@@ -31,44 +49,33 @@ exports.handleCreateRequest = async (req, res) => {
   }
 };
 
-
-exports.createRequest = async ({ user_id, note, urgent, date, type }) => {
-  try {
-    const code = await generateRequestCode();
-
-    const result = await pool.query(
-      `INSERT INTO requests 
-       (request_code, user_id, request_status, request_note, is_urgent, request_due_date, request_date, request_type)
-       VALUES ($1, $2, 'pending', $3, $4, $5, NOW(), $6)
-       RETURNING request_id, request_code`,
-      [code, user_id, note, urgent, date, type]
-    );
-
-    return result.rows[0];
-  } catch (err) {
-    console.error("Error in createRequest:", err);
-    throw err;
-  }
-};
-
-
-const generateRequestCode = async () => {
-  const result = await pool.query(`SELECT COUNT(*) FROM requests`);
-  const count = parseInt(result.rows[0].count || '0') + 1;
-  const padded = count.toString().padStart(5, '0');
-  return `REQ-${padded}`;
-};
-
-
+/**
+ * ดึงคำขอตามพารามิเตอร์ query สำหรับสถานะ
+ *
+ * @param {object} req - Express request object.
+ * @param {object} res - Express response object.
+ */
 exports.getRequests = async (req, res) => {
   try {
-    const statusParam = req.query.status || 'waiting_approval,approved_all,rejected_all';
+    // กำหนดสถานะเริ่มต้นที่จะดึง หากไม่มีการระบุใน query parameter
+    const defaultStatuses = [
+      'waiting_approval',
+      'approved_all',
+      'rejected_all',
+      'approved_partial',
+      'rejected_partial',
+      'approved_partial_and_rejected_partial', // ✅ เพิ่มสถานะนี้
+      'completed',
+    ];
+
+    const statusParam = req.query.status || defaultStatuses.join(',');
     const statuses = statusParam.split(',');
-    const data = await RequestModel.getPendingRequests(statuses);
+
+    // เรียกใช้ฟังก์ชันที่เปลี่ยนชื่อแล้วจาก Model
+    const data = await RequestModel.getRequestsByStatus(statuses);
     res.json(data);
   } catch (err) {
     console.error('Error fetching requests:', err);
     res.status(500).json({ error: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
   }
 };
-
