@@ -69,62 +69,80 @@ exports.updateRequestOverallStatus = async (request_id, newStatus) => {
  * @param {string} note - หมายเหตุ/เหตุผลในการเปลี่ยนแปลง (optional)
  * @returns {Promise<boolean>} true หากอัปเดตสำเร็จ
  */
-exports.updateRequestDetailApprovalStatus = async (request_detail_id, newApprovalStatus, changed_by, note = null) => {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
 
-    // 1. ดึงสถานะ approval_status เดิม
-    const oldStatusResult = await client.query(
-      `SELECT approval_status, request_id FROM request_details WHERE request_detail_id = $1`,
-      [request_detail_id]
-    );
-    if (oldStatusResult.rows.length === 0) {
-      throw new Error(`Request detail with ID ${request_detail_id} not found.`);
+/**
+ * อัปเดตสถานะการอนุมัติ (approval_status) ของรายการย่อย
+ * และบันทึกเหตุผลถ้ามี พร้อมทั้งบันทึกประวัติ
+ *
+ * @param {number} request_detail_id - ID ของรายการย่อย
+ * @param {string} newApprovalStatus - สถานะการอนุมัติใหม่ ('approved', 'rejected', 'waiting_approval_detail')
+ * @param {number} newApprovedQty - **<<<<<< เพิ่มตรงนี้: จำนวนที่อนุมัติใหม่**
+ * @param {number} changed_by - ID ผู้ใช้งานที่ทำการเปลี่ยนแปลง
+ * @param {string} note - หมายเหตุ/เหตุผลในการเปลี่ยนแปลง (optional)
+ * @returns {Promise<boolean>} true หากอัปเดตสำเร็จ
+ */
+exports.updateRequestDetailApprovalStatus = async (request_detail_id, newApprovalStatus, newApprovedQty, changed_by, note = null) => { // <<<< แก้ไข: เพิ่ม parameter 'newApprovedQty'
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // 1. ดึงสถานะ approval_status และ approved_qty เดิม
+        const oldStatusResult = await client.query(
+            `SELECT approval_status, approved_qty, request_id FROM request_details WHERE request_detail_id = $1`,
+            [request_detail_id]
+        );
+        if (oldStatusResult.rows.length === 0) {
+            throw new Error(`Request detail with ID ${request_detail_id} not found.`);
+        }
+        const oldApprovalStatus = oldStatusResult.rows[0].approval_status;
+        const oldApprovedQty = oldStatusResult.rows[0].approved_qty; // <<<< เพิ่มตรงนี้: ดึงค่า approved_qty เดิม
+        const request_id_from_detail = oldStatusResult.rows[0].request_id;
+
+        // 2. อัปเดต approval_status, approved_qty และ request_detail_note
+        let query, params;
+        // <<<< เพิ่มตรงนี้: ตรวจสอบว่ามีการเปลี่ยนแปลง status หรือ approved_qty เพื่อดูว่าควรบันทึกประวัติหรือไม่
+        const hasStatusOrQtyChanged = (oldApprovalStatus !== newApprovalStatus) || (oldApprovedQty !== newApprovedQty);
+
+        if (note) {
+            query = `
+                UPDATE request_details
+                SET approval_status = $1, approved_qty = $2, request_detail_note = $3
+                WHERE request_detail_id = $4
+            `;
+            // <<<< แก้ไข: ลำดับ parameter ให้ตรงกับ query ($1=newApprovalStatus, $2=newApprovedQty, $3=note, $4=request_detail_id)
+            params = [newApprovalStatus, newApprovedQty, note, request_detail_id];
+        } else {
+            query = `
+                UPDATE request_details
+                SET approval_status = $1, approved_qty = $2, request_detail_note = NULL
+                WHERE request_detail_id = $3
+            `;
+            // <<<< แก้ไข: ลำดับ parameter ให้ตรงกับ query ($1=newApprovalStatus, $2=newApprovedQty, $3=request_detail_id)
+            params = [newApprovalStatus, newApprovedQty, request_detail_id];
+        }
+        const result = await client.query(query, params);
+
+        // 3. บันทึกประวัติสถานะการอนุมัติของรายการย่อย
+        // <<<< แก้ไข: เงื่อนไขการบันทึกประวัติให้ครอบคลุมการเปลี่ยนแปลงจำนวนด้วย
+        if (result.rowCount > 0 && hasStatusOrQtyChanged) {
+            await client.query(
+                `INSERT INTO request_status_history
+                 (request_id, request_detail_id, old_status, new_status, changed_by, changed_at, note, status_type, old_approved_qty, new_approved_qty) -- <<<< แก้ไข: เพิ่ม 2 คอลัมน์นี้ในตาราง history ของคุณ
+                 VALUES ($1, $2, $3, $4, $5, NOW(), $6, 'approval_detail', $7, $8)`, // <<<< แก้ไข: เพิ่ม $7, $8 สำหรับค่า approved_qty
+                [request_id_from_detail, request_detail_id, oldApprovalStatus, newApprovalStatus, changed_by, note || `อัปเดตสถานะอนุมัติรายการย่อย ID: ${request_detail_id}`, oldApprovedQty, newApprovedQty] // <<<< แก้ไข: เพิ่มค่า oldApprovedQty, newApprovedQty
+            );
+        }
+
+        await client.query('COMMIT');
+        return result.rowCount > 0;
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error("Error in updateRequestDetailApprovalStatus:", err);
+        throw err;
+    } finally {
+        client.release();
     }
-    const oldApprovalStatus = oldStatusResult.rows[0].approval_status;
-    const request_id_from_detail = oldStatusResult.rows[0].request_id; // ใช้ชื่อใหม่เพื่อไม่ให้ซ้ำกับ parameter
-
-    // 2. อัปเดต approval_status และ request_detail_note
-    let query, params;
-    if (note) {
-      query = `
-        UPDATE request_details
-        SET approval_status = $1, request_detail_note = $2
-        WHERE request_detail_id = $3
-      `;
-      params = [newApprovalStatus, note, request_detail_id];
-    } else {
-      query = `
-        UPDATE request_details
-        SET approval_status = $1, request_detail_note = NULL -- ตั้งเป็น NULL ถ้าไม่มี note
-        WHERE request_detail_id = $2
-      `;
-      params = [newApprovalStatus, request_detail_id];
-    }
-    const result = await client.query(query, params);
-
-    // 3. บันทึกประวัติสถานะการอนุมัติของรายการย่อย
-    if (result.rowCount > 0 && oldApprovalStatus !== newApprovalStatus) { // เพิ่มเงื่อนไขให้บันทึกประวัติเฉพาะเมื่อสถานะเปลี่ยน
-      await client.query(
-        `INSERT INTO request_status_history
-          (request_id, request_detail_id, old_status, new_status, changed_by, changed_at, note, status_type)
-          VALUES ($1, $2, $3, $4, $5, NOW(), $6, 'approval_detail')`,
-        [request_id_from_detail, request_detail_id, oldApprovalStatus, newApprovalStatus, changed_by, note || `อัปเดตสถานะอนุมัติรายการย่อย ID: ${request_detail_id}`]
-      );
-    }
-
-    await client.query('COMMIT');
-    return result.rowCount > 0;
-  } catch (err) {
-    await client.query('ROLLBACK');
-    console.error("Error in updateRequestDetailApprovalStatus:", err);
-    throw err;
-  } finally {
-    client.release();
-  }
 };
-
 
 /**
  * คำนวณและคืนค่าการนับสถานะของรายการย่อยทั้งหมดสำหรับคำขอที่ระบุ
