@@ -1,195 +1,297 @@
+/* page.module.css */
+
 .mainHome {
-  padding: 15px;
-  background-color: #e3e8ec;
-  height: 100%;
-  min-height: 900px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f8f9fa; /* Light background for a clean look */
+  font-family: 'Kanit', sans-serif; /* A modern, clean Thai font */
+  color: #333;
 }
 
 .infoContainer {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  padding: 30px;
+  max-width: 1600px; /* Wider container for better table display */
+  margin: 0 auto;
   width: 100%;
-  height: 100%;
-  padding: 10px;
-  background-color: #fff;
-  border-radius: 5px;
-  position: relative; /* ให้ลูกที่ absolute อิงตำแหน่งจากตรงนี้ */
-  padding-top: 60px; 
-
 }
 
 .cardHeader {
-  background: #106db9;
-  color: #fff;
-  font-weight: bold;
-  border-radius: 8px 8px 0 0;
-  width: 100%;
-  box-sizing: border-box;
-  display: block;
-  height: 60px;
-  padding: 10px 0;
-  text-align: center;
-  position: absolute;
-  top: 0;
-  left: 0;
-  
-  
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 20px;
+  margin-bottom: 25px;
+  text-align: center; /* Center the heading */
 }
 
-/* ตัวกรอง */
+.cardHeader h1 {
+  font-size: 2.5rem;
+  color: #0056b3; /* A strong, professional blue */
+  font-weight: 700;
+  margin: 0;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+}
+
 .filterContainer {
-  padding: 10px;
-  margin-top: 20px;
   display: flex;
-  justify-content: flex-start;
+  flex-wrap: wrap; /* Allow filters to wrap on smaller screens */
   gap: 20px;
-  align-items: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #e9f5ff; /* Light blue background for filters */
+  border-radius: 10px;
+  border: 1px solid #cce0ff;
+  align-items: flex-end; /* Align items to the bottom */
 }
 
 .filterGroup {
   display: flex;
   flex-direction: column;
+  min-width: 180px; /* Minimum width for select boxes */
+  flex: 1; /* Allow flex items to grow */
+}
+
+.filterGroupSearch {
+  flex: 2; /* Search input takes more space */
+  min-width: 250px;
+  display: flex;
+  flex-direction: column;
 }
 
 .filterLabel {
-  font-size: 14px;
-  margin-bottom: 5px;
+  font-size: 0.9rem;
+  color: #555;
+  margin-bottom: 8px;
+  font-weight: 600;
 }
 
-.filterSelect, .filterInput {
-  padding: 8px;
-  font-size: 14px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-
+.filterSelect,
 .filterInput {
-  width: 200px;
+  padding: 12px 15px;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #495057;
+  background-color: #fff;
+  transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box; /* Include padding in width */
 }
 
-.filterSelect {
-  width: 150px;
+.filterSelect:focus,
+.filterInput:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  outline: none;
 }
 
-/* ตัวกรองช่องค้นหาอยู่ขวาสุด */
-.filterGroupSearch {
-  margin-left: auto; /* ทำให้ช่องค้นหาถูกจัดไปขวาสุด */
-}
-
-.filterInput {
-  width: 250px; /* ความกว้างของช่องค้นหา */
-}
-
+/* Table Styles */
 .tableGrid {
   display: grid;
-  grid-template-columns:
-    100px    /* No. */
-    150px    /* วันที่ */
-    200px    /* รหัสคำขอ (ใหม่) */
-    150px    /* เวลา */
-    250px    /* ผู้ขอเบิก */
-    180px    /* แผนก */
-    150px    /* จำนวนรายการ */
-    150px    /* ประเภท */
-    180px    /* สถานะ */
-    150px;   /* ตรวจสอบ */
-  gap: 10px;
-  width: 100%;
+  grid-template-columns: 0.5fr 1.5fr 1fr 1.2fr 1fr 0.8fr 1fr 1.2fr 1fr; /* Adjust columns for better layout */
+  gap: 1px; /* Small gap for borders */
+  align-items: center;
+  background-color: #e0e0e0; /* Light gray for grid lines */
+  border-radius: 8px;
+  overflow: hidden; /* Ensures borders are contained */
 }
 
-
-/* แถบหัวข้อ */
 .tableHeader {
-  margin-top: 10px;
-  padding: 10px ;
-  background-color: #E9EBFF;
-  font-weight: bold;
-  /* border-bottom: 1px solid #ccc; */
-  border-radius: 12px;
+  background-color: #007bff; /* Primary blue for header */
+  color: #fff;
+  font-weight: 600;
+  padding: 15px 0;
+  font-size: 0.95rem;
+  text-align: center;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
 }
 
 .headerItem {
-  padding: 10px;
-  text-align: left;
+  padding: 15px 10px;
+  text-align: center;
+  background-color: #007bff;
 }
 
-.headerItem:last-child {
-  border-right: none;
-}
-
-/* สไตล์สำหรับแถวในตาราง */
 .tableRow {
-  height: 60px; 
-  width: 100%;
-  border-radius: 8px;
-  display: grid;
-  /* gap: 10px; */
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
+  background-color: #ffffff;
+  transition: background-color 0.2s ease;
 }
 
 .tableRow:nth-child(even) {
-  background-color: #F1F2F6; /* สีสำหรับแถวคู่ */
+  background-color: #f2f7fc; /* Slight stripe for readability */
 }
 
-.tableRow:nth-child(odd) {
-  background-color: #ffffff; /* สีสำหรับแถวคี่ */
+.tableRow:hover {
+  background-color: #e0f0ff; /* Light blue on hover */
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
 }
 
 .tableCell {
-  display: flex;
-  align-items: center;
-  padding: 0px 10px; /* บน-ล่าง 2px, ซ้าย-ขวา 10px */
-  text-align: left;
-}
-
-.tableCell:last-child {
-  border-right: none;
+  padding: 15px 10px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #444;
+  word-break: break-word; /* Prevent long words from overflowing */
 }
 
 .actionButton {
-  padding: 5px 10px;
-  background-color: #007bff;
+  background-color: #28a745; /* Green for action */
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
+  padding: 8px 15px;
+  font-size: 0.9rem;
   cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  font-family: 'Kanit', sans-serif;
 }
 
 .actionButton:hover {
-  background-color: #0056b3;
+  background-color: #218838;
+  transform: translateY(-2px);
 }
 
-  /* /////////////////////////////////////////////////////////////////////////////////////////////////////// */
-  /* สไตล์สำหรับปุ่มย้อนกลับและหน้าถัดไป */
-  .pagination {
-    display: flex;
-    justify-content: center;
-    margin-top: 10px;
+/* Loading and Error messages */
+.inventory p {
+  text-align: center;
+  padding: 30px;
+  font-size: 1.1rem;
+  color: #666;
+}
 
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: flex-end; /* Align to the right */
+  align-items: center;
+  margin-top: 30px;
+  gap: 15px;
+}
+
+.prevButton,
+.nextButton {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 25px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  font-family: 'Kanit', sans-serif;
+  font-weight: 500;
+  min-width: 120px;
+}
+
+.prevButton:hover,
+.nextButton:hover:not(:disabled) {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+.prevButton:disabled,
+.nextButton:disabled {
+  background-color: #cce0ff;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.7;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .tableGrid {
+    grid-template-columns: 0.5fr 1.5fr 1fr 1.2fr 1fr 0.8fr 1fr 1.2fr 1fr; /* Maintain columns but allow overflow */
+    display: block; /* Change to block to allow horizontal scroll */
+    width: max-content; /* Ensure table takes content width */
   }
-  
-  .prevButton,
-  .nextButton {
-    background-color: #007bff; /* สีพื้นหลังปุ่ม */
-    color: white; /* สีข้อความ */
-    border: none; /* กำหนดไม่ให้มีขอบ */
-    padding: 10px 20px; /* ขนาดของปุ่ม */
-    font-size: 16px; /* ขนาดตัวอักษร */
-    cursor: pointer; /* แสดงสัญลักษณ์ของการคลิก */
-    border-radius: 5px; /* มุมโค้ง */
-    transition: background-color 0.3s ease; /* การเปลี่ยนสีเมื่อ hover */
-    margin: 0 10px; /* ระยะห่างระหว่างปุ่ม */
+
+  .inventory {
+    overflow-x: auto; /* Enable horizontal scrolling for the table */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    padding-bottom: 10px; /* Space for scrollbar */
   }
-  
-  /* เมื่อวางเมาส์ที่ปุ่ม */
-  .prevButton:hover,
-  .nextButton:hover {
-    background-color: #0056b3; /* สีพื้นหลังเมื่อ hover */
+
+  .tableHeader, .tableRow {
+    min-width: 1000px; /* Ensure a minimum width for table content */
+    display: grid; /* Keep grid display within min-width */
+    grid-template-columns: 0.5fr 1.5fr 1fr 1.2fr 1fr 0.8fr 1fr 1.2fr 1fr;
   }
-  
-  /* เมื่อปุ่มถูกปิดใช้งาน */
-  .prevButton:disabled,
-  .nextButton:disabled {
-    background-color: #ccc; /* สีพื้นหลังเมื่อปิดใช้งาน */
-    cursor: not-allowed; /* ไม่สามารถคลิกได้ */
+}
+
+
+@media (max-width: 768px) {
+  .cardHeader h1 {
+    font-size: 2rem;
   }
-  
+
+  .filterContainer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filterGroup, .filterGroupSearch {
+    min-width: unset; /* Remove min-width on small screens */
+    width: 100%; /* Take full width */
+  }
+
+  .tableHeader, .tableRow {
+    min-width: 800px; /* Adjust minimum width for smaller screens */
+  }
+
+  .pagination {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .prevButton, .nextButton {
+    width: 100%;
+    max-width: 250px; /* Limit button width */
+  }
+}
+
+@media (max-width: 480px) {
+  .mainHome {
+    padding: 15px;
+  }
+
+  .infoContainer {
+    padding: 20px;
+  }
+
+  .cardHeader {
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+  }
+
+  .cardHeader h1 {
+    font-size: 1.8rem;
+  }
+
+  .filterContainer {
+    padding: 15px;
+    gap: 15px;
+  }
+
+  .filterSelect, .filterInput {
+    padding: 10px 12px;
+    font-size: 0.95rem;
+  }
+
+  .tableHeader, .tableRow {
+    min-width: 700px; /* Further adjust for very small screens */
+  }
+
+  .tableCell, .headerItem {
+    padding: 10px 8px;
+    font-size: 0.85rem;
+  }
+
+  .actionButton {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+}

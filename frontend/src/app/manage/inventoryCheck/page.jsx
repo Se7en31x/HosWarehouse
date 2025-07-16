@@ -1,3 +1,4 @@
+// src/app/manage/inventoryCheck/page.js
 "use client";
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
@@ -42,8 +43,8 @@ export default function InventoryCheck() {
     const socket = connectSocket();
     socket.emit('requestInventoryData');
     socket.on('itemsData', (items) => {
-      console.log("📦 ได้รับข้อมูลใหม่:", items); // เพิ่ม debug log
-      setAllInventoryItems(items); // ✅ อัปเดตทันที
+      console.log("📦 ได้รับข้อมูลใหม่:", items);
+      setAllInventoryItems(items);
     });
     return () => {
       disconnectSocket();
@@ -55,7 +56,8 @@ export default function InventoryCheck() {
     const matchUnit = selectedUnit ? item.item_unit === selectedUnit : true;
     const matchStorage = selectedStorage ? item.item_location === selectedStorage : true;
     const matchSearchText = searchText
-      ? item.item_name.toLowerCase().includes(searchText.toLowerCase())
+      ? item.item_name.toLowerCase().includes(searchText.toLowerCase()) ||
+        getItemCode(item).toLowerCase().includes(searchText.toLowerCase())
       : true;
     return matchCategory && matchUnit && matchStorage && matchSearchText;
   });
@@ -81,19 +83,11 @@ export default function InventoryCheck() {
 
   return (
     <div className={styles.mainHome}>
-      {/* แถบเมนู */}
-      <div className={styles.bar}>
-        <ul className={styles.navList}>
-          <li className={styles.navItem}>ตรวจสอบยอดคงคลัง</li>
-          <li className={styles.navItem}>ยา</li>
-          <li className={styles.navItem}>เวชภัณฑ์</li>
-          <li className={styles.navItem}>ครุภัณฑ์</li>
-          <li className={styles.navItem}>อุปกรณ์ทางการแพทย์</li>
-          <li className={styles.navItem}>ของใช้ทั่วไป</li>
-        </ul>
-      </div>
+      {/* เพิ่มส่วน Page Title แบบข้อความธรรมดา */}
+      <h1 className={styles.pageTitle}>ตรวจสอบยอดคงคลัง</h1>
 
-      <div className={styles.infoContainer}>
+      {/* Wrapper สำหรับเนื้อหาหลัก (Filter + Table + Pagination) */}
+      <div className={styles.contentWrapper}>
         {/* ตัวกรอง */}
         <div className={styles.filterContainer}>
           <div className={styles.filterGroup}>
@@ -143,36 +137,37 @@ export default function InventoryCheck() {
               type="text"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              placeholder="กรอกเพื่อค้นหา..."
+              placeholder="ค้นหารายการ, รหัส..." /* ปรับ placeholder */
               className={styles.filterInput}
             />
           </div>
         </div>
 
-        {/* หัวตาราง */}
-        <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
-          <div className={styles.headerItem}>No.</div>
-          <div className={styles.headerItem}>รหัส</div>
-          <div className={styles.headerItem}>รูปภาพ</div>
-          <div className={styles.headerItem}>รายการ</div>
-          <div className={styles.headerItem}>หมวดหมู่</div>
-          <div className={styles.headerItem}>คงเหลือ</div>
-          <div className={styles.headerItem}>หน่วย</div>
-          <div className={styles.headerItem}>สถานะ</div>
-          <div className={styles.headerItem}>สถานที่จัดเก็บ</div>
-          <div className={styles.headerItem}>อัปเดตล่าสุด</div>
-          <div className={styles.headerItem}>ดำเนินการ</div>
-        </div>
-
-        {/* รายการ */}
+        {/* ตาราง */}
         <div className={styles.inventory}>
+          {/* หัวตาราง */}
+          <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+            <div className={`${styles.headerItem} ${styles.leftAligned}`}>No.</div>
+            <div className={`${styles.headerItem} ${styles.leftAligned}`}>รหัส</div>
+            <div className={styles.headerItem}>รูปภาพ</div>
+            <div className={`${styles.headerItem} ${styles.leftAligned}`}>รายการ</div>
+            <div className={`${styles.headerItem} ${styles.leftAligned}`}>หมวดหมู่</div>
+            <div className={styles.headerItem}>คงเหลือ</div>
+            <div className={styles.headerItem}>หน่วย</div>
+            <div className={`${styles.headerItem} ${styles.leftAligned}`}>สถานะ</div>
+            <div className={`${styles.headerItem} ${styles.leftAligned}`}>สถานที่จัดเก็บ</div>
+            <div className={styles.headerItem}>อัปเดตล่าสุด</div>
+            <div className={styles.headerItem}>ดำเนินการ</div>
+          </div>
+
+          {/* รายการ */}
           {paginatedItems.length > 0 ? (
             paginatedItems.map((item, index) => (
               <div key={item.item_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
-                <div className={styles.tableCell}>
+                <div className={`${styles.tableCell} ${styles.leftAligned}`}>
                   {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
                 </div>
-                <div className={styles.tableCell}>{getItemCode(item)}</div>
+                <div className={`${styles.tableCell} ${styles.leftAligned}`}>{getItemCode(item)}</div>
                 <div className={styles.tableCell}>
                   <img
                     src={item.item_img
@@ -180,17 +175,16 @@ export default function InventoryCheck() {
                       : "http://localhost:5000/public/defaults/landscape.png"}
                     alt={item.item_name}
                     className={styles.imageCell}
-                    style={{ width: "70px", height: "70px", objectFit: "cover" }}
                   />
                 </div>
-                <div className={styles.tableCell}>{item.item_name}</div>
-                <div className={styles.tableCell}>
+                <div className={`${styles.tableCell} ${styles.leftAligned}`}>{item.item_name}</div>
+                <div className={`${styles.tableCell} ${styles.leftAligned}`}>
                   {categoryThaiMap[item.item_category?.toLowerCase()] || item.item_category}
                 </div>
                 <div className={styles.tableCell}>{item.item_qty}</div>
                 <div className={styles.tableCell}>{item.item_unit}</div>
-                <div className={styles.tableCell}>พร้อมใช้งาน</div>
-                <div className={styles.tableCell}>{item.item_location}</div>
+                <div className={`${styles.tableCell} ${styles.statusAvailable}`}>พร้อมใช้งาน</div>
+                <div className={`${styles.tableCell} ${styles.leftAligned}`}>{item.item_location}</div>
                 <div className={styles.tableCell}>
                   {new Date(item.item_update).toLocaleString("th-TH", {
                     timeZone: "Asia/Bangkok",
@@ -205,7 +199,6 @@ export default function InventoryCheck() {
                   <Link href={`/manage/inventoryCheck/${item.item_id}/inventoryDetail`} className={styles.actionButton}>
                     ตรวจสอบ
                   </Link>
-
                 </div>
               </div>
             ))

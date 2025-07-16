@@ -1,3 +1,10 @@
+/* src/app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* คุณอาจมี CSS อื่นๆ ของคุณต่อจากนี้ */
+
 /* Layout */
 .layout {
     display: flex;

@@ -1,173 +1,307 @@
+/* page.module.css */
+
 .mainHome {
-  padding: 15px;
-  background-color: #e3e8ec;
-}
-
-.customHr {
-  height: 2px;
-  background: #ccc;
-  margin-top: 10px;
-}
-
-.textchart {
-  font-weight: bold;
-  text-align: center;
-}
-
-/* Dashboard */
-.dataDashboard {
-  height: 329px;
+  /* นี่คือ Container หลักที่จะรองรับส่วนเนื้อหา Dashboard */
+  /* หากคุณมี Sidebar และ Header ที่ถูกจัดการแยกต่างหาก คุณอาจต้องปรับ parent element ให้เหมาะสม */
   display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
+  flex-direction: column; /* วางเนื้อหาในแนวตั้ง */
+  min-height: 100vh; /* ความสูงขั้นต่ำเต็มหน้าจอ */
+  background-color: #f0f2f5; /* สีพื้นหลังหลักที่สะอาดตา */
+  font-family: 'Prompt', sans-serif; /* แนะนำใช้ฟอนต์ Prompt เพื่อรองรับภาษาไทย หรือฟอนต์ sans-serif อื่นๆ */
+  color: #333; /* สีข้อความเริ่มต้น */
+  padding: 20px; /* ระยะห่างรอบ Dashboard */
 }
 
+/* --- ไม่มีสไตล์สำหรับ Header และ Sidebar ในส่วนนี้ เพื่อให้เป็นไปตามคำสั่ง --- */
+/* หากคุณมีสไตล์สำหรับ Header และ Sidebar อยู่แล้ว ให้คงไว้ในไฟล์ CSS อื่นๆ ของคุณ */
+
+/* Main Content Wrapper: ตัวห่อหุ้มเนื้อหา Dashboard ทั้งหมด */
+.contentWrapper {
+  flex-grow: 1; /* ให้ใช้พื้นที่ที่เหลือทั้งหมด */
+  padding: 0; /* ไม่มี padding เพิ่มเติม เนื่องจาก .mainHome มี padding อยู่แล้ว */
+  display: flex;
+  flex-direction: column;
+  gap: 25px; /* ระยะห่างระหว่างกลุ่ม Card หลักๆ */
+}
+
+/* General Card Styling: สไตล์พื้นฐานสำหรับ Card ทุกชนิด */
+.card {
+  background-color: #ffffff; /* สีพื้นหลัง Card */
+  border-radius: 12px; /* มุมโค้งมนของ Card */
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08); /* เงาที่ดูนุ่มนวล */
+  padding: 25px; /* ระยะห่างภายใน Card */
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Animation เมื่อ hover */
+}
+
+.card:hover {
+  transform: translateY(-4px); /* ยก Card ขึ้นเล็กน้อยเมื่อ hover */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12); /* ทำให้เงาชัดขึ้นเมื่อ hover */
+}
+
+/* Card Header: หัวข้อภายใน Card */
 .cardHeader {
-  background: #007bff;
-  color: #fff;
-  font-weight: bold;
-  border-radius: 8px 8px 0 0;
-  width: 100%;
-  box-sizing: border-box;
-  display: block;
-  height: 40px;
-  padding: 10px 0;
-  text-align: center;
-  position: absolute;
-  top: 0;
-  left: 0;
+  font-size: 1.4em; /* ขนาดฟอนต์หัวข้อ */
+  font-weight: 600; /* น้ำหนักฟอนต์ */
+  color: #212529; /* สีหัวข้อ */
+  margin-bottom: 18px; /* ระยะห่างด้านล่างหัวข้อ */
+  border-bottom: 2px solid #e9ecef; /* เส้นใต้หัวข้อที่หนาขึ้น */
+  padding-bottom: 12px; /* ระยะห่างระหว่างหัวข้อกับเส้นใต้ */
 }
 
-.dashboardContainer {
+/* Overview Cards Section: สไตล์สำหรับกลุ่มบัตรสรุปภาพรวม */
+.overviewCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Responsive Grid: อย่างน้อย 250px ต่อคอลัมน์ */
+  gap: 25px; /* ระยะห่างระหว่างบัตร */
+}
+
+.overviewCard {
   display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.dashboardData,
-.chartdata,
-.requestStatus,
-.recentActivity {
-  background: #fff;
-  padding: 15px;
-  border-radius: 15px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: relative;
-  padding-top: 50px;
-}
-
-
-
-.recentActivity {
-  height: 300px;
-  width: 587px;
-}
-
-.dashboardData {
-  flex: 1;
-  text-align: center;
-}
-
-.chartdata {
-  flex: 2;
+  align-items: center; /* จัดให้อยู่กึ่งกลางในแนวตั้ง */
+  gap: 20px; /* ระยะห่างระหว่างไอคอนกับเนื้อหา */
+  border-left: 8px solid; /* เส้นคั่นด้านซ้ายที่โดดเด่น */
   padding: 20px;
+  /* สีของ border-left จะถูกกำหนดด้วย inline style ใน HTML เพื่อความยืดหยุ่น */
+}
+
+.cardIcon {
+  font-size: 3em; /* ขนาดไอคอนใหญ่ขึ้น */
+  color: #6c757d; /* สีไอคอนที่ดูเรียบง่าย */
+  flex-shrink: 0; /* ป้องกันไอคอนหดตัว */
+}
+
+.cardTitle {
+  font-size: 1em;
+  color: #6c757d;
+  margin-bottom: 8px;
+}
+
+.cardValue {
+  font-size: 2.8em; /* ขนาดตัวเลขค่าใหญ่มาก */
+  font-weight: bold;
+  line-height: 1.1;
+  margin: 0;
+  color: #343a40; /* สีตัวเลขค่าเริ่มต้น */
+}
+
+.unit {
+  font-size: 0.5em; /* ขนาดหน่วยที่เล็กกว่า */
+  font-weight: normal;
+  color: #888;
+  margin-left: 5px;
+}
+
+/* Main Content Grid (Chart and Side Info): สไตล์สำหรับส่วนกราฟและข้อมูลด้านข้าง */
+.mainContentGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* กราฟใช้ 2 ส่วน, ข้อมูลด้านข้างใช้ 1 ส่วน */
+  gap: 25px; /* ระยะห่างระหว่างคอลัมน์ */
+}
+
+.chartCard {
+  /* สไตล์เฉพาะสำหรับ Card กราฟ */
 }
 
 .chartPlaceholder {
-  margin-top: 50px;
-  height: 400px;
-  background: #aaaaaa;
+  min-height: 380px; /* ความสูงขั้นต่ำสำหรับพื้นที่กราฟ */
+  background-color: #e6f7fa; /* สีพื้นหลังอ่อนๆ สำหรับพื้นที่กราฟ */
   border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.infoContainer {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  color: #007bff;
+  font-style: italic;
+  overflow: hidden; /* ป้องกันรูปภาพล้น */
 }
 
-.recentActivity table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.recentActivity th,
-.recentActivity td {
-  border: 1px solid
-}
-
-.requestStatus {
-  display: grid;
-  grid-template-columns: 1fr; /* คอลัมน์เดียว */
-  gap: 8px; /* ลดระยะห่างระหว่างรายการ */
-  padding: 15px 20px; /* เพิ่ม padding ข้างในให้สมดุล */
-  background: #ffffff;
-  border-radius: 15px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: relative;
-  height: auto;
-  width: 100%;
-  max-width: 587px; /* จำกัดความกว้างสูงสุด */
-  margin: 0 auto; /* กำหนดให้กึ่งกลางหน้า */
-}
-
-.cardHeader {
-  grid-column: span 1;
-  font-size: 18px;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 8px;
-}
-
-.dateRightTop {
-  grid-column: span 1;
-  text-align: right;
-  font-size: 14px;
-  font-weight: normal;
+.chartCaption {
+  margin-top: 20px;
+  font-size: 1em;
   color: #555;
-  margin-bottom: 8px;
+  text-align: center;
+  font-weight: 500;
 }
 
-.requestStatusItem {
-  font-size: 18px;
-  font-weight: bold;
+.sideInfoCards {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+/* Status Card: สไตล์สำหรับบัตรสถานะคำขอ */
+.statusCard {
+  /* สไตล์เฉพาะสำหรับบัตรสถานะ */
+}
+
+.statusList {
+  padding-top: 10px;
+}
+
+.statusItem {
   display: flex;
   align-items: center;
-  justify-content: center; /* จัดกลางเนื้อหาภายใน */
-  padding: 6px 10px; /* เพิ่ม padding ซ้าย-ขวา ให้อยู่ไม่ติดขอบ */
-  background-color: #f7f7f7;
-  border-radius: 8px;
+  margin-bottom: 15px;
+  font-size: 1.05em;
+  color: #495057;
+  padding-bottom: 5px;
+  border-bottom: 1px dashed #eff2f5; /* เส้นประคั่น */
 }
 
-.pending {
-  color: #ffa500;
+.statusItem:last-child {
+  border-bottom: none; /* ไม่มีเส้นคั่นสำหรับรายการสุดท้าย */
+  margin-bottom: 0;
 }
 
-.approved {
-  color: #28a745;
+.statusDot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  margin-right: 12px;
+  flex-shrink: 0;
 }
 
-.rejected {
-  color: #dc3545;
+.pendingDot { background-color: #ffc107; } /* สีเหลือง/ส้ม */
+.approvedDot { background-color: #28a745; } /* สีเขียว */
+.rejectedDot { background-color: #dc3545; } /* สีแดง */
+
+.statusCount {
+  font-weight: bold;
+  margin-left: auto; /* ดันตัวเลขไปทางขวา */
+  font-size: 1.2em;
+  color: #343a40;
 }
 
-.summary {
-  margin-top: 10px;
-  padding: 10px;
-  font-size: 14px;
-  font-style: italic;
-  color: #555;
-  text-align: center;
-  background: #eef2f7;
-  border-radius: 8px;
+/* Activity Card: สไตล์สำหรับบัตรกิจกรรมล่าสุด */
+.activityCard {
+  /* สไตล์เฉพาะสำหรับบัตรกิจกรรม */
 }
 
+.activityTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  font-size: 0.95em;
+}
 
+.activityTable th,
+.activityTable td {
+  text-align: left;
+  padding: 12px 0;
+  border-bottom: 1px solid #eff2f5;
+}
 
+.activityTable th {
+  background-color: #f8f9fa;
+  color: #495057;
+  font-weight: 600;
+  text-transform: uppercase; /* ตัวพิมพ์ใหญ่สำหรับหัวตาราง */
+  font-size: 0.9em;
+}
 
+.activityTable tbody tr:hover {
+  background-color: #f0f4f7;
+}
 
+.viewAllLink {
+  display: block;
+  text-align: right;
+  margin-top: 20px;
+  color: #007bff;
+  text-decoration: none;
+  font-size: 1em;
+  font-weight: 500;
+  transition: color 0.2s ease, text-decoration 0.2s ease;
+}
 
+.viewAllLink:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+/* Responsive Design: การปรับแต่งสำหรับขนาดหน้าจอต่างๆ */
+@media (max-width: 1200px) {
+  .mainContentGrid {
+    grid-template-columns: 1fr; /* บนหน้าจอขนาดกลาง (แท็บเล็ตแนวนอน) จะซ้อนกราฟและข้อมูลด้านข้างกัน */
+  }
+}
+
+@media (max-width: 768px) {
+  .mainHome {
+    padding: 15px; /* ลด padding ลง */
+  }
+
+  .contentWrapper {
+    gap: 15px; /* ลดระยะห่างระหว่างกลุ่ม Card */
+  }
+
+  .card {
+    padding: 18px;
+  }
+
+  .cardHeader {
+    font-size: 1.2em;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+  }
+
+  .overviewCards {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); /* ปรับขนาด Card ให้เล็กลง */
+    gap: 15px;
+  }
+
+  .overviewCard {
+    gap: 15px;
+    padding: 15px;
+  }
+
+  .cardIcon {
+    font-size: 2em; /* ลดขนาดไอคอน */
+  }
+
+  .cardValue {
+    font-size: 2em; /* ลดขนาดตัวเลขค่า */
+  }
+
+  .chartPlaceholder {
+    min-height: 280px; /* ลดความสูงกราฟ */
+  }
+
+  .statusItem {
+    font-size: 1em;
+  }
+
+  .statusCount {
+    font-size: 1.1em;
+  }
+
+  .activityTable th,
+  .activityTable td {
+    font-size: 0.85em; /* ลดขนาดฟอนต์ตาราง */
+    padding: 10px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .mainHome {
+    padding: 10px; /* ลด padding อีก */
+  }
+  .overviewCards {
+    grid-template-columns: 1fr; /* บนหน้าจอเล็กสุด (มือถือ) จะซ้อน Card ลงมาทั้งหมด */
+  }
+  .card {
+    padding: 15px;
+  }
+  .cardHeader {
+    font-size: 1.1em;
+  }
+  .cardValue {
+    font-size: 1.8em;
+  }
+  .chartPlaceholder {
+    min-height: 200px;
+  }
+  .viewAllLink {
+    font-size: 0.9em;
+  }
+}

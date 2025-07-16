@@ -34,8 +34,9 @@ export default function ApprovalRequestPage() {
     const router = useRouter();
     const [request, setRequest] = useState(null);
     const [details, setDetails] = useState([]);
-    // draftDetails เก็บทั้ง status, reason, และ approved_qty
     const [draftDetails, setDraftDetails] = useState({});
+    const [itemErrors, setItemErrors] = useState({});
+    const [tooltip, setTooltip] = useState({}); // { [itemId]: { show: boolean, message: string } }
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 8;
@@ -58,8 +59,18 @@ export default function ApprovalRequestPage() {
         pending: 'รอดำเนินการ (จัดเตรียม)',
     };
 
-    // สถานะคำขอรวมที่ไม่สามารถแก้ไขได้
-    const disabledOverallStatuses = ["preparing", "delivering", "completed", "canceled", "approved_all", "rejected_all", "approved_partial", "rejected_partial", "approved_partial_and_rejected_partial"];
+    // สถานะคำขอรวมที่ไม่สามารถแก้ไขได้ (ใช้กับคำขอโดยรวม)
+    const disabledOverallStatuses = [
+        "preparing",
+        "delivering",
+        "completed",
+        "canceled",
+        "approved_all",
+        "rejected_all",
+        "approved_partial",
+        "rejected_partial",
+        "approved_partial_and_rejected_partial"
+    ];
 
     // จำลอง user_id สำหรับการทดสอบ (ควรใช้จากระบบ Authentication จริง)
     useEffect(() => {
@@ -82,9 +93,22 @@ export default function ApprovalRequestPage() {
             const res = await axiosInstance.get(`/approval/${request_id}`);
             setRequest(res.data.request);
             setDetails(res.data.details);
-            // เมื่อโหลดข้อมูลใหม่ ให้รีเซ็ต draftDetails
-            setDraftDetails({});
+            const initialDraft = {};
+            res.data.details.forEach(detail => {
+                initialDraft[detail.request_detail_id] = {
+                    status: detail.approval_status,
+                    approved_qty: (detail.approved_qty !== null && detail.approved_qty !== undefined)
+                        ? detail.approved_qty
+                        : (detail.approval_status === 'rejected' ? 0 : detail.requested_qty), // Default to 0 if rejected
+                    reason: detail.approval_note
+                };
+            });
+            setDraftDetails(initialDraft);
+            setItemErrors({});
+            setTooltip({});
             setCurrentPage(1);
+            console.log("Fetched and updated details:", res.data.details);
+            console.log("Initial draft after fetch:", initialDraft);
         } catch (err) {
             console.error("Error fetching request detail:", err);
             Swal.fire('ผิดพลาด', 'ไม่สามารถโหลดข้อมูลคำขอได้', 'error');
@@ -99,15 +123,18 @@ export default function ApprovalRequestPage() {
             ...prev,
             [id]: {
                 status: newStatus,
-                approved_qty: newApprovedQty, // เพิ่ม approved_qty
-                reason: reason || null
+                approved_qty: newApprovedQty,
+                reason: newStatus === 'rejected' ? (reason || null) : null
             }
         }));
+        setItemErrors(prev => ({ ...prev, [id]: '' })); // Clear errors when status changes
+        setTooltip(prev => ({ ...prev, [id]: { show: false, message: '' } })); // Hide tooltip
     };
 
     // Handler เมื่อกดปุ่มอนุมัติรายการเดียว
     const handleApproveOne = (detail) => {
-        // กำหนดจำนวนที่อนุมัติเริ่มต้นเท่ากับจำนวนที่ขอ
+        // เมื่อกดอนุมัติ ให้กำหนดสถานะเป็น approved และจำนวนเป็น requested_qty
+        // แต่ยังคงอนุญาตให้ผู้ใช้แก้ไขจำนวนได้หลังจากนี้
         updateDraft(detail.request_detail_id, 'approved', detail.requested_qty);
     };
 
@@ -120,66 +147,146 @@ export default function ApprovalRequestPage() {
             inputPlaceholder: 'เช่น พัสดุหมด, ไม่สามารถให้ยืม',
             showCancelButton: true,
             confirmButtonText: '❌ ปฏิเสธ',
-            cancelButtonText: 'ยกเลิก'
+            cancelButtonText: 'ยกเลิก',
+            customClass: {
+                confirmButton: 'swal2-confirm swal2-styled swal2-deny-button',
+                cancelButton: 'swal2-cancel swal2-styled'
+            }
         });
         if (reason === undefined) return;
-        // เมื่อปฏิเสธ จำนวนที่อนุมัติเป็น 0
+        // เมื่อกดปฏิเสธ ให้กำหนดสถานะเป็น rejected และจำนวนเป็น 0 ทันที
         updateDraft(detail.request_detail_id, 'rejected', 0, reason);
     };
 
     // Handler เมื่อมีการเปลี่ยนจำนวนที่อนุมัติใน input field
     const handleApprovedQtyChange = (id, value, requestedQty) => {
-        const parsedValue = parseInt(value, 10);
-        // ตรวจสอบให้แน่ใจว่าเป็นตัวเลขและไม่ติดลบ
-        const newQty = isNaN(parsedValue) || parsedValue < 0 ? 0 : parsedValue;
-        // ไม่ให้เกินจำนวนที่ขอ
-        const finalQty = Math.min(newQty, requestedQty);
+        let errorMsg = '';
+        let finalQtyForDraft = null;
+
+        const currentDetailInDraft = draftDetails[id];
+        // ตรวจสอบว่าสถานะปัจจุบันใน draftDetails เป็น 'rejected' หรือไม่
+        // ถ้าเป็น 'rejected' ไม่ต้องทำอะไรกับการเปลี่ยนจำนวน เพราะ input ควรจะ disabled อยู่แล้ว
+        if (currentDetailInDraft?.status === 'rejected') {
+            // ไม่ควรมาถึงตรงนี้หาก input ถูก disabled อย่างถูกต้อง
+            // แต่เพื่อความปลอดภัย ให้ตั้งค่าเป็น 0 และออกจากฟังก์ชัน
+            setDraftDetails(prev => ({
+                ...prev,
+                [id]: {
+                    ...prev[id],
+                    approved_qty: 0,
+                }
+            }));
+            return;
+        }
+
+        if (value === '') {
+            errorMsg = '';
+            finalQtyForDraft = ''; // ให้แสดงเป็นช่องว่างได้
+        } else {
+            const parsedValue = parseInt(value, 10);
+            if (isNaN(parsedValue) || parsedValue < 0 || parsedValue > requestedQty) {
+                if (isNaN(parsedValue) || parsedValue < 0) {
+                     errorMsg = 'กรุณากรอกจำนวนให้เป็นตัวเลขที่ไม่ติดลบ';
+                     finalQtyForDraft = 0; // หรือคงค่าเดิมไว้
+                } else if (parsedValue > requestedQty) {
+                     errorMsg = `จำนวนต้องไม่เกิน ${requestedQty}`;
+                     finalQtyForDraft = requestedQty; // ตั้งค่าเป็น max เพื่อไม่ให้เกิน
+                }
+            } else {
+                errorMsg = '';
+                finalQtyForDraft = parsedValue;
+            }
+        }
+
+        setItemErrors(prev => ({
+            ...prev,
+            [id]: errorMsg
+        }));
+
+        if (errorMsg) {
+            setTooltip(prev => ({ ...prev, [id]: { show: true, message: errorMsg } }));
+        } else {
+            setTooltip(prev => ({ ...prev, [id]: { show: false, message: '' } }));
+        }
 
         setDraftDetails(prev => {
             const currentDraft = prev[id] || {};
+            // สถานะควรคงเดิมตามที่ผู้ใช้เลือก (approved/waiting_approval_detail)
+            // หรือถ้าเป็น rejected ควรจะถูก updateDraft ไปแล้วตั้งแต่แรก
             return {
                 ...prev,
                 [id]: {
                     ...currentDraft,
-                    status: currentDraft.status || 'waiting_approval_detail', // รักษาสถานะเดิม หรือตั้งเป็นรออนุมัติ
-                    approved_qty: finalQty, // อัปเดตจำนวนที่อนุมัติ
+                    approved_qty: finalQtyForDraft,
                 }
             };
         });
     };
 
+
     // Handler สำหรับบันทึกการเปลี่ยนแปลงทั้งหมด
     const handleSaveDraft = async () => {
-        // กรองเฉพาะรายการที่มีการเปลี่ยนแปลงจากสถานะเดิม หรือมีการเปลี่ยนแปลง approved_qty
-        const changesToSave = Object.keys(draftDetails)
-            .filter(detailId => {
-                const originalDetail = details.find(d => d.request_detail_id === parseInt(detailId, 10));
-                const draft = draftDetails[detailId];
-                // ตรวจสอบว่าสถานะเปลี่ยนไป หรือ approved_qty เปลี่ยนไป
-                return (
-                    draft.status !== originalDetail?.approval_status ||
-                    draft.approved_qty !== originalDetail?.approved_qty
-                );
-            })
-            .map(detailId => {
-                const originalDetail = details.find(d => d.request_detail_id === parseInt(detailId, 10));
-                const draft = draftDetails[detailId];
-                return {
-                    request_detail_id: parseInt(detailId, 10),
-                    status: draft.status,
-                    approved_qty: draft.approved_qty, // ส่ง approved_qty ไปด้วย
-                    note: draft.reason || null,
-                    old_status: originalDetail?.approval_status, // สถานะเดิม (สำหรับบันทึกประวัติ)
-                };
-            });
-
-        if (changesToSave.length === 0) {
-            Swal.fire('ไม่พบการเปลี่ยนแปลง', 'ไม่มีรายการใดที่ถูกเลือกเพื่อบันทึก', 'info');
+        if (request && disabledOverallStatuses.includes(request.request_status)) {
+            Swal.fire('ไม่สามารถบันทึกได้', 'คำขออยู่ในสถานะที่ไม่อนุญาตให้แก้ไขแล้ว', 'warning');
             return;
         }
 
-        if (request && disabledOverallStatuses.includes(request.request_status)) {
-            Swal.fire('ไม่สามารถบันทึกได้', 'คำขออยู่ในสถานะที่ไม่อนุญาตให้แก้ไขแล้ว', 'warning');
+        const hasInputErrors = Object.values(itemErrors).some(error => error !== '');
+        if (hasInputErrors) {
+            Swal.fire('ข้อผิดพลาด', 'กรุณาแก้ไขข้อมูลในช่องจำนวนที่อนุมัติให้ถูกต้องก่อนบันทึก', 'error');
+            return;
+        }
+
+        const changesToSave = Object.keys(draftDetails)
+            .map(detailId => {
+                const originalDetail = details.find(d => d.request_detail_id === parseInt(detailId, 10));
+                const draft = draftDetails[detailId];
+                if (!originalDetail) return null;
+
+                const approvedQtyForBackend = typeof draft.approved_qty === 'string' && draft.approved_qty === ''
+                    ? 0 // Treat empty string as 0 for backend
+                    : (isNaN(parseInt(draft.approved_qty, 10)) ? 0 : parseInt(draft.approved_qty, 10));
+
+                // If status is NOT rejected, and approved_qty is 0, show error
+                if (approvedQtyForBackend === 0 && draft.status !== 'rejected') {
+                    setItemErrors(prev => ({ ...prev, [detailId]: 'จำนวนที่อนุมัติเป็น 0 ไม่ได้ หากสถานะไม่ใช่ปฏิเสธ' }));
+                    setTooltip(prev => ({ ...prev, [detailId]: { show: true, message: 'จำนวนที่อนุมัติเป็น 0 ไม่ได้ หากสถานะไม่ใช่ปฏิเสธ' } }));
+                    return null;
+                }
+                // If status is rejected, ensure approved_qty is 0
+                if (draft.status === 'rejected' && approvedQtyForBackend !== 0) {
+                     setItemErrors(prev => ({ ...prev, [detailId]: 'จำนวนที่อนุมัติควรเป็น 0 เมื่อสถานะปฏิเสธ' }));
+                     setTooltip(prev => ({ ...prev, [detailId]: { show: true, message: 'จำนวนที่อนุมัติควรเป็น 0 เมื่อสถานะปฏิเสธ' } }));
+                     return null;
+                }
+
+
+                return {
+                    request_detail_id: parseInt(detailId, 10),
+                    status: draft.status,
+                    approved_qty: approvedQtyForBackend,
+                    note: draft.reason || null,
+                    old_status: originalDetail.approval_status,
+                };
+            })
+            .filter(item => {
+                if (!item) return false;
+                const originalDetail = details.find(d => d.request_detail_id === item.request_detail_id);
+                // Only include items that actually changed
+                return (
+                    item.status !== originalDetail.approval_status ||
+                    item.approved_qty !== originalDetail.approved_qty ||
+                    (item.status === 'rejected' && item.note !== originalDetail.approval_note)
+                );
+            });
+
+        if (Object.values(itemErrors).some(error => error !== '')) {
+            Swal.fire('ข้อผิดพลาด', 'กรุณาแก้ไขข้อมูลในช่องจำนวนที่อนุมัติให้ถูกต้องก่อนบันทึก', 'error');
+            return;
+        }
+
+        if (changesToSave.length === 0) {
+            Swal.fire('ไม่พบการเปลี่ยนแปลง', 'ไม่มีรายการใดที่ถูกเลือกเพื่อบันทึก', 'info');
             return;
         }
 
@@ -198,7 +305,7 @@ export default function ApprovalRequestPage() {
             const userId = parseInt(localStorage.getItem('user_id'), 10);
             await axiosInstance.put(`/approval/${request_id}/bulk-update`, { updates: changesToSave, userId });
             Swal.fire('สำเร็จ', 'บันทึกสำเร็จแล้ว', 'success');
-            await fetchRequestDetail(); // โหลดข้อมูลใหม่หลังจากบันทึก
+            await fetchRequestDetail();
         } catch (err) {
             console.error("Error saving draft:", err);
             const errorMessage = err.response?.data?.message || err.response?.data?.error || 'ไม่สามารถบันทึกได้';
@@ -219,7 +326,8 @@ export default function ApprovalRequestPage() {
         const counts = { totalItems: 0, approvedCount: 0, rejectedCount: 0, pendingCount: 0 };
         details.forEach(d => {
             const currentStatus = draftDetails[d.request_detail_id]?.status || d.approval_status;
-            counts.totalItems += d.requested_qty;
+            counts.totalItems += d.requested_qty; // นับตามจำนวนที่ขอทั้งหมด
+
             if (currentStatus === 'approved') counts.approvedCount += 1;
             else if (currentStatus === 'rejected') counts.rejectedCount += 1;
             else counts.pendingCount += 1;
@@ -227,17 +335,9 @@ export default function ApprovalRequestPage() {
         return counts;
     }, [details, draftDetails]);
 
+    // ตรวจสอบว่าคำขอโดยรวมอยู่ในสถานะที่แก้ไขไม่ได้แล้วหรือไม่
+    const isOverallRequestDisabled = request && disabledOverallStatuses.includes(request.request_status);
 
-    // ตรวจสอบว่าปุ่มอนุมัติ/ปฏิเสธแต่ละรายการควรถูกปิดใช้งานหรือไม่
-    const isItemDisabled = (detail) => {
-        const currentStatus = draftDetails[detail.request_detail_id]?.status || detail.approval_status;
-        // ปิดใช้งานถ้าสถานะคำขอรวมอยู่ใน disabledOverallStatuses
-        if (request && disabledOverallStatuses.includes(request.request_status)) return true;
-        // ปิดใช้งานถ้าสถานะรายการย่อยไม่ใช่ 'รออนุมัติ' แล้ว
-        return currentStatus !== 'waiting_approval_detail';
-    };
-
-    // Render Logic
     if (loading) return <p className={styles.loading}>กำลังโหลดข้อมูล...</p>;
     if (!request) return <p className={styles.error}>ไม่พบคำขอ</p>;
 
@@ -268,114 +368,150 @@ export default function ApprovalRequestPage() {
                 </div>
 
                 <h3 className={styles.subtitle}>รายการที่ขอ:</h3>
-                <table className={styles.table}>
-                    <thead>
-                        <tr>
-                            <th>ลำดับ</th>
-                            <th>รูป</th>
-                            <th>ชื่อพัสดุ</th>
-                            <th>จำนวนที่ขอ</th>
-                            <th>หน่วย</th>
-                            <th>สถานะ</th>
-                            <th>จำนวนที่อนุมัติ</th> {/* เพิ่มคอลัมน์นี้ */}
-                            <th>จัดการ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {currentItems.map((d, i) => {
-                            const draft = draftDetails[d.request_detail_id];
-                            const currentItemStatus = draft?.status || d.approval_status;
-                            const statusText = statusMap[currentItemStatus] || currentItemStatus;
-                            const isItemDisabledForApproval = isItemDisabled(d); // ตรวจสอบว่าปุ่มอนุมัติ/ปฏิเสธควรถูกปิดใช้งานหรือไม่
-
-                            // จำนวนที่อนุมัติที่แสดงในช่อง input
-                            const displayApprovedQty = draft?.approved_qty !== undefined
-                                ? draft.approved_qty
-                                : d.approved_qty !== undefined
-                                    ? d.approved_qty
-                                    : d.requested_qty; // ค่าเริ่มต้นคือจำนวนที่ขอ
-
-                            return (
-                                <tr key={d.request_detail_id}>
-                                    <td data-label="ลำดับ">{indexOfFirstItem + i + 1}</td>
-                                    <td data-label="รูป"><ItemImage item_img={d.item_img} alt={d.item_name} /></td>
-                                    <td data-label="ชื่อพัสดุ">{d.item_name}</td>
-                                    <td data-label="จำนวนที่ขอ">{d.requested_qty}</td>
-                                    <td data-label="หน่วย">{d.item_unit}</td>
-                                    <td data-label="สถานะ">{statusText}</td>
-                                    <td data-label="จำนวนที่อนุมัติ">
-                                        {/* ช่องกรอกจำนวนที่อนุมัติ */}
-                                        <input
-                                            type="number"
-                                            value={displayApprovedQty}
-                                            onChange={(e) => handleApprovedQtyChange(d.request_detail_id, e.target.value, d.requested_qty)}
-                                            min="0"
-                                            max={d.requested_qty}
-                                            className={styles.approvedQtyInput}
-                                            // ปิดใช้งานถ้าสถานะรวมถูกปิด หรือรายการย่อยถูกอนุมัติ/ปฏิเสธไปแล้ว
-                                            disabled={isItemDisabledForApproval || currentItemStatus === 'approved' || currentItemStatus === 'rejected'}
-                                        />
-                                    </td>
-                                    <td data-label="จัดการ">
-                                        {isItemDisabledForApproval ? (
-                                            <>
-                                                <button
-                                                    disabled
-                                                    className={styles.disabledButton}
-                                                    title="รายการนี้ได้รับการอนุมัติหรือปฏิเสธแล้ว"
-                                                >
-                                                    ✅
-                                                </button>
-                                                <button
-                                                    disabled
-                                                    className={styles.disabledButton}
-                                                    title="รายการนี้ได้รับการอนุมัติหรือปฏิเสธแล้ว"
-                                                >
-                                                    ❌
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <button
-                                                    onClick={() => handleApproveOne(d)} // ส่ง detail object ไป
-                                                    className={styles.activeButton}
-                                                    title="อนุมัติรายการนี้"
-                                                >
-                                                    ✅
-                                                </button>
-                                                <button
-                                                    onClick={() => handleRejectOne(d)} // ส่ง detail object ไป
-                                                    className={styles.activeButton}
-                                                    title="ปฏิเสธรายการนี้"
-                                                >
-                                                    ❌
-                                                </button>
-                                            </>
-                                        )}
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                        {/* แถวว่างสำหรับ Pagination */}
-                        {Array.from({ length: itemsPerPage - currentItems.length }).map((_, idx) => (
-                            <tr key={`empty-${idx}`} className={styles.emptyRow}>
-                                <td colSpan="8">&nbsp;</td> {/* ปรับ colSpan ให้ตรงกับจำนวนคอลัมน์ */}
+                <div className={styles.tableContainer}>
+                    <table className={styles.table}>
+                        <thead>
+                            <tr>
+                                <th>ลำดับ</th>
+                                <th>รูป</th>
+                                <th>ชื่อพัสดุ</th>
+                                <th>จำนวนที่ขอ</th>
+                                <th>หน่วย</th>
+                                <th>สถานะ</th>
+                                <th>จำนวนที่อนุมัติ</th>
+                                <th>จัดการ</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {currentItems.map((d, i) => {
+                                const draft = draftDetails[d.request_detail_id] || {
+                                    status: d.approval_status,
+                                    approved_qty: d.approved_qty,
+                                    reason: d.approval_note
+                                };
+                                const currentItemStatus = draft?.status;
+                                const statusText = statusMap[currentItemStatus] || currentItemStatus;
+
+                                const displayApprovedQty = draft?.approved_qty !== undefined
+                                    ? String(draft.approved_qty)
+                                    : (d.approved_qty !== undefined && d.approved_qty !== null
+                                        ? String(d.approved_qty)
+                                        : '');
+
+                                // **เงื่อนไขสำหรับ Input Field (จำนวนที่อนุมัติ)**
+                                // Input จะถูก disabled เมื่อ:
+                                // 1. คำขอโดยรวมอยู่ในสถานะที่แก้ไขไม่ได้แล้ว (isOverallRequestDisabled)
+                                // หรือ
+                                // 2. สถานะของรายการนั้นใน draftDetails เป็น 'rejected'
+                                const isQuantityInputDisabled = isOverallRequestDisabled || (currentItemStatus === 'rejected');
+
+                                // **เงื่อนไขสำหรับ Action Buttons (อนุมัติ/ปฏิเสธ)**
+                                // ปุ่มจะถูก disabled ก็ต่อเมื่อ:
+                                // 1. คำขอโดยรวมอยู่ในสถานะที่แก้ไขไม่ได้แล้วเท่านั้น (isOverallRequestDisabled)
+                                const areItemActionButtonsDisabled = isOverallRequestDisabled;
+
+                                return (
+                                    <tr key={d.request_detail_id}>
+                                        <td data-label="ลำดับ">{indexOfFirstItem + i + 1}</td>
+                                        <td data-label="รูป">
+                                            <ItemImage item_img={d.item_img} alt={d.item_name} />
+                                        </td>
+                                        <td data-label="ชื่อพัสดุ">{d.item_name}</td>
+                                        <td data-label="จำนวนที่ขอ">{d.requested_qty}</td>
+                                        <td data-label="หน่วย">{d.item_unit}</td>
+                                        <td data-label="สถานะ">{statusText}</td>
+                                        <td data-label="จำนวนที่อนุมัติ">
+                                            <div
+                                                className={styles.tooltipContainer}
+                                                onMouseOver={() => tooltip?.[d.request_detail_id]?.message &&
+                                                    setTooltip(prev => ({ ...prev, [d.request_detail_id]: { ...prev?.[d.request_detail_id], show: true } }))}
+                                                onMouseOut={() => setTooltip(prev => ({ ...prev, [d.request_detail_id]: { ...prev?.[d.request_detail_id], show: false } }))}
+                                                onFocus={() => tooltip?.[d.request_detail_id]?.message &&
+                                                    setTooltip(prev => ({ ...prev, [d.request_detail_id]: { ...prev?.[d.request_detail_id], show: true } }))}
+                                                onBlur={() => setTooltip(prev => ({ ...prev, [d.request_detail_id]: { ...prev?.[d.request_detail_id], show: false } }))}
+                                            >
+                                                <input
+                                                    type="number"
+                                                    value={displayApprovedQty}
+                                                    onChange={(e) => handleApprovedQtyChange(d.request_detail_id, e.target.value, d.requested_qty)}
+                                                    min="0"
+                                                    max={d.requested_qty}
+                                                    className={`${styles.approvedQtyInput} ${itemErrors?.[d.request_detail_id] ? styles.inputErrorBorder : ''}`}
+                                                    disabled={isQuantityInputDisabled}
+                                                />
+                                                {(itemErrors?.[d.request_detail_id] || tooltip?.[d.request_detail_id]?.show) && tooltip?.[d.request_detail_id]?.message && (
+                                                    <div className={styles.tooltip}>
+                                                        {tooltip?.[d.request_detail_id]?.message}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td data-label="จัดการ">
+                                            {areItemActionButtonsDisabled ? (
+                                                <>
+                                                    <button
+                                                        disabled
+                                                        className={`${styles.actionButton} ${styles.disabled}`}
+                                                        title="คำขออยู่ในสถานะที่ไม่สามารถแก้ไขได้"
+                                                    >
+                                                        ✅ อนุมัติ
+                                                    </button>
+                                                    <button
+                                                        disabled
+                                                        className={`${styles.actionButton} ${styles.disabled}`}
+                                                        title="คำขออยู่ในสถานะที่ไม่สามารถแก้ไขได้"
+                                                    >
+                                                        ❌ ปฏิเสธ
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleApproveOne(d)}
+                                                        className={`${styles.actionButton} ${styles.approve}`}
+                                                        title="อนุมัติรายการนี้"
+                                                    >
+                                                        ✅ อนุมัติ
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleRejectOne(d)}
+                                                        className={`${styles.actionButton} ${styles.reject}`}
+                                                        title="ปฏิเสธรายการนี้"
+                                                    >
+                                                        ❌ ปฏิเสธ
+                                                    </button>
+                                                </>
+                                            )}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+
+                            {Array.from({ length: itemsPerPage - currentItems.length }).map((_, idx) => (
+                                <tr key={`empty-${idx}`} className={styles.emptyRow}>
+                                    <td colSpan="8">&nbsp;</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
 
                 <div className={styles.actions}>
                     <button
                         className={styles.saveButton}
                         onClick={handleSaveDraft}
-                        disabled={Object.keys(draftDetails).length === 0 || (request && disabledOverallStatuses.includes(request.request_status))}
+                        disabled={
+                            Object.keys(draftDetails).length === 0 ||
+                            isOverallRequestDisabled ||
+                            loading ||
+                            Object.values(itemErrors).some(error => error !== '')
+                        }
                     >
                         💾 ยืนยันการบันทึก
                     </button>
                     <button
                         className={styles.cancelButton}
-                        onClick={() => router.push('/manage/approvalRequest')}
+                        onClick={() => router.push('/manage/requestList')}
                     >
                         ❌ ยกเลิก
                     </button>

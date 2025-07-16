@@ -1,463 +1,590 @@
-/* General Page Layout */
+/* page.module.css */
+
+/* --- Base Styles & Typography --- */
+body {
+    box-sizing: border-box;
+}
+
 .pageBackground {
-  background-color: #f8f9fa; /* Very light grey for a clean look */
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  padding: 40px 20px;
-  box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f0f2f5; /* Soft, light gray background */
+    font-family: 'Kanit', sans-serif;
+    color: #34495e;
 }
 
 .container {
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.08); /* Softer, slightly larger shadow */
-  padding: 30px 40px;
-  width: 90%;
-  box-sizing: border-box;
+    background-color: #ffffff;
+    border-radius: 12px; /* Slightly smaller radius for a more compact feel */
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08); /* Slightly less pronounced shadow */
+    padding: 10px; /* Reduced padding from 40px */
+    max-width: 1500px; /* Max width slightly adjusted */
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 25px; /* Reduced space between major sections from 35px */
+    margin: 20px auto; /* Center the container with margin */
 }
 
-/* Headings */
+/* --- Page Header --- */
 .title {
-  font-size: 2.4em; /* Slightly larger title */
-  color: #343a40; /* Darker text for better contrast */
-  text-align: center;
-  margin-bottom: 35px;
-  font-weight: 700;
-  border-bottom: 3px solid #e9ecef; /* Lighter, thicker bottom border */
-  padding-bottom: 18px;
+    font-size: 2.5rem; /* Slightly smaller title */
+    color: #2c3e50;
+    font-weight: 500;
+    margin: 0 0 20px 0; /* Reduced margin from 25px */
+    text-align: center;
+    position: relative;
+    padding-bottom: 12px; /* Reduced padding from 15px */
 }
 
-.subtitle {
-  font-size: 1.7em;
-  color: #495057;
-  margin-top: 35px;
-  margin-bottom: 25px;
-  font-weight: 600;
-  text-align: left;
+.title::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: 70px; /* Slightly shorter line */
+    height: 3px; /* Thinner line */
+    background-color: #3498db;
+    border-radius: 2px;
 }
 
-/* Loading and Error States */
-.loading, .error {
-  text-align: center;
-  font-size: 1.4em;
-  color: #6c757d;
-  padding: 50px;
-}
-
-.error {
-  color: #dc3545;
-  font-weight: bold;
-}
-
-/* Info Grid for Request Details */
+/* --- Request Information Grid --- */
 .infoGrid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 30px;
-  margin-bottom: 30px;
-  padding: 20px;
-  background-color: #f8f9fa; /* Consistent light background */
-  border-radius: 10px;
-  border: 1px solid #e2e6ea; /* Subtle border */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px; /* Reduced gap from 30px */
+    margin-bottom: 25px; /* Reduced margin from 30px */
+    background-color: #fcfcfc;
+    border-radius: 10px; /* Smaller radius */
+    padding: 20px; /* Reduced padding from 25px */
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04); /* More subtle shadow */
 }
 
 .infoLeft {
-  flex: 2;
-  min-width: 300px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px; /* Slightly more space */
-  font-size: 1.05em;
-  color: #495057;
+    flex: 2;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Slightly smaller min-width */
+    gap: 15px; /* Reduced gap from 20px */
+    padding-right: 15px; /* Reduced padding from 20px */
+    border-right: 1px solid #e9ecef; /* Simpler, lighter border */
 }
 
-.infoLeft strong {
-  color: #343a40;
+.infoLeft div {
+    font-size: 1rem; /* Slightly smaller font */
+    color: #555;
+    line-height: 1.4; /* Tighter line height */
 }
 
 .status {
-  font-weight: bold;
-  padding: 5px 10px;
-  border-radius: 6px;
-  background-color: #e0f7fa; /* Very light cyan for status */
-  color: #00796b; /* Darker teal for text */
-  display: inline-block; /* Ensure padding applies correctly */
-}
-
-.noteBox {
-  flex: 1;
-  min-width: 250px;
-  background-color: #e9ecef; /* Light grey for note box */
-  border-radius: 10px;
-  padding: 20px 25px;
-  font-size: 1.0em;
-  color: #495057;
-  border: 1px solid #dcdfe3;
-  line-height: 1.6; /* Better readability */
-}
-
-.noteBox strong {
-  display: block;
-  margin-bottom: 10px;
-  color: #343a40;
-  font-size: 1.15em;
+    font-weight: 600; /* Less bold, more consistent */
+    color: #2980b9;
 }
 
 .summary {
-  grid-column: 1 / -1;
-  font-weight: 600;
-  margin-top: 20px;
-  padding-top: 15px;
-  border-top: 1px dashed #ced4da; /* Softer dashed line */
-  color: #6c757d;
+    grid-column: 1 / -1;
+    font-weight: 600; /* Less bold */
+    color: #2980b9;
+    border-top: 1px dashed #dcdcdc;
+    padding-top: 12px; /* Reduced padding */
+    margin-top: 12px; /* Reduced margin */
+    font-size: 1rem; /* Slightly smaller font */
+    line-height: 1.5;
 }
 
-/* Table Styles - Adjusted for a cleaner look */
+.noteBox {
+    flex: 1;
+    background-color: #ecf0f1;
+    border: 1px solid #dce4e8;
+    border-radius: 8px; /* Smaller radius */
+    padding: 18px; /* Reduced padding from 20px */
+    font-size: 0.95rem; /* Slightly smaller font */
+    color: #5d6d7e;
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Reduced gap */
+}
+
+/* --- Table Styles --- */
+.subtitle {
+    font-size: 2rem; /* Reduced subtitle size */
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 20px; /* Reduced margin from 25px */
+    border-bottom: 1px solid #e9ecef; /* Thinner border */
+    padding-bottom: 10px; /* Reduced padding from 12px */
+}
+
+.tableContainer {
+    overflow-x: auto; /* Ensures table is scrollable on small screens */
+    margin-bottom: 30px;
+    border-radius: 10px; /* Consistent radius */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06); /* Lighter table shadow */
+}
+
 .table {
-  width: 100%;
-  border-collapse: separate; /* Allows border-radius on cells */
-  border-spacing: 0; /* Remove space between cell borders */
-  margin-bottom: 30px;
-  font-size: 0.95em;
-  border-radius: 8px; /* Rounded corners for the entire table */
-  overflow: hidden; /* Ensures rounded corners are visible */
+    width: 100%;
+    border-collapse: separate; /* Changed to separate for border-spacing */
+    border-spacing: 0; /* Remove default spacing */
+    font-size: 1em;
+    color: #333;
+    min-width: 700px; /* Ensures a minimum width for the table */
 }
 
-.table th, .table td {
-  padding: 14px 18px; /* More padding for spacious feel */
-  text-align: left;
-  border-bottom: 1px solid #eceff1; /* Very light horizontal borders */
-  /* Remove vertical borders for a cleaner look */
-  border-right: none;
+.table thead th {
+    background-color: #3498db;
+    color: white;
+    padding: 14px 12px; /* Reduced padding from 18px */
+    text-align: left;
+    font-size: 0.95rem; /* Slightly smaller font */
+    font-weight: 600;
+    white-space: nowrap;
 }
 
-.table th {
-  background-color: #f2f4f6; /* Slightly darker header background */
-  color: #495057;
-  font-weight: 600;
-  text-transform: uppercase;
-  border-top: 1px solid #eceff1; /* Top border for header */
+.table tbody td {
+    padding: 12px 12px; /* Reduced padding from 15px */
+    border-bottom: 1px solid #eef1f4; /* Lighter border for rows */
+    font-size: 0.9rem; /* Slightly smaller font */
+    color: #495057;
+    vertical-align: middle;
 }
 
-/* First and last child adjustments for rounded corners */
-.table thead tr th:first-child { border-top-left-radius: 8px; }
-.table thead tr th:last-child { border-top-right-radius: 8px; }
+/* Specific styling for the first and last column of the table */
+.table tbody td:first-child {
+    padding-left: 15px; /* Add slight padding for first column */
+}
+.table tbody td:last-child {
+    padding-right: 15px; /* Add slight padding for last column */
+}
 
 .table tbody tr:last-child td {
-  border-bottom: none; /* No bottom border for the last row */
+    border-bottom: none;
 }
 
-.table tbody tr:nth-child(odd) { /* Consistent background for odd rows */
-  background-color: #ffffff;
-}
-
-.table tbody tr:nth-child(even) { /* Consistent background for even rows */
-  background-color: #fdfdfd;
+.table tbody tr:nth-child(even) {
+    background-color: #fcfdfe;
 }
 
 .table tbody tr:hover {
-  background-color: #e9f7fe; /* Light blue hover effect */
+    background-color: #eef7ff; /* Lighter blue on hover */
+    transform: none; /* Removed slight scale on hover for a cleaner feel */
+    transition: background-color 0.2s ease-in-out; /* Only background transition */
 }
 
-/* Styling for empty rows (no data) */
-.emptyRow td {
-  background-color: #fdfdfd; /* Same as even rows for consistency */
-  color: #b0b0b0; /* Lighter text for empty rows */
-  font-style: italic;
-  padding: 14px 18px; /* Maintain consistent padding */
-  border-bottom: 1px solid #eceff1; /* Consistent border */
+.approvedQtyInput {
+    width: 80px; /* Slightly narrower */
+    padding: 8px; /* Reduced padding */
+    border: 1px solid #ced4da;
+    border-radius: 6px; /* Smaller radius */
+    text-align: center;
+    font-size: 0.95rem; /* Consistent font size */
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box;
+    /* Removed -moz-appearance: textfield; to show arrows in Firefox */
 }
 
-.table tbody tr:last-child.emptyRow td {
-  border-bottom: none; /* No bottom border for the last row */
+/* Removed -webkit-appearance: none; and margin: 0; to show arrows in Chrome, Safari, Edge */
+/* .approvedQtyInput::-webkit-outer-spin-button,
+.approvedQtyInput::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+} */
+
+.approvedQtyInput:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2); /* More subtle glow */
+    outline: none;
 }
 
-/* Item Image within Table */
-.table td img {
-  border-radius: 6px; /* Slightly larger radius for images */
-  vertical-align: middle;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Subtle shadow for images */
+.approvedQtyInput:disabled {
+    background-color: #eef2f5;
+    cursor: not-allowed;
+    color: #7f8c8d;
+    opacity: 0.8;
 }
 
-/* Buttons for Table Actions */
-
-/* ปุ่มที่ใช้งานได้ */
-.activeButton {
-  background: none;
-  border: 1px solid;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9em;
-  font-weight: 600;
-  transition: all 0.3s ease-in-out;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+/* Input Error Styles */
+.inputErrorBorder {
+    border-color: #e74c3c !important; /* Red border for error */
+    box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.25) !important; /* Red glow */
 }
 
-.activeButton:first-of-type {
-  border-color: #28a745;
-  color: #28a745;
-}
-.activeButton:first-of-type:hover {
-  background-color: #28a745;
-  color: white;
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+/* --- Tooltip Styles --- */
+.tooltipContainer {
+    position: relative; /* Crucial for positioning the tooltip relative to this container */
+    display: inline-block; /* Ensures the container wraps the input tightly */
+    width: auto; /* Allow width to adjust to content */
 }
 
-.activeButton:last-of-type {
-  border-color: #dc3545;
-  color: #dc3545;
-}
-.activeButton:last-of-type:hover {
-  background-color: #dc3545;
-  color: white;
-  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
-}
-
-/* ปุ่มที่ถูกปิดการใช้งานแต่ยังแสดง */
-.disabledButton {
-  background: none;
-  border: 1px solid #dcdcdc;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 0.9em;
-  color: #ccc;
-  cursor: not-allowed;
-  opacity: 0.6;
-  pointer-events: auto; /* ให้ tooltip แสดงได้ */
-  transition: none;
+.tooltip {
+    visibility: hidden;
+    width: max-content; /* Adjust width to fit content */
+    max-width: 250px; /* Prevent extremely long tooltips */
+    background-color: #333; /* Dark background for good contrast */
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px 12px;
+    position: absolute;
+    z-index: 1000; /* Ensure tooltip is on top of other elements */
+    bottom: calc(100% + 8px); /* Position above the input, with some space */
+    left: 50%;
+    transform: translateX(-50%); /* Center horizontally */
+    opacity: 0;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    white-space: nowrap; /* Prevent text from wrapping by default */
+    font-size: 0.9em;
+    pointer-events: none; /* Allows clicks/hovers on elements *underneath* the tooltip when it's hidden */
 }
 
-/* Main Action Buttons (Save and Cancel) */
+.tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%; /* Position the arrow at the bottom of the tooltip */
+    left: 50%;
+    margin-left: -8px; /* Center the arrow */
+    border-width: 8px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent; /* Arrow pointing down */
+}
+
+/* Show tooltip on hover, focus-within, or when input has error */
+.tooltipContainer:hover .tooltip,
+.tooltipContainer:focus-within .tooltip,
+.approvedQtyInput.inputErrorBorder + .tooltip {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto; /* Allow interaction with tooltip content if needed when visible */
+}
+
+
+/* --- Action Buttons (Table & Global) --- */
 .actions {
-  text-align: center;
-  margin-top: 40px;
-  display: flex; /* Use flexbox to align buttons */
-  justify-content: center; /* Center the buttons */
-  gap: 20px; /* Space between Save and Cancel buttons */
+    display: flex;
+    justify-content: center;
+    gap: 20px; /* Reduced gap from 25px */
+    margin-top: 30px; /* Reduced margin from 40px */
+}
+
+.saveButton,
+.cancelButton {
+    padding: 12px 30px; /* Reduced padding from 14px */
+    border: none;
+    border-radius: 8px; /* Smaller radius */
+    font-size: 1.1rem; /* Slightly smaller font */
+    cursor: pointer;
+    transition: all 0.3s ease, transform 0.1s ease, box-shadow 0.1s ease;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Base button active state (visual click feedback) */
+.saveButton:active,
+.cancelButton:active,
+.actionButton:active,
+.pageButton:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .saveButton {
-  background-color: #007bff;
-  color: white;
-  padding: 14px 30px; /* Adjusted padding for balanced size */
-  border: none;
-  border-radius: 8px; /* Slightly less rounded */
-  cursor: pointer;
-  font-size: 1.15em; /* Adjusted font size */
-  font-weight: 600;
-  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2); /* Softer shadow */
+    background-color: #28a745;
+    color: white;
+    box-shadow: 0 3px 10px rgba(40, 167, 69, 0.25); /* Less pronounced shadow */
 }
 
-.saveButton:hover {
-  background-color: #0056b3;
-  transform: translateY(-2px); /* Slightly less pronounced lift */
-  box-shadow: 0 6px 15px rgba(0, 123, 255, 0.3);
+.saveButton:hover:not(:disabled) {
+    background-color: #218838;
+    transform: translateY(-1px); /* Less dramatic lift */
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.35);
 }
 
 .saveButton:disabled {
-  background-color: #ced4da;
-  color: #6c757d;
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
+    background-color: #a4d8b2;
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
+    box-shadow: none;
 }
 
 .cancelButton {
-  background-color: #6c757d; /* Muted grey for cancel */
-  color: white;
-  padding: 14px 30px; /* Consistent padding with save button */
-  border: none;
-  border-radius: 8px; /* Consistent border-radius */
-  font-size: 1.15em; /* Consistent font size */
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-  box-shadow: 0 4px 10px rgba(108, 117, 125, 0.2); /* Consistent shadow style */
+    background-color: #e74c3c;
+    color: white;
+    box-shadow: 0 3px 10px rgba(231, 76, 60, 0.25);
 }
 
-.cancelButton:hover {
-  background-color: #5a6268;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(108, 117, 125, 0.3);
+.cancelButton:hover:not(:disabled) {
+    background-color: #c0392b;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.35);
 }
 
-/* Pagination */
+.cancelButton:disabled {
+    background-color: #f1b0a8;
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
+    box-shadow: none;
+}
+
+.actionButton {
+    color: white;
+    border: none;
+    border-radius: 6px; /* Smaller radius for cleaner look */
+    padding: 8px 15px; /* Reduced padding */
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease, transform 0.1s ease, box-shadow 0.1s ease;
+    font-weight: 500;
+    margin-right: 6px; /* Reduced margin */
+    min-width: 80px; /* Slightly smaller min-width */
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08); /* More subtle shadow */
+}
+
+.actionButton:last-child {
+    margin-right: 0;
+}
+
+.actionButton.approve {
+    background-color: #2ecc71;
+}
+
+.actionButton.approve:hover:not(:disabled) {
+    background-color: #27ae60;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(46, 204, 113, 0.25); /* More subtle hover shadow */
+}
+
+.actionButton.reject {
+    background-color: #e74c3c;
+}
+
+.actionButton.reject:hover:not(:disabled) {
+    background-color: #c0392b;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.25); /* More subtle hover shadow */
+}
+
+.actionButton.disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
+    box-shadow: none;
+}
+
+.actionButton.disabled:hover {
+    background-color: #bdc3c7;
+}
+
+/* --- Pagination --- */
 .pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 35px;
-  gap: 15px; /* Slightly less gap */
-  font-size: 1.1em; /* Slightly smaller font */
-  color: #6c757d;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 15px; /* Reduced gap from 20px */
+    margin-top: 30px; /* Reduced margin from 40px */
+    padding-top: 15px; /* Reduced padding from 20px */
+    border-top: 1px dashed #e0e0e0;
 }
 
 .pageButton {
-  background-color: #e9ecef;
-  color: #495057;
-  border: 1px solid #ced4da;
-  padding: 10px 18px; /* Slightly smaller padding */
-  border-radius: 6px; /* Slightly less rounded */
-  cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-  font-weight: 600;
-}
-
-.pageButton:hover {
-  background-color: #dee2e6;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px; /* Reduced padding from 12px */
+    font-size: 0.95rem; /* Slightly smaller font */
+    cursor: pointer;
+    transition: all 0.2s ease, transform 0.1s ease, box-shadow 0.1s ease;
+    font-weight: 500;
+    min-width: 100px; /* Slightly smaller min-width */
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08); /* More subtle shadow */
 }
 
 .pageButton:disabled {
-  background-color: #f8f9fa;
-  color: #adb5bd;
-  cursor: not-allowed;
-  border-color: #e9ecef;
-  transform: none;
-  box-shadow: none;
+    background-color: #bbdefb;
+    cursor: not-allowed;
+    transform: none;
+    opacity: 0.7;
+    box-shadow: none;
 }
 
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-  .container {
-    padding: 25px 30px;
-  }
-
-  .title {
-    font-size: 2em;
-  }
-
-  .subtitle {
-    font-size: 1.5em;
-  }
-
-  .infoGrid {
-    flex-direction: column;
-    gap: 20px;
-    padding: 15px;
-  }
-
-  .infoLeft, .noteBox {
-    min-width: unset;
-    width: 100%;
-  }
-
-  .table th, .table td {
-    padding: 12px 15px;
-    font-size: 0.9em;
-  }
-
-  .table td button {
-    padding: 7px 10px; /* Adjusted for smaller screens */
-    font-size: 0.8em;
-    margin-right: 4px;
-    margin-bottom: 4px;
-    gap: 2px;
-  }
-  
-  .actions {
-    flex-direction: column; /* Stack buttons on smaller screens */
-    gap: 15px; /* Space between stacked buttons */
-  }
-
-  .saveButton, .cancelButton {
-    width: 100%; /* Full width when stacked */
-    max-width: 300px; /* Limit max width for readability */
-    margin: 0 auto; /* Center buttons */
-    padding: 12px 25px;
-    font-size: 1em;
-  }
-
-  .pagination {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-  }
+.pageButton:hover:not(:disabled) {
+    background-color: #2980b9;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.25); /* More subtle hover shadow */
 }
 
-@media (max-width: 480px) {
-  .title {
-    font-size: 1.6em;
-    margin-bottom: 25px;
-  }
+.pageInfo {
+    font-size: 1rem; /* Slightly smaller font */
+    color: #616a6b;
+    font-weight: 500;
+}
 
-  .subtitle {
-    font-size: 1.3em;
-    margin-top: 25px;
-    margin-bottom: 15px;
-  }
-
-  .table thead {
-    display: none;
-  }
-
-  .table, .table tbody, .table tr, .table td {
-    display: block;
-    width: 100%;
-  }
-
-  .table tr {
-    margin-bottom: 15px;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  }
-
-  .table td {
-    text-align: right;
-    padding-left: 50%;
-    position: relative;
-    border-bottom: 1px dashed #e0e0e0;
-  }
-
-  .table td:last-child {
-    border-bottom: none;
-  }
-
-  .table td::before {
-    content: attr(data-label);
-    position: absolute;
-    left: 15px;
-    width: calc(50% - 30px);
-    padding-right: 10px;
-    white-space: nowrap;
-    text-align: left;
-    font-weight: bold;
-    color: #6c757d;
-  }
-  
-  .table td:nth-child(7) {
+/* --- Loading/Error States --- */
+.loading, .error {
     text-align: center;
-    padding-left: 15px;
-    padding-right: 15px;
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
+    padding: 50px; /* Reduced padding */
+    font-size: 1.2rem; /* Slightly smaller font */
+    color: #7f8c8d;
+    background-color: #fdfdfd;
+    border-radius: 10px;
+    margin-top: 25px; /* Reduced margin */
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
+}
 
-  .table td button {
-    flex-grow: 1;
-    width: auto;
-    max-width: 120px; /* Slightly smaller max-width for consistency */
-    padding: 6px 8px; /* Further reduced padding */
-    font-size: 0.75em;
-  }
+.error {
+    color: #e74c3c;
+    font-weight: 600;
+}
 
-  .saveButton, .cancelButton {
-    padding: 10px 20px; /* Even smaller on very small screens */
-    font-size: 0.9em;
-  }
-  
-  .pagination {
-    flex-direction: column;
-    gap: 10px;
-  }
+/* --- Empty Table Row for Styling --- */
+.emptyRow td {
+    visibility: hidden;
+    height: 45px; /* Adjusted height for tighter rows */
+    border-bottom: 1px dashed #eef1f4;
+}
+
+.table tbody tr:last-child.emptyRow td {
+    border-bottom: none;
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 1200px) {
+    .container {
+        padding: 25px;
+        gap: 20px;
+    }
+    .title {
+        font-size: 2.2rem;
+    }
+    .subtitle {
+        font-size: 1.8rem;
+    }
+    .infoGrid {
+        flex-direction: column;
+        gap: 20px;
+    }
+    .infoLeft {
+        border-right: none;
+        padding-right: 0;
+        border-bottom: 1px dashed #e0e0e0;
+        padding-bottom: 20px; /* Reduced padding */
+    }
+    .noteBox {
+        padding: 18px;
+    }
+    .table {
+        min-width: 900px; /* Adjusted min-width for smoother scroll */
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 15px; /* Even less padding */
+        gap: 15px;
+    }
+    .title {
+        font-size: 1.8rem;
+    }
+    .subtitle {
+        font-size: 1.6rem;
+    }
+    .infoGrid {
+        padding: 15px;
+        gap: 15px;
+    }
+    .infoLeft {
+        grid-template-columns: 1fr;
+        gap: 10px; /* Tighter gap */
+    }
+    .table {
+        min-width: 600px;
+    }
+    .table thead th,
+    .table tbody td {
+        padding: 10px 8px; /* Further reduced padding */
+        font-size: 0.85rem;
+    }
+    /* Stack table cells on small screens */
+    .table thead {
+        display: none; /* Hide table headers */
+    }
+
+    .table, .table tbody, .table tr, .table td {
+        display: block;
+        width: 100%;
+    }
+
+    .table tr {
+        margin-bottom: 15px;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .table td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+    }
+
+    .table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        width: calc(50% - 20px);
+        text-align: left;
+        font-weight: bold;
+        color: #007bff;
+    }
+
+    .table td:nth-child(2) img { /* Image specific */
+        float: right;
+    }
+
+    .table td:last-child {
+        border-bottom: 0;
+        display: flex;
+        justify-content: flex-end;
+        gap: 5px;
+        padding-top: 15px;
+    }
+    .approvedQtyInput {
+        width: 100px; /* Adjust input width for mobile */
+    }
+    .actions {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px; /* Tighter gap */
+    }
+    .saveButton, .cancelButton {
+        width: 100%;
+        max-width: 280px; /* Adjusted max-width */
+        padding: 10px 20px;
+        font-size: 1rem;
+    }
+    .actionButton {
+        padding: 6px 12px; /* Even smaller padding */
+        font-size: 0.8rem;
+        min-width: 70px;
+        margin-right: 5px;
+    }
+    .pagination {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .pageButton {
+        width: 100%;
+        max-width: 220px;
+        padding: 8px 18px;
+    }
+    .pageInfo {
+        font-size: 0.95rem;
+    }
 }

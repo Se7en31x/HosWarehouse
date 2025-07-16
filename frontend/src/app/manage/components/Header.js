@@ -1,13 +1,10 @@
-import styles from './Header.module.css';  // นำเข้า CSS Module
+import styles from './Header.module.css'; // Import CSS Module
 
 export default function Header() {
   return (
-    <header className={styles.header}> {/* ใช้ className จาก styles */}
-      <h1 className={styles.headerTitle}>ระบบคลังโรงพยาบาล</h1> {/* ใช้ className จาก styles */}
-      <div className={styles.headerIcons}> {/* ใช้ className จาก styles */}
-        <button className={styles.iconButton}>🔔</button> {/* ไอคอนแจ้งเตือน */}
-        <button className={styles.iconButton}>⚙️</button> {/* ไอคอนตั้งค่า */}
-      </div>
+    <header className={styles.header}> {/* Use className from styles */}
+      <h1 className={styles.headerTitle}>ระบบคลังโรงพยาบาล</h1> {/* Use className from styles */}
+      {/* Notifications and Settings icons have been moved to the Sidebar */}
     </header>
   );
 }
