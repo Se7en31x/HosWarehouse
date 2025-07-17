@@ -9,7 +9,7 @@ export default function TransactionHistory() {
   const [unit, setUnit] = useState("");
   const [storage, setStorage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 9;
 
   const handleFilterChange = (event) => setFilter(event.target.value);
   const handleCategoryChange = (event) => setCategory(event.target.value);

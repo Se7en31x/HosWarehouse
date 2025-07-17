@@ -1,17 +1,21 @@
 .container {
     padding: 20px; /* เพิ่ม padding โดยรวม */
-    background-color: #f0f2f5; /* สีพื้นหลังอ่อนลง */
-    min-height: 100vh;
+    background-color: #ffffff; /* เปลี่ยนเป็นสีขาวเพื่อให้เข้ากับ .content-area */
+    height: 100%; /* ทำให้ container ขยายเต็มความสูงของ parent (.content-area) */
+    /* min-height: 100vh; ถูกนำออกเพื่อให้ปรับขนาดตาม parent */
     display: flex;
     flex-direction: column;
     gap: 20px;
     font-family: 'Inter', sans-serif; /* ใช้ font Inter */
+    box-sizing: border-box; /* ตรวจสอบให้แน่ใจว่า padding รวมอยู่ในขนาดที่คำนวณ */
+    min-width: 0; /* เพิ่มบรรทัดนี้: อนุญาตให้ flex item (container) หดตัวได้ */
+    flex-shrink: 1; /* เพิ่มบรรทัดนี้: ทำให้ container หดตัวได้เมื่อจำเป็น */
 }
 
 .header {
     background-color: #1a73e8; /* สีน้ำเงินสดใสขึ้น */
     color: white;
-    padding: 1.5rem; /* เพิ่ม padding */
+    padding: 0.5rem; /* เพิ่ม padding */
     border-radius: 12px; /* มุมโค้งมนมากขึ้น */
     font-size: 1.75rem; /* ขนาดตัวอักษรใหญ่ขึ้น */
     text-align: center;
@@ -25,13 +29,15 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* เพิ่มเงา */
     overflow-x: auto;
     flex-grow: 1; /* ให้ตารางขยายเต็มพื้นที่ที่เหลือ */
+    min-width: 0; /* เพิ่มบรรทัดนี้: อนุญาตให้ flex item (tableContainer) หดตัวได้ */
 }
 
 .table {
     width: 100%;
     border-collapse: collapse; /* ทำให้เส้นขอบเซลล์รวมกัน */
     border-spacing: 0;
-    table-layout: fixed; /* ทำให้ความกว้างคอลัมน์คงที่ */
+    /* table-layout: fixed; ทำให้ความกว้างคอลัมน์คงที่ */
+    min-width: 0; /* เพิ่มบรรทัดนี้: อนุญาตให้ตารางหดตัวได้ */
 }
 
 .table th,
@@ -40,9 +46,10 @@
     text-align: left;
     vertical-align: middle;
     border-bottom: 1px solid #e0e0e0; /* สีเส้นแบ่งอ่อนลง */
-    white-space: nowrap; /* ป้องกันข้อความขึ้นบรรทัดใหม่ในเซลล์ */
+    /* white-space: nowrap; ถูกลบออกเพื่อให้ข้อความขึ้นบรรทัดใหม่ได้ */
     overflow: hidden; /* ซ่อนเนื้อหาที่เกิน */
     text-overflow: ellipsis; /* แสดง ... เมื่อเนื้อหาเกิน */
+    min-width: 0; /* เพิ่มบรรทัดนี้: อนุญาตให้เซลล์หดตัวได้ */
 }
 
 /* กำหนดความสูงของแถวให้คงที่ */
@@ -52,6 +59,7 @@
 }
 
 /* กำหนดความกว้างของแต่ละคอลัมน์ให้เหมาะสม */
+/* ปรับเปอร์เซ็นต์ใหม่เพื่อให้รวมกันเป็น 100% และกระจายพื้นที่ได้ดีขึ้น */
 .table th:nth-child(1), /* ลำดับ */
 .table td:nth-child(1) {
     width: 5%;
@@ -66,7 +74,7 @@
 }
 .table th:nth-child(4), /* ชื่อ */
 .table td:nth-child(4) {
-    width: 22%; /* เพิ่มพื้นที่ให้ชื่อ */
+    width: 20%; /* ปรับลดเล็กน้อย */
 }
 .table th:nth-child(5), /* จำนวน */
 .table td:nth-child(5) {
@@ -90,7 +98,7 @@
 }
 .table th:nth-child(10), /* การจัดการ */
 .table td:nth-child(10) {
-    width: 7%; /* ลดพื้นที่ให้ปุ่มจัดการ */
+    width: 9%; /* เพิ่มพื้นที่ให้ปุ่มจัดการเล็กน้อย */
 }
 
 
@@ -119,7 +127,8 @@
 
 /* สไตล์สำหรับ input จำนวน */
 .quantityInput {
-    width: 80px; /* กำหนดความกว้าง */
+    width: 100%; /* เปลี่ยนเป็น 100% เพื่อให้ปรับตาม td */
+    max-width: 80px; /* กำหนดความกว้างสูงสุด */
     padding: 8px 10px;
     border: 1px solid #b0b0b0; /* สีขอบเข้มขึ้นเล็กน้อย */
     border-radius: 8px; /* มุมโค้งมน */
@@ -127,6 +136,7 @@
     text-align: center;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
     -moz-appearance: textfield; /* ซ่อนลูกศรใน Firefox */
+    box-sizing: border-box; /* รวม padding ใน width */
 }
 
 /* ซ่อนลูกศรใน Chrome, Safari, Edge */
@@ -144,12 +154,14 @@
 
 /* สไตล์สำหรับ input วันที่คืน */
 .dateInput {
+    width: 100%; /* เปลี่ยนเป็น 100% เพื่อให้ปรับตาม td */
     padding: 8px 10px;
     border: 1px solid #b0b0b0;
     border-radius: 8px;
     font-size: 0.95rem;
     cursor: pointer;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    box-sizing: border-box; /* รวม padding ใน width */
 }
 
 .dateInput:focus {
@@ -176,7 +188,8 @@
 
 .leftColumn {
     flex: 1;
-    min-width: 300px; /* กำหนดความกว้างขั้นต่ำ */
+    flex-basis: 0; /* เพิ่ม: ให้ flex item หดตัวได้อย่างเต็มที่ */
+    /* min-width: 300px; ถูกลบออกเพื่อให้ยืดหยุ่นมากขึ้น */
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -247,7 +260,9 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    min-width: 250px; /* เพิ่มความกว้างขั้นต่ำ */
+    flex: 1; /* เพิ่ม flex: 1 เพื่อให้ขยายและหดตัวได้ */
+    flex-basis: 0; /* เพิ่ม: ให้ flex item หดตัวได้อย่างเต็มที่ */
+    /* min-width: 250px; ถูกลบออกเพื่อให้ยืดหยุ่นมากขึ้น */
 }
 
 .buttons {

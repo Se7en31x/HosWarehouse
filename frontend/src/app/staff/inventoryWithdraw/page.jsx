@@ -67,7 +67,7 @@ export default function InventoryWithdraw() {
 
     const [allItems, setAllItems] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 8;
+    const itemsPerPage = 7;
 
     const { addToCart, cartItems, clearCart, updateQuantity, updateReturnDate } = useContext(CartContext);
 

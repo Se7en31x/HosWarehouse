@@ -1,24 +1,21 @@
-'use client'; // ถ้าจะใช้ useEffect ต้องใส่
+'use client';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import './globals.css';
-import { CartProvider } from './context/CartContext';
+import { CartProvider } from './context/CartContext'; // ✅ เพิ่มบรรทัดนี้
+
 export default function RootLayout({ children }) {
   return (
-    <CartProvider>
-      <div className="layout">
-        {/* Sidebar */}
-        <Sidebar />
-
-        <div className="main-content">
-          {/* Header */}
-          <Header />
-
-          {/* Main Content */}
-          <main>{children}</main>
+    <CartProvider> {/* ✅ ครอบ context provider ตรงนี้ */}
+      <div className="app-layout-container">
+        <Header />
+        <div className="main-content-wrapper">
+          <Sidebar />
+          <main className="content-area">
+            {children}
+          </main>
         </div>
       </div>
     </CartProvider>
-
   );
 }

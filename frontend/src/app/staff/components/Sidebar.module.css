@@ -1,134 +1,180 @@
 /* src/app/components/Sidebar.module.css */
 
 .sidebar {
-    width: 13%;
-    height: 100vh;
-    background-color: #1596db;
-    color: white;
-    padding-top: 20px;
-    /* border-top-right-radius: 15px;
-    border-bottom-right-radius: 15px; */
-    overflow: hidden;
-    flex-shrink: 0;
-    box-shadow: 4px 0px 8px rgba(0, 0, 0, 0.1); /* เพิ่มเงาเพื่อให้ดูมีมิติ */
-  }
+  /* เปลี่ยนการกำหนดขนาดหลักให้เป็นเปอร์เซ็นต์ */
+  flex-basis: 20%; /* Sidebar จะเริ่มต้นที่ 20% ของพื้นที่ Main Content Wrapper ที่มีอยู่ */
+  flex-shrink: 1;  /* อนุญาตให้ Sidebar หดตัวได้เมื่อพื้นที่ไม่พอ (ค่า 1 คือหดได้) */
+  flex-grow: 1;    /* อนุญาตให้ Sidebar ขยายตัวได้เมื่อพื้นที่เหลือเฟือ (ค่า 1 คือขยายได้) */
+  min-width: 180px; /* **สำคัญ:** Sidebar จะไม่หดตัวเล็กกว่า 180px */
+  max-width: 280px; /* **สำคัญ:** Sidebar จะไม่ขยายใหญ่กว่า 280px */
   
-  .userInfo {
-    display: flex;
-    align-items: center;
-    padding: 10px 20px;
-  }
-  
-  .userImg {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-right: 15px;
-  }
-  
-  .userDetails {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .userName, .userPosition {
-    margin: 0;
-    padding: 0;
-  }
-  
-  .userName {
-    font-size: 16px;
-    font-weight: bold;
-  }
-  
-  .userPosition {
-    font-size: 14px;
-    color: #bdc3c7;
-  }
-  
-  .divider {
-    border: 1px solid #ECECEC;
-    margin-top: 15px;
-  }
-  
-  .navLinks {
-    list-style-type: none;
-    padding: 0;
-  }
-  
-  .navLinks li {
-    margin: 10px 0;
-  }
-  
-  .navLinks li a {
-    text-decoration: none;
-    color: #333;
-    font-weight: bold;
-    padding: 8px 12px;
-    display: block;
-    border-radius: 4px; /* เพิ่มขอบมน */
-  }
-  
-  /* .navLinks li a:hover {
-    background-color: #ffffff; 
-    color: white;
-    text-decoration: none;
-  } */
-  
-  .noStyleLink {
-    text-decoration: none;
-    color: inherit;
-  }
-  
-  /* สไตล์สำหรับ .sidebarItem */
-  .sidebarItem {
-    display: flex;
-    align-items: center;
-    height: 45px; /* ความสูงปกติ */
-    padding-left: 20px; 
-  
-    transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease, height 0.3s ease, padding 0.3s ease; /* เพิ่ม transition สำหรับ height และ padding */
-    border-top-left-radius: 12px;
-    border-bottom-left-radius: 12px; /* เพิ่มขอบมน */
-    cursor: pointer; /* เปลี่ยนเคอร์เซอร์เป็นมือเมื่อ hover */
-  }
-  
-  .sidebarItem:hover {
-    background-color: #f7f7f7; /* เปลี่ยนสีพื้นหลังเมื่อ hover */
-    color: white;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); /* เพิ่มเงา */
-    transform: translateX(5px); /* ขยับเมนูเล็กน้อยเมื่อ hover */
-  }
-  
-  /* เพิ่มสถานะเมื่อมีการคลิก */
-  .sidebarItem:active {
-    height: 50px; /* ความสูงเมื่อคลิก */
-    background-color: #1abc9c; /* เปลี่ยนสีพื้นหลังเมื่อคลิก */
-    padding-left: 10px; /* เพิ่ม padding เล็กน้อยเพื่อให้คลิกดูชัดเจนยิ่งขึ้น */
-    transform: scale(0.98); /* ขยับขนาดเล็กน้อยเพื่อให้ดูเหมือนกดลง */
-    transition: height 0.2s ease, padding 0.2s ease, transform 0.2s ease, background-color 0.2s ease; /* ใช้ transition ที่เร็วขึ้นเมื่อคลิก */
-  }
-  
-  
-  .sidebarIcon {
-    font-size: 22px;
-    transition: transform 0.3s ease, color 0.3s ease;
-    color: inherit;
-  }
-  
-  .sidebarText {
-    font-size: 16px;
-    font-weight: 500;
-    color: inherit;
-  }
-  
-  .sidebarItem:hover .sidebarIcon {
-    transform: scale(1.2); /* ขยายไอคอนเมื่อ hover */
-  }
-  
-  .sidebarItem:focus {
-    background-color: #16a085; /* สีเมื่อมีการ focus */
-    outline: none; 
-  }
-  
+  height: 100%; /* ให้ Sidebar สูงเต็มพื้นที่ของ parent (main-content-wrapper) */
+  background-color: #ffffff; /* สีขาว */
+  color: #333; /* สีข้อความหลัก */
+  border-radius: 15px; /* มุมโค้งมน*/
+
+  box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.1); /* เงาเพื่อให้ดูมีมิติ*/
+  transition: all 0.3s ease-in-out;
+  padding-top: 20px; /* เพิ่ม padding ด้านบนใน Sidebar */
+  padding-bottom: 20px; /* เพิ่ม padding ด้านล่างใน Sidebar */
+}
+
+/* ปรับ padding ของ userInfo ให้เข้ากับการจัดวางใหม่ */
+.userInfo {
+  display: flex;
+  align-items: center;
+  padding: 0 20px 20px 20px; /* ปรับ padding ด้านบนให้เป็น 0 เพราะมี padding-top ที่ Sidebar แล้ว */
+  border-bottom: 1px solid #eee;
+  margin-bottom: 20px;
+}
+
+.userImg {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 15px;
+  border: 1px solid #ddd;
+}
+
+.userDetails {
+  display: flex;
+  flex-direction: column;
+}
+
+.userName, .userPosition {
+  margin: 0;
+  padding: 0;
+}
+
+.userName {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+}
+
+.userPosition {
+  font-size: 14px;
+  color: #777;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 20px 20px; /* ปรับ margin */
+}
+
+.navLinks {
+  list-style-type: none;
+  padding: 0;
+  margin-top: 10px;
+}
+
+.navLinks li {
+  margin: 5px 0;
+}
+
+.sidebarItem {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px; /* ปรับ padding */
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  color: #333;
+  text-decoration: none;
+}
+
+.sidebarItem:hover {
+  background-color: #f0f0f0;
+  color: #007bff;
+  transform: translateX(3px);
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.sidebarItem:active {
+  background-color: #e0e0e0;
+  transform: scale(0.98);
+}
+
+.sidebarIcon {
+  font-size: 20px;
+  margin-right: 15px;
+  color: #555;
+}
+
+.sidebarItem:hover .sidebarIcon {
+  color: #007bff;
+}
+
+.sidebarText {
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.noStyleLink {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* --- Loading Skeleton Styles --- */
+.skeletonPlaceholder {
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeletonUserImg {
+  composes: skeletonPlaceholder;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 15px;
+}
+
+.skeletonText {
+  composes: skeletonPlaceholder;
+  height: 16px;
+}
+
+.skeletonText.name {
+  width: 100px;
+  margin-bottom: 5px;
+}
+
+.skeletonText.position {
+  width: 80px;
+}
+
+.skeletonItemContainer {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  margin: 5px 0;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeletonIcon {
+  composes: skeletonPlaceholder;
+  width: 20px;
+  height: 20px;
+  margin-right: 15px;
+}
+
+.skeletonItemText {
+  composes: skeletonPlaceholder;
+  width: 120px;
+  height: 16px;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.8; }
+  50% { opacity: 0.4; }
+  100% { opacity: 0.8; }
+}
