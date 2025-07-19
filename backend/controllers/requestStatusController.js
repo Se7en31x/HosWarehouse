@@ -17,13 +17,14 @@ exports.getAllRequestsWithUser = async (req, res) => {
       // ถ้ามี status parameter มา ให้แยก string เป็น array
       allowedStatuses = status.split(',');
     } else {
-      // ✅ ถ้าไม่มี status parameter มา ให้ใช้ allowedStatuses default ตาม Logic ของหน้าจัดการ
+      // ถ้าไม่มี status parameter มา ให้ใช้ allowedStatuses default ตาม Logic ของหน้าจัดการ
       // ควรระบุให้ชัดเจนว่าสถานะใดบ้างที่หน้านี้ควรแสดงในกรณีที่ไม่มีการกรองจาก Frontend
       // ซึ่งเป็นสถานะที่ "จบการตัดสินใจอนุมัติแล้ว" หรืออยู่ในขั้นตอนดำเนินการ
       allowedStatuses = [
         'approved_all',
         'rejected_all',
         'approved_partial_and_rejected_partial',
+        'stock_deducted', // เพิ่มสถานะนี้เพื่อให้แสดงในหน้ารวม
         'pending',
         'preparing',
         'delivering',
@@ -115,7 +116,7 @@ exports.updateRequestDetailProcessingStatus = async (req, res) => {
 
   } catch (err) {
     console.error("อัปเดตสถานะดำเนินการรายการย่อยล้มเหลวใน controller:", err);
-    // ✅ ส่งข้อความ Error จาก Model กลับไป Frontend หากมี
+    // ส่งข้อความ Error จาก Model กลับไป Frontend หากมี
     res.status(500).json({ error: err.message || "เกิดข้อผิดพลาดในการอัปเดตสถานะ" });
   }
 };

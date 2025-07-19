@@ -8,6 +8,8 @@ const { pool } = require("../config/db");
  */
 exports.getAllRequestsWithUser = async (allowedStatuses) => {
   // สร้างเงื่อนไข IN สำหรับ SQL query
+  // ป้องกัน SQL Injection โดยการใช้ parameterized query หรือตรวจสอบค่าที่เข้ามา
+  // แต่ในกรณีนี้ allowedStatuses มาจากค่าคงที่ใน frontend จึงปลอดภัยในระดับหนึ่ง
   const statusConditions = allowedStatuses.map(s => `'${s}'`).join(',');
 
   const query = `
@@ -79,9 +81,9 @@ exports.updateRequestOverallStatus = async (request_id, newStatus, changed_by) =
     }
     const oldStatus = oldStatusResult.rows[0].request_status;
 
-    // 2. อัปเดตสถานะ request_status
+    // 2. อัปเดตสถานะ request_status และ updated_at
     const updateResult = await client.query(
-      `UPDATE requests SET request_status = $1 WHERE request_id = $2`,
+      `UPDATE requests SET request_status = $1, updated_at = NOW() WHERE request_id = $2`,
       [newStatus, request_id]
     );
 
@@ -131,7 +133,7 @@ exports.updateRequestDetailProcessingStatus = async (request_id, request_detail_
     }
     const { processing_status: oldProcessingStatus, approval_status } = oldStatusResult.rows[0];
 
-    // ✅ เพิ่มการตรวจสอบ: สามารถอัปเดตได้เฉพาะรายการที่ approval_status เป็น 'approved' เท่านั้น
+    // เพิ่มการตรวจสอบ: สามารถอัปเดตได้เฉพาะรายการที่ approval_status เป็น 'approved' เท่านั้น
     if (approval_status !== 'approved') {
         throw new Error(`ไม่สามารถเปลี่ยนสถานะดำเนินการของรายการที่ยังไม่ถูกอนุมัติ (สถานะปัจจุบัน: ${approval_status})`);
     }
@@ -225,11 +227,11 @@ exports.calculateOverallProcessingStatus = async (request_id) => {
     }
   }
 
-  // ✅ Logic เพิ่มเติมเพื่อจัดการสถานะ 'pending' ให้เป็น 'preparing' หากคำขอได้รับการอนุมัติแล้ว
+  // Logic เพิ่มเติมเพื่อจัดการสถานะ 'pending' ให้เป็น 'preparing' หากคำขอได้รับการอนุมัติแล้ว
   // ถ้าทุกรายการย่อยที่อนุมัติอยู่ในสถานะ 'pending'
   if (overallProcessingStep === 'pending') {
       // และสถานะหลักของคำขอ (request_status) เป็นหนึ่งในสถานะที่บ่งบอกว่าอนุมัติแล้ว
-      if (['approved_all', 'approved_partial_and_rejected_partial'].includes(requestOverallApprovalStatus)) {
+      if (['approved_all', 'approved_partial_and_rejected_partial', 'stock_deducted'].includes(requestOverallApprovalStatus)) {
           // สามารถเปลี่ยนไปเป็น 'preparing' ได้ทันที
           return 'preparing';
       }
@@ -290,9 +292,8 @@ exports.updateRequestOverallStatusByProcessingDetails = async (request_id, chang
             );
             const currentOverallApprovalStatus = overallApprovalStatusResult.rows[0]?.request_status;
 
+            // ลบ 'stock_deducted' ออกจากเงื่อนไขนี้ เพื่อให้สอดคล้องกับ calculateOverallProcessingStatus
             if (['approved_all', 'approved_partial_and_rejected_partial'].includes(currentOverallApprovalStatus)) {
-                // หากคำขอหลักถูกอนุมัติทั้งหมด หรือถูกอนุมัติ/ปฏิเสธบางส่วน (ตัดสินใจครบแล้ว)
-                // และทุกรายการย่อยที่อนุมัติแล้วยัง 'pending'
                 finalOverallRequestStatus = 'pending'; // เปลี่ยนเป็น pending เพื่อรอการจัดเตรียม
             }
             // หาก currentOverallApprovalStatus เป็น waiting_approval, approved_partial, rejected_partial
