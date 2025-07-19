@@ -1,237 +1,385 @@
-.container {
-  width: 100%; /* แก้ไขจาก max เป็น max-width */
-  background-color: #004b96;
-  border-radius: 16px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.07);
+/* General Page Styling */
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+.pageBackground {
+  height: 100vh;
+  display: flex;
+  flex-direction: column; /* สำคัญมาก */
+  justify-content: stretch;
+  align-items: stretch;
+  padding: 20px;
+  background-color: #f0f2f5;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
   box-sizing: border-box;
 }
 
+.container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* 💥 สำคัญมาก ไม่งั้นมันจะไม่ยืด */
+  padding: 25px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+
 .heading {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #0f172a;
-  margin-bottom: 1.5rem;
-  text-align: center;
+  font-size: 2.5em; /* ขนาดตัวอักษรของหัวข้อ */
+  color: #2c3e50; /* สีของหัวข้อ */
+  text-align: center; /* จัดข้อความอยู่กึ่งกลาง */
+  margin-bottom: 30px; /* ระยะห่างด้านล่าง */
+  padding-bottom: 15px; /* ระยะห่างระหว่างข้อความกับเส้นขีด */
+  border-bottom: 3px solid #007bff; /* เส้นขีดเส้นใต้สีน้ำเงิน */
+  font-weight: 700;
 }
 
+/* Table Container for Scrollability */
 .tableContainer {
-  /* max-height: 900px; */ /* คอมเมนต์ไว้ ถ้าต้องการใช้ ให้เปิด */
-  overflow-y: auto;
-  border-radius: 12px;
-  background-color: white;
-  box-shadow: 0 0 5px rgb(0 0 0 / 0.1);
+  flex: 1; /* ให้ Table Container ยืดเต็มพื้นที่ที่เหลือ */
+  min-height: 0; /* สำคัญสำหรับ flex item ที่มี overflow */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* ซ่อน scrollbar ของ container เอง */
+  border-radius: 8px; /* Match table border-radius */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* Match table shadow */
 }
 
+/* Table Styling (inside tableContainer) */
 .table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed; /* ช่วยให้คอลัมน์กว้างเท่ากัน และจัดการ word-wrap ได้ดีขึ้น */
+  table-layout: fixed;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
-.table thead tr {
-  background-color: #f1f5f9;
+.table thead {
+  flex-shrink: 0; /* ป้องกัน header หดตัว */
+}
+
+.table tbody {
+  display: block; /* ทำให้ tbody เป็น block เพื่อให้สามารถ scroll ได้ */
+  overflow-y: auto; /* เพิ่ม scrollbar แนวตั้งเมื่อเนื้อหาเกิน */
+  flex-grow: 1; /* ทำให้ tbody ยืดเต็มพื้นที่ที่เหลือ */
+}
+
+.table tr {
+  width: 100%; /* กำหนดความกว้างของแถวใน tbody */
+  display: table; /* ทำให้ tr ทำงานเหมือน table row */
+  table-layout: fixed; /* ทำให้คอลัมน์ในแต่ละแถวมีขนาดคงที่ */
 }
 
 .table th,
 .table td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 15px;
+  /* border: 1px solid #eee; */ /* ลบเส้นขอบเซลล์ออก */
   text-align: left;
-  font-size: 0.95rem;
-  color: #1e293b;
-  height: 54px; /* กำหนดความสูงคงที่สำหรับแต่ละแถว */
-  word-wrap: break-word; /* เพื่อจัดการข้อความยาวๆ ไม่ให้ล้น */
+  word-wrap: break-word;
+  vertical-align: middle;
 }
 
-.table tbody tr:nth-child(even) {
-  background-color: #f9fafb;
-}
-
-.statusBadge {
-  padding: 0.35rem 0.75rem;
-  border-radius: 9999px; /* ทำให้มุมโค้งมนสุดๆ (Pill shape) */
-  font-size: 0.85rem;
-  font-weight: 600;
-  display: inline-block;
-  white-space: nowrap; /* ป้องกันไม่ให้ข้อความขึ้นบรรทัดใหม่ */
-}
-
-/* --- Status Colors --- */
-.statusBadge.pending { /* เพิ่ม .statusBadge เพื่อความเฉพาะเจาะจง */
-  background-color: #fef08a; /* Yellow-200 */
-  color: #78350f; /* Amber-900 */
-}
-
-.statusBadge.preparing {
-  background-color: #bae6fd; /* Light Blue-300 */
-  color: #0369a1; /* Sky Blue-800 */
-}
-
-.statusBadge.delivering {
-  background-color: #fcd34d; /* Amber-300 */
-  color: #92400e; /* Orange-900 */
-}
-
-.statusBadge.completed {
-  background-color: #bbf7d0; /* Green-200 */
-  color: #166534; /* Green-800 */
-}
-
-.statusBadge.approved_all {
-  background-color: #d1fae5; /* Emerald-100 */
-  color: #065f46; /* Emerald-800 */
-}
-
-.statusBadge.approved_partial {
-  background-color: #fde68a; /* Yellow-200 */
-  color: #92400e; /* Orange-900 - เลือกสีที่แตกต่างจาก approved_all เล็กน้อย */
-}
-
-.statusBadge.rejected_all { /* ลบ .rejected_all ซ้ำออกไป */
-  background-color: #fecaca; /* Red-200 */
-  color: #991b1b; /* Red-800 */
-}
-
-.statusBadge.rejected_partial { /* เพิ่มสไตล์สำหรับ rejected_partial */
-  background-color: #f87171; /* Red-400, เลือกสีแดงที่ต่างจาก rejected_all เล็กน้อย */
-  color: #7f1d1d; /* Red-900 */
-}
-
-.statusBadge.waiting_approval {
-  background-color: #f3f4f6; /* Gray-100 */
-  color: #374151; /* Gray-700 */
-}
-
-.statusBadge.defaultStatus { /* เพิ่มสไตล์สำหรับสถานะ default */
-  background-color: #e2e8f0; /* Gray-200 */
-  color: #475569; /* Slate-700 */
-}
-
-/* --- Buttons --- */
-.manageBtn {
-  background-color: #3b82f6; /* Blue-500 */
+.table th {
+  background-image: linear-gradient(to right, #007bff, #0056b3); /* ไล่เฉดสีน้ำเงิน */
   color: white;
-  padding: 0.4rem 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.95em; /* ปรับขนาดฟอนต์เล็กน้อย */
+  padding: 16px 15px; /* ปรับ padding เล็กน้อย */
+  border: none; /* ลบเส้นขอบแต่ละเส้น */
+  border-bottom: 2px solid #004085; /* เพิ่มเส้นขอบด้านล่างที่ชัดเจน */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* เพิ่มเงาที่โดดเด่นขึ้น */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2); /* เพิ่มเงาข้อความ */
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* กำหนด border-radius เฉพาะหัวตารางมุมบนซ้ายและขวา */
+.table th:first-child {
+  border-top-left-radius: 8px;
+}
+
+.table th:last-child {
+  border-top-right-radius: 8px;
+}
+
+/* กำหนดความกว้างของแต่ละคอลัมน์เพื่อให้ตารางมีขนาดคงที่ */
+.table th:nth-child(1), /* รหัสคำขอ */
+.table td:nth-child(1) {
+  width: 15%;
+}
+
+.table th:nth-child(2), /* ผู้ขอ */
+.table td:nth-child(2) {
+  width: 15%;
+}
+
+.table th:nth-child(3), /* แผนก */
+.table td:nth-child(3) {
+  width: 10%;
+}
+
+.table th:nth-child(4), /* วันที่ขอ */
+.table td:nth-child(4) {
+  width: 12%;
+}
+
+.table th:nth-child(5), /* เวลา */
+.table td:nth-child(5) {
+  width: 8%;
+}
+
+.table th:nth-child(6), /* วันที่นำส่ง */
+.table td:nth-child(6) {
+  width: 12%;
+}
+
+.table th:nth-child(7), /* สถานะปัจจุบัน */
+.table td:nth-child(7) {
+  width: 15%;
+}
+
+.table th:nth-child(8), /* จัดการ */
+.table td:nth-child(8) {
+  width: 13%;
+}
+/* สิ้นสุดการกำหนดความกว้างคอลัมน์ */
+
+
+.table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.table tr:hover {
+  background-color: #e9f5ff;
+  cursor: pointer;
+}
+
+.emptyRow, .emptyFillerRow {
+  height: 60px; /* กำหนดความสูงของแถวว่าง */
+  background-color: #fdfdfd;
+  /* border: 1px solid #eee; */ /* ลบเส้นขอบออก */
+  text-align: center;
+  color: #ccc;
+  font-style: italic;
+}
+
+/* Status Badges */
+.statusBadge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85em;
+  font-weight: bold;
+  text-align: center;
+  min-width: 100px;
+  white-space: nowrap;
+}
+
+/* Specific status colors */
+.waiting_approval { background-color: #6c757d; color: white; } /* Grey */
+.approved_all { background-color: #28a745; color: white; } /* Green */
+.rejected_all { background-color: #dc3545; color: white; } /* Red */
+.approved_partial { background-color: #ffc107; color: #333; } /* Orange */
+.rejected_partial { background-color: #dc3545; color: white; } /* Red */
+.approved_partial_and_rejected_partial { background-color: #ffc107; color: #333; } /* Orange */
+.pending { background-color: #ffc107; color: #333; } /* Orange */
+.preparing { background-color: #17a2b8; color: white; } /* Cyan */
+.delivering { background-color: #007bff; color: white; } /* Blue */
+.completed { background-color: #28a745; color: white; } /* Green */
+.canceled { background-color: #6c757d; color: white; } /* Grey */
+.stock_deducted { background-color: #8a2be2; color: white; } /* BlueViolet for stock_deducted */
+.defaultStatus { background-color: #e0e0e0; color: #333; } /* Default light grey */
+
+
+/* Buttons */
+.manageBtn {
+  padding: 10px 18px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
+  font-size: 0.95em;
   font-weight: 500;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease; /* เพิ่ม box-shadow transition */
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  white-space: nowrap;
+  background-color: #007bff; /* Default for manage */
+  color: white;
 }
 
 .manageBtn:hover {
-  background-color: #2563eb; /* Blue-600 */
-  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2); /* เพิ่มเงาเมื่อ hover */
+  background-color: #0056b3;
+  transform: translateY(-2px);
 }
 
-.manageBtn.disabledManageBtn {
-  background-color: #cbd5e1; /* Gray-300 */
-  color: #64748b; /* Gray-500 */
+.manageBtn:disabled {
+  background-color: #cccccc;
   cursor: not-allowed;
-  opacity: 0.8; /* ทำให้ดูจางลงเล็กน้อย */
-  pointer-events: none; /* ป้องกันการคลิก */
-  box-shadow: none; /* ไม่มีเงาเมื่อ disabled */
 }
 
-/* --- Loading States --- */
-.loadingContainer {
-  text-align: center;
-  margin-top: 3rem;
-  padding: 2rem;
+.viewOnlyBtn {
+  background-color: #6c757d; /* Grey for view only */
+  color: white;
+}
+
+.viewOnlyBtn:hover {
+  background-color: #5a6268;
+}
+
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 25px;
+  gap: 10px; /* ลด gap เล็กน้อย */
+}
+
+.pageBtn {
+  padding: 10px 15px; /* ปรับ padding */
+  border: 1px solid #007bff;
+  border-radius: 8px;
   background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  color: #007bff;
+  cursor: pointer;
+  font-size: 0.9em; /* ปรับขนาดฟอนต์ */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background-color: #007bff;
+  color: white;
+}
+
+.pageBtn.activePage {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+}
+
+.pageBtn.disabledBtn {
+  background-color: #e0e0e0;
+  color: #999;
+  cursor: not-allowed;
+  border-color: #e0e0e0;
+}
+
+/* Messages (Loading, Error, No Data) */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%; /* ให้เต็มความสูงของ container */
+  gap: 20px;
+  font-size: 1.2em;
+  color: #555;
 }
 
 .spinner {
-  margin: 0 auto 0.75rem;
-  border: 4px solid #e2e8f0; /* Gray-200 */
-  border-top: 4px solid #3b82f6; /* Blue-500 */
+  border: 8px solid #f3f3f3; /* Light grey */
+  border-top: 8px solid #007bff; /* Blue */
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  width: 60px;
+  height: 60px;
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .loading {
-  font-size: 1.1rem;
-  color: #475569; /* Slate-700 */
-  font-weight: 500;
+  font-weight: 600;
+  color: #007bff;
 }
 
-/* --- Pagination --- */
-.pagination {
-  margin-top: 1.5rem;
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  flex-wrap: wrap; /* เพื่อให้ปุ่มขึ้นบรรทัดใหม่เมื่อหน้าจอเล็ก */
-  padding: 0.5rem; /* เพิ่ม padding เล็กน้อย */
-}
-
-.pageInfo {
+.errorMessage {
+  color: #dc3545;
+  font-weight: bold;
   text-align: center;
-  color: #64748b;
-  margin: 0.75rem 0 0.5rem;
-  font-size: 0.9rem;
-  user-select: none; /* ป้องกันการเลือกข้อความ */
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #ffebeb;
+  border: 1px solid #dc3545;
+  border-radius: 8px;
 }
 
-.pageBtn {
-  padding: 0.45rem 0.85rem;
-  font-size: 0.9rem;
-  background-color: #ffffff; /* White */
-  border: 1px solid #cbd5e1; /* Gray-300 */
-  border-radius: 6px;
-  cursor: pointer;
-  color: #334155; /* Slate-800 */
-  transition: all 0.2s ease;
-  min-width: 40px; /* กำหนดความกว้างขั้นต่ำให้ปุ่ม */
-  display: flex; /* ใช้ flexbox เพื่อจัดกึ่งกลางข้อความ */
-  align-items: center;
-  justify-content: center;
-}
-
-.pageBtn:hover {
-  background-color: #f1f5f9; /* Gray-100 */
-  border-color: #94a3b8; /* Slate-400 */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* เพิ่มเงาเล็กน้อยเมื่อ hover */
-}
-
-.pageBtn.activePage {
-  background-color: #3b82f6; /* Blue-500 */
-  color: white;
-  border-color: #3b82f6;
-  font-weight: 600; /* ทำให้ตัวหนาขึ้น */
-}
-
-.pageBtn.disabledBtn {
-  background-color: #f8fafc; /* Gray-50 */
-  color: #94a3b8; /* Gray-400 */
-  cursor: not-allowed;
-  border-color: #e2e8f0; /* Gray-200 */
-  pointer-events: none; /* ป้องกันการคลิก */
-  opacity: 0.7;
-}
-
-/* --- Empty Table Row --- */
-.emptyRow td {
-  height: 100px; /* เพิ่มความสูงของแถวว่างเพื่อให้ดูดีขึ้น */
-  color: #94a3b8; /* Gray-400 */
+.infoMessage {
+  color: #6c757d;
   text-align: center;
-  font-style: italic; /* ตัวเอียงเล็กน้อย */
-  background-color: #fdfdfd; /* สีพื้นหลังอ่อนๆ */
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #e9ecef;
+  border-radius: 8px;
 }
 
-.emptyFillerRow td { /* สไตล์สำหรับแถวว่างที่ใช้เติมความสูงตาราง */
-  border-bottom: none; /* ไม่มีเส้นขอบด้านล่าง */
-  height: 54px; /* กำหนดความสูงเท่ากับแถวข้อมูลปกติ */
-  background-color: transparent; /* พื้นหลังโปร่งใส */
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding: 15px;
+  }
+  .heading {
+    font-size: 2em;
+  }
+  .table th, .table td {
+    padding: 10px;
+    font-size: 0.85em;
+  }
+  .statusBadge {
+    padding: 4px 8px;
+    font-size: 0.75em;
+    min-width: 80px;
+  }
+  .manageBtn, .pageBtn {
+    padding: 8px 12px;
+    font-size: 0.85em;
+  }
+  .table th:nth-child(1), .table td:nth-child(1) { width: 18%; } /* รหัสคำขอ */
+  .table th:nth-child(2), .table td:nth-child(2) { width: 18%; } /* ผู้ขอ */
+  .table th:nth-child(3), .table td:nth-child(3) { width: 12%; } /* แผนก */
+  .table th:nth-child(4), .table td:nth-child(4) { width: 15%; } /* วันที่ขอ */
+  .table th:nth-child(5), .table td:nth-child(5) { width: 10%; } /* เวลา */
+  .table th:nth-child(6), .table td:nth-child(6) { width: 15%; } /* วันที่นำส่ง */
+  .table th:nth-child(7), .table td:nth-child(7) { width: 18%; } /* สถานะปัจจุบัน */
+  .table th:nth-child(8), .table td:nth-child(8) { width: 15%; } /* จัดการ */
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 10px;
+  }
+  .heading {
+    font-size: 1.5em;
+  }
+  .table th, .table td {
+    padding: 8px;
+    font-size: 0.75em;
+  }
+  .statusBadge {
+    padding: 3px 6px;
+    font-size: 0.7em;
+    min-width: 60px;
+  }
+  .manageBtn, .pageBtn {
+    padding: 6px 10px;
+    font-size: 0.8em;
+  }
+  /* อาจต้องปรับความกว้างคอลัมน์เพิ่มเติมสำหรับหน้าจอเล็กมาก */
+  .table th:nth-child(1), .table td:nth-child(1) { width: 20%; }
+  .table th:nth-child(2), .table td:nth-child(2) { width: 20%; }
+  .table th:nth-child(3), .table td:nth-child(3) { width: 15%; }
+  .table th:nth-child(4), .table td:nth-child(4) { width: 15%; }
+  .table th:nth-child(5), .table td:nth-child(5) { width: 10%; }
+  .table th:nth-child(6), .table td:nth-child(6) { width: 15%; }
+  .table th:nth-child(7), .table td:nth-child(7) { width: 20%; }
+  .table th:nth-child(8), .table td:nth-child(8) { width: 15%; }
 }

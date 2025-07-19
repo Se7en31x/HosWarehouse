@@ -1,9 +1,8 @@
-// RequestStatusManagerPage.js
 'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import axiosInstance from '../../utils/axiosInstance';
+import axiosInstance from '@/app/utils/axiosInstance'; // ปรับ Path ให้ถูกต้อง
 import Swal from 'sweetalert2';
 import styles from './page.module.css';
 
@@ -12,23 +11,22 @@ export default function RequestStatusManagerPage() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const itemsPerPage = 10;
+  const itemsPerPage = 9; // จำนวนรายการต่อหน้า
 
   // 1. statusMap: ควรมีคำแปลสำหรับทุกสถานะที่เป็นไปได้ในระบบ
-  // แม้บางสถานะจะไม่แสดงในหน้านี้โดยตรง (ถูกกรองด้วย allowedStatuses)
-  // แต่การมีไว้จะช่วยให้การแสดงผลสถานะที่มาจาก Backend ถูกต้องเสมอ
   const statusMap = {
     waiting_approval: 'รอการอนุมัติ', // สถานะเริ่มต้นของคำขอ (ผู้อนุมัติจัดการ)
     approved_all: 'อนุมัติทั้งหมด',
     rejected_all: 'ปฏิเสธทั้งหมด',
     approved_partial: 'อนุมัติบางส่วน', // มีรายการที่อนุมัติและรายการที่รอตัดสินใจ
     rejected_partial: 'ปฏิเสธบางส่วน', // มีรายการที่ปฏิเสธและรายการที่รอตัดสินใจ
-    approved_partial_and_rejected_partial: 'อนุมัติ/ปฏิเสธบางส่วน', // ✅ สถานะนี้บอกว่าทุกรายการย่อยได้รับการตัดสินใจแล้ว
-    pending: 'รอดำเนินการจัดเตรียม', // คำขอพร้อมให้เริ่มจัดเตรียม
+    approved_partial_and_rejected_partial: 'อนุมัติ/ปฏิเสธบางส่วน', // ทุกรายการย่อยได้รับการตัดสินใจแล้ว
+    pending: 'อยู่ระหว่างการดำเนินการ',
     preparing: 'กำลังจัดเตรียม',
     delivering: 'นำส่งแล้ว',
     completed: 'เสร็จสิ้น',
-    canceled: 'ยกเลิกคำขอ', // อาจจะรวมคำขอที่ยกเลิกด้วยในหน้าผู้จัดการ
+    canceled: 'ยกเลิกคำขอ',
+    stock_deducted: 'ตัดสต็อกแล้ว', // เปลี่ยนคำแปลตรงนี้
   };
 
   // 2. statusToClass: กำหนดคลาส CSS สำหรับแต่ละสถานะเพื่อการแสดงผล
@@ -38,29 +36,27 @@ export default function RequestStatusManagerPage() {
     rejected_all: 'rejected_all',
     approved_partial: 'approved_partial',
     rejected_partial: 'rejected_partial',
-    approved_partial_and_rejected_partial: 'approved_partial_and_rejected_partial', // ✅ เพิ่มเข้ามา
+    approved_partial_and_rejected_partial: 'approved_partial_and_rejected_partial',
     pending: 'pending',
     preparing: 'preparing',
     delivering: 'delivering',
     completed: 'completed',
     canceled: 'canceled',
+    stock_deducted: 'stock_deducted', // คลาสสำหรับสถานะใหม่
   };
 
-  // 3. allowedStatuses: นี่คือหัวใจสำคัญของการกรองข้อมูลในหน้านี้
-  // หน้านี้ควรแสดงเฉพาะคำขอที่ "จบกระบวนการอนุมัติแล้ว"
+  // 3. allowedStatuses: หน้านี้ควรแสดงเฉพาะคำขอที่ "จบกระบวนการอนุมัติแล้ว"
   // หรืออยู่ในขั้นตอนการดำเนินการจัดส่งพัสดุ
   const allowedStatuses = [
-    'approved_all', // อนุมัติทุกรายการย่อย (จบการอนุมัติ)
-    'rejected_all', // ปฏิเสธทุกรายการย่อย (จบการอนุมัติ)
-    'approved_partial_and_rejected_partial', // ✅ สำคัญ: ทุกรายการย่อยได้รับการตัดสินใจแล้ว (จบการอนุมัติ)
-    'pending', // คำขอที่อนุมัติแล้วและรอการจัดเตรียม
-    'preparing', // กำลังจัดเตรียม
-    'delivering', // กำลังนำส่ง
-    'completed', // เสร็จสิ้นกระบวนการทั้งหมด
-    'canceled', // อาจจะรวมคำขอที่ยกเลิกไว้ในมุมมองของผู้จัดการ
-    // ❌ ไม่รวม 'waiting_approval' เพราะคำขอเหล่านี้ยังอยู่ที่หน้าอนุมัติ
-    // ❌ ไม่รวม 'approved_partial' เพราะยังมีรายการที่รอตัดสินใจในหน้าอนุมัติ
-    // ❌ ไม่รวม 'rejected_partial' เพราะยังมีรายการที่รอตัดสินใจในหน้าอนุมัติ
+    'approved_all',
+    'rejected_all',
+    'approved_partial_and_rejected_partial',
+    'stock_deducted',
+    'pending',
+    'preparing',
+    'delivering',
+    'completed',
+    'canceled',
   ];
 
   useEffect(() => {
@@ -68,12 +64,11 @@ export default function RequestStatusManagerPage() {
   }, []);
 
   const fetchRequests = async () => {
+    setLoading(true);
     try {
-      // ✅ สร้าง query string จาก allowedStatuses เพื่อให้ Backend กรองข้อมูล
-      // การกรองที่ Backend มีประสิทธิภาพดีกว่าการกรองที่ Frontend
       const statusQuery = allowedStatuses.join(',');
       const res = await axiosInstance.get(`/requestStatus?status=${statusQuery}`);
-      setRequests(res.data); // Backend ควรส่งเฉพาะข้อมูลที่กรองแล้วมาให้
+      setRequests(res.data);
     } catch (err) {
       console.error('โหลดคำขอล้มเหลว', err);
       Swal.fire('ผิดพลาด', 'โหลดคำขอไม่สำเร็จ กรุณาลองใหม่', 'error');
@@ -103,7 +98,8 @@ export default function RequestStatusManagerPage() {
   }
 
   // กำหนดสถานะที่ไม่ต้องการให้ "จัดการ" (ปุ่มจะเปลี่ยนเป็น "ดูรายละเอียด" แทน)
-  const viewOnlyStatuses = ['rejected_all', 'completed', 'canceled']; // เพิ่ม 'canceled' ถ้าต้องการให้ดูได้อย่างเดียว
+  // ลบ 'stock_deducted' ออกจากรายการนี้ เพื่อให้สามารถ "จัดการสถานะ" ได้
+  const viewOnlyStatuses = ['rejected_all', 'completed', 'canceled']; 
 
   return (
     <div className={styles.container}>
@@ -145,9 +141,8 @@ export default function RequestStatusManagerPage() {
                     </span>
                   </td>
                   <td>
-                    <Link href={`/manage/request-status-manager/${r.request_id}`}>
+                    <Link href={`/manage/request-status-manager/${r.request_id}`}> 
                       <button
-                        // ใช้ viewOnlyStatuses เพื่อตรวจสอบสถานะ
                         className={`${styles.manageBtn} ${viewOnlyStatuses.includes(r.request_status) ? styles.viewOnlyBtn : ''}`}
                         title={viewOnlyStatuses.includes(r.request_status) ? "ดูรายละเอียดคำขอนี้" : "จัดการสถานะคำขอนี้"}
                       >
@@ -160,13 +155,12 @@ export default function RequestStatusManagerPage() {
             ) : (
               <tr>
                 <td colSpan={8} className={styles.emptyRow}>
-                  {/* ข้อความแสดงผลเมื่อไม่มีข้อมูลในหน้าปัจจุบัน หรือไม่มีคำขอเลย */}
                   {requests.length === 0 ? "ยังไม่มีคำขอในระบบสำหรับสถานะที่แสดง" : "ไม่พบคำขอในสถานะที่แสดงในหน้าปัจจุบัน"}
                 </td>
               </tr>
             )}
 
-            {/* แถวว่างสำหรับเติมเต็มตารางให้ครบ 10 รายการ เพื่อความสวยงาม */}
+            {/* แถวว่างสำหรับเติมเต็มตารางให้ครบตาม itemsPerPage เพื่อความสวยงาม */}
             {Array.from({ length: itemsPerPage - currentItems.length }).map((_, idx) => (
               <tr key={`empty-${idx}`} className={styles.emptyFillerRow}>
                 <td colSpan={8}>&nbsp;</td>
@@ -184,7 +178,7 @@ export default function RequestStatusManagerPage() {
           className={`${styles.pageBtn} ${currentPage === 1 ? styles.disabledBtn : ''}`}
           title="หน้าแรก"
         >
-          ⏮ หน้าแรก
+          หน้าแรก ⏮
         </button>
 
         <button

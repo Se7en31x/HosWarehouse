@@ -9,10 +9,13 @@ import styles from './page.module.css'; // ตรวจสอบให้แน�
 
 // Map สถานะเพื่อให้แสดงผลเป็นภาษาไทยและมี class สำหรับ styling
 const statusMap = {
-  approved_all: { text: 'อนุมัติทั้งหมด', class: styles.statusApproved }, // ใช้ styles.statusApproved
-  approved_partial: { text: 'อนุมัติบางส่วน', class: styles.statusPartial }, // ใช้ styles.statusPartial
-  stock_deducted: { text: 'เบิก-จ่ายแล้ว', class: styles.statusDeducted }, // เพิ่มสถานะใหม่
-  completed: { text: 'เสร็จสิ้น', class: styles.statusCompleted }, // เพิ่มสถานะใหม่
+  approved_all: { text: 'อนุมัติทั้งหมด', class: styles.statusApproved },
+  approved_partial: { text: 'อนุมัติบางส่วน', class: styles.statusPartial },
+  stock_deducted: { text: 'เบิก-จ่ายแล้ว', class: styles.statusDeducted },
+  completed: { text: 'เสร็จสิ้น', class: styles.statusCompleted },
+  // เพิ่มสถานะอื่นๆ ที่คุณมีใน request_status ของตาราง requests ได้ที่นี่
+  // ตัวอย่าง: ถ้า Backend ส่งสถานะ 'pending_deduction' มา
+  // pending_deduction: { text: 'รอเบิก-จ่าย', class: styles.statusPendingDeduction },
 };
 
 // Map ประเภทคำขอ (request_type) เป็นภาษาไทย
@@ -25,38 +28,40 @@ const typeMap = {
 
 export default function StockDeductionPage() {
   const router = useRouter(); // Initialize router hook
-  
+
   // States สำหรับเก็บข้อมูลและสถานะต่างๆ
-  const [requests, setRequests] = useState([]); // เก็บรายการคำขอที่อนุมัติแล้ว
+  const [requests, setRequests] = useState([]); // เก็บรายการคำขอที่อนุมัติแล้วและพร้อมเบิก-จ่าย
   const [isLoading, setIsLoading] = useState(true); // บอกว่ากำลังโหลดข้อมูลหรือไม่
   const [error, setError] = useState(null); // เก็บข้อความ error หากมีปัญหา
   const [currentPage, setCurrentPage] = useState(1); // หน้าปัจจุบันสำหรับการแบ่งหน้า
-  const itemsPerPage =10; // จำนวนรายการต่อหน้า
+  const itemsPerPage = 10; // จำนวนรายการต่อหน้า
 
   // Effect Hook สำหรับดึงข้อมูลจาก Backend API เมื่อ Component ถูก Mount
   useEffect(() => {
-    const fetchApprovedRequests = async () => {
+    const fetchRequestsForStockDeduction = async () => {
       try {
         setIsLoading(true); // เริ่มโหลด: ตั้งสถานะเป็นกำลังโหลด
         setError(null); // ล้างข้อผิดพลาดเก่า
-        
-        const response = await axiosInstance.get('/stockDeduction/approved'); 
+
+        // **แก้ไข:** API นี้ควรส่งคืนเฉพาะคำขอที่มีรายการย่อยที่พร้อมเบิก-จ่าย (processing_status = 'pending')
+        const response = await axiosInstance.get('/stockDeduction/ready');
         const data = response.data;
-        
-        const filteredData = data.filter(item => 
-          item.status === 'approved_all' || item.status === 'approved_partial'
-        );
-        
-        setRequests(filteredData); // อัปเดต state ด้วยข้อมูลที่ได้มา
+
+        // **ลบ:** ไม่ต้อง filter ข้อมูลใน Frontend อีกต่อไป เพราะสมมติว่า Backend กรองมาให้แล้ว
+        // const filteredData = data.filter(item =>
+        //   item.status === 'approved_all' || item.status === 'approved_partial'
+        // );
+
+        setRequests(data); // อัปเดต state ด้วยข้อมูลที่ได้มา (ซึ่งถูกกรองโดย Backend แล้ว)
       } catch (err) {
-        console.error("Error fetching approved requests for stock deduction:", err);
-        setError(err.response?.data?.message || "ไม่สามารถโหลดรายการคำขอที่อนุมัติได้ กรุณาลองใหม่อีกครั้ง"); // แสดงข้อความ error ให้ผู้ใช้
+        console.error("Error fetching requests ready for stock deduction:", err);
+        setError(err.response?.data?.message || "ไม่สามารถโหลดรายการคำขอที่พร้อมเบิก-จ่ายได้ กรุณาลองใหม่อีกครั้ง"); // แสดงข้อความ error ให้ผู้ใช้
       } finally {
         setIsLoading(false); // จบการโหลด ไม่ว่าสำเร็จหรือล้มเหลว
       }
     };
 
-    fetchApprovedRequests(); // เรียกฟังก์ชันดึงข้อมูลเมื่อ Component ถูกโหลดครั้งแรก
+    fetchRequestsForStockDeduction(); // เรียกฟังก์ชันดึงข้อมูลเมื่อ Component ถูกโหลดครั้งแรก
   }, []); // Dependency array ว่างเปล่า [] หมายหมายถึง effect นี้จะทำงานเพียงครั้งเดียวหลังการ render ครั้งแรก
 
   // คำนวณข้อมูลสำหรับการแบ่งหน้า (Pagination)
@@ -80,10 +85,10 @@ export default function StockDeductionPage() {
         <h1 className={styles.title}>รายการคำขอที่รอเบิก-จ่ายสต็อก</h1>
 
         {/* แสดงสถานะการโหลด */}
-        {isLoading && <p className={styles.infoMessage}>กำลังโหลดข้อมูลรายการคำขอ...</p>} 
+        {isLoading && <p className={styles.infoMessage}>กำลังโหลดข้อมูลรายการคำขอ...</p>}
 
         {/* แสดงข้อความ error หากมี */}
-        {error && <p className={styles.errorMessage}>{error}</p>} 
+        {error && <p className={styles.errorMessage}>{error}</p>}
 
         {/* ตารางจะแสดงเสมอ ไม่ว่าจะโหลดอยู่ มี error หรือไม่มีข้อมูล */}
         {!isLoading && !error && (
@@ -104,7 +109,7 @@ export default function StockDeductionPage() {
               <tbody>
                 {currentItems.length > 0 ? (
                   currentItems.map((item, index) => (
-                    <tr key={item.request_id || item.request_code}> 
+                    <tr key={item.request_id || item.request_code}>
                       <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                       <td>{item.request_code}</td>
                       <td>{new Date(item.request_date).toLocaleDateString('th-TH')}</td>
@@ -114,14 +119,15 @@ export default function StockDeductionPage() {
                         {typeMap[item.type] || item.type}
                       </td>
                       <td>
+                        {/* แสดงสถานะที่มาจาก Backend (request_status) */}
                         <span className={`${styles.statusBadge} ${statusMap[item.status]?.class}`}>
                           {statusMap[item.status]?.text || 'ไม่ระบุ'}
                         </span>
                       </td>
                       <td>
-                        <button 
+                        <button
                           className={`${styles.button} ${styles.primaryButton}`}
-                          onClick={() => handleDeductStockClick(item.request_id)} 
+                          onClick={() => handleDeductStockClick(item.request_id)}
                         >
                           📦 ดำเนินการเบิก-จ่าย
                         </button>
@@ -146,7 +152,7 @@ export default function StockDeductionPage() {
             {/* ส่วนควบคุมการแบ่งหน้า (Pagination) */}
             <div className={styles.pagination}>
               <button
-                className={styles.pageButton} 
+                className={styles.pageButton}
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((prev) => prev - 1)}
               >
@@ -154,7 +160,7 @@ export default function StockDeductionPage() {
               </button>
               <span>หน้า {currentPage} / {totalPages}</span>
               <button
-                className={styles.pageButton} 
+                className={styles.pageButton}
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((prev) => prev + 1)}
               >

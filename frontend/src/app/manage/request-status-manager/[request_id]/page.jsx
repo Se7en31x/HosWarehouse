@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import axiosInstance from '../../../utils/axiosInstance';
+import axiosInstance from '../../../utils/axiosInstance'; // Adjusted path
 import Swal from 'sweetalert2';
 import styles from './page.module.css';
 import { io } from 'socket.io-client';
@@ -40,6 +40,10 @@ const translateStatus = (status) => {
     approved_partial_and_rejected_partial: 'อนุมัติและปฏิเสธบางส่วน',
     canceled: 'ยกเลิกคำขอ',
     unknown_status: 'สถานะไม่ทราบ',
+    '': 'ไม่ระบุ', // เพิ่มเพื่อให้สามารถแปลค่าว่างได้หากจำเป็น
+    'N/A': 'N/A', // สำหรับกรณีที่ไม่มีสถานะแสดงผล
+    null: 'ยังไม่ระบุ',
+    'waiting_for_processing_selection': 'รอการเลือกสถานะ',
   };
   return map[status] || status;
 };
@@ -56,6 +60,7 @@ const immutableOverallApprovalStatuses = [
   'approved_all', 'rejected_all', 'canceled', 'completed', 'approved_partial_and_rejected_partial'
 ];
 
+// สถานะการอนุมัติที่ไม่สามารถเปลี่ยนแปลง processing_status ได้
 const immutableDetailProcessingStatuses = ['rejected', 'waiting_approval_detail'];
 
 const statusIconMap = {
@@ -80,34 +85,38 @@ function StatusTrack({ currentStatus, statusStepsConfig, statusIconMapConfig }) 
 
   const currentIndex = steps.findIndex(s => s.key === currentStatus);
   const isOverallCompleted = currentStatus === 'completed';
-  let donePercentage = '0%';
+  const isWaitingForSelection = currentStatus === 'waiting_for_processing_selection';
 
+  // สถานะรวมที่ไม่เกี่ยวข้องกับ Processing Flow โดยตรง (เช่น ถูกปฏิเสธทั้งหมด)
+  // แต่เราจะไม่ซ่อน StatusTrack แล้ว แต่จะให้มันแสดงผลเป็น "Non-trackable"
+  const isNonProcessingStatus = [
+    'rejected_all', 'rejected_partial', 'waiting_approval', 'canceled', 'approved_partial_and_rejected_partial'
+  ].includes(currentStatus);
+
+  let donePercentage = '0%';
   if (currentIndex !== -1 && steps.length > 1) {
     donePercentage = `${(currentIndex / (steps.length - 1)) * 100}%`;
   } else if (currentStatus === 'completed') {
     donePercentage = '100%';
   }
 
-  const shouldNotShowTrack = [
-    'rejected_all', 'rejected_partial', 'waiting_approval', 'canceled', 'approved_partial_and_rejected_partial'
-  ].includes(currentStatus);
+  // กำหนด class สำหรับ StatusTrack ตามสถานะ
+  const trackerClass = isWaitingForSelection
+    ? styles.trackerWaitingForSelection
+    : isOverallCompleted
+      ? styles.trackerCompleted
+      : isNonProcessingStatus // Add this class for non-processing states
+        ? styles.nonTrackableVisual // New class to visually indicate non-trackable status
+        : '';
 
-  if (shouldNotShowTrack) {
-    return (
-      <div className={`${styles.progressTracker} ${styles.nonTrackable}`}>
-        <p className={styles.noTrackerData}>
-          สถานะรวมของคำขอ: <span className={`${styles.statusBadgeSmall} ${styles[currentStatus] || styles.defaultStatus}`}>
-            {translateStatus(currentStatus)}
-          </span>
-        </p>
-      </div>
-    );
-  }
+  // กำหนด donePercentage ที่ใช้จริงใน style
+  const donePercentageForTrack = (isWaitingForSelection || isNonProcessingStatus) ? '0%' : donePercentage;
+
 
   return (
     <div
-      className={`${styles.progressTracker} ${isOverallCompleted ? styles.trackerCompleted : ''}`}
-      style={{ '--done-percentage': donePercentage }}
+      className={`${styles.progressTracker} ${trackerClass}`}
+      style={{ '--done-percentage': donePercentageForTrack }}
     >
       <div className={styles.lineBackground}></div>
       <div className={styles.lineProgress}></div>
@@ -115,6 +124,14 @@ function StatusTrack({ currentStatus, statusStepsConfig, statusIconMapConfig }) 
       {steps.map((step, index) => {
         const isActive = index === currentIndex;
         const isDone = index < currentIndex;
+
+        // ปรับ class ของวงกลมเพื่อควบคุมสี
+        const stepCircleClass = `${styles.stepCircle} ${
+          (isWaitingForSelection || isNonProcessingStatus) ? styles.noProgressColor : // ไม่มีสี progress ถ้าเป็น waiting for selection หรือ non-processing status
+          isDone ? styles.done :
+          isActive ? styles.active : ''
+        }`;
+
         const iconToDisplay = isDone
           ? (statusIconMapConfig?.[`${step.key}Active`] || step.icon)
           : isActive
@@ -124,16 +141,29 @@ function StatusTrack({ currentStatus, statusStepsConfig, statusIconMapConfig }) 
         return (
           <div key={step.key} className={styles.stepContainer}>
             <div
-              className={`${styles.stepCircle} ${isDone ? styles.done : isActive ? styles.active : ''}`}
+              className={stepCircleClass}
             >
               <div className={styles.icon}>{iconToDisplay}</div>
             </div>
-            <div className={`${styles.stepLabel} ${isActive ? styles.labelActive : ''}`}>
+            {/* ปรับ class ของ label เพื่อไม่ให้มีสี active ถ้าเป็น waiting for selection หรือ non-processing status */}
+            <div className={`${styles.stepLabel} ${isActive && !(isWaitingForSelection || isNonProcessingStatus) ? styles.labelActive : ''}`}>
               {step.label}
             </div>
           </div>
         );
       })}
+      {isNonProcessingStatus && (
+        <div className={styles.overlayNonTrackable}>
+          <p className={styles.nonTrackableMessage}>
+            สถานะรวมของคำขอนี้คือ:{' '}
+            <span className={`${styles.statusBadgeSmall} ${styles[currentStatus] || styles.defaultStatus}`}>
+              {translateStatus(currentStatus)}
+            </span>
+            <br />
+            ไม่สามารถติดตามสถานะการดำเนินการได้
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -152,43 +182,69 @@ export default function RequestDetailClient() {
   // TODO: Replace with actual logged-in user ID
   const currentUserId = 1;
 
-  const calculateOverallProcessingStatus = (currentDetails) => {
-    const approvedAndProcessingDetails = currentDetails.filter(d =>
-      d.approval_status === 'approved' && processingStatusSteps.includes(d.processing_status)
-    );
-
-    if (approvedAndProcessingDetails.length === 0) {
-      const hasApprovedButNotStarted = currentDetails.some(d =>
-        d.approval_status === 'approved' && (!d.processing_status || d.processing_status === '')
-      );
-      if (hasApprovedButNotStarted) return 'pending';
-
-      const allApprovedAreCompleted = currentDetails.every(d =>
-        d.approval_status !== 'approved' || d.processing_status === 'completed'
-      );
-      if (allApprovedAreCompleted) return 'completed';
-
-      return 'pending';
+  // ปรับปรุง Logic calculateOverallProcessingStatus
+  const calculateOverallProcessingStatus = (currentDetails, currentRequestStatus) => {
+    // ถ้าสถานะรวมของคำขอเป็นสถานะที่ไม่ต้องติดตามการดำเนินการ ให้ใช้สถานะรวมนั้นเลย
+    // (เพราะเราต้องการให้ StatusTrack แสดงตลอดเวลา แต่ไม่มี progress)
+    if (['rejected_all', 'rejected_partial', 'waiting_approval', 'canceled', 'approved_partial_and_rejected_partial'].includes(currentRequestStatus)) {
+      return currentRequestStatus;
     }
 
+    // กรองเฉพาะรายการที่อนุมัติแล้ว และมี processing_status ที่อยู่ใน processingStatusSteps
+    const approvedAndProcessingDetails = currentDetails.filter(d =>
+      d.approval_status === 'approved' && d.processing_status && processingStatusSteps.includes(d.processing_status)
+    );
+
+    // ตรวจสอบว่ามีรายการที่อนุมัติแล้ว แต่ยังไม่มี processing_status (เป็น NULL หรือ '')
+    const hasApprovedButNotStarted = currentDetails.some(d =>
+      d.approval_status === 'approved' && (!d.processing_status || d.processing_status === '')
+    );
+
+    if (hasApprovedButNotStarted) {
+        return 'waiting_for_processing_selection'; // บ่งบอกว่ามีรายการที่อนุมัติแต่ยังไม่ได้เริ่มดำเนินการ
+    }
+
+    if (approvedAndProcessingDetails.length === 0) {
+        // กรณีไม่มีรายการที่อนุมัติแล้วและกำลังดำเนินการ
+        // ตรวจสอบว่าทุกรายการที่อนุมัติ (ถ้ามี) เป็น 'completed' แล้วหรือไม่
+        const allApprovedAreCompleted = currentDetails.every(d =>
+            d.approval_status !== 'approved' || d.processing_status === 'completed'
+        );
+
+        if (currentDetails.length === 0) {
+            return 'N/A'; // ไม่มีรายการย่อยเลย
+        }
+
+        // ถ้าทุกรายการที่อนุมัติเสร็จสิ้นแล้ว
+        if (allApprovedAreCompleted && currentDetails.some(d => d.approval_status === 'approved')) {
+            return 'completed';
+        }
+
+        // ถ้ามีรายการอนุมัติอยู่แต่ processing_status เป็น null/'' ทั้งหมด
+        // หรือมีแต่รายการที่ยังรออนุมัติ/ถูกปฏิเสธ
+        // ในกรณีนี้จะถือว่ายัง "รอการเลือกสถานะ" หากมีรายการที่อนุมัติแต่ไม่มี processing_status
+        // หากไม่มีรายการอนุมัติเลย หรือมีแต่รายการที่ถูกปฏิเสธ/รออนุมัติ ให้ใช้สถานะรวมของคำขอหลัก
+        return currentRequestStatus;
+    }
+
+    // ถ้ามีรายการที่กำลังดำเนินการอยู่ ให้หาขั้นต่ำสุด
     const minIndex = Math.min(
-      ...approvedAndProcessingDetails.map((d) => processingStatusSteps.indexOf(d.processing_status))
+        ...approvedAndProcessingDetails.map((d) => processingStatusSteps.indexOf(d.processing_status))
     );
     return processingStatusSteps[minIndex];
   };
 
   const getDisplayOverallStatus = useMemo(() => {
-    if (!requestInfo) return 'pending';
+    if (!requestInfo) return 'N/A';
 
-    if (['rejected_all', 'rejected_partial', 'waiting_approval', 'canceled', 'approved_partial_and_rejected_partial'].includes(requestInfo.request_status)) {
-      return requestInfo.request_status;
-    }
-
+    // สร้าง combinedDetails ที่รวมค่าจาก pendingProcessingStatus
     const combinedDetails = details.map(d => ({
       ...d,
-      processing_status: pendingProcessingStatus[d.request_detail_id] || d.processing_status
+      processing_status: pendingProcessingStatus[d.request_detail_id] !== undefined ? pendingProcessingStatus[d.request_detail_id] : (d.processing_status || null)
     }));
-    return calculateOverallProcessingStatus(combinedDetails);
+
+    // ส่ง combinedDetails และ requestInfo.request_status ไปคำนวณสถานะรวม
+    return calculateOverallProcessingStatus(combinedDetails, requestInfo.request_status);
   }, [requestInfo, details, pendingProcessingStatus]);
 
 
@@ -230,8 +286,17 @@ export default function RequestDetailClient() {
         params: { t: Date.now() },
       });
 
-      setRequestInfo(res.data.request || null);
-      setDetails(res.data.details && Array.isArray(res.data.details) ? res.data.details : []);
+      const fetchedRequest = res.data.request || null;
+      const fetchedDetails = res.data.details && Array.isArray(res.data.details) ? res.data.details : [];
+
+      setRequestInfo(fetchedRequest);
+      setDetails(fetchedDetails);
+
+      const initialPendingStatuses = {};
+      fetchedDetails.forEach(detail => {
+        initialPendingStatuses[detail.request_detail_id] = detail.processing_status || null;
+      });
+      setPendingProcessingStatus(initialPendingStatuses);
 
     } catch (err) {
       console.error('โหลดข้อมูลล้มเหลว', err);
@@ -240,31 +305,38 @@ export default function RequestDetailClient() {
       setRequestInfo(null);
     } finally {
       setLoading(false);
-      setPendingProcessingStatus({}); // Clear pending status on data load
     }
   };
 
   // --- Event Handlers ---
   const handleDropdownChange = (e, requestDetailId) => {
+    // หากเลือก placeholder option (value = "") ให้เก็บเป็น null
+    const newValue = e.target.value === "" ? null : e.target.value;
     setPendingProcessingStatus(prev => ({
       ...prev,
-      [requestDetailId]: e.target.value
+      [requestDetailId]: newValue
     }));
   };
 
   const handleSaveAllChanges = async () => {
     const changesToSave = Object.keys(pendingProcessingStatus).filter(detailId => {
       const originalDetail = details.find(d => d.request_detail_id === parseInt(detailId, 10));
-      // Only include changes if the new status is different from the current saved status
-      return pendingProcessingStatus[detailId] !== (originalDetail?.processing_status || '');
+      const originalDbStatus = originalDetail?.processing_status || null;
+      const currentPendingStatus = pendingProcessingStatus[detailId];
+
+      // กรองเฉพาะรายการที่มีการเปลี่ยนแปลงจากค่าเดิมใน DB
+      // และ currentPendingStatus ต้องไม่เท่ากับ originalDbStatus
+      return currentPendingStatus !== originalDbStatus;
     }).map(detailId => {
       const originalDetail = details.find(d => d.request_detail_id === parseInt(detailId, 10));
+      const newStatusValue = pendingProcessingStatus[detailId];
+
       return {
         request_detail_id: parseInt(detailId, 10),
-        newStatus: pendingProcessingStatus[detailId],
+        newStatus: newStatusValue,
         current_approval_status: originalDetail?.approval_status,
       };
-    });
+    }).filter(Boolean);
 
     if (changesToSave.length === 0) {
       Swal.fire('ไม่พบการเปลี่ยนแปลง', 'ไม่มีรายการใดที่ถูกเลือกเพื่อบันทึก', 'info');
@@ -276,7 +348,6 @@ export default function RequestDetailClient() {
       return;
     }
 
-    // Frontend validation: Check if trying to change processing status for rejected/waiting_approval items
     const invalidChanges = changesToSave.filter(change => {
       const currentDetail = details.find(d => d.request_detail_id === change.request_detail_id);
       return currentDetail && immutableDetailProcessingStatuses.includes(currentDetail.approval_status);
@@ -288,7 +359,7 @@ export default function RequestDetailClient() {
         return detail ? `"${detail.item_name}" (สถานะอนุมัติ: ${translateStatus(detail.approval_status)})` : `รายการ ID: ${item.request_detail_id}`;
       }).join(', ');
       Swal.fire('ไม่สามารถบันทึกบางรายการได้', `รายการเหล่านี้ไม่สามารถเปลี่ยนแปลงสถานะการดำเนินการได้: ${invalidItems} (เนื่องจากถูกปฏิเสธแล้ว หรือยังไม่ได้รับการอนุมัติ)`, 'warning');
-      return; // Prevent saving if any invalid changes are present
+      return;
     }
 
     const confirmResult = await Swal.fire({
@@ -322,7 +393,7 @@ export default function RequestDetailClient() {
         showConfirmButton: false,
       });
 
-      setPendingProcessingStatus({});
+      fetchRequestDetails();
 
     } catch (err) {
       console.error('อัปเดตสถานะการดำเนินการล้มเหลว:', err);
@@ -345,7 +416,7 @@ export default function RequestDetailClient() {
     const counts = {};
     const combinedDetails = details.map(d => ({
       ...d,
-      processing_status: pendingProcessingStatus[d.request_detail_id] || d.processing_status
+      processing_status: pendingProcessingStatus[d.request_detail_id] !== undefined ? pendingProcessingStatus[d.request_detail_id] : (d.processing_status || null)
     }));
 
     combinedDetails.forEach((d) => {
@@ -354,10 +425,12 @@ export default function RequestDetailClient() {
       } else if (d.approval_status === 'waiting_approval_detail') {
         counts['waiting_approval_detail'] = (counts['waiting_approval_detail'] || 0) + d.requested_qty;
       }
-      else {
-        const statusToCount = d.processing_status || d.approval_status;
-        if (statusToCount) {
-          counts[statusToCount] = (counts[statusToCount] || 0) + d.requested_qty;
+      else if (d.approval_status === 'approved') {
+        const statusToCount = d.processing_status;
+        if (statusToCount === null || statusToCount === '') {
+            counts['waiting_for_processing_selection'] = (counts['waiting_for_processing_selection'] || 0) + d.requested_qty;
+        } else if (processingStatusSteps.includes(statusToCount)) {
+            counts[statusToCount] = (counts[statusToCount] || 0) + d.requested_qty;
         }
       }
     });
@@ -367,7 +440,13 @@ export default function RequestDetailClient() {
   const hasPendingChanges = useMemo(() => {
     return Object.keys(pendingProcessingStatus).some(detailId => {
       const originalDetail = details.find(d => d.request_detail_id === parseInt(detailId, 10));
-      return pendingProcessingStatus[detailId] !== (originalDetail?.processing_status || '');
+      const originalDbStatus = originalDetail?.processing_status || null;
+      const currentPendingStatus = pendingProcessingStatus[detailId];
+
+      // มีการเปลี่ยนแปลงถ้า currentPendingStatus ไม่ตรงกับสถานะเดิมใน DB
+      // **ยกเลิก: และ currentPendingStatus ต้องไม่ใช่ null (คือต้องมีการเลือกสถานะที่ถูกต้องแล้ว)**
+      // เพราะตอนนี้สามารถเลือก null ได้แล้ว
+      return currentPendingStatus !== originalDbStatus;
     });
   }, [pendingProcessingStatus, details]);
 
@@ -495,11 +574,10 @@ export default function RequestDetailClient() {
                 immutableDetailProcessingStatuses.includes(d.approval_status) ||
                 isSavingAll;
 
-              const displayProcessingStatus = immutableDetailProcessingStatuses.includes(d.approval_status)
-                ? ''
-                : (pendingProcessingStatus[d.request_detail_id] !== undefined
-                  ? pendingProcessingStatus[d.request_detail_id]
-                  : d.processing_status || '');
+              // ค่าที่จะแสดงใน Dropdown และป้ายสถานะ
+              const actualProcessingStatus = pendingProcessingStatus[d.request_detail_id] !== undefined
+                ? pendingProcessingStatus[d.request_detail_id]
+                : (d.processing_status || null);
 
               return (
                 <tr
@@ -521,14 +599,13 @@ export default function RequestDetailClient() {
                     </span>
                   </td>
                   <td data-label="สถานะการดำเนินการ">
-                    {/* *** ปรับปรุงการแสดงผลข้อความตรงนี้: ใช้ "-" *** */}
                     {immutableDetailProcessingStatuses.includes(d.approval_status) ? (
                       <span className={`${styles.statusBadge} ${styles.dashStatus}`}>
                         -
                       </span>
                     ) : (
-                      <span className={`${styles.statusBadge} ${styles[d.processing_status] || styles.defaultStatus}`}>
-                        {translateStatus(d.processing_status || 'N/A')}
+                      <span className={`${styles.statusBadge} ${styles[actualProcessingStatus || 'null'] || styles.defaultStatus}`}>
+                        {translateStatus(actualProcessingStatus || null)}
                       </span>
                     )}
                   </td>
@@ -544,25 +621,25 @@ export default function RequestDetailClient() {
                   <td data-label="อัปเดตสถานะการดำเนินการ">
                     <div className={styles.statusUpdateControl}>
                       <select
-                        value={displayProcessingStatus}
+                        value={actualProcessingStatus === null ? "" : actualProcessingStatus} // **แก้ไข: ถ้าเป็น null ให้ value เป็น ""**
                         onChange={(e) => handleDropdownChange(e, d.request_detail_id)}
                         disabled={isProcessingSelectDisabled}
                         className={`${styles.selectStatus} ${isProcessingSelectDisabled ? styles.selectStatusDisabled : ''}`}
                         aria-label={`เปลี่ยนสถานะการดำเนินการของ ${d.item_name}`}
                       >
-                        {/* *** ปรับปรุงออปชั่นเริ่มต้นใน dropdown *** */}
                         {immutableDetailProcessingStatuses.includes(d.approval_status) ? (
                           <option value="" disabled>ไม่ได้ดำเนินการ</option>
                         ) : (
-                          <option value="" disabled>
-                            {d.processing_status ? translateStatus(d.processing_status) : "เลือกสถานะ"}
-                          </option>
+                          <>
+                            {/* เพิ่ม option "เลือกสถานะ..." ที่มี value เป็น "" */}
+                            <option value="">เลือกสถานะ...</option>
+                            {processingStatusSteps.map((status) => (
+                              <option key={status} value={status}>
+                                {translateStatus(status)}
+                              </option>
+                            ))}
+                          </>
                         )}
-                        {!immutableDetailProcessingStatuses.includes(d.approval_status) && processingStatusSteps.map((status) => (
-                          <option key={status} value={status}>
-                            {translateStatus(status)}
-                          </option>
-                        ))}
                       </select>
                     </div>
                   </td>
