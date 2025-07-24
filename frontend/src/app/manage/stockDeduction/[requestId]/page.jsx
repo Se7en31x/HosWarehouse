@@ -15,7 +15,7 @@ const statusMap = {
   completed: { text: 'เสร็จสิ้น', class: styles.statusCompleted },
 };
 
-// *** เพิ่ม: Map ประเภทคำขอ (request_type) เป็นภาษาไทย ***
+// Map ประเภทคำขอ (request_type) เป็นภาษาไทย
 const typeMap = {
   'Borrow': 'ยืม',
   'Withdraw': 'เบิก',
@@ -46,15 +46,15 @@ export default function SingleStockDeductionPage() {
         setDeductionSuccess(false);
 
         console.log(`Fetching request details for requestId: ${requestId}`);
-        const response = await axiosInstance.get(`/stockDeduction/${requestId}`); 
+        const response = await axiosInstance.get(`/stockDeduction/${requestId}/details`); 
         
         const fetchedDetail = response.data;
-        console.log("Fetched request detail:", fetchedDetail);
+        console.log("Fetched request detail in Frontend:", fetchedDetail); // เพิ่ม console.log เพื่อดูโครงสร้างข้อมูลที่ได้รับ
         setRequestDetail(fetchedDetail);
 
         const initialQuantities = {};
-        if (fetchedDetail.items) {
-          fetchedDetail.items.forEach(item => {
+        if (fetchedDetail.details) {
+          fetchedDetail.details.forEach(item => {
             initialQuantities[item.item_id] = {
               actual_deducted_qty: item.approved_qty,
               deduction_reason: ''
@@ -99,7 +99,7 @@ export default function SingleStockDeductionPage() {
   const handleDeductStock = async () => {
     if (!requestDetail || isProcessing) return;
 
-    const itemsToProcess = requestDetail.items.map(item => {
+    const itemsToProcess = requestDetail.details.map(item => {
       const actualQty = itemQuantities[item.item_id]?.actual_deducted_qty || 0;
       const reason = itemQuantities[item.item_id]?.deduction_reason || '';
 
@@ -122,7 +122,7 @@ export default function SingleStockDeductionPage() {
       };
     }).filter(Boolean);
 
-    if (itemsToProcess.length !== requestDetail.items.length) {
+    if (itemsToProcess.length !== requestDetail.details.length) {
       return;
     }
 
@@ -148,13 +148,21 @@ export default function SingleStockDeductionPage() {
       setIsProcessing(true);
       setError(null);
 
-      const response = await axiosInstance.post(`/stockDeduction/deduct`, {
-        requestId: requestDetail.request_id,
-        items: itemsToProcess,
+      const response = await axiosInstance.put(`/stockDeduction/${requestId}/process`, {
+        updates: itemsToProcess.map(item => ({
+          request_detail_id: requestDetail.details.find(d => d.item_id === item.item_id).request_detail_id,
+          newStatus: 'preparing', 
+          current_approval_status: requestDetail.details.find(d => d.item_id === item.item_id).approval_status,
+          current_processing_status: requestDetail.details.find(d => d.item_id === item.item_id).processing_status,
+          item_id: item.item_id,
+          requested_qty: item.actual_deducted_qty,
+          deduction_reason: item.deduction_reason // *** เพิ่มตรงนี้: ส่งเหตุผลไป Backend ***
+        })),
+        userId: 1, // TODO: Replace with actual logged-in user ID
       });
 
       setDeductionSuccess(true);
-      setRequestDetail(prev => ({ ...prev, status: 'stock_deducted' })); 
+      // setRequestDetail(prev => ({ ...prev, status: 'stock_deducted' })); // สถานะนี้อาจถูกอัปเดตโดย Backend
       
       await Swal.fire(
         'สำเร็จ!',
@@ -183,15 +191,27 @@ export default function SingleStockDeductionPage() {
   };
 
   if (isLoading) {
-    return <div className={styles.pageBackground}><p className={styles.infoMessage}>กำลังโหลดรายละเอียดคำขอ...</p></div>;
+    return (
+      <div className={styles.pageBackground}>
+        <p className={styles.infoMessage}>กำลังโหลดรายละเอียดคำขอ...</p>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className={styles.pageBackground}><p className={styles.errorMessage}>{error}</p></div>;
+    return (
+      <div className={styles.pageBackground}>
+        <p className={styles.errorMessage}>{error}</p>
+      </div>
+    );
   }
 
   if (!requestDetail) {
-    return <div className={styles.pageBackground}><p className={styles.infoMessage}>ไม่พบข้อมูลคำขอ หรือคำขอนี้ไม่พร้อมสำหรับการเบิก-จ่ายสต็อก</p></div>;
+    return (
+      <div className={styles.pageBackground}>
+        <p className={styles.infoMessage}>ไม่พบข้อมูลคำขอ หรือคำขอนี้ไม่พร้อมสำหรับการเบิก-จ่ายสต็อก</p>
+      </div>
+    );
   }
 
   const isAlreadyDeducted = requestDetail.status === 'stock_deducted' || requestDetail.status === 'completed';
@@ -202,11 +222,10 @@ export default function SingleStockDeductionPage() {
         <h1 className={styles.title}>เบิก-จ่ายสต็อก: {requestDetail.request_code}</h1>
 
         <div className={styles.detailSection}>
-          <p><strong>ผู้ขอ:</strong> {requestDetail.requester_name}</p>
-          <p><strong>แผนก:</strong> {requestDetail.department}</p>
+          <p><strong>ผู้ขอ:</strong> {requestDetail.user_name}</p>
+          <p><strong>แผนก:</strong> {requestDetail.department_name}</p>
           <p><strong>วันที่ขอ:</strong> {new Date(requestDetail.request_date).toLocaleDateString('th-TH')}</p>
           <p>
-            {/* *** แก้ไข: ใช้ typeMap เพื่อแสดงประเภทคำขอเป็นภาษาไทย *** */}
             <strong>ประเภทคำขอ:</strong> {typeMap[requestDetail.request_type] || requestDetail.request_type}
           </p>
           <p>
@@ -232,18 +251,18 @@ export default function SingleStockDeductionPage() {
             </tr>
           </thead>
           <tbody>
-            {requestDetail.items && requestDetail.items.length > 0 ? (
-              requestDetail.items.map((item, index) => (
+            {requestDetail.details && requestDetail.details.length > 0 ? (
+              requestDetail.details.map((item, index) => (
                 <tr key={item.item_id}>
-                  <td>{index + 1}</td>
-                  <td>{item.item_name}</td>
-                  <td>{item.requested_qty}</td>
-                  <td>{item.approved_qty}</td>
-                  <td>{item.item_unit}</td>
-                  <td className={item.current_stock_qty < item.approved_qty ? styles.lowStock : ''}>
+                  <td data-label="ลำดับ">{index + 1}</td>
+                  <td data-label="สินค้า">{item.item_name}</td>
+                  <td data-label="จำนวนที่ขอ">{item.requested_qty}</td>
+                  <td data-label="จำนวนที่อนุมัติ">{item.approved_qty}</td>
+                  <td data-label="หน่วยนับ">{item.item_unit}</td>
+                  <td data-label="คงเหลือในสต็อก" className={item.current_stock_qty < item.approved_qty ? styles.lowStock : ''}>
                     {item.current_stock_qty}
                   </td>
-                  <td>
+                  <td data-label="จำนวนที่เบิกจริง">
                     <input
                       type="number"
                       min="0"
@@ -254,7 +273,7 @@ export default function SingleStockDeductionPage() {
                       disabled={isAlreadyDeducted || isProcessing}
                     />
                   </td>
-                  <td>
+                  <td data-label="เหตุผล (ถ้าเบิกไม่ครบ)">
                     {itemQuantities[item.item_id]?.actual_deducted_qty < item.approved_qty && (
                       <input
                         type="text"
@@ -286,7 +305,7 @@ export default function SingleStockDeductionPage() {
           <button 
             className={`${styles.button} ${styles.primaryButton}`}
             onClick={handleDeductStock}
-            disabled={isProcessing || isAlreadyDeducted || !requestDetail.items || requestDetail.items.length === 0}
+            disabled={isProcessing || isAlreadyDeducted || !requestDetail.details || requestDetail.details.length === 0}
           >
             {isProcessing ? 'กำลังดำเนินการเบิก-จ่าย...' : 'ยืนยันการเบิก-จ่ายสต็อก'}
           </button>

@@ -36,7 +36,7 @@ export default function ApprovalRequestPage() {
     const [details, setDetails] = useState([]);
     const [draftDetails, setDraftDetails] = useState({});
     const [itemErrors, setItemErrors] = useState({});
-    const [tooltip, setTooltip] = useState({}); // { [itemId]: { show: boolean, message: string } }
+    const [tooltip, setTooltip] = useState({});
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 8;
@@ -56,7 +56,7 @@ export default function ApprovalRequestPage() {
         delivering: 'กำลังนำส่ง',
         completed: 'เสร็จสิ้น',
         canceled: 'ยกเลิกคำขอ',
-        pending: 'รอดำเนินการ (จัดเตรียม)',
+        approved_in_queue: 'รอกำเนินการ', // เพิ่มสถานะใหม่
     };
 
     // สถานะคำขอรวมที่ไม่สามารถแก้ไขได้ (ใช้กับคำขอโดยรวม)
@@ -72,7 +72,6 @@ export default function ApprovalRequestPage() {
         "approved_partial_and_rejected_partial"
     ];
 
-    // จำลอง user_id สำหรับการทดสอบ (ควรใช้จากระบบ Authentication จริง)
     useEffect(() => {
         if (typeof window !== 'undefined' && !localStorage.getItem('user_id')) {
             localStorage.setItem('user_id', '999');
@@ -81,12 +80,10 @@ export default function ApprovalRequestPage() {
         }
     }, []);
 
-    // Fetch ข้อมูลคำขอเมื่อ request_id เปลี่ยน
     useEffect(() => {
         if (request_id) fetchRequestDetail();
     }, [request_id]);
 
-    // ฟังก์ชันดึงข้อมูลรายละเอียดคำขอ
     const fetchRequestDetail = async () => {
         setLoading(true);
         try {
@@ -99,7 +96,7 @@ export default function ApprovalRequestPage() {
                     status: detail.approval_status,
                     approved_qty: (detail.approved_qty !== null && detail.approved_qty !== undefined)
                         ? detail.approved_qty
-                        : (detail.approval_status === 'rejected' ? 0 : detail.requested_qty), // Default to 0 if rejected
+                        : (detail.approval_status === 'rejected' ? 0 : detail.requested_qty),
                     reason: detail.approval_note
                 };
             });
@@ -117,7 +114,6 @@ export default function ApprovalRequestPage() {
         }
     };
 
-    // อัปเดตสถานะและจำนวนใน draftDetails
     const updateDraft = (id, newStatus, newApprovedQty, reason = '') => {
         setDraftDetails(prev => ({
             ...prev,
@@ -127,18 +123,14 @@ export default function ApprovalRequestPage() {
                 reason: newStatus === 'rejected' ? (reason || null) : null
             }
         }));
-        setItemErrors(prev => ({ ...prev, [id]: '' })); // Clear errors when status changes
-        setTooltip(prev => ({ ...prev, [id]: { show: false, message: '' } })); // Hide tooltip
+        setItemErrors(prev => ({ ...prev, [id]: '' }));
+        setTooltip(prev => ({ ...prev, [id]: { show: false, message: '' } }));
     };
 
-    // Handler เมื่อกดปุ่มอนุมัติรายการเดียว
     const handleApproveOne = (detail) => {
-        // เมื่อกดอนุมัติ ให้กำหนดสถานะเป็น approved และจำนวนเป็น requested_qty
-        // แต่ยังคงอนุญาตให้ผู้ใช้แก้ไขจำนวนได้หลังจากนี้
         updateDraft(detail.request_detail_id, 'approved', detail.requested_qty);
     };
 
-    // Handler เมื่อกดปุ่มปฏิเสธรายการเดียว
     const handleRejectOne = async (detail) => {
         const { value: reason } = await Swal.fire({
             title: 'ปฏิเสธรายการนี้',
@@ -154,21 +146,15 @@ export default function ApprovalRequestPage() {
             }
         });
         if (reason === undefined) return;
-        // เมื่อกดปฏิเสธ ให้กำหนดสถานะเป็น rejected และจำนวนเป็น 0 ทันที
         updateDraft(detail.request_detail_id, 'rejected', 0, reason);
     };
 
-    // Handler เมื่อมีการเปลี่ยนจำนวนที่อนุมัติใน input field
     const handleApprovedQtyChange = (id, value, requestedQty) => {
         let errorMsg = '';
         let finalQtyForDraft = null;
 
         const currentDetailInDraft = draftDetails[id];
-        // ตรวจสอบว่าสถานะปัจจุบันใน draftDetails เป็น 'rejected' หรือไม่
-        // ถ้าเป็น 'rejected' ไม่ต้องทำอะไรกับการเปลี่ยนจำนวน เพราะ input ควรจะ disabled อยู่แล้ว
         if (currentDetailInDraft?.status === 'rejected') {
-            // ไม่ควรมาถึงตรงนี้หาก input ถูก disabled อย่างถูกต้อง
-            // แต่เพื่อความปลอดภัย ให้ตั้งค่าเป็น 0 และออกจากฟังก์ชัน
             setDraftDetails(prev => ({
                 ...prev,
                 [id]: {
@@ -181,16 +167,16 @@ export default function ApprovalRequestPage() {
 
         if (value === '') {
             errorMsg = '';
-            finalQtyForDraft = ''; // ให้แสดงเป็นช่องว่างได้
+            finalQtyForDraft = '';
         } else {
             const parsedValue = parseInt(value, 10);
             if (isNaN(parsedValue) || parsedValue < 0 || parsedValue > requestedQty) {
                 if (isNaN(parsedValue) || parsedValue < 0) {
-                     errorMsg = 'กรุณากรอกจำนวนให้เป็นตัวเลขที่ไม่ติดลบ';
-                     finalQtyForDraft = 0; // หรือคงค่าเดิมไว้
+                    errorMsg = 'กรุณากรอกจำนวนให้เป็นตัวเลขที่ไม่ติดลบ';
+                    finalQtyForDraft = 0;
                 } else if (parsedValue > requestedQty) {
-                     errorMsg = `จำนวนต้องไม่เกิน ${requestedQty}`;
-                     finalQtyForDraft = requestedQty; // ตั้งค่าเป็น max เพื่อไม่ให้เกิน
+                    errorMsg = `จำนวนต้องไม่เกิน ${requestedQty}`;
+                    finalQtyForDraft = requestedQty;
                 }
             } else {
                 errorMsg = '';
@@ -211,8 +197,6 @@ export default function ApprovalRequestPage() {
 
         setDraftDetails(prev => {
             const currentDraft = prev[id] || {};
-            // สถานะควรคงเดิมตามที่ผู้ใช้เลือก (approved/waiting_approval_detail)
-            // หรือถ้าเป็น rejected ควรจะถูก updateDraft ไปแล้วตั้งแต่แรก
             return {
                 ...prev,
                 [id]: {
@@ -223,8 +207,6 @@ export default function ApprovalRequestPage() {
         });
     };
 
-
-    // Handler สำหรับบันทึกการเปลี่ยนแปลงทั้งหมด
     const handleSaveDraft = async () => {
         if (request && disabledOverallStatuses.includes(request.request_status)) {
             Swal.fire('ไม่สามารถบันทึกได้', 'คำขออยู่ในสถานะที่ไม่อนุญาตให้แก้ไขแล้ว', 'warning');
@@ -244,26 +226,23 @@ export default function ApprovalRequestPage() {
                 if (!originalDetail) return null;
 
                 const approvedQtyForBackend = typeof draft.approved_qty === 'string' && draft.approved_qty === ''
-                    ? 0 // Treat empty string as 0 for backend
+                    ? 0
                     : (isNaN(parseInt(draft.approved_qty, 10)) ? 0 : parseInt(draft.approved_qty, 10));
 
-                // If status is NOT rejected, and approved_qty is 0, show error
                 if (approvedQtyForBackend === 0 && draft.status !== 'rejected') {
                     setItemErrors(prev => ({ ...prev, [detailId]: 'จำนวนที่อนุมัติเป็น 0 ไม่ได้ หากสถานะไม่ใช่ปฏิเสธ' }));
                     setTooltip(prev => ({ ...prev, [detailId]: { show: true, message: 'จำนวนที่อนุมัติเป็น 0 ไม่ได้ หากสถานะไม่ใช่ปฏิเสธ' } }));
                     return null;
                 }
-                // If status is rejected, ensure approved_qty is 0
                 if (draft.status === 'rejected' && approvedQtyForBackend !== 0) {
-                     setItemErrors(prev => ({ ...prev, [detailId]: 'จำนวนที่อนุมัติควรเป็น 0 เมื่อสถานะปฏิเสธ' }));
-                     setTooltip(prev => ({ ...prev, [detailId]: { show: true, message: 'จำนวนที่อนุมัติควรเป็น 0 เมื่อสถานะปฏิเสธ' } }));
-                     return null;
+                    setItemErrors(prev => ({ ...prev, [detailId]: 'จำนวนที่อนุมัติควรเป็น 0 เมื่อสถานะปฏิเสธ' }));
+                    setTooltip(prev => ({ ...prev, [detailId]: { show: true, message: 'จำนวนที่อนุมัติควรเป็น 0 เมื่อสถานะปฏิเสธ' } }));
+                    return null;
                 }
-
 
                 return {
                     request_detail_id: parseInt(detailId, 10),
-                    status: draft.status,
+                    status: draft.status, // This is approval_status
                     approved_qty: approvedQtyForBackend,
                     note: draft.reason || null,
                     old_status: originalDetail.approval_status,
@@ -272,7 +251,6 @@ export default function ApprovalRequestPage() {
             .filter(item => {
                 if (!item) return false;
                 const originalDetail = details.find(d => d.request_detail_id === item.request_detail_id);
-                // Only include items that actually changed
                 return (
                     item.status !== originalDetail.approval_status ||
                     item.approved_qty !== originalDetail.approved_qty ||
@@ -315,18 +293,16 @@ export default function ApprovalRequestPage() {
         }
     };
 
-    // การแบ่งหน้า
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = details.slice(indexOfFirstItem, indexOfLastItem);
     const totalPages = Math.ceil(details.length / itemsPerPage);
 
-    // สรุปจำนวนตามสถานะต่างๆ
     const summary = useMemo(() => {
         const counts = { totalItems: 0, approvedCount: 0, rejectedCount: 0, pendingCount: 0 };
         details.forEach(d => {
             const currentStatus = draftDetails[d.request_detail_id]?.status || d.approval_status;
-            counts.totalItems += d.requested_qty; // นับตามจำนวนที่ขอทั้งหมด
+            counts.totalItems += d.requested_qty;
 
             if (currentStatus === 'approved') counts.approvedCount += 1;
             else if (currentStatus === 'rejected') counts.rejectedCount += 1;
@@ -335,7 +311,6 @@ export default function ApprovalRequestPage() {
         return counts;
     }, [details, draftDetails]);
 
-    // ตรวจสอบว่าคำขอโดยรวมอยู่ในสถานะที่แก้ไขไม่ได้แล้วหรือไม่
     const isOverallRequestDisabled = request && disabledOverallStatuses.includes(request.request_status);
 
     if (loading) return <p className={styles.loading}>กำลังโหลดข้อมูล...</p>;
@@ -398,16 +373,7 @@ export default function ApprovalRequestPage() {
                                         ? String(d.approved_qty)
                                         : '');
 
-                                // **เงื่อนไขสำหรับ Input Field (จำนวนที่อนุมัติ)**
-                                // Input จะถูก disabled เมื่อ:
-                                // 1. คำขอโดยรวมอยู่ในสถานะที่แก้ไขไม่ได้แล้ว (isOverallRequestDisabled)
-                                // หรือ
-                                // 2. สถานะของรายการนั้นใน draftDetails เป็น 'rejected'
                                 const isQuantityInputDisabled = isOverallRequestDisabled || (currentItemStatus === 'rejected');
-
-                                // **เงื่อนไขสำหรับ Action Buttons (อนุมัติ/ปฏิเสธ)**
-                                // ปุ่มจะถูก disabled ก็ต่อเมื่อ:
-                                // 1. คำขอโดยรวมอยู่ในสถานะที่แก้ไขไม่ได้แล้วเท่านั้น (isOverallRequestDisabled)
                                 const areItemActionButtonsDisabled = isOverallRequestDisabled;
 
                                 return (
