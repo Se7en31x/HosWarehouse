@@ -103,7 +103,7 @@ export default function Sidebar() {
           <li className={styles.sidebarItem}>
             <Link href="/staff/cart" className={styles.noStyleLink}>
               <FaBox className={styles.sidebarIcon} />
-              <span className={styles.sidebarText}>ตะกล้า</span>
+              <span className={styles.sidebarText}>ตะกร้า</span>
             </Link>
           </li>
           <li className={styles.sidebarItem}>

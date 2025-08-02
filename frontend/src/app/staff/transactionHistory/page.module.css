@@ -1,42 +1,94 @@
+/* page.module.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* General layout and typography */
 .mainHome {
-  padding: 15px;
-  background-color: #e3e8ec;
-  height: 100%;
+  min-height: 70vh;
+  /* ให้ mainHome มีความสูงอย่างน้อยเท่ากับ viewport */
+  background-color: #f3f4f6;
+  /* padding: 0.5vw 0.5vw; */
+  font-family: 'Inter', sans-serif;
+  
+  flex-direction: column;
+  justify-content: flex-start;
+  /* จัดเนื้อหาให้อยู่ด้านบนสุด */
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .infoContainer {
   width: 100%;
-  padding: 10px;
-  background-color: #fff;
-  border-radius: 5px;
-  position: relative;
-  padding-top: 60px;
-}
-
-.cardHeader {
-  background: #106db9;
-  color: #fff;
-  font-weight: bold;
-  border-radius: 8px 8px 0 0;
-  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  padding: 1.5rem 2.5rem;
+  border-radius: 0.6rem;
+  box-shadow: 0 3px 5px -1px rgb(0 0 0 / 0.1), 0 1px 3px -2px rgb(0 0 0 / 0.1);
+  flex-direction: column;
+  flex-grow: 1;
+  /* ให้ infoContainer ขยายเต็มพื้นที่ที่เหลือใน mainHome */
   box-sizing: border-box;
-  display: block;
-  height: 60px;
-  padding: 10px 0;
-  text-align: center;
-  position: absolute;
-  top: 0;
-  left: 0;
+  min-height: 89vh;
+  /* กำหนดความสูงขั้นต่ำเพื่อป้องกันการหดตัวมากเกินไปเมื่อเนื้อหาน้อย */
+  display: flex;
 }
 
-/* ตัวกรอง */
-.filterContainer {
-  padding: 10px;
-  margin-top: 20px;
+/* Header Section */
+.cardHeader {
   display: flex;
-  justify-content: flex-start;
-  gap: 20px;
+  justify-content: space-between;
   align-items: center;
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+  /* ป้องกันไม่ให้ header หดตัว */
+}
+
+.cardHeader h1 {
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  /* ลดขนาด font-size ของ h1 */
+  line-height: 1.2;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+/* Filter & Search Controls */
+.filterControls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 0.8rem;
+  background-color: #f9fafb;
+  border-radius: 0.6rem;
+  margin-bottom: 1.2rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  flex-shrink: 0;
+  /* ป้องกันไม่ให้ filter controls หดตัว */
+}
+
+@media (min-width: 768px) {
+  .filterControls {
+    flex-direction: row;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+}
+
+.filterGrid {
+  flex: 2 1 60%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  /* ลด minmax */
+  gap: 0.8rem;
+  /* ลด gap */
+}
+
+@media (min-width: 1024px) {
+  .filterGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .filterGroup {
@@ -45,117 +97,351 @@
 }
 
 .filterLabel {
-  font-size: 14px;
-  margin-bottom: 5px;
+  font-size: 0.85rem;
+  /* ลด font-size */
+  line-height: 1.3;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.2rem;
+  /* ลด margin-bottom */
 }
 
 .filterSelect,
-.filterInput {
-  padding: 8px;
-  font-size: 14px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
+.searchInput {
+  width: 100%;
+  padding: 0.5rem 0.8rem;
+  /* ลด padding */
+  border-width: 1px;
+  border-color: #d1d5db;
+  border-radius: 0.4rem;
+  /* ลดมุมโค้งมน */
+  font-size: 0.88rem;
+  /* ลด font-size */
 }
 
-.filterInput {
-  width: 250px;
+.filterSelect:focus,
+.searchInput:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px #3b82f6;
 }
 
-.filterSelect {
-  width: 150px;
+.searchControls {
+  flex: 1 1 30%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  /* ลด gap */
+  margin-top: 0.6rem;
+  /* ลด margin-top */
 }
 
-.filterGroupSearch {
-  margin-left: auto;
+@media (min-width: 768px) {
+  .searchControls {
+    flex-direction: row;
+    align-items: flex-end;
+    margin-top: 0;
+    gap: 0.6rem;
+    /* ลด gap */
+  }
+}
+
+.searchGroup {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .searchGroup {
+    flex-grow: 1;
+  }
+}
+
+.clearButton {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  /* ลด padding */
+  background-color: #6b7280;
+  color: #ffffff;
+  border-radius: 0.4rem;
+  /* ลดมุมโค้งมน */
+  font-weight: 600;
+  transition-property: all;
+  transition-duration: 150ms;
+  border: none;
+  cursor: pointer;
+  font-size: 0.88rem;
+  /* ลด font-size */
+}
+
+.clearButton:hover {
+  background-color: #4b5563;
+}
+
+.clearButton:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  border-color: #6b7280;
+  box-shadow: 0 0 0 2px #6b7280;
+}
+
+@media (min-width: 768px) {
+  .clearButton {
+    width: auto;
+    min-width: 100px;
+    /* ลด min-width */
+  }
+}
+
+
+/* Table Section */
+.tableWrapper {
+  overflow-x: auto;
+  box-shadow: 0 3px 5px -1px rgb(0 0 0 / 0.1), 0 1px 3px -2px rgb(0 0 0 / 0.1);
+  border-radius: 0.6rem;
+  border: 1px solid #e0e0e0;
+
+  flex-grow: 1;
+  /* **สำคัญ:** ให้ tableWrapper ขยายเต็มพื้นที่ที่เหลือใน infoContainer */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* **สำคัญ:** อนุญาตให้ flex item นี้สามารถหดตัวได้ */
 }
 
 .tableGrid {
   display: grid;
-  /* ปรับให้คอลัมน์ยืดหดได้ตามพื้นที่ */
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); 
-  gap: 10px;
+  /* ปรับ minmax และสัดส่วนคอลัมน์ให้เล็กลง และมี min-width เพื่อป้องกันการหดตัวมากเกินไป */
+  grid-template-columns: minmax(50px, 0.8fr) minmax(100px, 1.8fr) minmax(60px, 0.6fr) minmax(60px, 0.6fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(100px, 1.5fr);
+
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+  min-width: 700px;
+  /* ลด min-width ของตาราง */
 }
 
-/* หัวตาราง */
 .tableHeader {
-  margin-top: 10px;
-  padding: 10px;
-  background-color: #E9EBFF;
-  font-weight: bold;
-  border-radius: 12px;
+  background-color: #e5e7eb;
+  font-size: 0.8rem;
+  /* ลด font-size ของหัวตาราง */
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
 }
 
 .headerItem {
-  padding: 10px;
+  padding: 0.8rem 1.2rem;
+  /* ลด padding ของหัวตาราง */
   text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* แถวตาราง */
+.inventory {
+  background-color: #ffffff;
+  flex-grow: 1;
+  /* ให้ inventory ขยายเต็มพื้นที่ที่เหลือใน tableWrapper */
+  overflow-y: auto;
+  /* ให้มี scrollbar แนวตั้งเมื่อเนื้อหาเกิน */
+  -webkit-overflow-scrolling: touch;
+  min-height: calc(8 * 47px);
+  /* ปรับ min-height ให้พอดีกับ 8 แถว โดย 1 แถวมีขนาดประมาณ 47px */
+}
+
 .tableRow {
-  height: 60px;
-  width: 100%;
-  border-radius: 8px;
-  display: grid;
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
-}
-
-.tableRow:nth-child(even) {
-  background-color: #F1F2F6;
+  min-width: 100%;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .tableRow:nth-child(odd) {
-  background-color: #ffffff;
+  background-color: #f9fafb;
 }
 
 .tableCell {
+  padding: 0.8rem 1.2rem;
+  /* ลด padding ของเซลล์ตาราง */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.85rem;
+  /* ลด font-size ของเซลล์ตาราง */
+  color: #6b7280;
+}
+
+.tableCell:first-child {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.noDataCell {
+  grid-column: 1 / -1;
+  padding: 1.5rem 1rem;
+  /* ลด padding */
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+  font-size: 0.95rem;
+  /* ลด font-size */
+}
+
+/* Status Badges */
+.statusBadge {
+  display: inline-block;
+  padding: 0.25rem 0.7rem;
+  /* ลด padding */
+  font-size: 0.75rem;
+  /* ลด font-size */
+  font-weight: 600;
+  border-radius: 9999px;
+  line-height: 1;
+}
+
+.statusSuccess {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.statusCancelled {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.statusPending {
+  background-color: #fffbeb;
+  color: #92400e;
+}
+
+/* Pagination Controls */
+.paginationControls {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  padding: 0 10px;
-  text-align: left;
+
+  padding: 1rem 2.5rem;
+  background-color: #ffffff;
+  box-shadow: 0 -1px 8px rgba(0, 0, 0, 0.05);
+  z-index: 10;
+  box-sizing: border-box;
+  border-top: 1px solid #e0e0e0;
+  border-bottom-left-radius: 0.6rem;
+  border-bottom-right-radius: 0.6rem;
+  flex-shrink: 0;
+  /* ป้องกันไม่ให้ pagination หดตัว */
+  margin-top: auto;
+  /* ดัน pagination ไปอยู่ด้านล่างสุดของ flex container */
 }
 
-/* ปุ่มจัดการ */
-.actionButton {
-  padding: 5px 10px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
+.pageButton {
+  padding: 0.6rem 1rem;
+  /* ลด padding */
+  border-width: 1px;
+  border-color: #d1d5db;
+  border-radius: 0.4rem;
+  /* ลดมุมโค้งมน */
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  font-size: 0.85rem;
+  /* ลด font-size */
+  font-weight: 500;
+  color: #374151;
+  background-color: #ffffff;
   cursor: pointer;
 }
 
-.actionButton:hover {
-  background-color: #0056b3;
+.pageButton:hover:not(:disabled) {
+  background-color: #f9fafb;
 }
 
-/* Pagination */
-.pagination {
-  display: flex;
-  justify-content: center;
-  margin-top: 10px;
-}
-
-.prevButton,
-.nextButton {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 5px;
-  transition: background-color 0.3s ease;
-  margin: 0 10px;
-}
-
-.prevButton:hover,
-.nextButton:hover {
-  background-color: #0056b3;
-}
-
-.prevButton:disabled,
-.nextButton:disabled {
-  background-color: #ccc;
+.pageButton:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
+}
+
+.pageInfo {
+  font-size: 0.85rem;
+  /* ลด font-size */
+  color: #374151;
+}
+
+/* Responsive adjustments for overall layout if needed */
+@media (max-width: 1200px) {
+  .infoContainer {
+    padding: 1.2rem 1.5rem;
+    /* ลด padding */
+  }
+}
+
+@media (max-width: 768px) {
+  .infoContainer {
+    padding: 0.8rem 0.8rem;
+    /* ลด padding */
+    width: 100%;
+    border-radius: 0.4rem;
+    min-height: unset;
+  }
+
+  .tableGrid {
+    min-width: 600px;
+    /* ลด min-width สำหรับจอเล็ก */
+  }
+
+  .headerItem,
+  .tableCell {
+    padding: 0.6rem 0.8rem;
+    /* ลด padding */
+    font-size: 0.75rem;
+    /* ลด font-size */
+  }
+
+  .paginationControls {
+    padding: 0.8rem 1rem;
+    /* ลด padding */
+    flex-direction: column;
+    gap: 0.6rem;
+    /* ลด gap */
+  }
+
+  .pageButton,
+  .pageInfo {
+    font-size: 0.75rem;
+    /* ลด font-size */
+  }
+}
+
+@media (max-width: 480px) {
+  .filterControls {
+    padding: 0.6rem;
+    /* ลด padding */
+    gap: 0.6rem;
+    /* ลด gap */
+  }
+
+  .filterSelect,
+  .searchInput,
+  .clearButton {
+    padding: 0.4rem 0.6rem;
+    /* ลด padding */
+    font-size: 0.8rem;
+    /* ลด font-size */
+  }
+
+  .tableGrid {
+    min-width: 500px;
+    /* ลด min-width สำหรับจอเล็กมาก */
+  }
+
+  .headerItem,
+  .tableCell {
+    padding: 0.5rem 0.7rem;
+    /* ลด padding */
+    font-size: 0.7rem;
+    /* ลด font-size */
+  }
+
+  .paginationControls {
+    padding: 0.6rem 0.8rem;
+    /* ลด padding */
+  }
 }

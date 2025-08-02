@@ -3,7 +3,7 @@
 import { useEffect, useState, useContext, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
-import { CartContext } from "../context/CartContext"
+import { CartContext } from "../context/CartContext";
 import { toast } from "react-toastify";
 import { io } from "socket.io-client";
 import Image from "next/image";
@@ -117,24 +117,47 @@ export default function InventoryWithdraw() {
                 height={70}
                 style={{ objectFit: "cover" }}
                 onError={() => setImgSrc(defaultImg)}
+                loading="lazy" // Added for performance
+                unoptimized // Added if the image host isn't configured for Next.js image optimization
             />
         );
     }
+
+    const translateCategoryToEnglish = (thaiCategory) => {
+        switch (thaiCategory) {
+            case "ยา": return "medicine";
+            case "เวชภัณฑ์": return "medsup";
+            case "ครุภัณฑ์": return "equipment";
+            case "อุปกรณ์ทางการแพทย์": return "meddevice";
+            case "ของใช้ทั่วไป": return "general";
+            default: return thaiCategory;
+        }
+    };
 
     const filteredItems = useMemo(() => {
         return allItems.filter((item) => {
             if (!item) return false;
 
-            const matchCategory = category ? item.item_category === category : true;
+            const englishCategory = translateCategoryToEnglish(category);
+            const matchCategory = englishCategory ? item.item_category === englishCategory : true;
             const matchUnit = unit ? item.item_unit === unit : true;
             const matchStorage = storage ? item.item_location === storage : true;
             const matchFilterText = filter
-                ? item.item_name?.toLowerCase().includes(filter.toLowerCase())
+                ? item.item_name?.toLowerCase().includes(filter.toLowerCase()) ||
+                  item.item_id?.toLowerCase().includes(filter.toLowerCase()) ||
+                  item.item_number?.toLowerCase().includes(filter.toLowerCase()) ||
+                  getItemCode(item).toLowerCase().includes(filter.toLowerCase()) ||
+                  translateCategory(item.item_category).toLowerCase().includes(filter.toLowerCase()) ||
+                  item.item_unit?.toLowerCase().includes(filter.toLowerCase()) ||
+                  item.item_status?.toLowerCase().includes(filter.toLowerCase()) ||
+                  item.item_location?.toLowerCase().includes(filter.toLowerCase())
                 : true;
 
             return matchCategory && matchUnit && matchStorage && matchFilterText;
         });
     }, [allItems, category, unit, storage, filter]);
+
+    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
     const currentItems = useMemo(() => {
         const start = (currentPage - 1) * itemsPerPage;
@@ -172,7 +195,32 @@ export default function InventoryWithdraw() {
         } else {
             setActionType(type);
         }
-    }
+    };
+
+    const handleCategoryChange = (e) => {
+        setCategory(e.target.value);
+    };
+
+    const handleUnitChange = (e) => {
+        setUnit(e.target.value);
+    };
+
+    const handleStorageChange = (e) => {
+        setStorage(e.target.value);
+    };
+
+    const handleFilterChange = (e) => {
+        setFilter(e.target.value);
+    };
+
+    const clearFilters = () => {
+        setFilter("");
+        setCategory("");
+        setUnit("");
+        setStorage("");
+        setCurrentPage(1);
+    };
+
 
     useEffect(() => {
         setCurrentPage(1);
@@ -197,8 +245,6 @@ export default function InventoryWithdraw() {
     };
 
     const handleConfirm = () => {
-        // console.log(`[InventoryWithdraw.js] handleConfirm - inputQuantity: ${inputQuantity}, selectedItem.item_qty: ${selectedItem?.item_qty}`); // ลบ debug log นี้ได้
-
         if (!inputQuantity || inputQuantity <= 0) {
             toast.error("กรุณากรอกจำนวนให้ถูกต้อง");
             return;
@@ -215,8 +261,6 @@ export default function InventoryWithdraw() {
             toast.error("จำนวนไม่เพียงพอ");
             return;
         }
-
-        // console.log(`[InventoryWithdraw.js] handleConfirm: actionType=${actionType}, returnDate=${returnDate}`); // ลบ debug log นี้ได้
 
         if (actionType === "borrow") {
             if (!returnDate) {
@@ -255,7 +299,7 @@ export default function InventoryWithdraw() {
             location: selectedItem.item_location,
             action: actionType,
             returnDate: actionType === "borrow" ? returnDate : null,
-            item_qty: selectedItem.item_qty, // <--- เพิ่มบรรทัดนี้เข้ามา!
+            item_qty: selectedItem.item_qty,
         });
 
         toast.success("เพิ่มรายการเข้าตะกร้าเรียบร้อยแล้ว");
@@ -279,6 +323,7 @@ export default function InventoryWithdraw() {
                 return "-";
         }
     };
+
     const translateCategory = (cat) => {
         switch (cat) {
             case "medicine":
@@ -295,158 +340,183 @@ export default function InventoryWithdraw() {
                 return cat;
         }
     };
+
     return (
         <div className={styles.mainHome}>
-            {/* Modal */}
-            {showModal && selectedItem && (
-                <div className={styles.modalOverlay}>
-                    <div className={styles.modal}>
-                        <h2 className={styles.modalTitle}>
-                            ทำรายการ {actionType === "withdraw" ? "เบิก" : "ยืม"}
-                        </h2>
-
-                        <div className={styles.modalContentRow} style={{ display: "flex", gap: "1rem" }}>
-                            <ItemImage
-                                item_img={selectedItem.item_img || ""}
-                                alt={selectedItem.item_name || "ไม่มีชื่อ"}
-                            />
-
-                            <div className={styles.modalDetails}>
-                                <div>
-                                    <strong>ชื่อ:</strong> {selectedItem.item_name || "-"}
-                                </div>
-                                <div>
-                                    <strong>รหัสสินค้า:</strong> {selectedItem.item_id || "-"}
-                                </div>
-                                <div>
-                                    <strong>หมวดหมู่:</strong> {translateCategory(selectedItem.item_category) || "-"}
-                                </div>
-                                <div>
-                                    <strong>จำนวนคงเหลือ:</strong> {selectedItem.item_qty || 0}{" "}
-                                    {selectedItem.item_unit || ""}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className={styles.modalForm}>
-                            <label htmlFor="quantity">จำนวนที่ต้องการ</label>
-                            <input
-                                id="quantity"
-                                type="number"
-                                className={styles.modalInput}
-                                min={1}
-                                max={selectedItem.item_qty || 1}
-                                value={inputQuantity}
-                                onChange={(e) => setInputQuantity(Number(e.target.value))}
-                            />
-                            {/* แสดงช่องวันที่คืนถ้าเป็นประเภท 'ยืม' */}
-                            {actionType === "borrow" && (
-                                <>
-                                    <label htmlFor="returnDate">วันที่คืน</label>
-                                    <input
-                                        id="returnDate"
-                                        type="date"
-                                        className={styles.modalInput}
-                                        value={returnDate}
-                                        onChange={(e) => setReturnDate(e.target.value)}
-                                        min={minReturnDate}
-                                        max={maxReturnDate}
-                                    />
-                                </>
-                            )}
-                        </div>
-
-                        <div className={styles.modalActions}>
-                            <button className={styles.modalConfirm} onClick={handleConfirm}>
-                                บันทึก
-                            </button>
-                            <button className={styles.modalCancel} onClick={closeModal}>
-                                ยกเลิก
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* ปุ่มเลือกประเภทการทำรายการ */}
-            {isActionTypeLoaded && (
-                <div className={styles.actionTypeSelector}>
-                    <h3>เลือกประเภทการทำรายการ:</h3>
-                    <button
-                        className={actionType === "withdraw" ? styles.active : ""}
-                        onClick={() => handleChangeActionType("withdraw")}
-                    >
-                        เบิก
-                    </button>
-                    <button
-                        className={actionType === "borrow" ? styles.active : ""}
-                        onClick={() => handleChangeActionType("borrow")}
-                    >
-                        ยืม
-                    </button>
-                </div>
-            )}
-
             {/* ตัวกรอง */}
             <div className={styles.infoContainer}>
-                <div className={styles.filterContainer}>
-                    <div className={styles.filterGroup}>
-                        <select
-                            id="category"
-                            className={styles.filterSelect}
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                        >
-                            <option value="">เลือกหมวดหมู่</option>
-                            <option value="medicine">ยา</option>
-                            <option value="medsup">เวชภัณฑ์</option>
-                            <option value="equipment">ครุภัณฑ์</option>
-                            <option value="meddevice">อุปกรณ์ทางการแพทย์</option>
-                            <option value="general">ของใช้ทั่วไป</option>
-                        </select>
-                    </div>
+                <div className={styles.cardHeader}>
+                    <h1>เบิก-ยืม</h1>
+                </div>
 
-                    <div className={styles.filterGroup}>
-                        <select
-                            id="unit"
-                            className={styles.filterSelect}
-                            value={unit}
-                            onChange={(e) => setUnit(e.target.value)}
-                        >
-                            <option value="">เลือกหน่วย</option>
-                            <option value="ขวด">ขวด</option>
-                            <option value="แผง">แผง</option>
-                            <option value="ชุด">ชุด</option>
-                            <option value="ชิ้น">ชิ้น</option>
-                            <option value="กล่อง">กล่อง</option>
-                        </select>
-                    </div>
+                {/* Modal */}
+                {showModal && selectedItem && (
+                    <div className={styles.modalOverlay}>
+                        <div className={styles.modal}>
+                            <h2 className={styles.modalTitle}>
+                                ทำรายการ {actionType === "withdraw" ? "เบิก" : "ยืม"}
+                            </h2>
 
-                    <div className={styles.filterGroup}>
-                        <select
-                            id="storage"
-                            className={styles.filterSelect}
-                            value={storage}
-                            onChange={(e) => setStorage(e.target.value)}
-                        >
-                            <option value="">เลือกสถานที่จัดเก็บ</option>
-                            <option value="ห้องเก็บยา">ห้องเก็บยา</option>
-                            <option value="คลังสินค้า">คลังสินค้า</option>
-                            <option value="ห้องเวชภัณฑ์">ห้องเวชภัณฑ์</option>
-                            <option value="ห้อง1">ห้อง1</option>
-                            <option value="1">1</option>
-                        </select>
-                    </div>
+                            <div className={styles.modalContentRow} style={{ display: "flex", gap: "1rem" }}>
+                                <ItemImage
+                                    item_img={selectedItem.item_img || ""}
+                                    alt={selectedItem.item_name || "ไม่มีชื่อ"}
+                                />
 
-                    <div className={styles.filterGroupSearch}>
-                        <input
-                            type="text"
-                            id="filter"
-                            className={styles.filterInput}
-                            value={filter}
-                            onChange={(e) => setFilter(e.target.value)}
-                            placeholder="กรอกเพื่อค้นหา..."
-                        />
+                                <div className={styles.modalDetails}>
+                                    <div>
+                                        <strong>ชื่อ:</strong> {selectedItem.item_name || "-"}
+                                    </div>
+                                    <div>
+                                        <strong>รหัสสินค้า:</strong> {selectedItem.item_id || "-"}
+                                    </div>
+                                    <div>
+                                        <strong>หมวดหมู่:</strong> {translateCategory(selectedItem.item_category) || "-"}
+                                    </div>
+                                    <div>
+                                        <strong>จำนวนคงเหลือ:</strong> {selectedItem.item_qty || 0}{" "}
+                                        {selectedItem.item_unit || ""}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className={styles.modalForm}>
+                                <label htmlFor="quantity">จำนวนที่ต้องการ</label>
+                                <input
+                                    id="quantity"
+                                    type="number"
+                                    className={styles.modalInput}
+                                    min={1}
+                                    max={selectedItem.item_qty || 1}
+                                    value={inputQuantity}
+                                    onChange={(e) => setInputQuantity(Number(e.target.value))}
+                                />
+                                {/* แสดงช่องวันที่คืนถ้าเป็นประเภท 'ยืม' */}
+                                {actionType === "borrow" && (
+                                    <>
+                                        <label htmlFor="returnDate">วันที่คืน</label>
+                                        <input
+                                            id="returnDate"
+                                            type="date"
+                                            className={styles.modalInput}
+                                            value={returnDate}
+                                            onChange={(e) => setReturnDate(e.target.value)}
+                                            min={minReturnDate}
+                                            max={maxReturnDate}
+                                        />
+                                    </>
+                                )}
+                            </div>
+
+                            <div className={styles.modalActions}>
+                                <button className={styles.modalConfirm} onClick={handleConfirm}>
+                                    บันทึก
+                                </button>
+                                <button className={styles.modalCancel} onClick={closeModal}>
+                                    ยกเลิก
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* ปุ่มเลือกประเภทการทำรายการ */}
+                {isActionTypeLoaded && (
+                    <div className={styles.actionTypeSelector}>
+                        <h3>เลือกประเภทการทำรายการ:</h3>
+                        <button
+                            className={actionType === "withdraw" ? styles.active : ""}
+                            onClick={() => handleChangeActionType("withdraw")}
+                        >
+                            เบิก
+                        </button>
+                        <button
+                            className={actionType === "borrow" ? styles.active : ""}
+                            onClick={() => handleChangeActionType("borrow")}
+                        >
+                            ยืม
+                        </button>
+                    </div>
+                )}
+                {/* ฟิลเตอร์ */}
+                <div className={styles.filterControls}>
+                    <div className={styles.filterGrid}>
+                        <div className={styles.filterGroup}>
+                            <label htmlFor="category" className={styles.filterLabel}>
+                                หมวดหมู่:
+                            </label>
+                            <select
+                                id="category"
+                                className={styles.filterSelect}
+                                value={category}
+                                onChange={handleCategoryChange}
+                            >
+                                <option value="">เลือกหมวดหมู่</option>
+                                <option value="ยา">ยา</option>
+                                <option value="เวชภัณฑ์">เวชภัณฑ์</option>
+                                <option value="ครุภัณฑ์">ครุภัณฑ์</option>
+                                <option value="อุปกรณ์ทางการแพทย์">อุปกรณ์ทางการแพทย์</option>
+                                <option value="ของใช้ทั่วไป">ของใช้ทั่วไป</option>
+                            </select>
+                        </div>
+
+                        <div className={styles.filterGroup}>
+                            <label htmlFor="unit" className={styles.filterLabel}>
+                                หน่วย:
+                            </label>
+                            <select
+                                id="unit"
+                                className={styles.filterSelect}
+                                value={unit}
+                                onChange={handleUnitChange}
+                            >
+                                <option value="">เลือกหน่วย</option>
+                                <option value="ขวด">ขวด</option>
+                                <option value="แผง">แผง</option>
+                                <option value="ชุด">ชุด</option>
+                                <option value="ชิ้น">ชิ้น</option>
+                                <option value="กล่อง">กล่อง</option>
+                                <option value="ห่อ">ห่อ</option>
+                            </select>
+                        </div>
+
+                        <div className={styles.filterGroup}>
+                            <label htmlFor="storage" className={styles.filterLabel}>
+                                สถานที่จัดเก็บ:
+                            </label>
+                            <select
+                                id="storage"
+                                className={styles.filterSelect}
+                                value={storage}
+                                onChange={handleStorageChange}
+                            >
+                                <option value="">เลือกสถานที่จัดเก็บ</option>
+                                <option value="ห้องเก็บยา">ห้องเก็บยา</option>
+                                <option value="คลังสินค้า">คลังสินค้า</option>
+                                <option value="ห้องเวชภัณฑ์">ห้องเวชภัณฑ์</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div className={styles.searchControls}>
+                        <div className={styles.searchGroup}>
+                            <label htmlFor="filter" className={styles.filterLabel}>
+                                ค้นหา:
+                            </label>
+                            <input
+                                type="text"
+                                id="filter"
+                                className={styles.searchInput}
+                                value={filter}
+                                onChange={handleFilterChange}
+                                placeholder="ค้นหาด้วยรายการ, สถานะ..."
+                            />
+                        </div>
+                        <button
+                            onClick={clearFilters}
+                            className={styles.clearButton}
+                        >
+                            ล้างตัวกรอง
+                        </button>
                     </div>
                 </div>
 
@@ -540,18 +610,21 @@ export default function InventoryWithdraw() {
                 </div>
 
                 {/* pagination */}
-                <div className={styles.pagination}>
+                <div className={styles.paginationControls}>
                     <button
-                        className={styles.prevButton}
+                        className={styles.pageButton}
                         onClick={handlePrevPage}
                         disabled={currentPage === 1}
                     >
                         หน้าก่อนหน้า
                     </button>
+                    <span className={styles.pageInfo}>
+                        หน้า {currentPage} / {totalPages}
+                    </span>
                     <button
-                        className={styles.nextButton}
+                        className={styles.pageButton}
                         onClick={handleNextPage}
-                        disabled={currentPage * itemsPerPage >= filteredItems.length}
+                        disabled={currentPage >= totalPages}
                     >
                         หน้าถัดไป
                     </button>

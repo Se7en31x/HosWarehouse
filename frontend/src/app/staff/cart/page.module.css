@@ -1,419 +1,291 @@
+/* page.module.css */
+
 .container {
-    padding: 20px; /* เพิ่ม padding โดยรวม */
-    background-color: #ffffff; /* เปลี่ยนเป็นสีขาวเพื่อให้เข้ากับ .content-area */
-    height: 100%; /* ทำให้ container ขยายเต็มความสูงของ parent (.content-area) */
-    /* min-height: 100vh; ถูกนำออกเพื่อให้ปรับขนาดตาม parent */
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    font-family: 'Inter', sans-serif; /* ใช้ font Inter */
-    box-sizing: border-box; /* ตรวจสอบให้แน่ใจว่า padding รวมอยู่ในขนาดที่คำนวณ */
-    min-width: 0; /* เพิ่มบรรทัดนี้: อนุญาตให้ flex item (container) หดตัวได้ */
-    flex-shrink: 1; /* เพิ่มบรรทัดนี้: ทำให้ container หดตัวได้เมื่อจำเป็น */
+  padding: 2rem;
+  max-width: 100%;
+  height: 100%;
+  margin: 0 auto;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  font-family: 'Sarabun', sans-serif; /* Example font, ensure it's imported or available */
 }
 
 .header {
-    background-color: #1a73e8; /* สีน้ำเงินสดใสขึ้น */
-    color: white;
-    padding: 0.5rem; /* เพิ่ม padding */
-    border-radius: 12px; /* มุมโค้งมนมากขึ้น */
-    font-size: 1.75rem; /* ขนาดตัวอักษรใหญ่ขึ้น */
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* เพิ่มเงา */
-    font-weight: 700;
+  font-size: 2rem;
+  color: #343a40;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-weight: 700;
 }
 
 .tableContainer {
-    background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* เพิ่มเงา */
-    overflow-x: auto;
-    flex-grow: 1; /* ให้ตารางขยายเต็มพื้นที่ที่เหลือ */
-    min-width: 0; /* เพิ่มบรรทัดนี้: อนุญาตให้ flex item (tableContainer) หดตัวได้ */
+  overflow-x: auto; /* เก็บไว้เผื่อกรณีตารางกว้างเกินหน้าจอ จะได้เลื่อนแนวนอนได้ */
+  max-height: 500px; /* กำหนดความสูงสูงสุดของตาราง เพื่อให้เกิดการเลื่อน */
+  overflow-y: scroll; /* ทำให้เนื้อหาในแนวตั้งเลื่อนได้ */
+
+  /* --- โค้ดสำหรับซ่อน Scrollbar --- */
+  /* สำหรับ Webkit (Chrome, Safari, Edge) */
+  &::-webkit-scrollbar {
+    display: none; /* ซ่อนแถบเลื่อนทั้งหมด */
+  }
+
+  /* สำหรับ Firefox */
+  scrollbar-width: none; /* 'none' ซ่อนแถบเลื่อน */
+  /* --------------------------------- */
+
+  margin-bottom: 2rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background-color: #ffffff;
 }
 
 .table {
-    width: 100%;
-    border-collapse: collapse; /* ทำให้เส้นขอบเซลล์รวมกัน */
-    border-spacing: 0;
-    /* table-layout: fixed; ทำให้ความกว้างคอลัมน์คงที่ */
-    min-width: 0; /* เพิ่มบรรทัดนี้: อนุญาตให้ตารางหดตัวได้ */
+  width: 100%;
+  border-collapse: collapse;
 }
 
 .table th,
 .table td {
-    padding: 8px 10px; /* ปรับลด padding ลง */
-    text-align: left;
-    vertical-align: middle;
-    border-bottom: 1px solid #e0e0e0; /* สีเส้นแบ่งอ่อนลง */
-    /* white-space: nowrap; ถูกลบออกเพื่อให้ข้อความขึ้นบรรทัดใหม่ได้ */
-    overflow: hidden; /* ซ่อนเนื้อหาที่เกิน */
-    text-overflow: ellipsis; /* แสดง ... เมื่อเนื้อหาเกิน */
-    min-width: 0; /* เพิ่มบรรทัดนี้: อนุญาตให้เซลล์หดตัวได้ */
+  padding: 12px 15px;
+  border-bottom: 1px solid #e9ecef;
+  text-align: left;
+  vertical-align: middle;
 }
-
-/* กำหนดความสูงของแถวให้คงที่ */
-.table tbody tr {
-    min-height: 60px; /* <--- ใช้ min-height แทน height และปรับเป็น 60px */
-    height: 60px; /* <--- กำหนด height ควบคู่กัน เพื่อความสม่ำเสมอในเบราว์เซอร์ส่วนใหญ่ */
-}
-
-/* กำหนดความกว้างของแต่ละคอลัมน์ให้เหมาะสม */
-/* ปรับเปอร์เซ็นต์ใหม่เพื่อให้รวมกันเป็น 100% และกระจายพื้นที่ได้ดีขึ้น */
-.table th:nth-child(1), /* ลำดับ */
-.table td:nth-child(1) {
-    width: 5%;
-}
-.table th:nth-child(2), /* รหัส */
-.table td:nth-child(2) {
-    width: 10%;
-}
-.table th:nth-child(3), /* รูปภาพ */
-.table td:nth-child(3) {
-    width: 8%;
-}
-.table th:nth-child(4), /* ชื่อ */
-.table td:nth-child(4) {
-    width: 20%; /* ปรับลดเล็กน้อย */
-}
-.table th:nth-child(5), /* จำนวน */
-.table td:nth-child(5) {
-    width: 8%;
-}
-.table th:nth-child(6), /* หน่วย */
-.table td:nth-child(6) {
-    width: 8%;
-}
-.table th:nth-child(7), /* หมวดหมู่ */
-.table td:nth-child(7) {
-    width: 12%;
-}
-.table th:nth-child(8), /* ประเภท */
-.table td:nth-child(8) {
-    width: 10%;
-}
-.table th:nth-child(9), /* วันที่คืน */
-.table td:nth-child(9) {
-    width: 10%;
-}
-.table th:nth-child(10), /* การจัดการ */
-.table td:nth-child(10) {
-    width: 9%; /* เพิ่มพื้นที่ให้ปุ่มจัดการเล็กน้อย */
-}
-
 
 .table th {
-    padding: 10px 10px; /* เพิ่ม padding สำหรับหัวตาราง */
-    background-color: #e8f0fe; /* สีพื้นหลังหัวตารางอ่อนลง */
-    font-weight: 600;
-    color: #333;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-}
-
-.table tbody tr:nth-child(even) {
-    background-color: #f9f9f9; /* สีสลับแถวอ่อนลง */
-}
-
-.table tbody tr:nth-child(odd) {
-    background-color: #ffffff;
+  background-color: #e2f0ff; /* Light blue header */
+  color: #343a40;
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap; /* Prevent wrapping for headers */
+  position: sticky; /* ทำให้ header ตารางติดอยู่ด้านบนเมื่อเลื่อน */
+  top: 0; /* กำหนดให้ติดที่ตำแหน่งบนสุด */
+  z-index: 1; /* ตรวจสอบให้แน่ใจว่าอยู่เหนือเนื้อหาตาราง */
 }
 
 .table tbody tr:hover {
-    background-color: #eef5ff; /* สีไฮไลท์เมื่อ hover */
-    transition: background-color 0.2s ease;
+  background-color: #f1f7fe; /* Lighter blue on hover */
 }
 
-/* สไตล์สำหรับ input จำนวน */
-.quantityInput {
-    width: 100%; /* เปลี่ยนเป็น 100% เพื่อให้ปรับตาม td */
-    max-width: 80px; /* กำหนดความกว้างสูงสุด */
-    padding: 8px 10px;
-    border: 1px solid #b0b0b0; /* สีขอบเข้มขึ้นเล็กน้อย */
-    border-radius: 8px; /* มุมโค้งมน */
-    font-size: 0.95rem;
-    text-align: center;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    -moz-appearance: textfield; /* ซ่อนลูกศรใน Firefox */
-    box-sizing: border-box; /* รวม padding ใน width */
+.table tbody tr:last-child td {
+  border-bottom: none;
 }
 
-/* ซ่อนลูกศรใน Chrome, Safari, Edge */
+.quantityInput,
+.dateInput {
+  width: 80px;
+  padding: 8px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  text-align: center;
+  /* -moz-appearance: textfield; Hide arrows in Firefox */
+}
+
 .quantityInput::-webkit-outer-spin-button,
 .quantityInput::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.quantityInput:focus {
-    border-color: #1a73e8; /* สีขอบเมื่อ focus */
-    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2); /* เพิ่มเงาเมื่อ focus */
-    outline: none;
-}
-
-/* สไตล์สำหรับ input วันที่คืน */
-.dateInput {
-    width: 100%; /* เปลี่ยนเป็น 100% เพื่อให้ปรับตาม td */
-    padding: 8px 10px;
-    border: 1px solid #b0b0b0;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    box-sizing: border-box; /* รวม padding ใน width */
-}
-
-.dateInput:focus {
-    border-color: #1a73e8;
-    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
-    outline: none;
-}
-
-
-.footer {
-    margin-top: 20px;
-    background-color: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.formRow {
-    display: flex;
-    gap: 20px; /* เพิ่มช่องว่างระหว่างคอลัมน์ */
-    flex-wrap: wrap;
-    justify-content: space-between; /* กระจายช่องว่าง */
-}
-
-.leftColumn {
-    flex: 1;
-    flex-basis: 0; /* เพิ่ม: ให้ flex item หดตัวได้อย่างเต็มที่ */
-    /* min-width: 300px; ถูกลบออกเพื่อให้ยืดหยุ่นมากขึ้น */
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.topRow {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-
-.checkboxGroup {
-    display: flex;
-    gap: 20px;
-}
-
-.checkboxGroup label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 500;
-    color: #555;
-    cursor: pointer;
-}
-
-.checkboxGroup input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    accent-color: #1a73e8; /* สี checkbox */
-}
-
-.datePicker {
-    padding: 10px 15px;
-    border: 1px solid #b0b0b0;
-    border-radius: 8px;
-    font-size: 1rem;
-    background-color: #fff;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.datePicker:focus {
-    border-color: #1a73e8;
-    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
-    outline: none;
-}
-
-.textarea {
-    width: 100%;
-    padding: 12px 15px;
-    font-size: 1rem;
-    border-radius: 8px;
-    border: 1px solid #b0b0b0;
-    background-color: #fdfdfd;
-    resize: vertical; /* อนุญาตให้ปรับขนาดแนวตั้ง */
-    min-height: 80px;
-    transition: border 0.3s ease, box-shadow 0.3s ease;
-}
-
-.textarea:focus {
-    border-color: #1a73e8;
-    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
-    outline: none;
-}
-
-.rightColumn {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    flex: 1; /* เพิ่ม flex: 1 เพื่อให้ขยายและหดตัวได้ */
-    flex-basis: 0; /* เพิ่ม: ให้ flex item หดตัวได้อย่างเต็มที่ */
-    /* min-width: 250px; ถูกลบออกเพื่อให้ยืดหยุ่นมากขึ้น */
-}
-
-.buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-
-.cancel,
-.draft,
-.confirm {
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    flex-grow: 1; /* ให้ปุ่มขยายเต็มพื้นที่ */
-    min-width: 100px; /* กำหนดความกว้างขั้นต่ำของปุ่ม */
-}
-
-/* ปุ่มยกเลิก */
-.cancel {
-    background-color: #f8f9fa;
-    color: #dc3545;
-    border: 1px solid #dc3545;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.cancel:hover {
-    background-color: #ffebeb;
-    color: #c82333;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.cancel:active {
-    background-color: #f0f0f0;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* ปุ่มฉบับร่าง */
-.draft {
-    background-color: #e9ecef;
-    color: #6c757d;
-    border: 1px solid #ced4da;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.draft:hover {
-    background-color: #dee2e6;
-    color: #495057;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.draft:active {
-    background-color: #d3d9df;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* ปุ่มยืนยัน */
-.confirm {
-    background-color: #1a73e8;
-    color: white;
-    border: 1px solid #1a73e8;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.confirm:hover {
-    background-color: #0d47a1;
-    border-color: #0d47a1;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.confirm:active {
-    background-color: #0a3a80;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  -webkit-appearance: none; /* Hide arrows in Webkit browsers */
+  margin: 0;
 }
 
 .delete {
-    background-color: #fff;
-    color: #dc3545;
-    border: 1px solid #dc3545;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: #dc3545; /* Red color for delete */
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color 0.2s ease-in-out;
 }
 
 .delete:hover {
-    background-color: #f8d7da;
-    color: #c82333;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  background-color: #c82333;
 }
 
-.delete:active {
-    background-color: #f5c6cb;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+.delete:disabled {
+  background-color: #e0a800; /* Yellow for disabled delete button */
+  cursor: not-allowed;
+}
+
+.footer {
+  background-color: #ffffff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.formRow {
+  display: flex;
+  flex-wrap: wrap; /* Allows wrapping on smaller screens */
+  gap: 1.5rem; /* Space between columns */
+}
+
+.leftColumn {
+  flex: 2; /* Takes more space */
+  min-width: 300px; /* Minimum width before wrapping */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.topRow {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.checkboxGroup {
+  display: flex;
+  align-items: center;
+}
+
+.checkboxGroup input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-right: 0.5rem;
+  accent-color: #007bff; /* Blue accent for checkbox */
+}
+
+.checkboxGroup span {
+  font-size: 1rem;
+  color: #495057;
+}
+
+.datePicker {
+  flex-grow: 1; /* Allows date picker to take available space */
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
+  color: #495057;
+}
+
+.textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
+  min-height: 80px;
+  resize: vertical; /* Allow vertical resizing */
+  color: #495057;
+}
+
+.rightColumn {
+  flex: 1; /* Takes less space */
+  min-width: 200px; /* Minimum width before wrapping */
+  display: flex;
+  justify-content: flex-end; /* Align buttons to the right */
+  align-items: flex-end; /* Align buttons to the bottom */
+}
+
+.buttons {
+  display: flex;
+  gap: 1rem;
+  width: 100%; /* Ensure buttons take full width of their column */
+  justify-content: flex-end; /* Align buttons to the right */
+}
+
+.buttons button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
+  flex-grow: 1; /* Allow buttons to grow and fill space */
+  max-width: 120px; /* Max width for individual buttons */
+}
+
+.buttons button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancel {
+  background-color: #6c757d; /* Grey */
+  color: white;
+}
+
+.cancel:hover:not(:disabled) {
+  background-color: #5a6268;
+}
+
+.draft {
+  background-color: #ffc107; /* Yellow/Orange */
+  color: #343a40;
+}
+
+.draft:hover:not(:disabled) {
+  background-color: #e0a800;
+}
+
+.confirm {
+  background-color: #007bff; /* Blue */
+  color: white;
+}
+
+.confirm:hover:not(:disabled) {
+  background-color: #0056b3;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .formRow {
-        flex-direction: column;
-    }
+  .formRow {
+    flex-direction: column; /* Stack columns on smaller screens */
+  }
 
-    .leftColumn, .rightColumn {
-        min-width: unset;
-        width: 100%;
-    }
+  .leftColumn,
+  .rightColumn {
+    min-width: unset; /* Remove min-width for full flexibility */
+    width: 100%; /* Take full width */
+  }
 
-    .buttons {
-        justify-content: center;
-    }
+  .topRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+  }
 
-    .cancel, .draft, .confirm {
-        width: 100%;
-        max-width: 200px; /* จำกัดความกว้างของปุ่มบนมือถือ */
-    }
+  .datePicker {
+    width: 100%;
+  }
 
-    .topRow {
-        flex-direction: column;
-        align-items: flex-start;
-    }
+  .buttons {
+    flex-direction: column; /* Stack buttons vertically */
+    align-items: stretch; /* Stretch buttons to full width */
+  }
 
-    .datePicker {
-        width: 100%;
-    }
+  .buttons button {
+    max-width: 100%; /* Allow buttons to take full width */
+  }
 }
 
 @media (max-width: 480px) {
-    .container {
-        padding: 10px;
-    }
+  .container {
+    padding: 1rem;
+  }
 
-    .header {
-        font-size: 1.5rem;
-        padding: 1rem;
-    }
+  .header {
+    font-size: 1.75rem;
+  }
 
-    .table th, .table td {
-        padding: 8px 10px;
-        font-size: 0.85rem;
-    }
+  .table th,
+  .table td {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+  }
 
-    .quantityInput, .dateInput {
-        padding: 6px 8px;
-        font-size: 0.85rem;
-    }
+  .quantityInput,
+  .dateInput {
+    width: 60px;
+    padding: 6px;
+  }
+
+  .delete {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
 }
