@@ -211,7 +211,7 @@ export default function Cart() {
   return (
     <div className={styles.container}>
       <h2 className={styles.header}>
-        รายการร{translateAction(cartItems[0]?.action || '')}
+        รายการ{translateAction(cartItems[0]?.action || '')}
       </h2>
       <div className={styles.tableContainer}>
         <table className={styles.table}>
