@@ -3,22 +3,21 @@
 
 /* General layout and typography */
 .mainHome {
-  min-height: 70vh;
-  /* ให้ mainHome มีความสูงอย่างน้อยเท่ากับ viewport */
+  min-height: 100vh;
+  /* min-width: 100vh; */
   background-color: #f3f4f6;
-  /* padding: 0.5vw 0.5vw; */
   font-family: 'Inter', sans-serif;
-  
+  display: flex;
+  /* Changed to flex for better vertical alignment */
   flex-direction: column;
   justify-content: flex-start;
-  /* จัดเนื้อหาให้อยู่ด้านบนสุด */
   align-items: center;
   box-sizing: border-box;
 }
 
 .infoContainer {
   width: 100%;
-  max-width: 1600px;
+  height: 100%;
   margin: 0 auto;
   background-color: #ffffff;
   padding: 1.5rem 2.5rem;
@@ -26,10 +25,9 @@
   box-shadow: 0 3px 5px -1px rgb(0 0 0 / 0.1), 0 1px 3px -2px rgb(0 0 0 / 0.1);
   flex-direction: column;
   flex-grow: 1;
-  /* ให้ infoContainer ขยายเต็มพื้นที่ที่เหลือใน mainHome */
   box-sizing: border-box;
-  min-height: 89vh;
-  /* กำหนดความสูงขั้นต่ำเพื่อป้องกันการหดตัวมากเกินไปเมื่อเนื้อหาน้อย */
+  min-height: 80vh;
+  /* ADJUSTED: Increased min-height for more vertical space */
   display: flex;
 }
 
@@ -42,12 +40,10 @@
   padding-bottom: 0.5rem;
   border-bottom: 1px solid #e0e0e0;
   flex-shrink: 0;
-  /* ป้องกันไม่ให้ header หดตัว */
 }
 
 .cardHeader h1 {
   font-size: clamp(1.8rem, 3vw, 2.5rem);
-  /* ลดขนาด font-size ของ h1 */
   line-height: 1.2;
   font-weight: 700;
   color: #1f2937;
