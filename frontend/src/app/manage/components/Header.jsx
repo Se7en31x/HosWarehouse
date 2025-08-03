@@ -1,10 +1,11 @@
 import styles from './Header.module.css'; // Import CSS Module
-import Image from 'next/image';
+import Image from 'next/image'; // ตรวจสอบให้แน่ใจว่าได้ import Image ถูกต้อง
 
 export default function Header() {
   return (
     <header className={styles.header}> {/* Use className from styles */}
-    <Image
+      {/* เพิ่มโลโก้ตรงนี้ */}
+      <Image
         src="/logos/logo.png" // **เปลี่ยน Path นี้ให้ตรงกับตำแหน่งไฟล์โลโก้ของคุณ**
         alt="Hospital Logo" // คำอธิบายสำหรับรูปภาพ (สำคัญสำหรับ SEO และการเข้าถึง)
         width={65} // กำหนดความกว้างของโลโก้ (ปรับตามขนาดที่ต้องการ)

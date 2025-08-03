@@ -23,6 +23,8 @@ export default function AddItem() {
         item_order_date: '',
         item_seller: '',
         item_receiver: '',
+        item_barcode: '',
+        image: null,
         imagePreview: null,
         // เฉพาะฟอร์มยา
         med_generic_name: '',
@@ -88,10 +90,7 @@ export default function AddItem() {
     };
 
     const [form, setForm] = useState(initialFormState);
-    //function select type and show form
-    // const [selectedCategory, setSelectedCategory] = useState('');
-
-    // Clean up URL object when component unmounts or image changes (memory leak prevention)
+    
     useEffect(() => {
         return () => {
             if (form.imagePreview) URL.revokeObjectURL(form.imagePreview);
@@ -105,16 +104,37 @@ export default function AddItem() {
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
-        if (file) {
-            if (form.imagePreview) {
-                URL.revokeObjectURL(form.imagePreview);
-            }
+        const maxSize = 5 * 1024 * 1024; // กำหนดขนาดไฟล์สูงสุด 5MB
+
+        if (!file) {
+            if (form.imagePreview) URL.revokeObjectURL(form.imagePreview);
             setForm((prev) => ({
                 ...prev,
-                image: file,
-                imagePreview: URL.createObjectURL(file),
+                image: null,
+                imagePreview: null,
             }));
+            return;
         }
+
+        if (file.size > maxSize) {
+            Swal.fire({
+                icon: 'error',
+                title: 'ขนาดไฟล์ใหญ่เกินไป',
+                text: 'กรุณาเลือกรูปภาพที่มีขนาดไม่เกิน 5MB',
+            });
+            e.target.value = null;
+            return;
+        }
+        
+        if (form.imagePreview) {
+            URL.revokeObjectURL(form.imagePreview);
+        }
+
+        setForm((prev) => ({
+            ...prev,
+            image: file,
+            imagePreview: URL.createObjectURL(file),
+        }));
     };
 
     const validateForm = () => {
@@ -125,7 +145,6 @@ export default function AddItem() {
             Swal.fire({ icon: 'error', title: 'กรุณากรอกชื่อพัสดุ' });
             return false;
         }
-        // 🔁 แก้ตรงนี้
         if (!form.item_qty || isNaN(qty) || qty <= 0) {
             Swal.fire({ icon: 'error', title: 'กรุณากรอกจำนวนคงเหลือให้ถูกต้อง' });
             return false;
@@ -138,14 +157,12 @@ export default function AddItem() {
             Swal.fire({ icon: 'error', title: 'จำนวนสูงสุดต้องไม่น้อยกว่าจำนวนขั้นต่ำ' });
             return false;
         }
-        if (max !== null && Number(form.item_quantity) > max) {
+        if (max !== null && qty > max) {
             Swal.fire({ icon: 'error', title: 'จำนวนคงเหลือไม่ควรเกินจำนวนสูงสุด' });
             return false;
         }
         return true;
     };
-
-
 
     const resetForm = () => {
         if (form.imagePreview) URL.revokeObjectURL(form.imagePreview);
@@ -153,7 +170,6 @@ export default function AddItem() {
     };
 
     const handleSubmit = async (e) => {
-
         e.preventDefault();
 
         if (!validateForm()) return;
@@ -190,33 +206,44 @@ export default function AddItem() {
             });
             console.error('Error saving data:', error);
         }
-
     };
 
     const handleCancel = () => {
-        if (confirm('คุณต้องการยกเลิกการกรอกข้อมูลหรือไม่?')) {
-            resetForm();
-        }
+        Swal.fire({
+            title: 'ยืนยันการยกเลิก?',
+            text: 'ข้อมูลที่กรอกไว้จะถูกลบทิ้งทั้งหมด',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#808080',
+            confirmButtonText: 'ยืนยัน',
+            cancelButtonText: 'ยกเลิก',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                resetForm();
+            }
+        });
     };
 
     return (
-        <div className={styles.container}>
-            <h1 className={styles.title}>เพิ่มรายการ</h1>
-            <form onSubmit={handleSubmit} className={styles.form}>
-
-                {/* ข้อมูลทั่วไป */}
-                <BasicForm
-                    form={form}
-                    handleChange={handleChange}
-                    handleImageChange={handleImageChange}
-                />
-                {/* ปุ่มคำสั่ง */}
-                <div className={styles.actions}>
-                    <button type="button" className={styles.cancel} onClick={handleCancel}>ยกเลิก</button>
-                    <button type="submit" className={styles.save}>บันทึก</button>
-                </div>
-
-            </form>
+        <div className={styles.pageLayout}>
+            <header className={styles.header}>
+                <h1 className={styles.title}>เพิ่มรายการพัสดุ</h1>
+            </header>
+            
+            <main className={styles.mainContent}>
+                <form onSubmit={handleSubmit} className={styles.formCard}>
+                    <BasicForm
+                        form={form}
+                        handleChange={handleChange}
+                        handleImageChange={handleImageChange}
+                    />
+                    <div className={styles.actions}>
+                        <button type="button" className={styles.cancel} onClick={handleCancel}>ยกเลิก</button>
+                        <button type="submit" className={styles.save}>บันทึก</button>
+                    </div>
+                </form>
+            </main>
         </div>
     );
 }

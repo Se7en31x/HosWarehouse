@@ -8,7 +8,7 @@
   display: flex;
   justify-content: flex-start; /* Align content to the start (left) */
   align-items: center;
-  height: 60px; /* Standard height for the header */
+  height: 65px; /* Standard height for the header */
   padding: 0 30px; /* Increased horizontal padding for a cleaner look */
   border-bottom: 1px solid #e0e0e0; /* Lighter and softer bottom border */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow for a floating effect */

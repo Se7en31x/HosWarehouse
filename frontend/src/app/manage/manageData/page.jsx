@@ -40,6 +40,15 @@ export default function ManageDataPage() {
       default: return '-';
     }
   };
+  
+  // แปลงค่า category จากภาษาไทยเป็นภาษาอังกฤษก่อนนำไปกรองข้อมูล
+  const categoryValues = {
+    'ยา': 'medicine',
+    'เวชภัณฑ์': 'medsup',
+    'ครุภัณฑ์': 'equipment',
+    'อุปกรณ์ทางการแพทย์': 'meddevice',
+    'ของใช้ทั่วไป': 'general',
+  };
 
   // กรองข้อมูลตาม filter และ dropdown
   const filteredItems = items.filter((item) => {
@@ -47,10 +56,10 @@ export default function ManageDataPage() {
       filter === "" ||
       item.item_name?.toLowerCase().includes(filter.toLowerCase()) ||
       getItemCode(item)?.toLowerCase().includes(filter.toLowerCase());
-
+    
     const matchesCategory =
       category === "" ||
-      categoryLabels[item.item_category]?.toLowerCase() === category.toLowerCase();
+      categoryValues[category]?.toLowerCase() === item.item_category?.toLowerCase();
 
     const matchesUnit =
       unit === "" || item.item_unit?.toLowerCase() === unit.toLowerCase();
@@ -60,7 +69,7 @@ export default function ManageDataPage() {
 
     return matchesFilter && matchesCategory && matchesUnit && matchesStorage;
   });
-
+  
   // เปลี่ยนหน้าเมื่อ filter เปลี่ยน
   useEffect(() => {
     setCurrentPage(1);
@@ -199,23 +208,41 @@ export default function ManageDataPage() {
         <div className={styles.inventory}>
           {currentItems.map((item, index) => (
             <div className={`${styles.tableGrid} ${styles.tableRow}`} key={item.item_id}>
-              <div className={`${styles.tableCell} ${styles.centerCell}`}>{(currentPage - 1) * itemsPerPage + index + 1}</div>
-              <div className={styles.tableCell}>{getItemCode(item)}</div>
-              <div className={`${styles.tableCell} ${styles.centerCell}`}>
+              <div className={`${styles.tableCell} ${styles.centerCell}`} data-label="ลำดับ">
+                {(currentPage - 1) * itemsPerPage + index + 1}
+              </div>
+              <div className={styles.tableCell} data-label="รหัสสินค้า">
+                {getItemCode(item)}
+              </div>
+              <div className={`${styles.tableCell} ${styles.centerCell}`} data-label="รูปภาพ">
                 <img
                   src={item.item_img ? `http://localhost:5000/uploads/${item.item_img}` : "http://localhost:5000/public/defaults/landscape.png"}
                   alt={item.item_name}
                   className={styles.imageCell}
                 />
               </div>
-              <div className={styles.tableCell}>{item.item_name}</div>
-              <div className={styles.tableCell}>{categoryLabels[item.item_category] || item.item_category}</div>
-              <div className={styles.tableCell}>{item.item_qty}</div>
-              <div className={styles.tableCell}>{item.item_unit}</div>
-              <div className={styles.tableCell}>{item.item_status}</div>
-              <div className={styles.tableCell}>{item.item_location}</div>
-              <div className={styles.tableCell}>{formatThaiDateTime(item.item_update)}</div>
-              <div className={`${styles.tableCell} ${styles.centerCell}`}>
+              <div className={styles.tableCell} data-label="ชื่อ">
+                {item.item_name}
+              </div>
+              <div className={styles.tableCell} data-label="หมวดหมู่">
+                {categoryLabels[item.item_category] || item.item_category}
+              </div>
+              <div className={styles.tableCell} data-label="จำนวน">
+                {item.item_qty}
+              </div>
+              <div className={styles.tableCell} data-label="หน่วย">
+                {item.item_unit}
+              </div>
+              <div className={styles.tableCell} data-label="สถานะ">
+                {item.item_status}
+              </div>
+              <div className={styles.tableCell} data-label="สถานที่จัดเก็บ">
+                {item.item_location}
+              </div>
+              <div className={styles.tableCell} data-label="แก้ไขล่าสุด">
+                {formatThaiDateTime(item.item_update)}
+              </div>
+              <div className={`${styles.tableCell} ${styles.centerCell}`} data-label="การจัดการ">
                 <Link href={`/manage/manageData/${item.item_id}/editItem`} className={`${styles.actionButton} ${styles.editButton}`}>แก้ไข</Link>
                 <button className={`${styles.actionButton} ${styles.deleteButton}`} onClick={() => handleDelete(item.item_id)}>ลบ</button>
               </div>

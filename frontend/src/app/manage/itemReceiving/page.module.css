@@ -1,0 +1,546 @@
+/* --- page.module.css (ฉบับสมบูรณ์และแก้ไขปัญหาตาราง) --- */
+
+/* --- General Layout and Container --- */
+.pageContainer {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    background-color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.mainCard {
+    background-color: #ffffff;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    width: 100vw;
+    max-width: 100%;
+    height: 100%;
+}
+
+/* --- Header Section --- */
+.header {
+    text-align: center;
+    padding: 2px;
+    background-color: #1a237e;
+    color: white;
+    border-bottom: 2px solid #ebebeb;
+}
+
+.header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 4px;
+}
+
+.header p {
+    font-size: 0.9rem;
+    color: #c5c5e0;
+}
+
+/* --- Main Content Layout (Flexbox) --- */
+.contentWrapper {
+    display: flex;
+    flex-direction: row;
+    height: calc(100vh - 84px); /* Full height minus header height */
+}
+
+.sider {
+    flex: 0 0 350px;
+    padding: 24px;
+    background-color: #ffffff;
+    border-right: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+}
+
+.mainContent {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Success Message --- */
+.successMessage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    animation: fadeIn 0.5s ease-out;
+    font-weight: 600;
+}
+
+.successIcon {
+    margin-right: 12px;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- Search & Scan Section --- */
+.searchSection {
+    margin-bottom: 24px;
+    position: relative;
+}
+
+.searchBoxContainer {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.searchIconPrefix {
+    position: absolute;
+    left: 16px;
+    color: #9e9e9e;
+    pointer-events: none;
+}
+
+.searchField {
+    flex: 1;
+    padding: 14px 16px 14px 48px;
+    border: 1px solid #c5d4e1;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.searchField:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+.scanButton {
+    background-color: transparent;
+    color: #1a237e;
+    border: none;
+    padding: 0 16px;
+    cursor: pointer;
+    transition: color 0.3s;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.scanButton:hover {
+    color: #1e88e5;
+}
+
+.searchResults {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    z-index: 10;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.searchItem {
+    padding: 14px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f4f8;
+    transition: background-color 0.2s;
+}
+
+.searchItem:hover {
+    background-color: #e2e8f0;
+}
+
+/* --- Table Section (Sider) --- */
+.tableSection {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.tableHeader {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-left: 4px solid #1a237e;
+    padding-left: 12px;
+}
+
+.headerIcon {
+    color: #1a237e;
+}
+
+.tableWrapper {
+    overflow-x: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    flex: 1;
+}
+
+.itemTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.itemTable thead {
+    background-color: #f5f5f5;
+    display: table-header-group;
+}
+
+.itemTable th,
+.itemTable td {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+    white-space: nowrap;
+}
+
+.itemTable th {
+    font-weight: 600;
+    color: #424242;
+}
+
+.itemTable tbody {
+    min-height: 400px;
+    display: table-row-group;
+}
+
+.itemTable tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.itemTable tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+.itemName {
+    font-weight: 500;
+    color: #1a237e;
+}
+
+.textRight {
+    text-align: right;
+}
+
+.emptyMessage {
+    text-align: center;
+    color: #757575;
+    padding: 24px;
+}
+
+.selectItemButton {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-weight: 500;
+}
+
+.selectItemButton:hover {
+    background-color: #1d4ed8;
+}
+
+.deleteButton {
+    background-color: #ef5350;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.deleteButton:hover {
+    background-color: #e53935;
+}
+
+/* --- Pagination Controls --- */
+.paginationControls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.pageButton {
+    background-color: #e0e0e0;
+    color: #424242;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.pageButton:hover:not(:disabled) {
+    background-color: #bdbdbd;
+}
+
+.pageButton:disabled {
+    background-color: #f5f5f5;
+    color: #bdbdbd;
+    cursor: not-allowed;
+}
+
+.paginationControls span {
+    font-weight: 600;
+    color: #333;
+}
+
+/* --- Details Form Section --- */
+.detailsFormSection {
+    background-color: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.detailsFormHeader {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a237e;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-left: 4px solid #1a237e;
+    padding-left: 12px;
+}
+
+/* --- Form Fields --- */
+.inputGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.formField {
+    display: flex;
+    flex-direction: column;
+}
+
+.formField label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.formField input,
+.formField textarea {
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.formField input:focus,
+.formField textarea:focus {
+    outline: none;
+    border-color: #42a5f5;
+}
+
+.notesField {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.formActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 1.5rem; /* แก้ไข: เพิ่มระยะห่างด้านบน */
+}
+
+.formActions button {
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.formActions button:active {
+    transform: scale(0.98);
+}
+
+.clearButton {
+    background-color: #e0e0e0;
+    color: #424242;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.clearButton:hover {
+    background-color: #d33; /* แก้ไข: เปลี่ยนสีเป็นสีแดง */
+    color: white; /* แก้ไข: เปลี่ยนสีตัวอักษรเป็นสีขาว */
+}
+
+.addItemButton {
+    background-color: #22c55e;
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.addItemButton:hover:not(:disabled) {
+    background-color: #16a34a;
+}
+
+.addItemButton:disabled {
+    background-color: #e0e0e0;
+    color: #9e9e9e;
+    cursor: not-allowed;
+}
+
+/* --- Action Buttons Section (Save button) --- */
+.actionButtonsSection {
+    padding-top: 24px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: auto;
+}
+
+.saveButton {
+    background-color: #2e7d32;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.3s;
+}
+
+.saveButton:hover:not(:disabled) {
+    background-color: #1b5e20;
+}
+
+.saveButton:disabled {
+    background-color: #bdbdbd;
+    cursor: not-allowed;
+}
+
+/* --- Modal --- */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.modalContent {
+    background-color: #fff;
+    padding: 32px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.modalHeader {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a237e;
+    margin-bottom: 16px;
+}
+
+.modalNotes {
+    font-style: italic;
+    color: #757575;
+    margin-top: 8px;
+}
+
+.modalActions {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.cancelButton,
+.confirmButton {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.cancelButton {
+    background-color: #e0e0e0;
+    color: #424242;
+}
+
+.cancelButton:hover {
+    background-color: #bdbdbd;
+}
+
+.confirmButton {
+    background-color: #2e7d32;
+    color: white;
+}
+
+.confirmButton:hover {
+    background-color: #1b5e20;
+}
+
+/* --- Responsive Layout --- */
+@media (max-width: 768px) {
+    .contentWrapper {
+        flex-direction: column;
+    }
+
+    .sider {
+        border-right: none;
+        border-bottom: 1px solid #e0e0e0;
+        flex: none;
+        width: 100%;
+    }
+}
