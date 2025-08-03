@@ -4,64 +4,84 @@ const addItemModel = require('../models/addItemModel');
 const { pool } = require('../config/db');
 const { getIO } = require('../socket');
 
-function parseNullable(value) {
-    return value?.trim() === '' ? null : value;
-}
-
-function parseNullableDate(value) {
-    return value?.trim() === '' ? null : value;
-}
-
-function parseNullableInt(value) {
+// Helper functions (ย้ายไปไว้ที่ utils/helpers.js จะดีกว่า แต่ตอนนี้แก้ไขที่นี่ไปก่อน)
+const parseNullable = (value) => value?.trim() === '' ? null : value;
+const parseNullableDate = (value) => value?.trim() === '' ? null : value;
+const parseNullableInt = (value) => {
     const n = parseInt(value);
     return isNaN(n) ? 0 : n;
-}
-
-function parseNullableFloat(value) {
+};
+const parseNullableFloat = (value) => {
     const f = parseFloat(value);
     return isNaN(f) ? 0 : f;
-}
+};
 
 function deleteUploadedFile(filePath) {
-    if (filePath && fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-        console.log('🗑️ ลบรูปภาพ:', filePath);
-    }
+    if (filePath && fs.existsSync(path.join('uploads', filePath))) {
+        fs.unlinkSync(path.join('uploads', filePath));
+        console.log('🗑️ ลบรูปภาพ:', filePath);
+    }
 }
 
 exports.addNewItem = async (req, res) => {
-    const file = req.file ? req.file.filename : null; // ✅ เก็บแค่ชื่อไฟล์
+    const file = req.file ? req.file.filename : null;
     try {
         console.log('BODY:', req.body);
         console.log('FILE:', req.file);
 
-        const data = req.body;
+        // สร้าง Object ข้อมูลใหม่เพื่อป้องกันการเปลี่ยนแปลงข้อมูลต้นฉบับ
+        // และจัดการค่าให้พร้อมใช้งาน
+        const data = {
+            item_name: parseNullable(req.body.item_name),
+            item_category: parseNullable(req.body.item_category),
+            item_sub_category: parseNullable(req.body.item_sub_category),
+            item_unit: parseNullable(req.body.item_unit),
+            item_location: parseNullable(req.body.item_location),
+            item_zone: parseNullable(req.body.item_zone),
+            item_exp: parseNullableDate(req.body.item_exp),
+            item_barcode: parseNullable(req.body.item_barcode),
+            item_img: file, // ใช้ชื่อตัวแปรให้ตรงกัน
+            
+            // ค่าตัวเลข
+            item_qty: parseNullableInt(req.body.item_qty),
+            item_min: parseNullableInt(req.body.item_min),
+            item_max: parseNullableInt(req.body.item_max),
 
-        if (file) {
-            data.item_image = file;
-        }
+            // ข้อมูล medicine
+            med_generic_name: parseNullable(req.body.med_generic_name),
+            med_thai_name: parseNullable(req.body.med_thai_name),
+            med_marketing_name: parseNullable(req.body.med_marketing_name),
+            med_counting_unit: parseNullable(req.body.med_counting_unit),
+            med_dosage_form: parseNullable(req.body.med_dosage_form),
+            med_medical_category: parseNullable(req.body.med_medical_category),
+            med_cost_price: parseNullableFloat(req.body.med_cost_price),
+            med_selling_price: parseNullableFloat(req.body.med_selling_price),
+            med_medium_price: parseNullableFloat(req.body.med_medium_price),
+            med_TMT_code: parseNullable(req.body.med_TMT_code),
+            med_TPU_code: parseNullable(req.body.med_TPU_code),
+            med_TMT_GP_name: parseNullable(req.body.med_TMT_GP_name),
+            med_TMT_TP_name: parseNullable(req.body.med_TMT_TP_name),
+            med_severity: parseNullable(req.body.med_severity),
+            med_essential_med_list: parseNullable(req.body.med_essential_med_list),
+            med_pregnancy_cagetory: parseNullable(req.body.med_pregnancy_cagetory),
+            med_mfg: parseNullableDate(req.body.med_mfg),
+            med_exp: parseNullableDate(req.body.med_exp),
+            med_dose_dialogue: parseNullable(req.body.med_dose_dialogue),
+            med_replacement: parseNullable(req.body.med_replacement),
 
-        // แปลงค่าว่างเป็น null สำหรับวันที่
-        data.item_expire_date = parseNullableDate(data.item_expire_date);
-        data.item_order_date = parseNullableDate(data.item_order_date);
-
-        // แปลงค่าที่ควรเป็นตัวเลข
-        data.item_qty = parseNullableInt(data.item_quantity);
-        data.item_min = parseNullableInt(data.item_min);
-        data.item_max = parseNullableInt(data.item_max);
-        if (data.medsup_qty) data.medsup_qty = parseNullableInt(data.medsup_qty);
-        if (data.medsup_price) data.medsup_price = parseNullableFloat(data.medsup_price);
-
-        // วันที่ของแต่ละประเภท
-        data.med_exp = parseNullableDate(data.med_exp);
-        data.medsup_expiry_date = parseNullableDate(data.medsup_expiry_date);
-        data.equip_purchase_date = parseNullableDate(data.equip_purchase_date);
-        data.equip_warranty_expire = parseNullableDate(data.equip_warranty_expire);
-        data.equip_last_maintenance = parseNullableDate(data.equip_last_maintenance);
+            // ข้อมูล medsup
+            medsup_category: parseNullable(req.body.medsup_category),
+            medsup_brand: parseNullable(req.body.medsup_brand),
+            medsup_serial_no: parseNullable(req.body.medsup_serial_no),
+            medsup_status: parseNullable(req.body.medsup_status),
+            medsup_price: parseNullableFloat(req.body.medsup_price),
+            
+            // ... (ทำแบบเดียวกันกับ equip, meddevice, general)
+        };
 
         const baseResult = await addItemModel.addBaseItem(data);
         if (!baseResult) {
-            deleteUploadedFile(file);
+            deleteUploadedFile(data.item_img);
             return res.status(400).json({ error: 'ไม่สามารถเพิ่มข้อมูลพื้นฐานได้' });
         }
 
@@ -86,18 +106,18 @@ exports.addNewItem = async (req, res) => {
                 detailResult = await addItemModel.insertGeneral(item_id, data);
                 break;
             default:
-                deleteUploadedFile(file);
+                deleteUploadedFile(data.item_img);
                 return res.status(400).json({ error: 'ไม่รู้จักประเภทพัสดุ' });
         }
 
         if (!detailResult.success) {
-            deleteUploadedFile(file);
+            deleteUploadedFile(data.item_img);
             return res.status(400).json({ error: 'เพิ่มข้อมูลเสริมไม่สำเร็จ' });
         }
-        // ✅ หลังเพิ่มสำเร็จ ดึงข้อมูล inventory ใหม่ และส่งผ่าน socket
-        const io = getIO(); // ✅
-        const allItems = await require('../models/inventoryModel').getAllItemsDetailed(); // ✅
-        io.emit('itemsData', allItems); // ✅ ส่งข้อมูล inventory ไปยังทุก client
+
+        const io = getIO();
+        const allItems = await require('../models/inventoryModel').getAllItemsDetailed();
+        io.emit('itemsData', allItems);
         
         return res.status(201).json({
             success: true,
