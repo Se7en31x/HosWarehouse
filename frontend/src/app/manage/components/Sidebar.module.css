@@ -1,30 +1,46 @@
 /* src/app/components/Sidebar.module.css */
 
 .sidebar {
-  /* เปลี่ยนการกำหนดขนาดหลักให้เป็นเปอร์เซ็นต์ */
-  flex-basis: 20%; /* Sidebar จะเริ่มต้นที่ 20% ของพื้นที่ Main Content Wrapper ที่มีอยู่ */
-  flex-shrink: 1;  /* อนุญาตให้ Sidebar หดตัวได้เมื่อพื้นที่ไม่พอ (ค่า 1 คือหดได้) */
-  flex-grow: 1;    /* อนุญาตให้ Sidebar ขยายตัวได้เมื่อพื้นที่เหลือเฟือ (ค่า 1 คือขยายได้) */
-  min-width: 180px; /* **สำคัญ:** Sidebar จะไม่หดตัวเล็กกว่า 180px */
-  max-width: 280px; /* **สำคัญ:** Sidebar จะไม่ขยายใหญ่กว่า 280px */
-  
-  height: 100%; /* ให้ Sidebar สูงเต็มพื้นที่ของ parent (main-content-wrapper) */
+  /* กำหนดขนาดหลักให้เป็นเปอร์เซ็นต์และมีขีดจำกัด */
+  flex-basis: 20%;
+  flex-shrink: 1;
+  flex-grow: 1;
+  min-width: 180px;
+  max-width: 280px;
+
+  height: 100%;
   background-color: #ffffff; /* สีขาว */
   color: #333; /* สีข้อความหลัก */
-  border-radius: 15px; /* มุมโค้งมน*/
-
-  box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.1); /* เงาเพื่อให้ดูมีมิติ*/
+  border-radius: 15px; /* มุมโค้งมน */
+  box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.1); /* เงาเพื่อให้ดูมีมิติ */
   transition: all 0.3s ease-in-out;
-  padding-top: 20px; /* เพิ่ม padding ด้านบนใน Sidebar */
-  padding-bottom: 20px; /* เพิ่ม padding ด้านล่างใน Sidebar */
+  padding-top: 20px;
+  padding-bottom: 20px;
+  overflow: hidden; /* ซ่อนเนื้อหาที่ล้นออกไปเมื่อยุบ */
+  position: relative; /* เพื่อให้ปุ่ม collapse จัดตำแหน่งได้ */
 }
 
-/* ปรับ padding ของ userInfo ให้เข้ากับการจัดวางใหม่ */
+/* สไตล์เมื่อ Sidebar ถูกยุบ (collapsed state) */
+.sidebar.collapsed {
+  flex-basis: 70px; /* ขนาดเมื่อยุบ: ประมาณความกว้างของไอคอน + padding */
+  min-width: 70px;
+  max-width: 70px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
 .userInfo {
   display: flex;
   align-items: center;
-  padding: 0 20px 20px 20px; /* ปรับ padding ด้านบนให้เป็น 0 เพราะมี padding-top ที่ Sidebar แล้ว */
+  padding: 0 20px 20px 20px; /* Padding ด้านข้าง 20px, ด้านล่าง 20px */
   margin-bottom: 5px;
+  position: relative; /* สำหรับปุ่ม collapse ที่อยู่ด้านใน */
+}
+
+/* จัดกึ่งกลาง User Info เมื่อ Sidebar ยุบ */
+.sidebar.collapsed .userInfo {
+  justify-content: center;
+  padding: 0 0 20px 0; /* ไม่มี padding ด้านข้างเมื่อยุบ */
 }
 
 .userImg {
@@ -34,14 +50,31 @@
   object-fit: cover;
   margin-right: 15px;
   border: 1px solid #ddd;
+  transition: all 0.3s ease-in-out;
+}
+
+/* ลดขนาดรูปภาพเมื่อ Sidebar ยุบ */
+.sidebar.collapsed .userImg {
+  width: 45px;
+  height: 45px;
+  margin-right: 0; /* ลบ margin เมื่อยุบ */
 }
 
 .userDetails {
   display: flex;
   flex-direction: column;
+  transition: opacity 0.3s ease-in-out;
 }
 
-.userName, .userPosition {
+/* ซ่อนรายละเอียดผู้ใช้เมื่อ Sidebar ยุบ */
+.sidebar.collapsed .userDetails {
+  opacity: 0;
+  pointer-events: none; /* ป้องกันการคลิก/โต้ตอบ */
+  position: absolute; /* ไม่ให้กินพื้นที่ */
+}
+
+.userName,
+.userPosition {
   margin: 0;
   padding: 0;
 }
@@ -60,6 +93,13 @@
 .divider {
   border: none;
   border-bottom: 1px solid #eee;
+  margin: 10px 0;
+  transition: all 0.3s ease-in-out;
+}
+
+/* ปรับ margin ของ divider เมื่อ Sidebar ยุบ */
+.sidebar.collapsed .divider {
+  margin: 5px 0;
 }
 
 .navLinks {
@@ -75,30 +115,55 @@
 .sidebarItem {
   display: flex;
   align-items: center;
-  padding: 12px 20px; /* ปรับ padding */
+  padding: 12px 20px; /* Padding ปกติ */
   border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out,
+    transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
   color: #333;
-  text-decoration: none;
+  text-decoration: none; /* เพื่อไม่ให้มีขีดเส้นใต้ */
+}
+
+/* **แก้ไข:** จัดเนื้อหา (Link) ให้อยู่ตรงกลางเมื่อ Sidebar ยุบ */
+.sidebar.collapsed .sidebarItem {
+  justify-content: center; /* จัดไอคอนให้อยู่ตรงกลางแนวนอน */
+  padding: 12px; /* ให้มี padding รอบๆ ไอคอน */
 }
 
 .sidebarItem:hover {
-  background-color: #f0f0f0;
+  background-color: #e6f2ff; /* สีฟ้าอ่อนเมื่อโฮเวอร์ */
   color: #007bff;
-  transform: translateX(3px);
+  transform: translateX(3px); /* เลื่อนเล็กน้อยเพื่อความรู้สึกโต้ตอบ */
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .sidebarItem:active {
-  background-color: #e0e0e0;
-  transform: scale(0.98);
+  background-color: #d1e7ff; /* สีฟ้าอ่อนลงเมื่อคลิก */
+  transform: scale(0.98); /* ย่อเล็กน้อยเมื่อคลิก */
+}
+
+/* สไตล์สำหรับเมนูที่ Active (ถูกเลือก) */
+.sidebarItem.active {
+  background-color: #007bff; /* สีน้ำเงิน */
+  color: #ffffff; /* ข้อความเป็นสีขาว */
+  font-weight: bold;
+  box-shadow: 2px 2px 8px rgba(0, 123, 255, 0.2);
+}
+
+.sidebarItem.active .sidebarIcon {
+  color: #ffffff; /* ไอคอนเป็นสีขาวเมื่อ active */
 }
 
 .sidebarIcon {
   font-size: 20px;
-  margin-right: 15px;
+  margin-right: 15px; /* ระยะห่างปกติ */
   color: #555;
+  transition: margin-right 0.3s ease-in-out, color 0.2s ease-in-out;
+}
+
+/* **แก้ไข:** ลบ margin ของไอคอนเมื่อ Sidebar ยุบ */
+.sidebar.collapsed .sidebarIcon {
+  margin-right: 0;
 }
 
 .sidebarItem:hover .sidebarIcon {
@@ -108,6 +173,16 @@
 .sidebarText {
   font-size: 16px;
   font-weight: 400;
+  white-space: nowrap; /* ป้องกันการขึ้นบรรทัดใหม่ */
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* ซ่อนข้อความเมนูเมื่อ Sidebar ยุบ */
+.sidebar.collapsed .sidebarText {
+  opacity: 0;
+  width: 0; /* ทำให้ไม่กินพื้นที่ */
+  overflow: hidden;
 }
 
 .noStyleLink {
@@ -117,6 +192,14 @@
   align-items: center;
   width: 100%;
   height: 100%;
+  /* **แก้ไข:** จัดตำแหน่งเริ่มต้นของไอคอนและข้อความใน Link */
+  justify-content: flex-start; /* จัดชิดซ้ายเป็นค่าเริ่มต้น */
+  transition: justify-content 0.3s ease-in-out; /* เพิ่ม transition */
+}
+
+/* **แก้ไข:** จัดไอคอนให้อยู่ตรงกลางใน Link เมื่อ Sidebar ยุบ */
+.sidebar.collapsed .noStyleLink {
+  justify-content: center;
 }
 
 /* --- Loading Skeleton Styles --- */
@@ -172,7 +255,89 @@
 }
 
 @keyframes pulse {
-  0% { opacity: 0.8; }
-  50% { opacity: 0.4; }
-  100% { opacity: 0.8; }
+  0% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 0.8;
+  }
+}
+
+/* Collapse Button */
+.collapseButton {
+  position: absolute;
+  top: 20px;
+  right: 10px; /* ตำแหน่งปกติเมื่อ Sidebar กางออก */
+  background: #f0f0f0; /* สีพื้นหลังปุ่ม */
+  border: none;
+  border-radius: 50%; /* ทำให้เป็นวงกลม */
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out; /* ทำให้การเปลี่ยนตำแหน่งและรูปแบบนุ่มนวล */
+  z-index: 10;
+  color: #555; /* สีไอคอนเริ่มต้น */
+}
+
+.collapseButton:hover {
+  background: #e0e0e0; /* สีเข้มขึ้นเมื่อ Hover */
+  transform: scale(1.08); /* ขยายใหญ่ขึ้นเล็กน้อยเมื่อ Hover */
+}
+
+/* **จุดสำคัญที่ปรับปรุง: ตำแหน่งและสไตล์เมื่อ Sidebar ถูกยุบ** */
+.sidebar.collapsed .collapseButton {
+  right: -18px; /* เลื่อนปุ่มไปด้านนอก Sidebar มากขึ้น เพื่อให้มองเห็นชัดเจน */
+  top: 50%; /* จัดกึ่งกลางแนวตั้ง */
+  transform: translateY(-50%) rotate(180deg); /* หมุนปุ่มทั้งปุ่ม 180 องศาเพื่อเปลี่ยนทิศลูกศร */
+  background-color: #007bff; /* **เพิ่ม: เปลี่ยนสีปุ่มเป็นสีเด่น** */
+  box-shadow: 0 3px 10px rgba(0, 123, 255, 0.4); /* **เพิ่ม: เงาที่ชัดเจนขึ้นและมีสีเดียวกับปุ่ม** */
+}
+
+/* **จุดสำคัญที่ปรับปรุง: สไตล์ของไอคอนภายในปุ่มเมื่อ Sidebar ถูกยุบ** */
+.sidebar.collapsed .collapseButton svg {
+  color: #ffffff; /* **เพิ่ม: เปลี่ยนสีไอคอนเป็นสีขาวเพื่อให้ตัดกับพื้นหลังสีน้ำเงิน** */
+  transform: rotate(180deg); /* **ทำให้ไอคอนหมุนกลับมาในทิศทางที่ถูกต้อง** (ถ้าปุ่มหมุน 180 องศาแล้ว) */
+  transition: transform 0.3s ease-in-out; /* ทำให้การหมุนของไอคอนเองนุ่มนวล */
+}
+
+.collapseButton svg {
+  font-size: 18px;
+  /* สีไอคอนเริ่มต้นกำหนดที่ .collapseButton แล้ว */
+  transition: transform 0.3s ease-in-out; /* ทำให้การหมุนของไอคอนเองนุ่มนวล */
+}
+
+/* Responsive adjustments for smaller screens (Mobile) */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed; /* Fix sidebar to the left */
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1000;
+    transform: translateX(-100%); /* Hide sidebar by default */
+    box-shadow: 10px 0 20px rgba(0, 0, 0, 0.15); /* เพิ่มเงาเมื่อเป็น mobile */
+  }
+
+  .sidebar.open {
+    transform: translateX(0); /* Show sidebar when 'open' class is applied (ต้องมี logic เพื่อเพิ่ม class 'open' จากภายนอก) */
+  }
+
+  .sidebar.collapsed {
+    /* สำหรับ mobile, เมื่อ collapsed ให้แสดงแค่ไอคอนเล็กๆ */
+    min-width: 60px;
+    max-width: 60px;
+    flex-basis: 60px;
+  }
+  .collapseButton {
+    /* อาจจะต้องปรับตำแหน่งปุ่มสำหรับ mobile */
+    top: 10px;
+    right: 10px;
+  }
 }
