@@ -1,61 +1,34 @@
-const TransactionHistory = require('../models/transactionHistoryModel'); // ตรวจสอบ path ให้ถูกต้อง
+// controllers/transactionHistoryController.js
+const TransactionHistory = require('../models/transactionHistoryModel');
 
-// เพิ่มสถานะทั้งหมดที่ frontend อาจส่งมา และ backend รู้จัก
-const allValidStatuses = [
-    'pending', 'approved', 'cancelled', 'completed',
-    'waiting_approval', 'issued', 'returned', 'rejected',
-    'approved_partial', 'rejected_partial', 'approved_all', 'rejected_all',
-    'preparing', 'delivering' // เพิ่มสถานะเหล่านี้
+// กำหนดประเภทการทำรายการที่ถูกต้องให้ตรงกับ Frontend และ Model
+const allValidTypes = [
+    'เบิก',
+    'ยืม',
+    'คืน',
+    'เพิ่ม/นำเข้า',
+    'ปรับปรุงสต็อก',
+    'โอนย้าย',
+    'ยกเลิก/ชำรุด',
+    'การเปลี่ยนสถานะอนุมัติ',
+    'การเปลี่ยนสถานะดำเนินการ',
 ];
 
 const transactionHistoryController = {
-    // ฟังก์ชัน getAllHistories (อาจไม่จำเป็นต้องใช้แล้ว หากใช้ getAllLogs แทน)
-    async getAllHistories(req, res) {
-        try {
-            const result = await TransactionHistory.getAll();
-            res.status(200).json(result);
-        } catch (err) {
-            console.error('Error in getAllHistories:', err);
-            res.status(500).json({ error: 'Failed to fetch history' });
-        }
-    },
-
-    // ฟังก์ชัน getHistoryByTransactionId (สำหรับดึงประวัติของ request_id เดียว)
-    async getHistoryByTransactionId(req, res) {
-        try {
-            const { request_id } = req.params; // เปลี่ยนชื่อจาก transactionId เป็น request_id
-            const result = await TransactionHistory.getByTransactionId(request_id);
-            res.status(200).json(result);
-        } catch (err) {
-            console.error('Error in getHistoryByTransactionId:', err);
-            res.status(500).json({ error: 'Failed to fetch request history' });
-        }
-    },
-
-    // ฟังก์ชัน createHistory (สำหรับสร้างประวัติใหม่)
-    async createHistory(req, res) {
-        try {
-            const data = req.body;
-            // ตรวจสอบข้อมูลที่รับเข้ามาว่ามีคอลัมน์ที่จำเป็นครบถ้วนสำหรับ request_status_history
-            if (!data.request_id || !data.changed_by || !data.old_status || !data.new_status) {
-                return res.status(400).json({ message: 'Missing required fields for history creation.' });
-            }
-            const result = await TransactionHistory.create(data);
-            res.status(201).json(result);
-        } catch (err) {
-            console.error('Error in createHistory:', err);
-            res.status(500).json({ error: 'Failed to create transaction history' });
-        }
-    },
-
-    // ฟังก์ชันหลักที่ Frontend จะเรียกใช้สำหรับหน้าประวัติ
+    /**
+     * ดึงประวัติการทำรายการทั้งหมดจากหลายตารางสำหรับหน้าประวัติแบบรวม
+     * รองรับการ Filter, Search, Sort, และ Pagination
+     * @param {object} req - Request object
+     * @param {object} res - Response object
+     */
     async getAllLogs(req, res) {
         try {
-            const { page = 1, limit = 10, status, search, sort, order } = req.query;
+            // ดึง Query Parameter ที่ frontend ส่งมา
+            const { page = 1, limit = 10, type, search, sort_by = 'timestamp', sort_order = 'desc' } = req.query;
 
-            // ตรวจสอบค่า status ถ้ามีการส่งมา
-            if (status && !allValidStatuses.includes(status)) {
-                return res.status(400).json({ message: 'Invalid status value' });
+            // ตรวจสอบค่า type ที่ส่งมา ถ้ามีการส่งมาต้องเป็นค่าที่ถูกต้อง
+            if (type && !allValidTypes.includes(type)) {
+                return res.status(400).json({ message: 'Invalid transaction type value' });
             }
 
             // แปลง page และ limit เป็นตัวเลข
@@ -70,17 +43,17 @@ const transactionHistoryController = {
             const result = await TransactionHistory.getAllFilteredLogs({
                 page: parsedPage,
                 limit: parsedLimit,
-                status,
+                type,
                 search,
-                sort,
-                order,
+                sort_by,
+                sort_order,
             });
 
             res.status(200).json({
-                logs: result.logs,
-                totalPages: result.totalPages,
-                currentPage: result.currentPage,
-                totalCount: result.totalCount,
+                data: result.logs,
+                total_pages: result.totalPages,
+                current_page: result.currentPage,
+                total_count: result.totalCount,
             });
 
         } catch (error) {
