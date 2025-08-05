@@ -1,25 +1,29 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import styles from './Sidebar.module.css'; // Import the CSS Module
-import axiosInstance from '../../utils/axiosInstance'; // Ensure this path is correct
+import { usePathname } from 'next/navigation'; // <-- เปลี่ยนจาก 'next/router' เป็น 'next/navigation'
+import styles from './Sidebar.module.css';
+import axiosInstance from '../../utils/axiosInstance';
 
-// Import icons from react-icons (install: npm install react-icons)
 import {
   FaHome,
-  FaBox,
+  Fexbox, // Please double-check if 'Fexbox' is a typo. You might mean FaBox or another icon.
+  FaHandHolding,
+  FaShoppingCart,
   FaListAlt,
   FaClipboardCheck,
-  FaCogs,
-  FaWarehouse,
   FaHistory,
   FaChartBar,
-  FaBell, // Added for Notifications
-  FaCog,  // Added for Settings
-  FaUserCircle
+  FaBell,
+  FaCog,
+  FaUserCircle,
+  FaChevronRight, // <-- Added this
+  FaChevronLeft  // <-- Added this
 } from 'react-icons/fa';
 
 export default function Sidebar() {
   const [userData, setUserData] = useState(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const pathname = usePathname(); // <-- เปลี่ยนจาก router.useRouter() เป็น usePathname()
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -28,41 +32,49 @@ export default function Sidebar() {
         setUserData(response.data);
       } catch (error) {
         console.error('Error fetching user data:', error);
-        setUserData({ name: 'Guest User', role: 'Unknown', img: 'https://via.placeholder.com/150' });
+        setUserData({
+          name: 'Guest User',
+          role: 'Unknown',
+          img: 'https://via.placeholder.com/150',
+        });
       }
     };
 
     fetchUserData();
   }, []);
 
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
+  // ฟังก์ชันสำหรับตรวจสอบว่าลิงก์ปัจจุบัน active หรือไม่
+  const isActive = (path) => { // เปลี่ยนชื่อ parameter เป็น path เพื่อไม่ให้สับสนกับ pathname hook
+    // ตรวจสอบว่า pathname ปัจจุบันตรงกับ path ที่ส่งเข้ามา
+    return pathname === path;
+  };
+
   if (!userData) {
     return (
-      <aside className={styles.sidebar}>
+      <aside className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ''}`}>
         <div className={styles.userInfo}>
           <div className={styles.skeletonUserImg}></div>
           <div className={styles.userDetails}>
             <div className={`${styles.skeletonText} ${styles.name}`}></div>
             <div className={`${styles.skeletonText} ${styles.position}`}></div>
           </div>
+          <button className={styles.collapseButton} onClick={toggleCollapse} aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
+            {isCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
+          </button>
         </div>
         <hr className={styles.divider} />
         <nav>
           <ul className={styles.navLinks}>
-            {Array.from({ length: 8 }).map((_, index) => (
+            {Array.from({ length: 11 }).map((_, index) => (
               <li key={index} className={styles.skeletonItemContainer}>
                 <div className={styles.skeletonIcon}></div>
                 <div className={styles.skeletonItemText}></div>
               </li>
             ))}
-            {/* Skeletons for new items (Notifications & Settings) */}
-            <li className={styles.skeletonItemContainer}>
-                <div className={styles.skeletonIcon}></div>
-                <div className={styles.skeletonItemText}></div>
-            </li>
-            <li className={styles.skeletonItemContainer}>
-                <div className={styles.skeletonIcon}></div>
-                <div className={styles.skeletonItemText}></div>
-            </li>
           </ul>
         </nav>
       </aside>
@@ -70,10 +82,10 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className={styles.sidebar}>
+    <aside className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ''}`}>
       <div className={styles.userInfo}>
         <img
-          src={userData.img || "https://s.isanook.com/ca/0/ud/284/1423051/821547.jpg?ip/resize/w728/q80/jpg"}
+          src={userData.img || 'https://s.isanook.com/ca/0/ud/284/1423051/821547.jpg?ip/resize/w728/q80/jpg'}
           alt="User Profile"
           className={styles.userImg}
         />
@@ -81,11 +93,15 @@ export default function Sidebar() {
           <p className={styles.userName}>{userData.name}</p>
           <p className={styles.userPosition}>{userData.role}</p>
         </div>
+        <button className={styles.collapseButton} onClick={toggleCollapse} aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
+          {isCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
+        </button>
       </div>
 
       <hr className={styles.divider} />
 
       <nav>
+
         <ul className={styles.navLinks}>
           {/* Main Navigation Links */}
           <li className={styles.sidebarItem}>
@@ -96,13 +112,13 @@ export default function Sidebar() {
           </li>
           <li className={styles.sidebarItem}>
             <Link href="/staff/inventoryWithdraw" className={styles.noStyleLink}>
-              <FaBox className={styles.sidebarIcon} />
+              <FaHandHolding className={styles.sidebarIcon} /> {/* Corrected usage */}
               <span className={styles.sidebarText}>เบิก ยืม</span>
             </Link>
           </li>
           <li className={styles.sidebarItem}>
             <Link href="/staff/cart" className={styles.noStyleLink}>
-              <FaBox className={styles.sidebarIcon} />
+              <FaShoppingCart className={styles.sidebarIcon} />
               <span className={styles.sidebarText}>ตะกร้า</span>
             </Link>
           </li>
@@ -119,8 +135,8 @@ export default function Sidebar() {
             </Link>
           </li>
           <li className={styles.sidebarItem}>
-            <Link href="/staff/transactionHistory" className={styles.noStyleLink}>
-              <FaCogs className={styles.sidebarIcon} />
+            <Link href="/staff/history" className={styles.noStyleLink}>
+              <FaHistory className={styles.sidebarIcon} />
               <span className={styles.sidebarText}>ประวัติรายการเบิก</span>
             </Link>
           </li>
@@ -132,9 +148,7 @@ export default function Sidebar() {
           </li>
 
           {/* New Section for Notifications and Settings */}
-          {/* You might want a separate divider here or some margin to visually separate it */}
           <hr className={styles.divider} style={{ marginTop: '20px', marginBottom: '10px' }} />
-
           <li className={styles.sidebarItem}>
             <Link href="/manage/notifications" className={styles.noStyleLink}>
               <FaBell className={styles.sidebarIcon} />
