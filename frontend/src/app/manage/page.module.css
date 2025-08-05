@@ -9,7 +9,6 @@
   background-color: #f0f2f5; /* สีพื้นหลังหลักที่สะอาดตา */
   font-family: 'Prompt', sans-serif; /* แนะนำใช้ฟอนต์ Prompt เพื่อรองรับภาษาไทย หรือฟอนต์ sans-serif อื่นๆ */
   color: #333; /* สีข้อความเริ่มต้น */
-  padding: 20px; /* ระยะห่างรอบ Dashboard */
 }
 
 /* --- ไม่มีสไตล์สำหรับ Header และ Sidebar ในส่วนนี้ เพื่อให้เป็นไปตามคำสั่ง --- */

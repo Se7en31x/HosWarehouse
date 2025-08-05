@@ -35,7 +35,6 @@ export default function Cart() {
 
   const handleQuantityChange = async (itemId, newQuantityStr) => {
     const newQuantity = Number(newQuantityStr);
-
     const itemInCart = cartItems.find(item => item.id === itemId);
 
     if (isNaN(newQuantity) || newQuantity <= 0) {
@@ -107,7 +106,6 @@ export default function Cart() {
     updateReturnDate(itemId, newReturnDateStr);
   };
 
-
   const handleSubmit = async () => {
     if (!requestDate || cartItems.length === 0) {
       await Swal.fire({
@@ -132,11 +130,8 @@ export default function Cart() {
 
     setIsSubmitting(true);
 
-    const translatedType = {
-      withdraw: 'Withdraw',
-      borrow: 'Borrow',
-      return: 'Return',
-    }[cartItems[0]?.action] || 'Withdraw';
+    // ********* แก้ไขตรงนี้ให้ส่งค่าภาษาอังกฤษไป *********
+    const requestType = cartItems[0]?.action || 'withdraw';
 
     const payload = {
       items: cartItems.map((item) => {
@@ -151,7 +146,7 @@ export default function Cart() {
       note,
       urgent,
       date: requestDate,
-      type: translatedType,
+      type: requestType, // ใช้ค่า 'withdraw' หรือ 'borrow' ตรงๆ
       user_id: userId,
     };
 

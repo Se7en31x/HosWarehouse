@@ -4,7 +4,6 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 30px; /* เพิ่ม padding โดยรวมของหน้า ให้มีพื้นที่หายใจ */
   background-color: #f8f9fa; /* สีพื้นหลังหน้าจอที่ดูสะอาดและสว่าง */
   overflow: auto; /* ให้หน้าจอสามารถเลื่อนได้ถ้าเนื้อหายาวเกิน */
 }
@@ -14,8 +13,8 @@
   font-size: 2.2rem; /* ขนาดใหญ่ขึ้นเล็กน้อย */
   font-weight: 700; /* ตัวหนามาก */
   color: #344767; /* สีกรมเข้ม */
-  margin-bottom: 25px; /* ระยะห่างจากส่วน filter */
-  text-align: left; /* จัดชิดซ้าย */
+  margin: 0  0  20 10px; /* ระยะห่างจากส่วน filter */
+  text-align: center; /* จัดชิดซ้าย */
 }
 
 /* --- Container สำหรับ Filter และ Table --- */
@@ -28,7 +27,7 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); /* เงาอ่อนๆ ให้ดูมีมิติ */
   padding: 25px; /* Padding ภายใน wrapper */
   /* เพิ่ม margin-bottom ให้ contentWrapper กรณีมีเนื้อหาอื่นๆ ใต้ pagination อีก */
-  margin-bottom: 20px;
+  /* margin-bottom: 20px; */
 }
 
 /* --- Filter Section --- */
@@ -88,7 +87,7 @@
     minmax(35px, 0.4fr)  /* No. */
     minmax(70px, 0.8fr)  /* รหัส */
     minmax(60px, 0.6fr)  /* รูปภาพ */
-    minmax(160px, 2.5fr) /* รายการ */
+    minmax(160px, 1.5fr) /* รายการ */
     minmax(100px, 1.2fr) /* หมวดหมู่ */
     minmax(60px, 0.7fr)  /* คงเหลือ */
     minmax(60px, 0.7fr)  /* หน่วย */

@@ -1,35 +1,212 @@
-/* fonts.css หรือ global.css: import font Sarabun */
-/* @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap'); */
+/* page.module.css */
 
-/* โดยรวม */
+/* --- General Styling --- */
 .container {
-    max-width: 1200px;
-    margin: 40px auto;
-    padding: 20px;
-    font-family: 'Sarabun', sans-serif; /* ใช้ font ที่คุณเลือก */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     color: #333;
-    animation: fadeIn 0.5s ease-out; /* เพิ่ม animation */
+    background-color: #f0f2f5;
+    min-height: 100%;
 }
 
 .heading {
     text-align: center;
-    color: #2c3e50;
-    margin-bottom: 30px;
-    font-size: 2.2em;
+    color: #1e3a8a;
+    margin: 20 0 0 0px;
+    font-size: 2rem;
     font-weight: 700;
 }
 
-/* Card / Wrapper สำหรับเนื้อหา */
+/* --- Main Card --- */
 .card {
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-    padding: 25px;
-    margin-top: 25px;
-    position: relative; /* สำหรับ overlay loading */
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    position: relative;
+    height: 100%;
 }
 
-/* Overlay Loading สำหรับตาราง */
+/* --- Controls and Filters (ภายใน Card) --- */
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 24px;
+    align-items: center;
+    justify-content: flex-start;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.filterGroup {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filterLabel {
+    font-weight: 600;
+    color: #4a5568;
+}
+
+.searchInput,
+.typeSelect {
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 1rem;
+    color: #4a5568;
+    background-color: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.searchInput:focus,
+.typeSelect:focus {
+    border-color: #4c51bf;
+    box-shadow: 0 0 0 3px rgba(76, 81, 191, 0.2);
+    outline: none;
+}
+
+.clearBtn {
+    padding: 10px 16px;
+    border: none;
+    background-color: #e53e3e;
+    color: #fff;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.clearBtn:hover {
+    background-color: #c53030;
+}
+
+/* --- Table --- */
+.tableWrapper {
+    overflow-x: auto;
+    height: 100%;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table thead {
+    background-color: #1e3a8a;
+    color: #fff;
+    white-space: nowrap;
+}
+
+.table th,
+.table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.table tbody tr:hover {
+    background-color: #f7fafc;
+}
+
+.sortableHeader {
+    cursor: pointer;
+    user-select: none;
+}
+
+.detailButton {
+    padding: 6px 12px;
+    background-color: #4c51bf;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+.detailButton:hover {
+    background-color: #434190;
+}
+
+.rowWithData, .emptyRowPlaceholder {
+    height: 54px;
+}
+
+.emptyRowPlaceholder td {
+    height: 54px;
+    padding: 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.noDataRow td {
+    text-align: center;
+    font-style: italic;
+    color: #718096;
+    padding: 20px;
+    height: 54px;
+}
+
+/* --- Pagination --- */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 24px;
+    padding-bottom: 24px;
+    gap: 8px;
+}
+
+.paginationBtn {
+    padding: 8px 16px;
+    border: 1px solid #e2e8f0;
+    background-color: #fff;
+    color: #4a5568;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.paginationBtn:hover:not(:disabled) {
+    background-color: #e2e8f0;
+}
+
+.paginationBtn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.activePage {
+    background-color: #4c51bf;
+    color: #fff;
+    border-color: #4c51bf;
+}
+
+/* --- Loading and Error States --- */
+.loadingContainer, .errorContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    font-size: 1.2rem;
+    color: #4a5568;
+}
+
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #4c51bf;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
 .tableLoadingOverlay {
     position: absolute;
     top: 0;
@@ -38,302 +215,174 @@
     bottom: 0;
     background-color: rgba(255, 255, 255, 0.7);
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     z-index: 10;
-    border-radius: 12px;
 }
 
-/* ส่วนควบคุม (Filters, Search, Buttons) */
-.controls {
+/* --- Modal Styling --- */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
     display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 25px;
-    padding: 15px 25px;
-    background-color: #f8f9fa;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    align-items: flex-end;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    overflow-y: auto;
+    padding: 20px;
 }
 
-.filterGroup {
+.modalContent {
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 900px; /* ขยายความกว้างสูงสุดเป็น 900px */
+    max-height: 90vh;
+    overflow-y: hidden;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 0.3s ease-out;
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
-    min-width: 180px;
 }
 
-.filterLabel {
-    font-size: 0.9em;
-    color: #555;
-    margin-bottom: 5px;
-    font-weight: 600;
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.searchInput,
-.typeSelect {
-    padding: 10px 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 1em;
-    width: 100%;
-    box-sizing: border-box;
-    transition: border-color 0.3s, box-shadow 0.3s;
-}
-
-.searchInput:focus,
-.typeSelect:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
-    outline: none;
-}
-
-.clearBtn {
-    padding: 10px 20px;
-    background-color: #6c757d;
-    color: white;
-    border: none;
-    border-radius: 8px;
+.closeButton {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 2rem;
+    font-weight: 300;
     cursor: pointer;
-    font-size: 1em;
-    font-weight: 500;
-    transition: background-color 0.3s ease;
-    align-self: flex-end;
-    flex-shrink: 0; /* ป้องกันการหดตัว */
+    color: #a0aec0;
+    transition: color 0.2s;
 }
 
-.clearBtn:hover {
-    background-color: #5a6268;
+.closeButton:hover {
+    color: #e53e3e;
 }
 
-/* ตาราง */
-.tableWrapper {
-    overflow-x: auto; /* ทำให้ตาราง scroll ได้แนวนอนถ้าเนื้อหาเกิน */
+.modalContent h3 {
+    color: #1e3a8a;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 8px;
 }
 
-.table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    font-size: 0.95em;
-    min-width: 900px; /* กำหนดขั้นต่ำ */
+.modalContent p {
+    margin: 12px 0;
+    font-size: 1.1rem;
+    color: #4a5568;
+}
+.modalDetailsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
 }
 
-.table th,
-.table td {
-    padding: 15px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
-
-.table th {
-    background-color: #e9ecef;
-    color: #495057;
+.modalDetailsHeader h4 {
+    font-size: 1.2rem;
+    color: #2d3748;
     font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.9em;
+}
+
+.modalInfoGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.modalInfoItem {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.modalInfoItem:last-child {
+    border-bottom: none;
+}
+
+.modalInfoItem span:first-child {
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.modalDetailsSection {
+    margin-top: 30px;
+    flex-grow: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.detailsTableWrapper {
+    flex-grow: 1;
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.detailTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.detailTable thead {
+    background-color: #f7fafc;
+    color: #4a5568;
+    font-weight: 600;
     position: sticky;
     top: 0;
     z-index: 1;
 }
 
-.table tr:hover {
-    background-color: #f8f9fa;
+.detailTable th,
+.detailTable td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
 }
 
-.sortableHeader {
-    cursor: pointer;
-    user-select: none;
-    transition: color 0.2s ease;
+.detailTable tbody tr:last-child td {
+    border-bottom: none;
 }
 
-.sortableHeader:hover {
-    color: #007bff;
+/* Responsive adjustments */
+@media (max-width: 900px) {
+    .modalContent {
+        max-width: 95%;
+        padding: 30px;
+    }
 }
-
-/* สถานะ (Status Badge) - สำคัญมากสำหรับการแยกแยะด้วยสายตา */
-.statusBadge {
-    display: inline-block;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.85em;
-    font-weight: 700;
-    text-align: center;
-    min-width: 90px;
-}
-
-/* กำหนดสีตามสถานะ */
-.status-pending { background-color: #ffc107; color: #343a40; } /* เหลือง - รอดำเนินการ */
-.status-approved { background-color: #28a745; color: white; } /* เขียว - อนุมัติ */
-.status-rejected { background-color: #dc3545; color: white; } /* แดง - ปฏิเสธ */
-.status-completed { background-color: #6f42c1; color: white; } /* ม่วง - เสร็จสิ้น */
-.status-issued { background-color: #007bff; color: white; } /* น้ำเงิน - เบิกจ่ายแล้ว */
-.status-returned { background-color: #17a2b8; color: white; } /* ฟ้าอมเขียว - คืนแล้ว */
-.status-waiting_approval { background-color: #fd7e14; color: white; } /* ส้ม - รออนุมัติ */
-.status-approved_all { background-color: #28a745; color: white; } /* เขียว - อนุมัติทั้งหมด */
-.status-rejected_all { background-color: #dc3545; color: white; } /* แดง - ปฏิเสธทั้งหมด */
-.status-approved_partial { background-color: #ffc107; color: #343a40; } /* เหลืองเข้ม - อนุมัติบางส่วน */
-.status-rejected_partial { background-color: #6c757d; color: white; } /* เทาเข้ม - ปฏิเสธบางส่วน */
-.status-cancelled { background-color: #6c757d; color: white; } /* เทา - ยกเลิก */
-.status-preparing { background-color: #20c997; color: white; } /* เขียวมินต์ - กำลังจัดเตรียม */
-.status-delivering { background-color: #17a2b8; color: white; } /* ฟ้า - กำลังจัดส่ง */
-.status-unknown { background-color: #6c757d; color: white; } /* เทา - ไม่ระบุ */
-
-
-.emptyRow td {
-    text-align: center;
-    color: #6c757d;
-    font-style: italic;
-    padding: 20px;
-}
-
-/* Pagination */
-.pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 30px;
-    gap: 8px;
-}
-
-.paginationBtn {
-    padding: 10px 18px;
-    background-color: #e9ecef;
-    color: #333;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-.paginationBtn:hover:not(:disabled) {
-    background-color: #dee2e6;
-    border-color: #c1c6cb;
-}
-
-.paginationBtn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    background-color: #f2f2f2;
-}
-
-.activePage {
-    background-color: #007bff;
-    color: white;
-    border-color: #007bff;
-    font-weight: 600;
-}
-
-.activePage:hover {
-    background-color: #0056b3;
-    border-color: #0056b3;
-}
-
-/* Loading & Error */
-.loadingContainer,
-.errorContainer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 400px;
-    text-align: center;
-    font-size: 1.2em;
-    color: #555;
-}
-
-.spinner {
-    border: 4px solid rgba(0, 0, 0, 0.1);
-    border-left-color: #007bff;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-    margin-bottom: 15px;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.loading {
-    color: #007bff;
-    font-weight: 600;
-}
-
-.errorContainer {
-    color: #dc3545;
-}
-
-.retryBtn {
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1em;
-    margin-top: 20px;
-    transition: background-color 0.3s ease;
-}
-
-.retryBtn:hover {
-    background-color: #0056b3;
-}
-
-/* Animation */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Responsive Design */
 @media (max-width: 768px) {
-    .container {
-        padding: 15px;
-        margin: 20px auto;
-    }
-
-    .heading {
-        font-size: 1.8em;
-    }
-
-    .controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .filterGroup {
-        min-width: unset;
-        width: 100%;
-    }
-
-    .clearBtn {
-        width: 100%;
-        align-self: stretch;
-    }
-
-    .table th,
-    .table td {
+    .modal {
         padding: 10px;
-        font-size: 0.9em;
     }
-
-    .table {
-        min-width: 600px; /* อาจจะต้องลองปรับตามเนื้อหาจริง */
+    .modalContent {
+        padding: 20px;
     }
-
-    .paginationBtn {
-        padding: 8px 15px;
-        font-size: 0.9em;
+    .modalContent h3 {
+        font-size: 1.5rem;
     }
-
-    .statusBadge {
-        padding: 4px 8px;
-        font-size: 0.8em;
-        min-width: 70px;
+    .modalContent p {
+        font-size: 1rem;
     }
 }

@@ -57,7 +57,7 @@ export default function InventoryCheck() {
     const matchStorage = selectedStorage ? item.item_location === selectedStorage : true;
     const matchSearchText = searchText
       ? item.item_name.toLowerCase().includes(searchText.toLowerCase()) ||
-        getItemCode(item).toLowerCase().includes(searchText.toLowerCase())
+      getItemCode(item).toLowerCase().includes(searchText.toLowerCase())
       : true;
     return matchCategory && matchUnit && matchStorage && matchSearchText;
   });
@@ -84,10 +84,9 @@ export default function InventoryCheck() {
   return (
     <div className={styles.mainHome}>
       {/* เพิ่มส่วน Page Title แบบข้อความธรรมดา */}
-      <h1 className={styles.pageTitle}>ตรวจสอบยอดคงคลัง</h1>
-
       {/* Wrapper สำหรับเนื้อหาหลัก (Filter + Table + Pagination) */}
       <div className={styles.contentWrapper}>
+        <h1 className={styles.pageTitle}>ตรวจสอบยอดคงคลัง</h1>
         {/* ตัวกรอง */}
         <div className={styles.filterContainer}>
           <div className={styles.filterGroup}>

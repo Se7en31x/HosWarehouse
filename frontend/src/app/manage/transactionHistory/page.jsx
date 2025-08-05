@@ -1,96 +1,233 @@
 'use client';
-
-import { useEffect, useState, useCallback } from 'react';
-import axiosInstance from '../../utils/axiosInstance'; // ตรวจสอบ path ให้ถูกต้อง
+import React, { useState, useEffect, useCallback } from 'react';
 import Swal from 'sweetalert2';
-import styles from './page.module.css'; // ตรวจสอบชื่อไฟล์ CSS
+import styles from './page.module.css';
+import axiosInstance from '@/app/utils/axiosInstance';
 
-// ฟังก์ชันสำหรับแปลสถานะ
-const translateStatus = (status) => {
-    const map = {
-        pending: 'รอดำเนินการ',
-        approved: 'อนุมัติ',
-        rejected: 'ปฏิเสธ',
-        completed: 'เสร็จสิ้น',
-        issued: 'เบิกจ่ายแล้ว',
-        returned: 'คืนแล้ว',
-        waiting_approval: 'รออนุมัติ',
-        waiting_approval_detail: 'รออนุมัติรายละเอียด', // **ปรับปรุง: เพิ่มคำแปลสถานะนี้**
-        approved_all: 'อนุมัติทั้งหมด',
-        rejected_all: 'ปฏิเสธทั้งหมด',
-        approved_partial: 'อนุมัติบางส่วน',
-        rejected_partial: 'ปฏิเสธบางส่วน',
-        cancelled: 'ยกเลิก',
-        preparing: 'กำลังจัดเตรียม',
-        delivering: 'กำลังจัดส่ง',
-        unknown: 'ไม่ระบุ',
+// --- ฟังก์ชันช่วยเหลือ (Utility Functions) ---
+const translateType = (type) => {
+    const translations = {
+        'เบิก': 'เบิก',
+        'ยืม': 'ยืม',
+        'คืน': 'คืน',
+        'เพิ่ม/นำเข้า': 'เพิ่ม/นำเข้า',
+        'ปรับปรุงสต็อก': 'ปรับปรุงสต็อก',
+        'โอนย้าย': 'โอนย้าย',
+        'ยกเลิก/ชำรุด': 'ยกเลิก/ชำรุด',
+        'การเปลี่ยนสถานะอนุมัติ': 'เปลี่ยนสถานะอนุมัติ',
+        'การเปลี่ยนสถานะดำเนินการ': 'เปลี่ยนสถานะดำเนินการ',
     };
-    return map[status] || status;
+    return translations[type] || type;
 };
 
+const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return '-';
+        return date.toLocaleString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Bangkok' });
+    } catch (e) {
+        return '-';
+    }
+};
+
+// --- Component ย่อยสำหรับแสดงรายละเอียดใน Modal ---
+const DetailsTable = ({ headers, data, renderRow }) => (
+    <div className={styles.detailsTableWrapper}>
+        <table className={styles.detailTable}>
+            <thead>
+                <tr>
+                    {headers.map((header, i) => <th key={i}>{header}</th>)}
+                </tr>
+            </thead>
+            <tbody>
+                {data.map(renderRow)}
+            </tbody>
+        </table>
+    </div>
+);
+
+const WithdrawalAndBorrowDetails = ({ details }) => (
+    <div>
+        <h4>รายการย่อย:</h4>
+        <DetailsTable
+            headers={['ชื่อ', 'จำนวน', 'จำนวนที่อนุมัติ', 'หน่วย', 'สถานะย่อย']}
+            data={details}
+            renderRow={(d, i) => (
+                <tr key={i}>
+                    <td>{d.item_name}</td>
+                    <td>{d.requested_qty}</td>
+                    <td>{d.approved_qty || '-'}</td>
+                    <td>{d.item_unit || '-'}</td>
+                    <td>{d.processing_status || d.approval_status || '-'}</td>
+                </tr>
+            )}
+        />
+    </div>
+);
+
+const ImportDetails = ({ details }) => (
+    <div>
+        <h4>รายการนำเข้า:</h4>
+        <DetailsTable
+            headers={['เวชภัณฑ์/อุปกรณ์', 'จำนวน', 'ราคา/หน่วย', 'หมายเหตุ']}
+            data={details}
+            renderRow={(d, i) => (
+                <tr key={i}>
+                    <td>{d.item_name}</td>
+                    <td>{d.import_qty} {d.item_unit}</td>
+                    <td>{d.import_price ? `฿${d.import_price.toFixed(2)}` : '-'}</td>
+                    <td>{d.import_note || '-'}</td>
+                </tr>
+            )}
+        />
+    </div>
+);
+
+const StockAdjustmentDetails = ({ details }) => (
+    <div>
+        <h4>รายละเอียดการปรับปรุงสต็อก:</h4>
+        <DetailsTable
+            headers={['เวชภัณฑ์/อุปกรณ์', 'จำนวนที่ปรับ', 'หน่วย', 'หมายเหตุ']}
+            data={details}
+            renderRow={(d, i) => (
+                <tr key={i}>
+                    <td>{d.item_name}</td>
+                    <td>{d.move_qty} {d.item_unit}</td>
+                    <td>{d.note || '-'}</td>
+                </tr>
+            )}
+        />
+    </div>
+);
+
+const TransferDetails = ({ details }) => (
+    <div>
+        <h4>รายการโอนย้าย:</h4>
+        <DetailsTable
+            headers={['เวชภัณฑ์/อุปกรณ์', 'จำนวน', 'หน่วย', 'หมายเหตุ']}
+            data={details}
+            renderRow={(d, i) => (
+                <tr key={i}>
+                    <td>{d.item_name}</td>
+                    <td>{d.move_qty} {d.item_unit}</td>
+                    <td>{d.note || '-'}</td>
+                </tr>
+            )}
+        />
+    </div>
+);
+
+const ReturnDetails = ({ details }) => (
+    <div>
+        <h4>รายการคืน:</h4>
+        <DetailsTable
+            headers={['เวชภัณฑ์/อุปกรณ์', 'จำนวน', 'สถานะ', 'หมายเหตุ']}
+            data={details}
+            renderRow={(d, i) => (
+                <tr key={i}>
+                    <td>{d.item_name}</td>
+                    <td>{d.return_qty} {d.item_unit}</td>
+                    <td>{d.return_status || '-'}</td>
+                    <td>{d.return_note || '-'}</td>
+                </tr>
+            )}
+        />
+    </div>
+);
+
+const CancelAndDamageDetails = ({ details }) => (
+    <div>
+        <h4>รายการที่ถูกยกเลิก/ชำรุด:</h4>
+        <DetailsTable
+            headers={['เวชภัณฑ์/อุปกรณ์', 'จำนวน', 'หน่วย', 'เหตุผล']}
+            data={details}
+            renderRow={(d, i) => (
+                <tr key={i}>
+                    <td>{d.item_name}</td>
+                    <td>{d.move_qty} {d.item_unit}</td>
+                    <td>{d.note || '-'}</td>
+                </tr>
+            )}
+        />
+    </div>
+);
+
+const ApprovalStatusChangeDetails = ({ details }) => (
+    <div>
+        <p><strong>คำขอ:</strong> {details[0]?.request_code}</p>
+        <p><strong>สถานะเดิม:</strong> {details[0]?.old_status}</p>
+        <p><strong>สถานะใหม่:</strong> {details[0]?.new_status}</p>
+        <p><strong>หมายเหตุ:</strong> {details[0]?.note || '-'}</p>
+    </div>
+);
+
+const OperationStatusChangeDetails = ({ details }) => (
+    <div>
+        <p><strong>คำขอ:</strong> {details[0]?.request_code}</p>
+        <p><strong>สถานะดำเนินการเดิม:</strong> {details[0]?.old_processing_status}</p>
+        <p><strong>สถานะดำเนินการใหม่:</strong> {details[0]?.new_processing_status}</p>
+        <p><strong>รายละเอียดการดำเนินการ:</strong> {details[0]?.description || '-'}</p>
+        <p><strong>หมายเหตุ:</strong> {details[0]?.note || '-'}</p>
+    </div>
+);
+
+
+// --- Main Component ---
 export default function TransactionHistoryLogPage() {
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [filterStatus, setFilterStatus] = useState('');
+    const [filterType, setFilterType] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
-    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(''); // **ปรับปรุง: เพิ่ม debouncedSearchTerm**
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [sortColumn, setSortColumn] = useState('changed_at');
+    const [sortColumn, setSortColumn] = useState('timestamp');
     const [sortOrder, setSortOrder] = useState('desc');
     const [isFetching, setIsFetching] = useState(false);
-
+    const [selectedTransaction, setSelectedTransaction] = useState(null);
     const logsPerPage = 10;
 
-    // **ปรับปรุง: useEffect สำหรับ Debounce Search Term**
     useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedSearchTerm(searchTerm);
-        }, 500); // 500ms debounce delay
-
-        return () => {
-            clearTimeout(handler);
-        };
+        const handler = setTimeout(() => setDebouncedSearchTerm(searchTerm), 500);
+        return () => clearTimeout(handler);
     }, [searchTerm]);
-
 
     const fetchHistoryLogs = useCallback(async () => {
         setIsFetching(true);
         setError(null);
         try {
-            const res = await axiosInstance.get('/transactionHistory', {
+            const response = await axiosInstance.get('/transaction-history', {
                 params: {
                     page: currentPage,
                     limit: logsPerPage,
-                    status: filterStatus || undefined,
-                    search: debouncedSearchTerm || undefined, // **ปรับปรุง: ใช้ debouncedSearchTerm**
-                    sort: sortColumn,
-                    order: sortOrder,
+                    type: filterType,
+                    search: debouncedSearchTerm,
+                    sort_by: sortColumn,
+                    sort_order: sortOrder,
                 },
             });
 
-            const fetchedLogs = Array.isArray(res.data.logs) ? res.data.logs : [];
-            const pages = Number(res.data.totalPages) || 1;
-
-            setLogs(fetchedLogs);
-            setTotalPages(pages);
+            const { data, total_pages, total_count } = response.data;
+            setLogs(data);
+            setTotalPages(total_pages);
         } catch (err) {
             console.error('Fetch error:', err);
-            setError('ไม่สามารถโหลดประวัติการเปลี่ยนแปลงสถานะได้');
-            Swal.fire('เกิดข้อผิดพลาด', err.response?.data?.message || err.message, 'error');
+            setError('ไม่สามารถโหลดประวัติการทำรายการได้');
+            Swal.fire('เกิดข้อผิดพลาด', err.message, 'error');
         } finally {
             setLoading(false);
             setIsFetching(false);
         }
-    }, [currentPage, filterStatus, debouncedSearchTerm, sortColumn, sortOrder, logsPerPage]); // **ปรับปรุง: เพิ่ม debouncedSearchTerm ใน dependency array**
+    }, [currentPage, filterType, debouncedSearchTerm, sortColumn, sortOrder, logsPerPage]);
 
     useEffect(() => {
         fetchHistoryLogs();
     }, [fetchHistoryLogs]);
 
     const handleFilterChange = (e) => {
-        setFilterStatus(e.target.value);
+        setFilterType(e.target.value);
         setCurrentPage(1);
     };
 
@@ -100,20 +237,27 @@ export default function TransactionHistoryLogPage() {
     };
 
     const handleSort = (column) => {
-        if (sortColumn === column) {
+        // Map frontend sort columns to backend database columns
+        const backendColumn = {
+            'timestamp': 'timestamp',
+            'type': 'type',
+            'user': 'user_name', // Corrected to match the backend query
+        }[column] || 'timestamp';
+
+        if (sortColumn === backendColumn) {
             setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
         } else {
-            setSortColumn(column);
+            setSortColumn(backendColumn);
             setSortOrder('asc');
         }
         setCurrentPage(1);
     };
 
     const handleClearFilters = () => {
-        setFilterStatus('');
+        setFilterType('');
         setSearchTerm('');
-        setDebouncedSearchTerm(''); // **ปรับปรุง: เคลียร์ debouncedSearchTerm ด้วย**
-        setSortColumn('changed_at');
+        setDebouncedSearchTerm('');
+        setSortColumn('timestamp');
         setSortOrder('desc');
         setCurrentPage(1);
     };
@@ -132,28 +276,32 @@ export default function TransactionHistoryLogPage() {
         if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
     };
 
-    const formatDate = (dateStr) => {
-        if (!dateStr) return '-';
-        try {
-            const date = new Date(dateStr);
-            // **ปรับปรุง: ตรวจสอบความถูกต้องของ Date object**
-            if (isNaN(date.getTime())) {
-                console.error("formatDate: Invalid date string detected, NaN date:", dateStr);
-                return '-';
-            }
-            return date.toLocaleString('th-TH', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false,
-                timeZone: 'Asia/Bangkok'
-            });
-        } catch (e) {
-            console.error("formatDate: Error processing date string:", dateStr, e);
-            return '-';
+    const handleRowClick = (transaction) => {
+        setSelectedTransaction(transaction);
+    };
+
+    const renderDetails = (transaction) => {
+        // ใช้ switch-case ที่ปรับให้เข้ากับประเภทและโครงสร้างข้อมูลจาก API
+        switch (transaction.type) {
+            case 'เบิก':
+            case 'ยืม':
+                return <WithdrawalAndBorrowDetails details={transaction.details} />;
+            case 'เพิ่ม/นำเข้า':
+                return <ImportDetails details={transaction.details} />;
+            case 'คืน':
+                return <ReturnDetails details={transaction.details} />;
+            case 'ปรับปรุงสต็อก':
+                return <StockAdjustmentDetails details={transaction.details} />;
+            case 'โอนย้าย':
+                return <TransferDetails details={transaction.details} />;
+            case 'ยกเลิก/ชำรุด':
+                return <CancelAndDamageDetails details={transaction.details} />;
+            case 'การเปลี่ยนสถานะอนุมัติ':
+                return <ApprovalStatusChangeDetails details={transaction.details} />;
+            case 'การเปลี่ยนสถานะดำเนินการ':
+                return <OperationStatusChangeDetails details={transaction.details} />;
+            default:
+                return <p>ไม่มีข้อมูลรายละเอียดสำหรับประเภทนี้</p>;
         }
     };
 
@@ -166,7 +314,7 @@ export default function TransactionHistoryLogPage() {
         return (
             <div className={styles.loadingContainer}>
                 <div className={styles.spinner}></div>
-                <p className={styles.loading}>กำลังโหลดประวัติการเปลี่ยนแปลงสถานะ...</p>
+                <p className={styles.loading}>กำลังโหลดประวัติการทำรายการ...</p>
             </div>
         );
     }
@@ -184,54 +332,45 @@ export default function TransactionHistoryLogPage() {
 
     return (
         <div className={styles.container}>
-            <h1 className={styles.heading}>ประวัติการเปลี่ยนสถานะของคำขอ</h1>
-
-            <div className={styles.controls}>
-                <div className={styles.filterGroup}>
-                    <label htmlFor="search-input" className={styles.filterLabel}>ค้นหา:</label>
-                    <input
-                        id="search-input"
-                        type="text"
-                        placeholder="รหัสคำขอ, ผู้เปลี่ยน, หมายเหตุ..."
-                        value={searchTerm}
-                        onChange={handleSearchChange}
-                        className={styles.searchInput}
-                    />
-                </div>
-
-                <div className={styles.filterGroup}>
-                    <label htmlFor="filter-status" className={styles.filterLabel}>กรองสถานะ:</label>
-                    <select
-                        id="filter-status"
-                        value={filterStatus}
-                        onChange={handleFilterChange}
-                        className={styles.typeSelect}
-                    >
-                        <option value="">-- แสดงทั้งหมด --</option>
-                        <option value="pending">รอดำเนินการ</option>
-                        <option value="waiting_approval">รออนุมัติ</option>
-                        <option value="waiting_approval_detail">รออนุมัติรายละเอียด</option> {/* **ปรับปรุง: เพิ่ม option นี้** */}
-                        <option value="approved">อนุมัติ</option>
-                        <option value="approved_all">อนุมัติทั้งหมด</option>
-                        <option value="approved_partial">อนุมัติบางส่วน</option>
-                        <option value="rejected">ปฏิเสธ</option>
-                        <option value="rejected_all">ปฏิเสธทั้งหมด</option>
-                        <option value="rejected_partial">ปฏิเสธบางส่วน</option>
-                        <option value="issued">เบิกจ่ายแล้ว</option>
-                        <option value="returned">คืนแล้ว</option>
-                        <option value="completed">เสร็จสิ้น</option>
-                        <option value="cancelled">ยกเลิก</option>
-                        <option value="preparing">กำลังจัดเตรียม</option>
-                        <option value="delivering">กำลังจัดส่ง</option>
-                    </select>
-                </div>
-
-                <button onClick={handleClearFilters} className={styles.clearBtn}>
-                    ล้างตัวกรอง
-                </button>
-            </div>
-
             <div className={styles.card}>
+                <h1 className={styles.heading}>ประวัติการทำรายการทั้งหมด</h1>
+                <div className={styles.controls}>
+                    <div className={styles.filterGroup}>
+                        <label htmlFor="search-input" className={styles.filterLabel}>ค้นหา:</label>
+                        <input
+                            id="search-input"
+                            type="text"
+                            placeholder="ผู้ทำรายการ..."
+                            value={searchTerm}
+                            onChange={handleSearchChange}
+                            className={styles.searchInput}
+                        />
+                    </div>
+                    <div className={styles.filterGroup}>
+                        <label htmlFor="filter-type" className={styles.filterLabel}>กรองประเภท:</label>
+                        <select
+                            id="filter-type"
+                            value={filterType}
+                            onChange={handleFilterChange}
+                            className={styles.typeSelect}
+                        >
+                            <option value="">-- แสดงทั้งหมด --</option>
+                            <option value="เบิก">เบิก</option>
+                            <option value="ยืม">ยืม</option>
+                            <option value="คืน">คืน</option>
+                            <option value="เพิ่ม/นำเข้า">เพิ่ม/นำเข้า</option>
+                            <option value="ปรับปรุงสต็อก">ปรับปรุงสต็อก</option>
+                            <option value="โอนย้าย">โอนย้าย</option>
+                            <option value="ยกเลิก/ชำรุด">ยกเลิก/ชำรุด</option>
+                            <option value="การเปลี่ยนสถานะอนุมัติ">เปลี่ยนสถานะอนุมัติ</option>
+                            <option value="การเปลี่ยนสถานะดำเนินการ">เปลี่ยนสถานะดำเนินการ</option>
+                        </select>
+                    </div>
+                    <button onClick={handleClearFilters} className={styles.clearBtn}>
+                        ล้างตัวกรอง
+                    </button>
+                </div>
+
                 {isFetching && (
                     <div className={styles.tableLoadingOverlay}>
                         <div className={styles.spinner}></div>
@@ -241,49 +380,45 @@ export default function TransactionHistoryLogPage() {
                     <table className={styles.table}>
                         <thead>
                             <tr>
-                                <th onClick={() => handleSort('changed_at')} className={styles.sortableHeader}>
-                                    วันที่เปลี่ยน {sortColumn === 'changed_at' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                <th onClick={() => handleSort('timestamp')} className={styles.sortableHeader}>
+                                    วันที่และเวลา {sortColumn === 'timestamp' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
-                                <th onClick={() => handleSort('request_code')} className={styles.sortableHeader}> {/* **ปรับปรุง: เปลี่ยน sort column เป็น request_code** */}
-                                    รหัสคำขอ {sortColumn === 'request_code' && (sortOrder === 'asc' ? '↑' : '↓')} {/* **ปรับปรุง: เปลี่ยน sort column เป็น request_code** */}
+                                <th onClick={() => handleSort('type')} className={styles.sortableHeader}>
+                                    ประเภท {sortColumn === 'type' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
-                                <th>จากสถานะ</th>
-                                <th>เป็นสถานะ</th>
-                                <th onClick={() => handleSort('changed_by')} className={styles.sortableHeader}>
-                                    ผู้เปลี่ยน {sortColumn === 'changed_by' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                <th onClick={() => handleSort('user')} className={styles.sortableHeader}>
+                                    ผู้ทำรายการ {sortColumn === 'user_name' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
-                                <th>หมายเหตุ</th>
+                                <th>การดำเนินการ</th>
                             </tr>
                         </thead>
                         <tbody>
                             {displayLogs.map((log, index) => {
-                                const isEmpty = !log.history_id;
+                                const isEmpty = !log.id;
                                 return (
-                                    <tr key={log.history_id || `${log.request_id || 'no_req'}-${log.changed_at || 'no_date'}-${index}`}>
-                                        <td>{isEmpty ? '' : formatDate(log.changed_at)}</td>
-                                        <td>{isEmpty ? '' : log.request_code || log.request_id || '-'}</td> {/* **ปรับปรุง: แสดง request_code ก่อน ถ้าไม่มีค่อยใช้ request_id** */}
+                                    <tr
+                                        key={log.id || `empty-${index}`}
+                                        className={!isEmpty ? styles.rowWithData : styles.emptyRowPlaceholder}
+                                    >
+                                        <td>{isEmpty ? '' : formatDate(log.timestamp)}</td>
+                                        <td>{isEmpty ? '' : translateType(log.type)}</td>
+                                        <td>{isEmpty ? '' : log.user_name || '-'}</td>
                                         <td>
-                                            {isEmpty ? '' : (
-                                                <span className={`${styles.statusBadge} ${styles[`status-${log.old_status}`]}`}>
-                                                    {translateStatus(log.old_status)}
-                                                </span>
+                                            {!isEmpty && (
+                                                <button
+                                                    onClick={() => handleRowClick(log)}
+                                                    className={styles.detailButton}
+                                                >
+                                                    ดูรายละเอียด
+                                                </button>
                                             )}
                                         </td>
-                                        <td>
-                                            {isEmpty ? '' : (
-                                                <span className={`${styles.statusBadge} ${styles[`status-${log.new_status}`]}`}>
-                                                    {translateStatus(log.new_status)}
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td>{isEmpty ? '' : (log.user_name || (log.user_fname && log.user_lname ? `${log.user_fname} ${log.user_lname}` : log.changed_by || '-'))}</td>
-                                        <td>{isEmpty ? '' : log.note || '-'}</td>
                                     </tr>
                                 );
                             })}
                             {logs.length === 0 && !loading && !error && (
-                                <tr>
-                                    <td colSpan="6" className={styles.emptyRow}>
+                                <tr className={styles.noDataRow}>
+                                    <td colSpan="4">
                                         ไม่พบข้อมูลประวัติ
                                     </td>
                                 </tr>
@@ -291,25 +426,39 @@ export default function TransactionHistoryLogPage() {
                         </tbody>
                     </table>
                 </div>
+                {totalPages > 0 && (
+                    <div className={styles.pagination}>
+                        <button onClick={handlePrev} disabled={currentPage === 1} className={styles.paginationBtn}>
+                            « ก่อนหน้า
+                        </button>
+                        {Array.from({ length: totalPages }, (_, i) => (
+                            <button
+                                key={i}
+                                className={`${styles.paginationBtn} ${currentPage === i + 1 ? styles.activePage : ''}`}
+                                onClick={() => handlePageChange(i + 1)}
+                            >
+                                {i + 1}
+                            </button>
+                        ))}
+                        <button onClick={handleNext} disabled={currentPage === totalPages} className={styles.paginationBtn}>
+                            ถัดไป »
+                        </button>
+                    </div>
+                )}
             </div>
 
-            {totalPages > 0 && (
-                <div className={styles.pagination}>
-                    <button onClick={handlePrev} disabled={currentPage === 1} className={styles.paginationBtn}>
-                        « ก่อนหน้า
-                    </button>
-                    {Array.from({ length: totalPages }, (_, i) => (
-                        <button
-                            key={i}
-                            className={`${styles.paginationBtn} ${currentPage === i + 1 ? styles.activePage : ''}`}
-                            onClick={() => handlePageChange(i + 1)}
-                        >
-                            {i + 1}
-                        </button>
-                    ))}
-                    <button onClick={handleNext} disabled={currentPage === totalPages} className={styles.paginationBtn}>
-                        ถัดไป »
-                    </button>
+            {selectedTransaction && (
+                <div className={styles.modal} onClick={() => setSelectedTransaction(null)}>
+                    <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+                        <span className={styles.closeButton} onClick={() => setSelectedTransaction(null)}>&times;</span>
+                        <h3>รายละเอียดการทำรายการ</h3>
+                        <p><strong>ประเภท:</strong> {translateType(selectedTransaction.type)}</p>
+                        <p><strong>ผู้ทำรายการ:</strong> {selectedTransaction.user_name}</p>
+                        <p><strong>วันที่และเวลา:</strong> {formatDate(selectedTransaction.timestamp)}</p>
+                        <div className={styles.modalDetailsSection}>
+                            {renderDetails(selectedTransaction)}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
