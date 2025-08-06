@@ -67,7 +67,7 @@ export default function InventoryWithdraw() {
 
     const [allItems, setAllItems] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 7;
+    const itemsPerPage = 9;
 
     const { addToCart, cartItems, clearCart, updateQuantity, updateReturnDate } = useContext(CartContext);
 
@@ -530,7 +530,7 @@ export default function InventoryWithdraw() {
                     <div className={styles.headerItem}>จำนวน</div>
                     <div className={styles.headerItem}>หน่วย</div>
                     <div className={styles.headerItem}>สถานะ</div>
-                    <div className={styles.headerItem}>สถานที่จัดเก็บ</div>
+                    {/* <div className={styles.headerItem}>สถานที่จัดเก็บ</div> */}
                     <div className={styles.headerItem}>แก้ไขล่าสุด</div>
                     <div className={styles.headerItem}>การจัดการ</div>
                 </div>
@@ -563,7 +563,7 @@ export default function InventoryWithdraw() {
                                     <div className={styles.tableCell}>{item.item_qty || 0}</div>
                                     <div className={styles.tableCell}>{item.item_unit || "-"}</div>
                                     <div className={styles.tableCell}>{item.item_status || "-"}</div>
-                                    <div className={styles.tableCell}>{item.item_location || "-"}</div>
+                                    {/* <div className={styles.tableCell}>{item.item_location || "-"}</div> */}
                                     <div className={styles.tableCell}>
                                         {item.item_update
                                             ? new Date(item.item_update).toLocaleDateString()

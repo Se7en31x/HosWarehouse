@@ -200,39 +200,68 @@
   border: 1px solid #e0e0e0;
 
   flex-grow: 1;
-  /* **สำคัญ:** ให้ tableWrapper ขยายเต็มพื้นที่ที่เหลือใน infoContainer */
   display: flex;
   flex-direction: column;
   min-height: 0;
-  /* **สำคัญ:** อนุญาตให้ flex item นี้สามารถหดตัวได้ */
+
+  /* MODIFIED: ซ่อนแถบเลื่อนแนวนอนแต่ยังเลื่อนได้ */
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 .tableGrid {
   display: grid;
-  /* ปรับ minmax และสัดส่วนคอลัมน์ให้เล็กลง และมี min-width เพื่อป้องกันการหดตัวมากเกินไป */
-  grid-template-columns: minmax(50px, 0.8fr) minmax(100px, 1.8fr) minmax(60px, 0.6fr) minmax(60px, 0.6fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(100px, 1.5fr);
-
+  /* Define grid columns based on the image and provided headers */
+  /* Adjust column widths as needed to match the image precisely */
+  grid-template-columns:
+    minmax(100px, 1fr)
+    /* หมายเลขรายการ (Order) */
+    minmax(180px, 2fr)
+    /* รายการ */
+    minmax(100px, 1fr)
+    /* จำนวน  */
+    minmax(100px, 1.5fr)
+    /* หน่วย  */
+    minmax(150px, 1.5fr)
+    /* หมวดหมู่ */
+    minmax(100px, 1fr)
+    /* สถานะ  */
+    minmax(150px, 1.5fr);
+  /* วันที่ดำเนินการ */
   align-items: center;
-  border-bottom: 1px solid #e5e7eb;
-  min-width: 700px;
-  /* ลด min-width ของตาราง */
+  padding: 0px;
+  /* Horizontal padding for the entire grid */
 }
 
 .tableHeader {
-  background-color: #e5e7eb;
-  font-size: 0.8rem;
-  /* ลด font-size ของหัวตาราง */
-  font-weight: 600;
-  color: #374151;
+  background-color: #f5f5f5;
+  /* Light grey background for header */
+  border-bottom: 1px solid #e0e0e0;
+  font-weight: 500;
+  color: #555;
+  height: 48px;
+  /* Standard height for header row */
+  font-size: 0.875rem;
+  /* 14px */
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  flex-shrink: 0;
+  letter-spacing: 0.01em;
 }
 
 .headerItem {
-  padding: 0.8rem 1.2rem;
-  /* ลด padding ของหัวตาราง */
-  text-align: left;
+  padding: 0 8px;
+  /* Padding for header cells */
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  /* Prevent text wrapping */
   overflow: hidden;
   text-overflow: ellipsis;
 }

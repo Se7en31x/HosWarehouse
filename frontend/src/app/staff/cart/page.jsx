@@ -341,19 +341,6 @@ export default function Cart() {
                 ยกเลิก
               </button>
               <button
-                className={styles.draft}
-                onClick={() =>
-                  Swal.fire({
-                    icon: 'info',
-                    title: 'ฟีเจอร์ฉบับร่าง',
-                    text: 'ยังไม่พร้อมใช้งานในขณะนี้',
-                  })
-                }
-                disabled={isSubmitting}
-              >
-                ฉบับร่าง
-              </button>
-              <button
                 className={styles.confirm}
                 onClick={handleSubmit}
                 disabled={isSubmitting || cartItems.length === 0 || !requestDate}

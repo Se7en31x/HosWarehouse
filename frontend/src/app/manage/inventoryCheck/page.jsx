@@ -1,4 +1,3 @@
-// src/app/manage/inventoryCheck/page.js
 "use client";
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
@@ -77,9 +76,21 @@ export default function InventoryCheck() {
     }
   };
 
+  // Reset page to 1 whenever filters or search text change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchText, selectedCategory, selectedUnit, selectedStorage]);
+
+  const totalPages = Math.ceil(filteredInventory.length / ITEMS_PER_PAGE);
+
+  // Function to clear all filters and search text
+  const clearFilters = () => {
+    setSearchText("");
+    setSelectedCategory("");
+    setSelectedUnit("");
+    setSelectedStorage("");
+    setCurrentPage(1); // Reset to first page after clearing filters
+  };
 
   return (
     <div className={styles.mainHome}>
@@ -131,14 +142,26 @@ export default function InventoryCheck() {
             </select>
           </div>
 
-          <div className={styles.filterGroupSearch}>
-            <input
-              type="text"
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              placeholder="ค้นหารายการ, รหัส..." /* ปรับ placeholder */
-              className={styles.filterInput}
-            />
+          <div className={styles.searchControls}>
+            <div className={styles.searchGroup}>
+              <label htmlFor="filter" className={styles.filterLabel}>
+                ค้นหา:
+              </label>
+              <input
+                type="text"
+                id="filter"
+                className={styles.searchInput}
+                value={searchText} 
+                onChange={(e) => setSearchText(e.target.value)} 
+                placeholder="ค้นหาด้วยรายการ, สถานะ..."
+              />
+            </div>
+            <button
+              onClick={clearFilters}
+              className={styles.clearButton}
+            >
+              ล้างตัวกรอง
+            </button>
           </div>
         </div>
 
@@ -146,7 +169,7 @@ export default function InventoryCheck() {
         <div className={styles.inventory}>
           {/* หัวตาราง */}
           <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
-            <div className={`${styles.headerItem} ${styles.leftAligned}`}>No.</div>
+            <div className={`${styles.headerItem} ${styles.leftAligned}`}>ลำดับ</div>
             <div className={`${styles.headerItem} ${styles.leftAligned}`}>รหัส</div>
             <div className={styles.headerItem}>รูปภาพ</div>
             <div className={`${styles.headerItem} ${styles.leftAligned}`}>รายการ</div>
@@ -209,14 +232,21 @@ export default function InventoryCheck() {
         </div>
 
         {/* ปุ่มเปลี่ยนหน้า */}
-        <div className={styles.pagination}>
-          <button className={styles.prevButton} onClick={goToPreviousPage} disabled={currentPage === 1}>
+        <div className={styles.paginationControls}>
+          <button
+            className={styles.pageButton}
+            onClick={goToPreviousPage}
+            disabled={currentPage === 1}
+          >
             หน้าก่อนหน้า
           </button>
+          <span className={styles.pageInfo}>
+            หน้า {currentPage} / {totalPages}
+          </span>
           <button
-            className={styles.nextButton}
+            className={styles.pageButton}
             onClick={goToNextPage}
-            disabled={currentPage * ITEMS_PER_PAGE >= filteredInventory.length}
+            disabled={currentPage >= totalPages}
           >
             หน้าถัดไป
           </button>
