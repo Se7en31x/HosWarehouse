@@ -1,172 +1,282 @@
+/* src/app/staff/status/page.module.css */
+
 .container {
-  width: 100vw;
-  max-width: 1200px;
-  min-height: 100vh;
-  margin: 0 auto;
-  padding: 2rem 3rem;
-  background: linear-gradient(to bottom right, #f0f4ff, #ffffff);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    padding: 2.5rem;
+    max-width: 1400px;
+    margin: 2rem auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 .header {
-  text-align: center;
-  font-size: 2.25rem;
-  font-weight: 700;
-  margin-bottom: 2.5rem;
-  color: #2c3e50;
-  user-select: none;
+    font-size: 2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 1rem;
 }
 
-.loading,
-.noData {
-  text-align: center;
-  font-size: 1.2rem;
-  color: #888;
-  user-select: none;
-}
-
-.requestsList {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+.requestList {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
 .requestCard {
-  border: 1px solid #e0e0e0;
-  border-radius: 16px;
-  padding: 2rem;
-  background: #ffffff;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background-color: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
 }
 
 .requestCard:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 25px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(-5px);
 }
 
-.requestHeader {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  font-size: 1rem;
-  margin-bottom: 1.8rem;
-  color: #34495e;
-  user-select: none;
+.cardSummary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
 }
 
-.stepTracker {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  user-select: none;
-  padding: 0 0.5rem;
+.cardHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.requestInfo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.requestID {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.statusLabel {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: white;
+    text-transform: capitalize;
+}
+
+/* Status colors */
+.statusLabel.pending {
+    background-color: #ff9800; /* Orange */
+}
+
+.statusLabel.inProgress {
+    background-color: #2196f3; /* Blue */
+}
+
+.statusLabel.completed {
+    background-color: #4caf50; /* Green */
+}
+
+.statusLabel.rejected {
+    background-color: #f44336; /* Red */
+}
+
+.metaInfo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #777;
+    font-size: 0.9rem;
+}
+
+.urgentTag {
+    background-color: #e57373;
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.typeTag {
+    background-color: #b0bec5;
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.dateInfo {
+    font-style: italic;
+    color: #999;
+}
+
+.expandIcon {
+    transition: transform 0.3s ease;
+    font-size: 1.2rem;
+    color: #555;
+}
+
+.expandIcon.expanded {
+    transform: rotate(180deg);
+}
+
+.cardDetails {
+    margin-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    padding-top: 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+/* Timeline/Stepper Styles */
+.timeline {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding-left: 20px;
+}
+
+.stepLine {
+    position: absolute;
+    width: 2px;
+    background-color: #e0e0e0;
+    top: 30px;
+    bottom: 20px;
+    left: 28px;
+}
+
+.stepLine.completed {
+    background-color: #008dda;
 }
 
 .step {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  text-align: center;
-  font-size: 0.85rem;
-  color: #bbb;
-  cursor: default;
-  padding: 0 0.5rem;
-}
-
-.step:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  top: 25%;
-  left: 50%;
-  transform: translateX(12px); /* ขยับไปทางขวานิดให้พอดีกลาง */
-  width: 100%;
-  height: 6px;
-  background-color: #ddd;
-  z-index: 0;
-  transition: background-color 0.3s ease;
-}
-
-.stepCircle {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  background-color: #ddd;
-  margin-bottom: 8px;
-  z-index: 1;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 1.1rem;
-  transition: all 0.3s ease;
-}
-
-/* Completed */
-.completed .stepCircle {
-  background-color: #2ecc71;
-  color: white;
-}
-
-.completed {
-  color: #2ecc71;
-}
-
-.completed::after {
-  background-color: #2ecc71;
-}
-
-/* Current */
-.current .stepCircle {
-  background-color: #3498db;
-  color: white;
-  box-shadow: 0 0 10px #3498dbaa;
-}
-
-.current {
-  color: #3498db;
-}
-
-.current::after {
-  background-color: #3498db;
-}
-
-/* Pending */
-.pending .stepCircle {
-  background-color: #ddd;
-  color: #aaa;
-}
-
-.pending {
-  color: #999;
-}
-
-.urgent {
-  color: #e74c3c;
-  font-weight: bold;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .container {
-    padding: 1.5rem 1rem;
-  }
-
-  .stepTracker {
-    flex-direction: column;
+    display: flex;
     align-items: flex-start;
-    gap: 1.5rem;
-  }
+    position: relative;
+    margin-bottom: 20px;
+}
 
-  .step:not(:last-child)::after {
-    display: none;
-  }
+.stepIcon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.9rem;
+    z-index: 1;
+}
 
-  .requestHeader {
+.stepIcon.completed {
+    background-color: #008dda;
+    color: white;
+}
+
+.stepIcon.rejected {
+    background-color: #f44336;
+    color: white;
+}
+
+.stepContent {
+    margin-left: 20px;
+    display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-  }
+    padding-top: 0;
+}
+
+.stepLabel {
+    font-weight: 600;
+    color: #333;
+    font-size: 1rem;
+}
+
+.stepDate {
+    font-size: 0.9rem;
+    color: #777;
+    margin-top: 5px;
+}
+
+/* Items List Styles */
+.itemsList {
+    display: flex;
+    flex-direction: column;
+}
+
+.itemsHeader {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.itemsGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.itemCard {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background-color: #ffffff;
+    padding: 0.75rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.itemImage {
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+.itemInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.itemName {
+    font-weight: 500;
+    color: #333;
+}
+
+.itemQuantity {
+    font-size: 0.9rem;
+    color: #777;
+}
+
+.noRequests {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    padding: 2rem;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+
+    .header {
+        font-size: 1.5rem;
+    }
+
+    .cardDetails {
+        grid-template-columns: 1fr;
+    }
 }

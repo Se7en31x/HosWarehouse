@@ -34,11 +34,9 @@ class RequestStatusModel {
             `;
             const requestResult = await pool.query(requestQuery, [requestId]);
             const request = requestResult.rows[0];
-
             if (!request) {
                 return null;
             }
-
             const detailsQuery = `
                 SELECT
                     rd.request_detail_id,
@@ -65,7 +63,6 @@ class RequestStatusModel {
             `;
             const detailsResult = await pool.query(detailsQuery, [requestId]);
             const details = detailsResult.rows;
-
             return { request, details };
         } catch (error) {
             console.error('Error fetching request details from DB:', error);
@@ -96,19 +93,14 @@ class RequestStatusModel {
                 JOIN
                     users u ON r.user_id = u.user_id
             `;
-
             const values = [];
-
             if (allowedStatuses && allowedStatuses.length > 0) {
                 query += ` WHERE r.request_status = ANY($1)`;
                 values.push(allowedStatuses);
             }
-
             query += ` ORDER BY r.request_date DESC`;
-
             const result = await client.query(query, values);
             return result.rows;
-
         } catch (error) {
             console.error('Error in getRequestsByStatuses:', error);
             throw error;
@@ -116,7 +108,6 @@ class RequestStatusModel {
             client.release();
         }
     }
-
 
     /**
      * อัปเดตสถานะการดำเนินการของรายการคำขอหลายรายการแบบ Batch
@@ -129,41 +120,28 @@ class RequestStatusModel {
      * @param {number} changedByUserId - ID ของผู้ใช้ที่ทำการเปลี่ยนแปลง (มาจาก Frontend)
      * @returns {Promise<void>}
      */
-    static async updateProcessingStatusbatch(requestId, updates, newOverallProcessingStatus, changedByUserId) { // <<< เพิ่ม changedByUserId ที่นี่
+    static async updateProcessingStatusbatch(requestId, updates, newOverallProcessingStatus, changedByUserId) {
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
-
             const now = moment().tz('Asia/Bangkok').format('YYYY-MM-DD HH:mm:ss.SSSSSSZ');
             for (const update of updates) {
                 const { request_detail_id, newStatus, current_approval_status } = update;
-
-                // 1. ดึงสถานะปัจจุบันของ request_details เพื่อใช้เป็น old_processing_status
-                //    และดึง item_id เพื่อนำไปดึง item_name มาสร้าง description
                 const oldDetailResult = await client.query(
                     `SELECT processing_status, item_id FROM request_details WHERE request_detail_id = $1`,
                     [request_detail_id]
                 );
-
-                // *** จุดที่ 1: แก้ไขชื่อคอลัมน์ `oldProcessingStatus` เป็น `processing_status`
                 const oldProcessingStatus = oldDetailResult.rows[0]?.processing_status || null;
                 const itemId = oldDetailResult.rows[0]?.item_id;
-
-                // 2. ดึงชื่อไอเทมสำหรับประวัติ (optional แต่ดีกว่า)
-                // *** จุดที่ 2: แก้ไขชื่อตัวแปร `requset_detail_id` เป็น `request_detail_id`
-                let itemName = `รายการ ID: ${request_detail_id}`; // ค่าเริ่มต้น
+                let itemName = `รายการ ID: ${request_detail_id}`;
                 if (itemId) {
-                    // *** จุดที่ 3: แก้ไขชื่อตาราง `item` เป็น `items`
                     const itemResult = await client.query(
                         `SELECT item_name FROM items WHERE item_id = $1`,
                         [itemId]
                     );
                     itemName = itemResult.rows[0]?.item_name || itemName;
                 }
-
-                // ตรวจสอบเงื่อนไข: เฉพาะรายการที่ถูกอนุมัติ (approved) เท่านั้นที่สามารถอัปเดต processing_status ได้
                 if (current_approval_status === 'approved') {
-                    // 3. อัปเดต request_details
                     const updateDetailQuery = `
                         UPDATE request_details
                         SET
@@ -173,11 +151,9 @@ class RequestStatusModel {
                             request_detail_id = $3;
                     `;
                     await client.query(updateDetailQuery, [newStatus, now, request_detail_id]);
-
-                    // 4. บันทึกประวัติการเปลี่ยนแปลงลงใน request_status_history
-                    const description = `Updated processing status for "${itemName}" from "${this.translateStatus(oldProcessingStatus)}" to "${this.translateStatus(newStatus)}"`; // <<< ใช้ this.translateStatus
+                    const description = `Updated processing status for "${itemName}" from "${this.translateStatus(oldProcessingStatus)}" to "${this.translateStatus(newStatus)}"`;
                     const insertHistoryQuery = `
-                        INSERT INTO request_status_history ( 
+                        INSERT INTO request_status_history (
                             request_id,
                             request_detail_id,
                             old_processing_status,
@@ -189,42 +165,83 @@ class RequestStatusModel {
                             description
                         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
                     `;
-                    // *** จุดที่ 5: แก้ไขการเรียกใช้ client.query โดยเพิ่มวงเล็บครอบ parameters
                     await client.query(insertHistoryQuery, [
                         requestId,
                         request_detail_id,
                         oldProcessingStatus,
                         newStatus,
-                        changedByUserId, // <<< ต้องมาจากพารามิเตอร์ของฟังก์ชัน
+                        changedByUserId,
                         now,
                         'PROCESSING',
                         'UPDATE_PROCESSING_STATUS',
                         description
                     ]);
-
                 } else {
                     console.warn(`Request detail ID ${request_detail_id} with approval status "${current_approval_status}" cannot have its processing_status updated. Skipping history log.`);
                 }
             }
-
-            // 5. อัปเดต overall_processing_status และ updated_by ในตาราง requests หลัก
             const updateRequestQuery = `
                 UPDATE requests
                 SET
                     overall_processing_status = $1,
                     updated_at = $2,
-                    updated_by = $3 -- เพิ่มการอัปเดตผู้ใช้งานที่แก้ไขล่าสุด
+                    updated_by = $3
                 WHERE
                     request_id = $4;
             `;
-            // *** จุดที่ 6: แก้ไขการส่งพารามิเตอร์ changedByUserId แทน requestId ตัวสุดท้าย
-            await client.query(updateRequestQuery, [newOverallProcessingStatus, now, changedByUserId, requestId]); // <<< changedByUserId ถูกส่งมาที่นี่
-
+            await client.query(updateRequestQuery, [newOverallProcessingStatus, now, changedByUserId, requestId]);
             await client.query('COMMIT');
-
         } catch (error) {
             await client.query('ROLLBACK');
-            console.error('Error in RequestStatusModel.updateProcessingStatusbatch:', error); // <<< ใช้ชื่อ Class
+            console.error('Error in RequestStatusModel.updateProcessingStatusbatch:', error);
+            throw error;
+        } finally {
+            client.release();
+        }
+    }
+
+    // เพิ่มฟังก์ชันใหม่นี้
+        static async updateOverallProcessingStatus(requestId, newOverallProcessingStatus, changedByUserId) {
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            const now = moment().tz('Asia/Bangkok').format('YYYY-MM-DD HH:mm:ss.SSSSSSZ');
+            const updateRequestQuery = `
+                UPDATE requests
+                SET
+                    overall_processing_status = $1,
+                    updated_at = $2,
+                    updated_by = $3
+                WHERE
+                    request_id = $4;
+            `;
+            await client.query(updateRequestQuery, [newOverallProcessingStatus, now, changedByUserId, requestId]);
+
+            const description = `Updated overall processing status from an unspecified status to "${this.translateStatus(newOverallProcessingStatus)}"`;
+            const insertHistoryQuery = `
+                INSERT INTO request_status_history (
+                    request_id,
+                    changed_by,
+                    changed_at,
+                    status_type,
+                    action,
+                    description
+                ) VALUES ($1, $2, $3, $4, $5, $6);
+            `;
+            await client.query(insertHistoryQuery, [
+                requestId,
+                changedByUserId,
+                now,
+                // เปลี่ยน 'OVERALL_PROCESSING' เป็น 'PROCESSING'
+                'PROCESSING',
+                'UPDATE_OVERALL_PROCESSING_STATUS',
+                description
+            ]);
+
+            await client.query('COMMIT');
+        } catch (error) {
+            await client.query('ROLLBACK');
+            console.error('Error in RequestStatusModel.updateOverallProcessingStatus:', error);
             throw error;
         } finally {
             client.release();
@@ -258,8 +275,6 @@ class RequestStatusModel {
             'partially_processed': 'กำลังดำเนินการบางส่วน',
         };
         return map[status] || status;
-
     }
 }
-
 module.exports = RequestStatusModel;

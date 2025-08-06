@@ -21,9 +21,24 @@
 }
 
 .tableContainer {
+<<<<<<< Updated upstream
     width: 100%;
     overflow-x: auto; /* Enables horizontal scrolling for the table on small screens if needed */
     margin-bottom: 20px;
+=======
+  overflow-x: auto; /* เก็บไว้เผื่อกรณีตารางกว้างเกินหน้าจอ จะได้เลื่อนแนวนอนได้ */
+  max-height: 700px; /* กำหนดความสูงสูงสุดของตาราง เพื่อให้เกิดการเลื่อน */
+  overflow-y: scroll; /* ทำให้เนื้อหาในแนวตั้งเลื่อนได้ */
+
+  /* สำหรับ Firefox */
+  scrollbar-width: none; /* 'none' ซ่อนแถบเลื่อน */
+  /* --------------------------------- */
+
+  margin-bottom: 2rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background-color: #ffffff;
+>>>>>>> Stashed changes
 }
 
 .table {

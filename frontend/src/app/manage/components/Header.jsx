@@ -1,19 +1,26 @@
-import styles from './Header.module.css'; // Import CSS Module
-import Image from 'next/image'; // ตรวจสอบให้แน่ใจว่าได้ import Image ถูกต้อง
+'use client';
+
+import styles from './Header.module.css';
+import Image from 'next/image';
+import { FaUserCircle, FaBell } from 'react-icons/fa'; // ใช้ FaBell สำหรับกระดิ่ง
 
 export default function Header() {
   return (
-    <header className={styles.header}> {/* Use className from styles */}
-      {/* เพิ่มโลโก้ตรงนี้ */}
+    <header className={styles.header}>
       <Image
-        src="/logos/logo.png" // **เปลี่ยน Path นี้ให้ตรงกับตำแหน่งไฟล์โลโก้ของคุณ**
-        alt="Hospital Logo" // คำอธิบายสำหรับรูปภาพ (สำคัญสำหรับ SEO และการเข้าถึง)
-        width={65} // กำหนดความกว้างของโลโก้ (ปรับตามขนาดที่ต้องการ)
-        height={65} // กำหนดความสูงของโลโก้ (ปรับตามขนาดที่ต้องการ)
-        className={styles.logo} // เพิ่ม className สำหรับ styling โลโก้ (ถ้ามี)
+        src="/logos/logo.png"
+        alt="Hospital Logo"
+        width={65}
+        height={65}
+        className={styles.logo}
       />
-      <h1 className={styles.headerTitle}>ระบบคลังโรงพยาบาล</h1> {/* Use className from styles */}
-      {/* Notifications and Settings icons have been moved to the Sidebar */}
+      <h1 className={styles.headerTitle}>ระบบคลังโรงพยาบาล</h1>
+
+      {/* ไอคอนอยู่ชิดขวา */}
+      <div className={styles.iconGroup}>
+        <FaBell className={styles.icon} size={24} />
+        <FaUserCircle className={styles.icon} size={32} />
+      </div>
     </header>
   );
 }

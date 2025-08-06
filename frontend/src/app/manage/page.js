@@ -1,128 +1,161 @@
-// page.js
-import styles from "./page.module.css";
+// Dashboard.jsx
+'use client';
 
-export default function Home() {
+import React from 'react';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
+import styles from './page.module.css';
+
+// --- ข้อมูลจำลอง (Mock Data) ---
+const kpiData = {
+  totalValue: '฿25,500,000',
+  lowStock: 210,
+  outOfStock: 15,
+  loanedItems: 45,
+};
+
+const stockByCategoryData = [
+  { name: 'ยา', value: 12000000, color: '#4CAF50' },
+  { name: 'เวชภัณฑ์', value: 8500000, color: '#2196F3' },
+  { name: 'ครุภัณฑ์', value: 4000000, color: '#FFC107' },
+  { name: 'ของใช้ทั่วไป', value: 1000000, color: '#F44336' },
+];
+
+const transactionLogData = [
+  { date: '2025-08-05', time: '10:30', type: 'นำเข้า', item: 'Surgical Gloves', amount: '+500 กล่อง', user: 'สมชาย' },
+  { date: '2025-08-05', time: '09:45', type: 'เบิก', item: 'Paracetamol 500mg', amount: '-100 แผง', user: 'แผนก OPD' },
+  { date: '2025-08-04', time: '16:20', type: 'คืน', item: 'Wheelchair', amount: '+1 คัน', user: 'แผนกผู้ป่วยใน' },
+  { date: '2025-08-04', time: '14:00', type: 'ยืม', item: 'Defibrillator', amount: '-1 เครื่อง', user: 'แผนก ER' },
+  { date: '2025-08-04', time: '11:10', type: 'นำออก', item: 'ผ้าห่ม (เก่า)', amount: '-10 ผืน', user: 'จัดการทรัพย์สิน' },
+];
+
+const loanedEquipmentData = [
+  { id: 'C001', name: 'Ultrasound Portable', borrowedDate: '2025-08-01', dueDate: '2025-08-08', status: 'กำลังใช้งาน', borrower: 'คุณหมอสมศรี', dept: 'ศัลยกรรม' },
+  { id: 'C005', name: 'Patient Monitor', borrowedDate: '2025-07-28', dueDate: '2025-08-04', status: 'เลยกำหนด', borrower: 'คุณพยาบาลวันดี', dept: 'ICU' },
+  { id: 'C012', name: 'Infusion Pump', borrowedDate: '2025-08-04', dueDate: '2025-08-11', status: 'กำลังใช้งาน', borrower: 'คุณพยาบาลฟ้าใส', dept: 'ผู้ป่วยใน' },
+];
+
+const KPIHeader = ({ data }) => (
+  <div className={styles.kpiContainer}>
+    <div className={styles.kpiCard}>
+      <p className={styles.kpiValue}>{data.totalValue}</p>
+      <p className={styles.kpiLabel}>มูลค่าสต็อกรวม</p>
+    </div>
+    <div className={styles.kpiCard}>
+      <p className={`${styles.kpiValue} ${styles.warning}`}>{data.lowStock}</p>
+      <p className={styles.kpiLabel}>รายการต่ำกว่าเกณฑ์</p>
+    </div>
+    <div className={styles.kpiCard}>
+      <p className={`${styles.kpiValue} ${styles.danger}`}>{data.outOfStock}</p>
+      <p className={styles.kpiLabel}>รายการหมดสต็อก</p>
+    </div>
+    <div className={styles.kpiCard}>
+      <p className={styles.kpiValue}>{data.loanedItems}</p>
+      <p className={styles.kpiLabel}>รายการที่ถูกยืม</p>
+    </div>
+  </div>
+);
+
+const StockByCategoryChart = ({ data }) => (
+  <ResponsiveContainer width="100%" height={300}>
+    <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis type="number" />
+      <YAxis dataKey="name" type="category" />
+      <Tooltip formatter={(value) => `฿${value.toLocaleString()}`} />
+      <Bar dataKey="value" name="มูลค่าสต็อก" fill="#8884d8">
+        {data.map((entry, index) => (
+          <Cell key={`cell-${index}`} fill={entry.color} />
+        ))}
+      </Bar>
+    </BarChart>
+  </ResponsiveContainer>
+);
+
+const TransactionTable = ({ data }) => (
+  <div className={styles.tableContainer}>
+    <table className={styles.table}>
+      <thead>
+        <tr>
+          <th className={styles.th}>วันที่</th>
+          <th className={styles.th}>ประเภท</th>
+          <th className={styles.th}>ชื่อสินค้า</th>
+          <th className={styles.th}>จำนวน</th>
+          <th className={styles.th}>ผู้ดำเนินการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((item, index) => (
+          <tr key={index}>
+            <td className={styles.td}>{item.date}</td>
+            <td className={styles.td}>
+              <span className={`${styles.statusBadge} ${styles[item.type]}`}>{item.type}</span>
+            </td>
+            <td className={styles.td}>{item.item}</td>
+            <td className={styles.td}>{item.amount}</td>
+            <td className={styles.td}>{item.user}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
+const LoanedTable = ({ data }) => (
+  <div className={styles.tableContainer}>
+    <table className={styles.table}>
+      <thead>
+        <tr>
+          <th className={styles.th}>รหัส</th>
+          <th className={styles.th}>ชื่อครุภัณฑ์</th>
+          <th className={styles.th}>วันที่ยืม</th>
+          <th className={styles.th}>กำหนดคืน</th>
+          <th className={styles.th}>สถานะ</th>
+          <th className={styles.th}>ผู้ยืม</th>
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((item, index) => (
+          <tr key={index}>
+            <td className={styles.td}>{item.id}</td>
+            <td className={styles.td}>{item.name}</td>
+            <td className={styles.td}>{item.borrowedDate}</td>
+            <td className={styles.td}>{item.dueDate}</td>
+            <td className={styles.td}>
+              <span className={`${styles.statusBadge} ${item.status === 'เลยกำหนด' ? styles.statusDanger : styles.statusSuccess}`}>{item.status}</span>
+            </td>
+            <td className={styles.td}>{item.borrower}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
+const Dashboard = () => {
   return (
-    <div className={styles.mainHome}>
-      {/*
-        *** ส่วนของ Header และ Sidebar ของคุณ (จากโค้ดเดิมที่คุณมี) ***
-        *** จะอยู่ที่นี่ หรือถูกจัดการโดย Layout Component ของคุณ ***
-        *** ผมจะเน้นแค่โค้ดสำหรับเนื้อหาหลักของ Dashboard ตามคำสั่ง ***
-      */}
-
-      {/* Main Content Area: พื้นที่แสดงข้อมูลหลักของ Dashboard */}
-      <div className={styles.contentWrapper}>
-        {/* Overview Cards: บัตรสรุปข้อมูลภาพรวม */}
-        <div className={styles.overviewCards}>
-          {/* Card: จำนวนคงคลังรวม */}
-          <div className={`${styles.card} ${styles.overviewCard}`} style={{ borderLeftColor: '#007bff' }}>
-            <div className={styles.cardIcon}><span role="img" aria-label="package">📦</span></div>
-            <div className={styles.cardContent}>
-              <p className={styles.cardTitle}>จำนวนคงคลังรวม</p>
-              <p className={styles.cardValue}>15,876 <span className={styles.unit}>ชิ้น</span></p>
-            </div>
-          </div>
-
-          {/* Card: รายการใกล้หมด/วิกฤติ */}
-          <div className={`${styles.card} ${styles.overviewCard}`} style={{ borderLeftColor: '#dc3545' }}>
-            <div className={styles.cardIcon}><span role="img" aria-label="warning">⚠️</span></div>
-            <div className={styles.cardContent}>
-              <p className={styles.cardTitle}>รายการใกล้หมด/วิกฤติ</p>
-              <p className={styles.cardValue}>32 <span className={styles.unit}>รายการ</span></p>
-            </div>
-          </div>
-
-          {/* Card: มูลค่าคงคลังโดยประมาณ */}
-          <div className={`${styles.card} ${styles.overviewCard}`} style={{ borderLeftColor: '#28a745' }}>
-            <div className={styles.cardIcon}><span role="img" aria-label="money bag">💰</span></div>
-            <div className={styles.cardContent}>
-              <p className={styles.cardTitle}>มูลค่าคงคลังโดยประมาณ</p>
-              <p className={styles.cardValue}>฿ 12,500,000</p>
-            </div>
-          </div>
-
-          {/* Card: คำขอรอดำเนินการ */}
-          <div className={`${styles.card} ${styles.overviewCard}`} style={{ borderLeftColor: '#ffc107' }}>
-            <div className={styles.cardIcon}><span role="img" aria-label="hourglass">⏳</span></div>
-            <div className={styles.cardContent}>
-              <p className={styles.cardTitle}>คำขอรอดำเนินการ</p>
-              <p className={styles.cardValue}>7 <span className={styles.unit}>รายการ</span></p>
-            </div>
-          </div>
+    <div className={styles.dashboardContainer}>
+      <h1 className={styles.dashboardTitle}>แดชบอร์ดคลังโรงพยาบาล</h1>
+      <KPIHeader data={kpiData} />
+      
+      <div className={styles.sectionGrid}>
+        <div className={styles.sectionCard}>
+          <h2>ภาพรวมสต็อกตามหมวดหมู่</h2>
+          <StockByCategoryChart data={stockByCategoryData} />
         </div>
+        <div className={styles.sectionCard}>
+          <h2>การเคลื่อนไหวล่าสุดในคลัง</h2>
+          <TransactionTable data={transactionLogData} />
+        </div>
+      </div>
 
-        {/* Main Content Grid: ตาราง Grid สำหรับกราฟและข้อมูลด้านข้าง */}
-        <div className={styles.mainContentGrid}>
-          {/* Chart Card: กราฟภาพรวมการทำรายการ */}
-          <div className={`${styles.card} ${styles.chartCard}`}>
-            <h3 className={styles.cardHeader}>ภาพรวมการทำรายการ (7 วันล่าสุด)</h3>
-            <div className={styles.chartPlaceholder}>
-              {/* รูปภาพจำลองกราฟ (จะแทนที่ด้วย Component กราฟจริงเมื่อมีข้อมูล) */}
-              <img src="https://via.placeholder.com/800x350/E0F7FA/00BCD4?text=Daily+Inventory+Flow+Chart" alt="ภาพรวมการทำรายการ" style={{ maxWidth: '100%', height: 'auto', borderRadius: '8px' }} />
-              <p className={styles.chartCaption}>
-                <span style={{ color: '#28a745', fontWeight: 'bold' }}>— รับเข้า </span>
-                <span style={{ color: '#007bff', fontWeight: 'bold' }}>— เบิกจ่าย</span>
-              </p>
-            </div>
-          </div>
-
-          {/* Side Info Cards: บัตรข้อมูลสถานะและกิจกรรมล่าสุด */}
-          <div className={styles.sideInfoCards}>
-            {/* Status Card: สถานะคำขอทั้งหมด */}
-            <div className={`${styles.card} ${styles.statusCard}`}>
-              <h3 className={styles.cardHeader}>สถานะคำขอทั้งหมด</h3>
-              <div className={styles.statusList}>
-                <p className={styles.statusItem}>
-                  <span className={`${styles.statusDot} ${styles.pendingDot}`}></span> รอดำเนินการ: <span className={styles.statusCount}>15 รายการ</span>
-                </p>
-                <p className={styles.statusItem}>
-                  <span className={`${styles.statusDot} ${styles.approvedDot}`}></span> อนุมัติแล้ว: <span className={styles.statusCount}>45 รายการ</span>
-                </p>
-                <p className={styles.statusItem}>
-                  <span className={`${styles.statusDot} ${styles.rejectedDot}`}></span> ถูกปฏิเสธ: <span className={styles.statusCount}>5 รายการ</span>
-                </p>
-              </div>
-            </div>
-
-            {/* Activity Card: กิจกรรมล่าสุด */}
-            <div className={`${styles.card} ${styles.activityCard}`}>
-              <h3 className={styles.cardHeader}>กิจกรรมล่าสุด</h3>
-              <table className={styles.activityTable}>
-                <thead>
-                  <tr>
-                    <th>เวลา</th>
-                    <th>กิจกรรม</th>
-                    <th>แผนก</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>11:45 น.</td>
-                    <td>รับเข้ายา Paracetamol</td>
-                    <td>เภสัชกรรม</td>
-                  </tr>
-                  <tr>
-                    <td>10:10 น.</td>
-                    <td>เบิกผ้าก๊อซ</td>
-                    <td>ห้องฉุกเฉิน</td>
-                  </tr>
-                  <tr>
-                    <td>09:30 น.</td>
-                    <td>แก้ไขครุภัณฑ์ X-ray</td>
-                    <td>วิศวกรรม</td>
-                  </tr>
-                  <tr>
-                    <td>08:00 น.</td>
-                    <td>เบิกชุดทำแผล</td>
-                    <td>หอผู้ป่วย 3</td>
-                  </tr>
-                </tbody>
-              </table>
-              <a href="#" className={styles.viewAllLink}>ดูทั้งหมด »</a>
-            </div>
-          </div>
+      <div className={styles.sectionGridFull}>
+        <div className={styles.sectionCard}>
+          <h2>สถานะครุภัณฑ์และอุปกรณ์</h2>
+          <LoanedTable data={loanedEquipmentData} />
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default Dashboard;

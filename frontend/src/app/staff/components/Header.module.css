@@ -13,6 +13,7 @@
   border-bottom: 1px solid #e0e0e0; /* Lighter and softer bottom border */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow for a floating effect */
   transition: all 0.3s ease-in-out; /* Smooth transitions for any changes */
+  /* border-radius: 12px; */
 }
 
 .headerTitle {
@@ -22,6 +23,28 @@
   margin: 0; /* Remove default margin */
   padding: 0; /* Remove default padding */
   line-height: 1; /* Ensures text is vertically centered within its line box */
+}
+
+.userIcon {
+  color: #555;
+  margin-right: 10px;
+}
+
+.iconGroup {
+  margin-left: auto; /* ดันไอคอนไปชิดขวาสุด */
+  display: flex;
+  align-items: center;
+  gap: 16px; /* ระยะห่างระหว่างไอคอน */
+}
+
+.icon {
+  color: #555;
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
+}
+
+.icon:hover {
+  color: #007bff; /* เปลี่ยนสีเมื่อ hover */
 }
 
 /* Since the icons are moved, .headerIcons and .iconButton styles are no longer needed here */

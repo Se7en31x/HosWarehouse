@@ -27,8 +27,8 @@ html, body {
 .main-content-wrapper {
   display: flex;
   flex-grow: 1; /* ✨ สำคัญ: ทำให้ส่วนนี้ขยายเต็มพื้นที่ที่เหลือหลังจาก Header */
-  padding: 20px;
-  gap: 20px;
+  padding: 15 0 15px;
+  gap: 15px;
   overflow: hidden; /* ป้องกัน Scrollbar ในส่วน wrapper นี้ */
 }
 

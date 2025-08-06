@@ -3,8 +3,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Swal from 'sweetalert2';
 import styles from './page.module.css';
 import axiosInstance from '@/app/utils/axiosInstance';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSortUp, faSortDown, faSearch, faFilter, faTimes, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 
-// --- ฟังก์ชันช่วยเหลือ (Utility Functions) ---
+// --- Utility Functions ---
 const translateType = (type) => {
     const translations = {
         'เบิก': 'เบิก',
@@ -31,7 +33,7 @@ const formatDate = (dateStr) => {
     }
 };
 
-// --- Component ย่อยสำหรับแสดงรายละเอียดใน Modal ---
+// --- Sub-components for Modal Details ---
 const DetailsTable = ({ headers, data, renderRow }) => (
     <div className={styles.detailsTableWrapper}>
         <table className={styles.detailTable}>
@@ -209,13 +211,13 @@ export default function TransactionHistoryLogPage() {
                 },
             });
 
-            const { data, total_pages, total_count } = response.data;
+            const { data, total_pages } = response.data;
             setLogs(data);
             setTotalPages(total_pages);
         } catch (err) {
             console.error('Fetch error:', err);
             setError('ไม่สามารถโหลดประวัติการทำรายการได้');
-            Swal.fire('เกิดข้อผิดพลาด', err.message, 'error');
+            Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถโหลดประวัติการทำรายการได้', 'error');
         } finally {
             setLoading(false);
             setIsFetching(false);
@@ -237,11 +239,10 @@ export default function TransactionHistoryLogPage() {
     };
 
     const handleSort = (column) => {
-        // Map frontend sort columns to backend database columns
         const backendColumn = {
             'timestamp': 'timestamp',
             'type': 'type',
-            'user': 'user_name', // Corrected to match the backend query
+            'user': 'user_name',
         }[column] || 'timestamp';
 
         if (sortColumn === backendColumn) {
@@ -268,20 +269,11 @@ export default function TransactionHistoryLogPage() {
         }
     };
 
-    const handlePrev = () => {
-        if (currentPage > 1) setCurrentPage((prev) => prev - 1);
-    };
-
-    const handleNext = () => {
-        if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
-    };
-
     const handleRowClick = (transaction) => {
         setSelectedTransaction(transaction);
     };
 
     const renderDetails = (transaction) => {
-        // ใช้ switch-case ที่ปรับให้เข้ากับประเภทและโครงสร้างข้อมูลจาก API
         switch (transaction.type) {
             case 'เบิก':
             case 'ยืม':
@@ -336,18 +328,22 @@ export default function TransactionHistoryLogPage() {
                 <h1 className={styles.heading}>ประวัติการทำรายการทั้งหมด</h1>
                 <div className={styles.controls}>
                     <div className={styles.filterGroup}>
-                        <label htmlFor="search-input" className={styles.filterLabel}>ค้นหา:</label>
+                        <label htmlFor="search-input" className={styles.filterLabel}>
+                            <FontAwesomeIcon icon={faSearch} /> ค้นหา:
+                        </label>
                         <input
                             id="search-input"
                             type="text"
-                            placeholder="ผู้ทำรายการ..."
+                            placeholder="ค้นหาจากชื่อผู้ทำรายการ..."
                             value={searchTerm}
                             onChange={handleSearchChange}
                             className={styles.searchInput}
                         />
                     </div>
                     <div className={styles.filterGroup}>
-                        <label htmlFor="filter-type" className={styles.filterLabel}>กรองประเภท:</label>
+                        <label htmlFor="filter-type" className={styles.filterLabel}>
+                            <FontAwesomeIcon icon={faFilter} /> กรองประเภท:
+                        </label>
                         <select
                             id="filter-type"
                             value={filterType}
@@ -366,8 +362,8 @@ export default function TransactionHistoryLogPage() {
                             <option value="การเปลี่ยนสถานะดำเนินการ">เปลี่ยนสถานะดำเนินการ</option>
                         </select>
                     </div>
-                    <button onClick={handleClearFilters} className={styles.clearBtn}>
-                        ล้างตัวกรอง
+                    <button onClick={handleClearFilters} className={styles.clearBtn} title="ล้างตัวกรองทั้งหมด">
+                        <FontAwesomeIcon icon={faTimes} /> ล้างตัวกรอง
                     </button>
                 </div>
 
@@ -381,13 +377,13 @@ export default function TransactionHistoryLogPage() {
                         <thead>
                             <tr>
                                 <th onClick={() => handleSort('timestamp')} className={styles.sortableHeader}>
-                                    วันที่และเวลา {sortColumn === 'timestamp' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                    วันที่และเวลา {sortColumn === 'timestamp' && (sortOrder === 'asc' ? <FontAwesomeIcon icon={faSortUp} /> : <FontAwesomeIcon icon={faSortDown} />)}
                                 </th>
                                 <th onClick={() => handleSort('type')} className={styles.sortableHeader}>
-                                    ประเภท {sortColumn === 'type' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                    ประเภท {sortColumn === 'type' && (sortOrder === 'asc' ? <FontAwesomeIcon icon={faSortUp} /> : <FontAwesomeIcon icon={faSortDown} />)}
                                 </th>
                                 <th onClick={() => handleSort('user')} className={styles.sortableHeader}>
-                                    ผู้ทำรายการ {sortColumn === 'user_name' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                    ผู้ทำรายการ {sortColumn === 'user_name' && (sortOrder === 'asc' ? <FontAwesomeIcon icon={faSortUp} /> : <FontAwesomeIcon icon={faSortDown} />)}
                                 </th>
                                 <th>การดำเนินการ</th>
                             </tr>
@@ -418,9 +414,7 @@ export default function TransactionHistoryLogPage() {
                             })}
                             {logs.length === 0 && !loading && !error && (
                                 <tr className={styles.noDataRow}>
-                                    <td colSpan="4">
-                                        ไม่พบข้อมูลประวัติ
-                                    </td>
+                                    <td colSpan="4">ไม่พบข้อมูลประวัติ</td>
                                 </tr>
                             )}
                         </tbody>
@@ -428,8 +422,8 @@ export default function TransactionHistoryLogPage() {
                 </div>
                 {totalPages > 0 && (
                     <div className={styles.pagination}>
-                        <button onClick={handlePrev} disabled={currentPage === 1} className={styles.paginationBtn}>
-                            « ก่อนหน้า
+                        <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className={styles.paginationBtn}>
+                            <FontAwesomeIcon icon={faChevronLeft} />
                         </button>
                         {Array.from({ length: totalPages }, (_, i) => (
                             <button
@@ -440,8 +434,8 @@ export default function TransactionHistoryLogPage() {
                                 {i + 1}
                             </button>
                         ))}
-                        <button onClick={handleNext} disabled={currentPage === totalPages} className={styles.paginationBtn}>
-                            ถัดไป »
+                        <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className={styles.paginationBtn}>
+                            <FontAwesomeIcon icon={faChevronRight} />
                         </button>
                     </div>
                 )}

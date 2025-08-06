@@ -84,8 +84,8 @@ async function getRequestDetailsForProcessing(requestId) {
       ORDER BY rd.request_detail_id ASC;
     `;
     const { rows: itemRows } = await pool.query(itemsQuery, [requestId]);
-    
-    console.log("Fetched itemRows from DB:", itemRows); 
+
+    console.log("Fetched itemRows from DB:", itemRows);
 
     request.details = itemRows;
 
@@ -121,6 +121,8 @@ async function deductStock(requestId, updates, userId) {
           throw new Error(`Item ${item_id} not found in stock.`);
         }
         const currentStock = itemRows[0].item_qty;
+        
+        console.log(`[DeductStock] Processing item ${item_id}. Requested: ${requested_qty}, Current Stock: ${currentStock}`);
 
         if (requested_qty > currentStock) {
           throw new Error(`Insufficient stock for item "${item_id}". Available: ${currentStock}, Attempted to deduct: ${requested_qty}.`);
@@ -131,7 +133,7 @@ async function deductStock(requestId, updates, userId) {
 
         let movementNote = `เบิก-จ่ายตามคำขอ #${requestId}, รายการ ${item_id}. จำนวน: ${requested_qty}.`;
         if (deduction_reason) {
-            movementNote += ` เหตุผล: ${deduction_reason}`;
+          movementNote += ` เหตุผล: ${deduction_reason}`;
         }
         const insertMovementQuery = `
           INSERT INTO stock_movements (item_id, move_type, move_qty, move_date, move_status, user_id, note)
@@ -146,20 +148,20 @@ async function deductStock(requestId, updates, userId) {
           movementNote
         ]);
       }
-      
+
       // 1. บันทึกประวัติการเปลี่ยนสถานะใน request_status_history
       // Note: `note` field in `request_status_history` is now optional or can be a generic message
       await client.query(
-          `INSERT INTO request_status_history (request_id, request_detail_id, old_status, new_status, changed_by, changed_at, note, status_type)
+        `INSERT INTO request_status_history (request_id, request_detail_id, old_status, new_status, changed_by, changed_at, note, status_type)
           VALUES ($1, $2, $3, $4, $5, NOW(), $6, 'processing_detail');`, // ใช้ 'processing_detail' สำหรับ status_type
-          [
-              requestId,
-              request_detail_id,
-              current_processing_status,
-              newStatus,
-              userId,
-              `เปลี่ยนสถานะการดำเนินการจาก '${current_processing_status || 'ไม่ระบุ'}' เป็น '${newStatus}'.` // ข้อความ note ทั่วไป
-          ]
+        [
+          requestId,
+          request_detail_id,
+          current_processing_status,
+          newStatus,
+          userId,
+          `เปลี่ยนสถานะการดำเนินการจาก '${current_processing_status || 'ไม่ระบุ'}' เป็น '${newStatus}'.` // ข้อความ note ทั่วไป
+        ]
       );
 
       // 2. อัปเดต processing_status ใน request_details
@@ -182,13 +184,13 @@ async function deductStock(requestId, updates, userId) {
 
       // 3. อัปเดต request_detail_note เฉพาะเมื่อมี deduction_reason
       if (deduction_reason && deduction_reason.trim() !== '') {
-          const reasonNote = `\n[${new Date().toLocaleString('th-TH')}] เหตุผลเบิกไม่ครบ: ${deduction_reason}.`;
-          const updateReasonQuery = `
+        const reasonNote = `\n[${new Date().toLocaleString('th-TH')}] เหตุผลเบิกไม่ครบ: ${deduction_reason}.`;
+        const updateReasonQuery = `
               UPDATE request_details
               SET request_detail_note = COALESCE(request_detail_note, '') || $1
               WHERE request_detail_id = $2;
           `;
-          await client.query(updateReasonQuery, [reasonNote, request_detail_id]);
+        await client.query(updateReasonQuery, [reasonNote, request_detail_id]);
       }
     }
 
