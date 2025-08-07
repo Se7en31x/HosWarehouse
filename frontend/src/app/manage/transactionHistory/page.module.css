@@ -26,7 +26,6 @@
     justify-content: center;
     align-items: flex-start;
     min-height: 100vh;
-    padding: 2rem;
     background-color: var(--bg-color);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     color: var(--text-color);
@@ -34,11 +33,10 @@
 
 .card {
     background-color: var(--card-bg-color);
-    padding: 2.5rem;
+    padding: 1rem;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 1200px;
     position: relative;
     border: 1px solid var(--border-color);
 }

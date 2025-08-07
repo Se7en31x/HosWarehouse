@@ -1,52 +1,60 @@
+/* --- Global Styles (ปรับเล็กน้อย) --- */
 .pageBackground {
   background-color: #f4f7f9;
   min-height: 100vh;
-  font-family: 'Arial', sans-serif;
+  font-family: 'Inter', 'Segoe UI', sans-serif; /* ลองใช้ font ที่ทันสมัยขึ้น */
   box-sizing: border-box;
+  display: flex; /* เพิ่ม Flexbox เพื่อจัดวาง .container */
+  justify-content: center;
+  align-items: flex-start; /* จัดชิดด้านบน */
 }
 
 .container {
+  height: 100vh;
   background-color: #ffffff;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  /* ลบ max-width เพื่อให้ใช้พื้นที่ได้เต็มที่ */
-  min-height: 100vh;
+  padding: 2.5rem; /* เพิ่ม padding ให้ container */
+  border-radius: 12px; /* เพิ่มความมนของมุมให้มากขึ้น */
+  min-height: auto; /* ไม่ต้อง min-height 100vh ใน container */
   width: 100%;
+  max-width: 1600px; /* กำหนด max-width เพื่อไม่ให้กว้างเกินไปบนจอใหญ่ๆ */
+  display: flex; /* เพิ่ม Flexbox เพื่อจัดการ Layout ภายใน */
+  flex-direction: column; /* จัดเรียงเนื้อหาในแนวตั้ง */
 }
 
 .title {
-  font-size: 2rem;
-  color: #333;
-  padding-bottom: 1rem;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid #e0e0e0;
+  font-size: 2.5rem; /* เพิ่มขนาดตัวอักษร */
+  color: #2c3e50; /* สีเข้มขึ้นเพื่อความโดดเด่น */
+  padding-bottom: 1.2rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #e0e0e0; /* เพิ่มความหนาของเส้นคั่น */
+  font-weight: 700; /* ทำให้ตัวหนาขึ้น */
 }
 
 .subtitle {
-  font-size: 1.5rem;
-  color: #555;
-  margin-top: 2rem;
-  margin-bottom: 1rem;
+  font-size: 1.8rem; /* เพิ่มขนาดตัวอักษร */
+  color: #34495e; /* สีเข้มขึ้น */
+  margin-top: 2.5rem;
+  margin-bottom: 1.2rem;
+  font-weight: 600;
 }
 
 .detailSection {
   background-color: #f9fafb;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
+  border-radius: 10px; /* เพิ่มความมนของมุม */
+  padding: 2rem; /* เพิ่ม padding */
+  margin-bottom: 2.5rem;
 }
 
 .detailsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* ปรับ minmax */
+  gap: 1.5rem; /* เพิ่มระยะห่าง */
 }
 
 .detailsGrid p {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.05rem; /* ปรับขนาดเล็กน้อย */
   color: #555;
   display: flex;
   align-items: center;
@@ -54,53 +62,77 @@
 
 .detailsGrid p strong {
   color: #333;
-  min-width: 100px;
-  margin-right: 0.5rem;
+  min-width: 120px; /* เพิ่ม min-width เพื่อจัดแนวให้ดีขึ้น */
+  margin-right: 1rem; /* เพิ่มระยะห่าง */
+  font-weight: 600;
 }
 
 .statusBadge {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.75rem;
-  border-radius: 16px;
-  font-size: 0.85rem;
+  padding: 0.35rem 1rem; /* เพิ่ม padding */
+  border-radius: 20px; /* ทำให้โค้งมนขึ้น */
+  font-size: 0.9rem; /* ปรับขนาดตัวอักษร */
   font-weight: bold;
   color: #ffffff;
-  margin-left: 0.5rem;
+  margin-left: 0.7rem; /* เพิ่มระยะห่าง */
 }
 
 .statusApproved { background-color: #28a745; }
-.statusPartial { background-color: #ffc107; }
+.statusPartial { background-color: #ffc107; color: #333; } /* เพิ่มสีข้อความสำหรับสีเหลือง */
 .statusDeducted { background-color: #007bff; }
 .statusCompleted { background-color: #6c757d; }
 
+/* --- Table Styles Enhancement --- */
 .tableContainer {
   overflow-x: auto;
-  margin-top: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  /* เพิ่ม width: 100% เพื่อให้ใช้พื้นที่ได้เต็มที่ */
+  margin-top: 2rem; /* เพิ่ม margin-top */
+  border-radius: 10px; /* เพิ่มความมนของมุม */
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08); /* เพิ่มเงาให้ดูมีมิติมากขึ้น */
   width: 100%;
+  border: 1px solid #e0e0e0; /* เพิ่มเส้นขอบรอบ table container */
 }
 
 .table {
   width: 100%;
-  border-collapse: separate;
+  border-collapse: separate; /* เพื่อให้ border-radius ทำงานได้ดีขึ้น */
   border-spacing: 0;
+  min-width: 700px; /* กำหนด min-width เพื่อป้องกันการบีบตัวเกินไปในจอเล็ก */
 }
 
 .table thead tr {
-  background-color: #f1f5f9;
-  color: #555;
+  background-color: #eef2f7; /* ปรับสีพื้นหลัง header */
+  color: #4a5568; /* สีข้อความ header */
   text-transform: uppercase;
-  font-size: 0.9rem;
-  letter-spacing: 0.5px;
+  font-size: 0.95rem; /* ปรับขนาดตัวอักษร */
+  letter-spacing: 0.7px; /* เพิ่มระยะห่างตัวอักษร */
+  font-weight: 600; /* ทำให้ตัวหนาขึ้น */
 }
 
 .table th, .table td {
-  padding: 12px 15px;
+  padding: 14px 20px; /* เพิ่ม padding */
   text-align: left;
+  border-bottom: 1px solid #e0e0e0; /* เพิ่มเส้นคั่นระหว่างแถว */
 }
+
+.table th:first-child,
+.table td:first-child {
+  padding-left: 25px; /* เพิ่ม padding ด้านซ้ายของคอลัมน์แรก */
+}
+
+.table th:last-child,
+.table td:last-child {
+  padding-right: 25px; /* เพิ่ม padding ด้านขวาของคอลัมน์สุดท้าย */
+}
+
+/* Rounded corners for table header */
+.table thead th:first-child {
+  border-top-left-radius: 10px;
+}
+.table thead th:last-child {
+  border-top-right-radius: 10px;
+}
+
 
 .table tbody tr:nth-child(odd) {
   background-color: #ffffff;
@@ -111,60 +143,80 @@
 }
 
 .table tbody tr:hover {
-  background-color: #e9ecef;
+  background-color: #e0f2f7; /* เปลี่ยนสี hover ให้ดูสบายตาขึ้น */
+  cursor: pointer; /* เพิ่ม cursor pointer */
 }
 
 .qtyInput, .reasonInput {
   width: 100px;
-  padding: 8px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
+  padding: 9px; /* เพิ่ม padding */
+  border: 1px solid #c9d6de; /* ปรับสีเส้นขอบ */
+  border-radius: 6px; /* เพิ่มความมนของมุม */
   box-sizing: border-box;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.qtyInput:focus, .reasonInput:focus {
+  outline: none;
+  border-color: #007bff;
 }
 
 .reasonInput {
   width: 100%;
-  max-width: 200px;
+  max-width: 250px; /* เพิ่ม max-width */
 }
 
 .lowStock {
   color: #dc3545;
   font-weight: bold;
+  background-color: #fff0f0; /* เพิ่มพื้นหลังสีอ่อน */
+  padding: 0.2em 0.5em;
+  border-radius: 4px;
 }
 
 .infoMessage {
   text-align: center;
   color: #6c757d;
-  font-size: 1.1rem;
-  padding: 2rem 0;
+  font-size: 1.2rem;
+  padding: 2.5rem 0;
+  font-style: italic; /* ทำให้ดูเป็นข้อความแนะนำ */
 }
 
 .errorMessage {
   text-align: center;
   color: #dc3545;
-  font-size: 1.2rem;
-  padding: 2rem;
+  font-size: 1.25rem;
+  padding: 2.5rem;
   background-color: #fff3f3;
   border: 1px solid #dc3545;
-  border-radius: 8px;
-  margin-top: 1.5rem;
+  border-radius: 10px;
+  margin-top: 2rem;
+  font-weight: 600;
 }
 
+/* --- Action Buttons (จัดให้อยู่ด้านล่างขวา) --- */
 .actionButtons {
-  margin-top: 2.5rem;
+  margin-top: 3rem; /* เพิ่ม margin-top เพื่อแยกจากเนื้อหาตาราง */
   display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
+  justify-content: flex-end; /* จัดให้อยู่ชิดขวา */
+  padding: 20px; /* เพิ่ม padding */
+  background-color: #ffffff; /* เปลี่ยนเป็นสีขาวเพื่อให้เข้ากับ container */
+  width: 100%;
+  gap: 15px;
+  border-top: 1px solid #e0e0e0; /* เพิ่มเส้นคั่นด้านบน */
+  border-bottom-left-radius: 12px; /* ทำให้มุมล่างซ้ายมนตาม container */
+  border-bottom-right-radius: 12px; /* ทำให้มุมล่างขวามนตาม container */
 }
 
 .button {
-  padding: 12px 24px;
-  border-radius: 6px;
-  font-size: 1rem;
+  padding: 13px 28px; /* เพิ่ม padding */
+  border-radius: 8px; /* เพิ่มความมนของมุม */
+  font-size: 1.05rem; /* ปรับขนาดตัวอักษร */
   font-weight: bold;
   cursor: pointer;
   border: none;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease; /* เพิ่ม transform */
 }
 
 .primaryButton {
@@ -174,12 +226,13 @@
 
 .primaryButton:hover:not(:disabled) {
   background-color: #0056b3;
-  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+  transform: translateY(-2px); /* ทำให้ปุ่มเด้งขึ้นเล็กน้อย */
 }
 
 .primaryButton:disabled {
   background-color: #a0c9f1;
   cursor: not-allowed;
+  opacity: 0.8;
 }
 
 .secondaryButton {
@@ -189,24 +242,55 @@
 
 .secondaryButton:hover {
   background-color: #5a6268;
+  transform: translateY(-2px);
 }
 
-/* Responsive Design */
+/* --- Responsive Design (ปรับปรุง) --- */
 @media (max-width: 768px) {
   .pageBackground {
     padding: 1rem;
+    align-items: stretch; /* ให้ container ยืดเต็มความกว้าง */
   }
-  
+
   .container {
-    padding: 1rem;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
   }
-  
+
   .title {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .subtitle {
+    font-size: 1.4rem;
+    margin-top: 2rem;
+  }
+
+  .detailSection {
+    padding: 1.2rem;
+    margin-bottom: 1.8rem;
   }
   
   .detailsGrid {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .detailsGrid p {
+    font-size: 0.95rem;
+  }
+
+  .detailsGrid p strong {
+    min-width: 90px;
+    margin-right: 0.8rem;
+  }
+
+  .tableContainer {
+    margin-top: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
   }
 
   .table thead {
@@ -223,27 +307,49 @@
     border: 1px solid #dee2e6;
     border-radius: 8px;
     padding: 1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* เพิ่มเงาให้แต่ละแถว */
   }
   
   .table td {
     border: none;
     text-align: right;
     position: relative;
-    padding-left: 50%;
+    padding-left: 45%; /* ปรับ padding-left */
+    padding-top: 8px;
+    padding-bottom: 8px;
   }
 
   .table td:before {
     content: attr(data-label);
     position: absolute;
     left: 15px;
-    width: calc(50% - 30px);
+    width: calc(45% - 30px); /* ปรับ width */
     text-align: left;
     font-weight: bold;
     color: #333;
+    top: 50%; /* จัดตำแหน่งกลาง */
+    transform: translateY(-50%);
   }
 
   .qtyInput, .reasonInput {
     width: 100%;
     max-width: none;
+    padding: 7px;
+    font-size: 0.9rem;
+  }
+
+  .actionButtons {
+    margin-top: 2rem;
+    padding: 15px;
+    flex-direction: column; /* จัดปุ่มในแนวตั้งบนมือถือ */
+    gap: 10px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+  }
+
+  .button {
+    width: 100%; /* ทำให้ปุ่มกว้างเต็ม */
+    padding: 10px 15px;
+    font-size: 0.95rem;
   }
 }

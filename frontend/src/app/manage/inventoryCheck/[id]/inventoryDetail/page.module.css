@@ -1,132 +1,99 @@
-/* Container หลักของหน้ารายละเอียดพัสดุ */
+/* Container for the whole page */
 .container {
-  max-width: 900px;
-  margin: 1.5rem auto;
-  padding: 1rem 2rem;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgb(0 0 0 / 0.1);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #333;
+  padding: 2rem; /* Ample padding around content */
+  max-width: 900px; /* Limit width for readability on large screens */
+  margin: 0 auto; /* Center the container */
+  background-color: #ffffff; /* Light background for the page */
+  border-radius: 8px; /* Slightly rounded corners */
 }
 
-/* หัวเรื่อง */
+/* Page Title */
 .title {
-  font-size: 1.8rem;
+  font-size: 2.2em; /* Larger, more prominent title */
+  color: #333;
+  text-align: center; /* Center the title */
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee; /* A subtle separator */
+}
+
+/* Common Card/Panel Style */
+.detailCard {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem; /* Space between cards */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03); /* Lighter shadow for cards */
+}
+
+.cardTitle {
+  font-size: 1.5em;
+  color: #555;
   margin-bottom: 1rem;
-  font-weight: 600;
-  color: #004a99;
-  text-align: center;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
 }
 
-/* ข้อความโหลดข้อมูล */
-.loading,
-.error,
-.noData {
-  text-align: center;
-  font-size: 1.2rem;
-  padding: 2rem;
+/* Styling for individual detail rows (label-value pairs) */
+.detailRow {
+  display: flex; /* Or grid for more complex layouts */
+  margin-bottom: 0.8rem;
+  align-items: baseline; /* Align text baselines */
+}
+
+.detailLabel {
+  font-weight: 600; /* Bold labels */
   color: #666;
+  width: 150px; /* Fixed width for labels for alignment */
+  flex-shrink: 0; /* Prevent label from shrinking */
+  margin-right: 1rem;
 }
 
-/* ข้อความ error เน้นสีแดง */
-.error {
-  color: #d9534f;
-  font-weight: 600;
+.detailValue {
+  color: #333;
+  flex-grow: 1; /* Allow value to take remaining space */
 }
 
-/* กล่องปุ่มกลับ */
+/* Button Styling */
 .buttonContainer {
+  text-align: center; /* Center the button */
   margin-top: 2rem;
-  text-align: center;
 }
 
-/* ปุ่มกลับ */
 .backButton {
-  background-color: #007bff;
+  padding: 0.8rem 1.5rem;
+  font-size: 1.1em;
+  background-color: #007bff; /* Primary blue color */
   color: white;
   border: none;
-  padding: 0.6rem 1.4rem;
-  font-size: 1rem;
   border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.2s ease-in-out;
 }
+
 .backButton:hover {
-  background-color: #0056b3;
+  background-color: #0056b3; /* Darker on hover */
 }
 
-/* ----- สำหรับ BasicDetail ----- */
-
-/* แต่ละส่วน fieldset */
-.section {
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  padding: 1rem 1.2rem 1.5rem;
-  margin-bottom: 1.6rem;
-  background-color: #fff;
-}
-
-/* legend ของ fieldset */
-.section legend {
-  padding: 0 0.6rem;
-  font-weight: 700;
-  font-size: 1.1rem;
+/* Loading and Error Messages */
+.loading {
+  text-align: center;
+  font-size: 1.2em;
   color: #007bff;
+  margin-top: 50px;
 }
 
-/* Grid layout ของกล่องข้อมูล */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.2rem 1.6rem;
-  margin-top: 1rem;
-}
-
-/* แต่ละ field แสดง label กับ input */
-.field {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Label */
-.field label {
-  font-weight: 600;
-  margin-bottom: 0.4rem;
-  color: #555;
-  font-size: 0.95rem;
-}
-
-/* Input แบบ disabled */
-.field input {
-  padding: 0.45rem 0.6rem;
-  font-size: 1rem;
-  border: 1px solid #bbb;
-  border-radius: 4px;
-  background-color: #eee;
-  color: #444;
-  cursor: not-allowed;
-}
-
-/* รูปภาพตัวอย่างพัสดุ */
-.imagePreview {
+.error {
   text-align: center;
-  margin-top: 0.8rem;
+  font-size: 1.2em;
+  color: #dc3545; /* Red for errors */
+  margin-top: 50px;
 }
 
-.imagePreview img {
-  max-width: 200px;
-  max-height: 200px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  object-fit: contain;
-  box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
-}
-
-/* ข้อความไม่มีรูป */
-.section p {
-  color: #888;
-  font-style: italic;
+.noData {
   text-align: center;
-  margin-top: 0.6rem;
+  font-size: 1.2em;
+  color: #6c757d; /* Grey for no data */
+  margin-top: 50px;
 }

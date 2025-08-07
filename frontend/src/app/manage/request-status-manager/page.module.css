@@ -2,356 +2,396 @@
 
 /* --- General Layout & Typography --- */
 .container {
-  /* ใช้พื้นที่เต็มตาม Layout หลัก ไม่ต้องมี padding/margin รอบนอก */
-  width: 100%; 
-  font-family: 'Kanit', sans-serif; 
-  color: #333;
-  /* background-color: #f0f2f5; ถ้า layout หลักเป็นสีนี้ หรือขาวก็ใช้ขาว */
-  /* box-shadow: none; */
+    width: 100%;
+    font-family: 'Kanit', sans-serif;
+    color: #333;
 }
 
 .heading {
-  font-size: 2.2rem; /* ขนาดกลาง ไม่เล็กไม่ใหญ่เกินไป */
-  color: #34495e; /* สีเทาเข้มๆ ให้ความรู้สึกเป็นทางการ */
-  text-align: center;
-  margin-bottom: 2rem; 
-  font-weight: 600; /* ไม่ต้องหนามาก ให้ดูเรียบ */
-  letter-spacing: -0.01em; 
-  padding: 1.5rem 1rem; /* เพิ่ม padding ให้มีพื้นที่หายใจ */
-  background-color: #ffffff; /* พื้นหลังสีขาว ให้ดูสะอาดตา */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* เงาบางๆ พอมีมิติ */
-  border-bottom: 1px solid #e0e0e0; /* เส้นแบ่งบางๆ */
-  border-radius: 4px; /* มุมมนเล็กน้อย */
-  /* หากต้องการให้หัวข้อเป็นส่วนหนึ่งของ layout หลักโดยไม่มีกรอบขาว ให้ลบ background-color, box-shadow, border-radius ออก */
+    font-size: 2.2rem;
+    color: #34495e;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    padding: 1.5rem 1rem;
+    background-color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid #e0e0e0;
+    border-radius: 4px;
 }
 
 
 /* --- Loading State --- */
 .loadingContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 50vh; 
-  background-color: #ffffff; 
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* เงาเบาๆ */
-  margin: 1rem 2rem; /* เพิ่ม margin รอบๆ loading container */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    margin: 1rem 2rem;
 }
 
 .spinner {
-  border: 6px solid #f3f3f3;
-  border-top: 6px solid #3498db; /* สีฟ้าตามธีม */
-  border-radius: 50%;
-  width: 50px; 
-  height: 50px; 
-  animation: spin 1s linear infinite; /* ปรับ animation ให้เร็วขึ้นเล็กน้อย */
-  margin-bottom: 1rem;
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .loading {
-  font-size: 1.1rem; 
-  color: #666;
-  font-weight: 400;
+    font-size: 1.1rem;
+    color: #666;
+    font-weight: 400;
 }
 
-/* --- Table Styles --- */
 .tableContainer {
-  overflow-x: auto;
-  margin: 0 2rem 2rem 2rem; /* เว้นระยะจากขอบซ้ายขวาเล็กน้อย */
-  background-color: #ffffff;
-  border-radius: 8px; /* มุมมนเล็กน้อย */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* เงาเบาๆ */
-  border: 1px solid #e0e0e0; /* เส้นขอบบางๆ */
+    overflow-x: auto;
+    margin: 0 2rem 2rem 2rem; /* คงระยะห่างจากขอบหน้าจอตามเดิม */
+    background-color: #ffffff;
+    border-radius: 8px; /* มุมโค้งมนเล็กน้อย */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* เงาอ่อนๆ ให้มีมิติ */
+    border: 1px solid #e0e0e0; /* เส้นขอบบางๆ รอบ container ของตาราง */
 }
 
 .table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 900px; /* รักษาความกว้างขั้นต่ำ */
+    width: 100%;
+    border-collapse: collapse; /* ทำให้เส้นขอบเซลล์ติดกัน ไม่มีช่องว่าง */
+    min-width: 1000px; /* **ปรับแก้:** เพิ่มความกว้างขั้นต่ำ เพื่อให้รองรับจำนวนคอลัมน์ได้ดีขึ้นก่อนที่จะมีการเลื่อนแนวนอน คุณอาจต้องปรับค่านี้อีกครั้งตามจำนวนและเนื้อหาของคอลัมน์ที่แน่นอน */
 }
 
 .table thead tr {
-  background-color: #3498db; /* สีฟ้าเข้ม ตามรูปภาพ */
-  color: white;
-  text-align: left;
+    background-color: #007bff; /* **เปลี่ยน:** ใช้สีน้ำเงินหลักตามภาพที่คุณให้มา */
+    color: white; /* ตัวอักษรสีขาว */
+    text-align: left; /* จัดชิดซ้ายเป็นค่าเริ่มต้นสำหรับหัวตาราง */
 }
 
 .table th,
 .table td {
-  padding: 15px 20px;
-  border-bottom: 1px solid #f0f0f0; /* เส้นแบ่งที่อ่อนลง */
-  vertical-align: middle;
+    padding: 12px 18px; /* **ปรับแก้:** ลดระยะห่าง (padding) ลงเล็กน้อย เพื่อให้ดูกระชับและทันสมัยยิ่งขึ้น */
+    border-bottom: 1px solid #e9ecef; /* **เปลี่ยน:** ใช้เส้นขอบแถวที่อ่อนลงและดูนุ่มนวลขึ้น */
+    vertical-align: middle; /* จัดตำแหน่งเนื้อหาให้อยู่กึ่งกลางในแนวตั้ง */
+    font-size: 0.95rem; /* **ปรับแก้:** ลดขนาดตัวอักษรในเซลล์ตารางลงเล็กน้อย */
+    color: #495057; /* **ปรับแก้:** ใช้สีเทาที่เข้มขึ้นเล็กน้อยเพื่อให้ข้อความอ่านง่ายขึ้น */
 }
 
 .table th {
-  font-weight: 500; /* ลดความหนาของตัวอักษรหัวตาราง */
-  text-transform: none; /* ไม่ต้องเป็นตัวพิมพ์ใหญ่ทั้งหมด */
-  font-size: 1rem; 
-  white-space: nowrap;
+    font-weight: 600; /* **ปรับแก้:** หัวตารางตัวหนาขึ้นเล็กน้อย */
+    text-transform: none; /* คงค่าเดิม ไม่ให้เป็นตัวพิมพ์ใหญ่ทั้งหมด */
+    font-size: 0.9rem; /* **ปรับแก้:** ขนาดตัวอักษรของหัวตารางเล็กกว่าเนื้อหาเล็กน้อย */
+    white-space: nowrap; /* ป้องกันไม่ให้ข้อความหัวตารางขึ้นบรรทัดใหม่ */
+    /* **สำคัญ:** เพิ่ม `text-align` สำหรับหัวตารางแต่ละคอลัมน์ตามโครงสร้างตารางจริงของคุณ */
+    text-align: center; /* ค่าเริ่มต้นให้หัวตารางจัดกึ่งกลาง เพื่อใช้ `nth-child` สำหรับการจัดชิดซ้ายในบางคอลัมน์ */
 }
 
+/* การจัดตำแหน่งหัวตารางเฉพาะคอลัมน์ (ปรับ `nth-child` ตามลำดับคอลัมน์จริงของคุณ) */
+.table th:nth-child(1), /* ลำดับ */
+.table th:nth-child(3), /* รูปภาพ */
+.table th:nth-child(6), /* จำนวน */
+.table th:nth-child(7), /* หน่วย */
+.table th:nth-child(8), /* สถานะ */
+.table th:nth-child(11) { /* การจัดการ */
+    text-align: center; /* จัดกึ่งกลาง */
+}
+
+.table th:nth-child(2), /* รหัส */
+.table th:nth-child(4), /* ชื่อ */
+.table th:nth-child(5), /* หมวดหมู่ */
+.table th:nth-child(9), /* สถานที่จัดเก็บ */
+.table th:nth-child(10) { /* แก้ไขล่าสุด */
+    text-align: left; /* จัดชิดซ้าย */
+}
+
+
 .table tbody tr:nth-child(even) {
-  background-color: #fcfcfc; /* สีสลับแถวที่อ่อนมากๆ */
+    background-color: #f8f9fa; /* **เปลี่ยน:** ใช้สีเทาอ่อนมากสำหรับแถวคู่ เพื่อให้มีการสลับสีที่ละเอียดอ่อน */
 }
 
 .table tbody tr:hover {
-  background-color: #f5fafd; /* สีเมื่อเอาเมาส์ไปชี้ที่ดูสะอาดตา */
-  transition: background-color 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03); /* เงาที่บางลง */
-  transform: none; /* ไม่มี animation ยกขึ้น */
+    background-color: #e2f2ff; /* **เปลี่ยน:** เมื่อวางเมาส์เหนือแถว จะเปลี่ยนเป็นสีฟ้าอ่อนๆ ที่เข้ากับสีหัวตาราง */
+    transition: background-color 0.2s ease; /* มีอนิเมชันเปลี่ยนสีอย่างนุ่มนวล */
+    box-shadow: none; /* ไม่มีเงาเมื่อ hover เพื่อให้ดูสะอาดตาขึ้น */
+    transform: none; /* ไม่มีเอฟเฟกต์ยกขึ้น */
 }
 
+/* การจัดตำแหน่งเซลล์ข้อมูลเฉพาะคอลัมน์ (ปรับ `nth-child` ตามลำดับคอลัมน์จริงของคุณ) */
+.table td:nth-child(1), /* ลำดับ */
+.table td:nth-child(3), /* รูปภาพ */
+.table td:nth-child(6), /* จำนวน */
+.table td:nth-child(7), /* หน่วย */
+.table td:nth-child(8), /* สถานะ */
+.table td:nth-child(11) { /* การจัดการ */
+    text-align: center; /* จัดกึ่งกลาง */
+}
+.table td:nth-child(2), /* รหัส */
+.table td:nth-child(4), /* ชื่อ */
+.table td:nth-child(5), /* หมวดหมู่ */
+.table td:nth-child(9), /* สถานที่จัดเก็บ */
+.table td:nth-child(10) { /* แก้ไขล่าสุด */
+    text-align: left; /* จัดชิดซ้าย */
+}
+
+
 .emptyRow td {
-  text-align: center;
-  font-style: italic;
-  color: #999;
-  padding: 40px 20px;
-  background-color: #ffffff;
+    text-align: center;
+    font-style: italic;
+    color: #999;
+    padding: 40px 20px;
+    background-color: #ffffff;
 }
 
 .emptyFillerRow td {
-  padding: 10px 20px;
-  border-bottom: 1px dashed #f5f5f5; /* เส้นประที่เบาลง */
-  background-color: #ffffff;
+    padding: 10px 20px;
+    border-bottom: 1px dashed #e9ecef; /* **เปลี่ยน:** ใช้เส้นประที่อ่อนลง */
+    background-color: #ffffff;
 }
 
-/* --- Status Badges --- */
+/* --- Status Badges (Revised) --- */
 .statusBadge {
-  display: inline-flex; 
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 0.8rem; /* ขนาดเล็กลงเล็กน้อย */
-  border-radius: 5px; /* มุมเหลี่ยมขึ้น คล้ายปุ่มในรูป */
-  font-weight: 600; 
-  font-size: 0.85rem; 
-  text-align: center;
-  min-width: 120px; 
-  text-shadow: none; /* ไม่มีเงาข้อความ */
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* เงาบางๆ พอมีมิติ */
-  transition: none; /* ไม่มี animation */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem 0.7rem; /* **ปรับแก้:** ลดระยะห่าง (padding) ลงเพื่อให้กระชับขึ้น */
+    border-radius: 4px; /* **ปรับแก้:** ทำให้มุมเหลี่ยมขึ้นเล็กน้อย */
+    font-weight: 500; /* **ปรับแก้:** ลดความหนาของตัวอักษรลงเล็กน้อย */
+    font-size: 0.8rem; /* **ปรับแก้:** ลดขนาดตัวอักษรลงเล็กน้อย */
+    text-align: center;
+    min-width: 90px; /* **ปรับแก้:** ลดความกว้างขั้นต่ำลง เพื่อให้ป้ายกระชับขึ้น */
+    text-shadow: none;
+    box-shadow: none; /* ไม่มีเงาเพื่อให้ดูเรียบ (flat look) */
+    transition: none;
 }
 
 .statusBadge:hover {
-  transform: none; /* ไม่มี animation */
+    transform: none;
+    opacity: 0.9; /* เปลี่ยนความทึบแสงเล็กน้อยเมื่อวางเมาส์ */
 }
 
-/* Status specific colors (เน้นสี Flat และตามรูปภาพ) */
-.waiting_approval { background-color: #ffc107; color: #333; } /* เหลืองส้ม */
-.approved_all { background-color: #28a745; color: white; } /* เขียวสดใส */
-.rejected_all { background-color: #dc3545; color: white; } /* แดง */
-.approved_partial { background-color: #20c997; color: white; } /* เขียวอมฟ้า */
-.rejected_partial { background-color: #fd7e14; color: white; } /* ส้มเข้ม */
-.approved_partial_and_rejected_partial { background-color: #6f42c1; color: white; } /* ม่วง */
-.pending { background-color: #007bff; color: white; } /* น้ำเงิน */
-.preparing { background-color: #6c757d; color: white; } /* เทา */
-.delivering { background-color: #17a2b8; color: white; } /* ฟ้าอ่อน */
-.completed { background-color: #343a40; color: white; } /* เทาดำ */
-.canceled { background-color: #6c757d; color: white; } /* เทาเข้ม */
-.stock_deducted { background-color: #6610f2; color: white; } /* ม่วงสด */
-.defaultStatus { background-color: #ccc; color: #333; }
+/* Status specific colors (ใช้ชุดสีที่ดูเรียบง่ายและทันสมัย) */
+.waiting_approval { background-color: #ffe082; color: #616161; } /* เหลืองอำพันอ่อน */
+.approved_all { background-color: #a5d6a7; color: #2e7d32; } /* เขียวอ่อน */
+.rejected_all { background-color: #ef9a9a; color: #b71c1c; } /* แดงอ่อน */
+.approved_partial { background-color: #80cbc4; color: #00695c; } /* สีเขียวอมฟ้า (Teal) */
+.rejected_partial { background-color: #ffab91; color: #d84315; } /* ส้มอมชมพู */
+.approved_partial_and_rejected_partial { background-color: #b39ddb; color: #4527a0; } /* ม่วงอ่อน */
+.pending { background-color: #90caf9; color: #1976d2; } /* น้ำเงินอ่อน */
+.preparing { background-color: #b0bec5; color: #455a64; } /* เทาอมฟ้า */
+.delivering { background-color: #81d4fa; color: #0288d1; } /* ฟ้าอ่อน */
+.completed { background-color: #9e9e9e; color: #424242; } /* เทา */
+.canceled { background-color: #cfd8dc; color: #4f5b62; } /* เทาอมฟ้าที่อ่อนลง */
+.stock_deducted { background-color: #ce93d8; color: #6a1b9a; } /* ม่วงอ่อน (สดใสขึ้น) */
+.defaultStatus { background-color: #e0e0e0; color: #757575; }
 
-
-/* --- Manage Button --- */
+/* --- Manage Button (Revised) --- */
 .manageBtn {
-  background-color: #3498db; /* สีฟ้าเดียวกับหัวตาราง */
-  color: white;
-  padding: 10px 15px; /* ขนาดปานกลาง */
-  border: none;
-  border-radius: 5px; 
-  cursor: pointer;
-  font-size: 0.9rem; 
-  font-weight: 500;
-  transition: background-color 0.2s ease; /* transition สีอย่างเดียว */
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* เงาบางๆ */
-  text-transform: none; /* ไม่ต้องเป็นตัวพิมพ์ใหญ่ */
-  letter-spacing: normal;
+    background-color: #007bff; /* **เปลี่ยน:** ใช้สีน้ำเงินหลักที่เข้ากับหัวตาราง */
+    color: white;
+    padding: 8px 14px; /* **ปรับแก้:** ขนาดปุ่มกระชับขึ้นเล็กน้อย */
+    border: none;
+    border-radius: 4px; /* **ปรับแก้:** มุมเหลี่ยมขึ้นเล็กน้อย */
+    cursor: pointer;
+    font-size: 0.85rem; /* **ปรับแก้:** ขนาดตัวอักษรเล็กลง */
+    font-weight: 500; /* **ปรับแก้:** ความหนาตัวอักษรลดลง */
+    transition: background-color 0.2s ease, box-shadow 0.2s ease; /* เปลี่ยนสีและเงาอย่างนุ่มนวล */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* เงาบางๆ */
+    text-transform: none; /* ไม่มีตัวพิมพ์ใหญ่ */
+    letter-spacing: normal;
 }
 
 .manageBtn:hover {
-  background-color: #2980b9; /* สีเข้มขึ้นเมื่อ hover */
-  transform: none; /* ไม่มี animation ยกขึ้น */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15); /* เงาเพิ่มขึ้นเล็กน้อย */
+    background-color: #0056b3; /* **เปลี่ยน:** สีน้ำเงินเข้มขึ้นเมื่อ hover */
+    transform: none; /* ไม่มีเอฟเฟกต์ยกขึ้น */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* เงาเด่นขึ้นเล็กน้อยเมื่อ hover */
 }
 
 .manageBtn:active {
-  transform: none; 
-  box-shadow: none; /* ไม่มีเงาเมื่อกด */
+    transform: none;
+    box-shadow: none; /* ไม่มีเงาเมื่อกด */
+    background-color: #004085; /* สีน้ำเงินเข้มขึ้นอีกเมื่อกด */
 }
 
 .manageBtn.viewOnlyBtn {
-  background-color: #6c757d; /* สีเทาสำหรับดูรายละเอียด */
+    background-color: #6c757d; /* สีเทาสำหรับปุ่มดูรายละเอียดเท่านั้น */
 }
 
 .manageBtn.viewOnlyBtn:hover {
-  background-color: #5a6268;
+    background-color: #5a6268;
 }
 
-
-/* --- Pagination --- */
+/* --- Pagination (Revised) --- */
 .pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px; /* ระยะห่างปกติ */
-  margin: 1.5rem 0 2.5rem 0; /* ปรับ margin */
-  flex-wrap: wrap;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px; /* **ปรับแก้:** ลดระยะห่างระหว่างปุ่มลงเล็กน้อย */
+    margin: 1.5rem 0 2.5rem 0;
+    flex-wrap: wrap;
 }
 
 .pageBtn {
-  background-color: #ffffff;
-  color: #555;
-  padding: 9px 14px; /* ขนาดปกติ */
-  border: 1px solid #ddd; 
-  border-radius: 5px; 
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-  min-width: 38px; 
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* เงาบางลง */
+    background-color: #ffffff;
+    color: #555;
+    padding: 8px 13px; /* **ปรับแก้:** ขนาดปุ่มกระชับขึ้นเล็กน้อย */
+    border: 1px solid #ccc; /* **ปรับแก้:** เส้นขอบเข้มขึ้นเล็กน้อย */
+    border-radius: 4px; /* **ปรับแก้:** มุมเหลี่ยมขึ้นเล็กน้อย */
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    min-width: 36px; /* **ปรับแก้:** ลดความกว้างขั้นต่ำลงเล็กน้อย */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .pageBtn:hover:not(.disabledBtn):not(.activePage) {
-  background-color: #e9ecef; /* สีอ่อนๆ เมื่อ hover */
-  border-color: #c0c0c0;
-  color: #333;
-  transform: none;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    background-color: #f0f2f5; /* **เปลี่ยน:** พื้นหลังสีเทาอ่อนลงเมื่อ hover */
+    border-color: #b0b0b0; /* **เปลี่ยน:** เส้นขอบเข้มขึ้นเมื่อ hover */
+    color: #333;
+    transform: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
 }
 
 .pageBtn.activePage {
-  background-color: #3498db; /* สีฟ้าหลัก */
-  color: white;
-  border-color: #3498db;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  transform: none;
+    background-color: #007bff; /* **เปลี่ยน:** ใช้สีน้ำเงินหลักสำหรับหน้าที่ใช้งานอยู่ */
+    color: white;
+    border-color: #007bff;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transform: none;
 }
 
 .pageBtn.disabledBtn {
-  background-color: #f5f5f5;
-  color: #aaa;
-  cursor: not-allowed;
-  opacity: 0.7;
-  box-shadow: none;
-  transform: none;
+    background-color: #f8f9fa; /* **เปลี่ยน:** พื้นหลังอ่อนลงสำหรับปุ่มที่ถูกปิดใช้งาน */
+    color: #bbb; /* **เปลี่ยน:** ตัวอักษรอ่อนลงสำหรับปุ่มที่ถูกปิดใช้งาน */
+    cursor: not-allowed;
+    opacity: 0.8; /* ลดความทึบแสงลงเล็กน้อย */
+    box-shadow: none;
+    transform: none;
 }
 
-/* --- Responsive Design (ปรับให้เข้ากับความเรียบง่าย) --- */
+/* --- Responsive Design (Adjusted for new table styles) --- */
 @media (max-width: 1200px) {
-  .table {
-    min-width: 800px;
-  }
+    .table {
+        min-width: 900px; /* ปรับตามความกว้างขั้นต่ำของตารางใหม่ */
+    }
 }
 
 @media (max-width: 992px) {
-  .heading {
-    font-size: 2rem;
-    padding: 1.2rem 1rem;
-    margin-bottom: 1.5rem;
-  }
-  .tableContainer {
-    margin: 0 1rem 1.5rem 1rem;
-  }
-  .table {
-    min-width: 750px;
-  }
-  .table th,
-  .table td {
-    padding: 12px 15px;
-    font-size: 0.95rem;
-  }
-  .statusBadge {
-    min-width: 100px;
-    font-size: 0.8rem;
-    padding: 0.4rem 0.7rem;
-  }
-  .manageBtn {
-    padding: 8px 12px;
-    font-size: 0.85rem;
-  }
+    .heading {
+        font-size: 2rem;
+        padding: 1.2rem 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .tableContainer {
+        margin: 0 1rem 1.5rem 1rem;
+    }
+    .table {
+        min-width: 800px; /* **ปรับแก้** */
+    }
+    .table th,
+    .table td {
+        padding: 10px 15px; /* **ปรับแก้** */
+        font-size: 0.9rem; /* **ปรับแก้** */
+    }
+    .statusBadge {
+        min-width: 80px; /* **ปรับแก้** */
+        font-size: 0.75rem; /* **ปรับแก้** */
+        padding: 0.3rem 0.6rem; /* **ปรับแก้** */
+    }
+    .manageBtn {
+        padding: 7px 11px; /* **ปรับแก้** */
+        font-size: 0.8rem; /* **ปรับแก้** */
+    }
 }
 
 @media (max-width: 768px) {
-  .heading {
-    font-size: 1.8rem;
-    padding: 1rem 0.8rem;
-  }
-  .loadingContainer {
-    margin: 0.5rem 1rem;
-    min-height: 30vh;
-  }
-  .spinner {
-    width: 40px;
-    height: 40px;
-  }
-  .loading {
-    font-size: 1rem;
-  }
-  .tableContainer {
-    margin: 0 0.5rem 1rem 0.5rem; 
-    border-radius: 6px;
-  }
-  .table {
-    min-width: 650px; 
-  }
-  .table th,
-  .table td {
-    padding: 10px 12px;
-    font-size: 0.85rem;
-  }
-  .statusBadge {
-    min-width: 80px;
-    font-size: 0.7rem;
-    padding: 0.3rem 0.5rem;
-  }
-  .manageBtn {
-    padding: 6px 9px;
-    font-size: 0.75rem;
-  }
-  .pagination {
-    gap: 8px;
-    margin: 1rem 0;
-  }
-  .pageBtn {
-    padding: 7px 10px;
-    font-size: 0.85rem;
-    border-radius: 4px;
-  }
+    .heading {
+        font-size: 1.8rem;
+        padding: 1rem 0.8rem;
+    }
+    .loadingContainer {
+        margin: 0.5rem 1rem;
+        min-height: 30vh;
+    }
+    .spinner {
+        width: 40px;
+        height: 40px;
+    }
+    .loading {
+        font-size: 1rem;
+    }
+    .tableContainer {
+        margin: 0 0.5rem 1rem 0.5rem;
+        border-radius: 6px;
+    }
+    .table {
+        min-width: 700px; /* **ปรับแก้** */
+    }
+    .table th,
+    .table td {
+        padding: 8px 10px; /* **ปรับแก้** */
+        font-size: 0.8rem; /* **ปรับแก้** */
+    }
+    .statusBadge {
+        min-width: 60px; /* **ปรับแก้** */
+        font-size: 0.65rem; /* **ปรับแก้** */
+        padding: 0.25rem 0.5rem; /* **ปรับแก้** */
+    }
+    .manageBtn {
+        padding: 5px 8px; /* **ปรับแก้** */
+        font-size: 0.7rem; /* **ปรับแก้** */
+    }
+    .pagination {
+        gap: 6px; /* **ปรับแก้** */
+        margin: 1rem 0;
+    }
+    .pageBtn {
+        padding: 6px 9px; /* **ปรับแก้** */
+        font-size: 0.8rem; /* **ปรับแก้** */
+        border-radius: 4px;
+    }
 }
 
 @media (max-width: 480px) {
-  .heading {
-    font-size: 1.5rem;
-  }
-  .table {
-    min-width: 500px; /* ความกว้างขั้นต่ำบนจอเล็กสุด */
-  }
-  .table th,
-  .table td {
-    font-size: 0.75rem;
-    padding: 6px 8px;
-  }
-  .statusBadge {
-    font-size: 0.65rem;
-    min-width: 60px;
-    padding: 0.2rem 0.4rem;
-  }
-  .manageBtn {
-    font-size: 0.7rem;
-    padding: 5px 7px;
-    border-radius: 4px;
-  }
-  .pagination {
-    gap: 4px;
-  }
-  .pageBtn {
-    padding: 5px 8px;
-    font-size: 0.75rem;
-  }
+    .heading {
+        font-size: 1.5rem;
+    }
+    .table {
+        min-width: 550px; /* **ปรับแก้** */
+    }
+    .table th,
+    .table td {
+        font-size: 0.7rem; /* **ปรับแก้** */
+        padding: 5px 7px; /* **ปรับแก้** */
+    }
+    .statusBadge {
+        font-size: 0.6rem; /* **ปรับแก้** */
+        min-width: 50px; /* **ปรับแก้** */
+        padding: 0.2rem 0.4rem;
+    }
+    .manageBtn {
+        font-size: 0.65rem; /* **ปรับแก้** */
+        padding: 4px 6px; /* **ปรับแก้** */
+        border-radius: 4px;
+    }
+    .pagination {
+        gap: 4px;
+    }
+    .pageBtn {
+        padding: 5px 8px;
+        font-size: 0.75rem;
+    }
 }

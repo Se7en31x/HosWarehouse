@@ -55,19 +55,28 @@ const KPIHeader = ({ data }) => (
   </div>
 );
 
+// --- เปลี่ยนเป็น Pie Chart ---
 const StockByCategoryChart = ({ data }) => (
   <ResponsiveContainer width="100%" height={300}>
-    <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-      <CartesianGrid strokeDasharray="3 3" />
-      <XAxis type="number" />
-      <YAxis dataKey="name" type="category" />
-      <Tooltip formatter={(value) => `฿${value.toLocaleString()}`} />
-      <Bar dataKey="value" name="มูลค่าสต็อก" fill="#8884d8">
+    <PieChart>
+      <Pie
+        data={data}
+        cx="50%"
+        cy="50%"
+        labelLine={false}
+        outerRadius={100} // ขนาดของวงกลม
+        fill="#8884d8"
+        dataKey="value"
+        nameKey="name"
+        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} // แสดงชื่อและเปอร์เซ็นต์
+      >
         {data.map((entry, index) => (
           <Cell key={`cell-${index}`} fill={entry.color} />
         ))}
-      </Bar>
-    </BarChart>
+      </Pie>
+      <Tooltip formatter={(value) => `฿${value.toLocaleString()}`} /> {/* แสดงมูลค่าเมื่อชี้เมาส์ */}
+      <Legend /> {/* แสดงคำอธิบายสี */}
+    </PieChart>
   </ResponsiveContainer>
 );
 
@@ -134,9 +143,9 @@ const LoanedTable = ({ data }) => (
 const Dashboard = () => {
   return (
     <div className={styles.dashboardContainer}>
-      <h1 className={styles.dashboardTitle}>แดชบอร์ดคลังโรงพยาบาล</h1>
+      <h1 className={styles.dashboardTitle}>Dashboard </h1>
       <KPIHeader data={kpiData} />
-      
+
       <div className={styles.sectionGrid}>
         <div className={styles.sectionCard}>
           <h2>ภาพรวมสต็อกตามหมวดหมู่</h2>

@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react'; // import hooks ที่จำเป็น
 import { useRouter } from 'next/navigation'; // สำหรับการนำทางใน Next.js App Router
-import Swal from 'sweetalert2'; // เพิ่ม: Import SweetAlert2 (สำหรับใช้ในอนาคต)
+import Swal from 'sweetalert2'; 
 
-import axiosInstance from '@/app/utils/axiosInstance'; // ตรวจสอบ Path ให้ถูกต้อง
-import styles from './page.module.css'; // ตรวจสอบให้แน่ใจว่าชื่อไฟล์และ path ถูกต้อง
+import axiosInstance from '@/app/utils/axiosInstance'; 
+import styles from './page.module.css'; 
 
 // Map สถานะเพื่อให้แสดงผลเป็นภาษาไทยและมี class สำหรับ styling
 const statusMap = {
@@ -13,84 +13,88 @@ const statusMap = {
   approved_partial: { text: 'อนุมัติบางส่วน', class: styles.statusPartial },
   stock_deducted: { text: 'เบิก-จ่ายแล้ว', class: styles.statusDeducted },
   completed: { text: 'เสร็จสิ้น', class: styles.statusCompleted },
-  // เพิ่มสถานะอื่นๆ ที่คุณมีใน request_status ของตาราง requests ได้ที่นี่
-  // ตัวอย่าง: ถ้า Backend ส่งสถานะ 'pending_deduction' มา
-  // pending_deduction: { text: 'รอเบิก-จ่าย', class: styles.statusPendingDeduction },
+  pending_deduction: { text: 'รอเบิก-จ่าย', class: styles.statusPendingDeduction },
 };
 
 // Map ประเภทคำขอ (request_type) เป็นภาษาไทย
 const typeMap = {
-  'Borrow': 'ยืม',
-  'Withdraw': 'เบิก',
-  'Transfer': 'โอน',
-  // เพิ่มประเภทอื่นๆ ที่คุณมีในฐานข้อมูลได้ที่นี่
+  'borrow': 'ยืม',
+  'withdraw': 'เบิก',
+  'transfer': 'โอน',
+};
+
+// **ฟังก์ชันใหม่สำหรับแปลสถานะ**
+const getStatusTranslation = (status) => {
+  if (statusMap[status]) {
+    return statusMap[status];
+  }
+  return {
+    text: status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' '),
+    class: styles.statusDefault || styles.statusPending,
+  };
+};
+
+// **ฟังก์ชันใหม่สำหรับแปลประเภทคำขอ**
+const getTypeTranslation = (type) => {
+  // ตรวจสอบว่าประเภทมีอยู่ใน typeMap หรือไม่
+  if (typeMap[type]) {
+    // ถ้ามี ให้คืนค่าภาษาไทย
+    return typeMap[type];
+  }
+  // ถ้าไม่มี ให้คืนค่าเดิม (เช่นถ้า Backend ส่งค่าที่ไม่คาดคิดมา)
+  return type;
 };
 
 export default function StockDeductionPage() {
-  const router = useRouter(); // Initialize router hook
+  const router = useRouter(); 
 
-  // States สำหรับเก็บข้อมูลและสถานะต่างๆ
-  const [requests, setRequests] = useState([]); // เก็บรายการคำขอที่อนุมัติแล้วและพร้อมเบิก-จ่าย
-  const [isLoading, setIsLoading] = useState(true); // บอกว่ากำลังโหลดข้อมูลหรือไม่
-  const [error, setError] = useState(null); // เก็บข้อความ error หากมีปัญหา
-  const [currentPage, setCurrentPage] = useState(1); // หน้าปัจจุบันสำหรับการแบ่งหน้า
-  const itemsPerPage = 10; // จำนวนรายการต่อหน้า
+  const [requests, setRequests] = useState([]); 
+  const [isLoading, setIsLoading] = useState(true); 
+  const [error, setError] = useState(null); 
+  const [currentPage, setCurrentPage] = useState(1); 
+  const itemsPerPage = 12; 
 
-  // Effect Hook สำหรับดึงข้อมูลจาก Backend API เมื่อ Component ถูก Mount
   useEffect(() => {
     const fetchRequestsForStockDeduction = async () => {
       try {
-        setIsLoading(true); // เริ่มโหลด: ตั้งสถานะเป็นกำลังโหลด
-        setError(null); // ล้างข้อผิดพลาดเก่า
+        setIsLoading(true); 
+        setError(null); 
 
-        // **แก้ไข:** API นี้ควรส่งคืนเฉพาะคำขอที่มีรายการย่อยที่พร้อมเบิก-จ่าย (processing_status = 'pending')
         const response = await axiosInstance.get('/stockDeduction/ready');
         const data = response.data;
 
-        // **ลบ:** ไม่ต้อง filter ข้อมูลใน Frontend อีกต่อไป เพราะสมมติว่า Backend กรองมาให้แล้ว
-        // const filteredData = data.filter(item =>
-        //   item.status === 'approved_all' || item.status === 'approved_partial'
-        // );
-
-        setRequests(data); // อัปเดต state ด้วยข้อมูลที่ได้มา (ซึ่งถูกกรองโดย Backend แล้ว)
+        setRequests(data); 
       } catch (err) {
         console.error("Error fetching requests ready for stock deduction:", err);
-        setError(err.response?.data?.message || "ไม่สามารถโหลดรายการคำขอที่พร้อมเบิก-จ่ายได้ กรุณาลองใหม่อีกครั้ง"); // แสดงข้อความ error ให้ผู้ใช้
+        setError(err.response?.data?.message || "ไม่สามารถโหลดรายการคำขอที่พร้อมเบิก-จ่ายได้ กรุณาลองใหม่อีกครั้ง"); 
       } finally {
-        setIsLoading(false); // จบการโหลด ไม่ว่าสำเร็จหรือล้มเหลว
+        setIsLoading(false); 
       }
     };
 
-    fetchRequestsForStockDeduction(); // เรียกฟังก์ชันดึงข้อมูลเมื่อ Component ถูกโหลดครั้งแรก
-  }, []); // Dependency array ว่างเปล่า [] หมายหมายถึง effect นี้จะทำงานเพียงครั้งเดียวหลังการ render ครั้งแรก
+    fetchRequestsForStockDeduction(); 
+  }, []); 
 
-  // คำนวณข้อมูลสำหรับการแบ่งหน้า (Pagination)
   const totalPages = Math.ceil(requests.length / itemsPerPage);
   const currentItems = requests.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // ฟังก์ชันสำหรับจัดการเมื่อปุ่ม "ดำเนินการเบิก-จ่าย" ถูกคลิก
   const handleDeductStockClick = (requestId) => {
     router.push(`/manage/stockDeduction/${requestId}`);
   };
 
-  // จำนวนคอลัมน์ในตาราง (สำหรับ colspan ของข้อความ "ไม่พบข้อมูล")
-  const tableColSpan = 8; // ลำดับ, รหัสคำขอ, วันที่ขอ, ผู้ขอ, แผนก, ประเภท, สถานะ, การจัดการ
+  const tableColSpan = 8; 
 
   return (
     <div className={styles.pageBackground}>
       <div className={styles.container}>
         <h1 className={styles.title}>รายการคำขอที่รอเบิก-จ่ายสต็อก</h1>
 
-        {/* แสดงสถานะการโหลด */}
         {isLoading && <p className={styles.infoMessage}>กำลังโหลดข้อมูลรายการคำขอ...</p>}
-
-        {/* แสดงข้อความ error หากมี */}
         {error && <p className={styles.errorMessage}>{error}</p>}
 
-        {/* ตารางจะแสดงเสมอ ไม่ว่าจะโหลดอยู่ มี error หรือไม่มีข้อมูล */}
         {!isLoading && !error && (
           <>
             <table className={styles.table}>
@@ -108,39 +112,41 @@ export default function StockDeductionPage() {
               </thead>
               <tbody>
                 {currentItems.length > 0 ? (
-                  currentItems.map((item, index) => (
-                    <tr key={item.request_id || item.request_code}>
-                      <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                      <td>{item.request_code}</td>
-                      <td>{new Date(item.request_date).toLocaleDateString('th-TH')}</td>
-                      <td>{item.requester}</td>
-                      <td>{item.department}</td>
-                      <td>
-                        {typeMap[item.type] || item.type}
-                      </td>
-                      <td>
-                        {/* แสดงสถานะที่มาจาก Backend (request_status) */}
-                        <span className={`${styles.statusBadge} ${statusMap[item.status]?.class}`}>
-                          {statusMap[item.status]?.text || 'ไม่ระบุ'}
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className={`${styles.button} ${styles.primaryButton}`}
-                          onClick={() => handleDeductStockClick(item.request_id)}
-                        >
-                          📦 ดำเนินการเบิก-จ่าย
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                  currentItems.map((item, index) => {
+                    const translatedStatus = getStatusTranslation(item.status);
+                    const translatedType = getTypeTranslation(item.type); // **เรียกใช้ฟังก์ชันแปลประเภท**
+                    return (
+                      <tr key={item.request_id || item.request_code}>
+                        <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                        <td>{item.request_code}</td>
+                        <td>{new Date(item.request_date).toLocaleDateString('th-TH')}</td>
+                        <td>{item.requester}</td>
+                        <td>{item.department}</td>
+                        <td>
+                          {/* **แสดงประเภทที่ถูกแปลแล้ว** */}
+                          {translatedType}
+                        </td>
+                        <td>
+                          <span className={`${styles.statusBadge} ${translatedStatus.class}`}>
+                            {translatedStatus.text}
+                          </span>
+                        </td>
+                        <td>
+                          <button
+                            className={`${styles.button} ${styles.primaryButton}`}
+                            onClick={() => handleDeductStockClick(item.request_id)}
+                          >
+                            📦 ดำเนินการเบิก-จ่าย
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
-                  // แสดงข้อความเมื่อไม่พบข้อมูล
                   <tr>
                     <td colSpan={tableColSpan} className={styles.infoMessage}>ไม่พบรายการคำขอที่รอการเบิก-จ่ายสต็อกในขณะนี้</td>
                   </tr>
                 )}
-                {/* เพิ่มแถวว่างเพื่อกันพื้นที่ให้ตารางมีขนาดคงที่ */}
                 {Array.from({ length: itemsPerPage - currentItems.length }).map((_, index) => (
                   <tr key={`placeholder-${index}`}>
                     <td colSpan={tableColSpan} className={styles.placeholderRow}>&nbsp;</td>
@@ -149,7 +155,6 @@ export default function StockDeductionPage() {
               </tbody>
             </table>
 
-            {/* ส่วนควบคุมการแบ่งหน้า (Pagination) */}
             <div className={styles.pagination}>
               <button
                 className={styles.pageButton}

@@ -11,7 +11,7 @@ export default function InventoryCheck() {
   const [selectedStorage, setSelectedStorage] = useState("");
   const [allInventoryItems, setAllInventoryItems] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 9;
+  const ITEMS_PER_PAGE = 10;
 
   const getItemCode = (item) => {
     switch (item.item_category?.toLowerCase()) {
@@ -97,7 +97,7 @@ export default function InventoryCheck() {
       {/* เพิ่มส่วน Page Title แบบข้อความธรรมดา */}
       {/* Wrapper สำหรับเนื้อหาหลัก (Filter + Table + Pagination) */}
       <div className={styles.contentWrapper}>
-        <h1 className={styles.pageTitle}>ตรวจสอบยอดคงคลัง</h1>
+        <h1>ตรวจสอบยอดคงคลัง</h1>
         {/* ตัวกรอง */}
         <div className={styles.filterContainer}>
           <div className={styles.filterGroup}>

@@ -6,6 +6,12 @@ import Link from "next/link";
 import axiosInstance from "../../utils/axiosInstance";
 import Swal from "sweetalert2";
 
+// Import icons from Font Awesome
+// ผู้ใช้ต้องติดตั้งแพ็กเกจ Font Awesome สำหรับ React ก่อนใช้งาน
+// npm i --save @fortawesome/fontawesome-svg-core @fortawesome/react-fontawesome @fortawesome/free-solid-svg-icons
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit, faTrashCan } from '@fortawesome/free-solid-svg-icons'; // เปลี่ยน faTrash เป็น faTrashCan เพื่อความชัดเจน
+
 export default function ManageDataPage() {
   const [items, setItems] = useState([]);
   const router = useRouter();
@@ -15,7 +21,7 @@ export default function ManageDataPage() {
   const [unit, setUnit] = useState("");
   const [storage, setStorage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const itemsPerPage = 9;
 
   const handleFilterChange = (event) => setFilter(event.target.value);
   const handleCategoryChange = (event) => setCategory(event.target.value);
@@ -243,8 +249,14 @@ export default function ManageDataPage() {
                 {formatThaiDateTime(item.item_update)}
               </div>
               <div className={`${styles.tableCell} ${styles.centerCell}`} data-label="การจัดการ">
-                <Link href={`/manage/manageData/${item.item_id}/editItem`} className={`${styles.actionButton} ${styles.editButton}`}>แก้ไข</Link>
-                <button className={`${styles.actionButton} ${styles.deleteButton}`} onClick={() => handleDelete(item.item_id)}>ลบ</button>
+                {/* ปุ่มแก้ไขพร้อมไอคอน */}
+                <Link href={`/manage/manageData/${item.item_id}/editItem`} className={`${styles.actionButton} ${styles.editButton}`}>
+                  <FontAwesomeIcon icon={faEdit} />
+                </Link>
+                {/* ปุ่มลบพร้อมไอคอน */}
+                <button className={`${styles.actionButton} ${styles.deleteButton}`} onClick={() => handleDelete(item.item_id)}>
+                  <FontAwesomeIcon icon={faTrashCan} />
+                </button>
               </div>
             </div>
           ))}

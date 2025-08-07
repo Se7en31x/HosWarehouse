@@ -5,16 +5,37 @@
 */
 
 .mainHome {
-  background-color: #f0f2f5;
+  /* กำหนดให้ mainHome ใช้ความสูงเต็ม viewport */
   min-height: 100vh;
-  font-family: 'Sarabun', sans-serif;
+  padding: 0;
+  margin: 0;
+  /* ลบ margin เริ่มต้นของ body/html */
+  background-color: #f3f4f6;
+  /* Soft gray background */
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #f8f9fa;
+  /* สีพื้นหลังหน้าจอที่ดูสะอาดและสว่าง */
+  overflow: auto;
+  /* ให้หน้าจอสามารถเลื่อนได้ถ้าเนื้อหายาวเกิน */
 }
 
 .infoContainer {
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
   background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  padding: 1rem;
+  padding: 1.5rem 2.5rem;
+  border-radius: 0.6rem;
+  box-shadow: 0 3px 5px -1px rgb(0 0 0 / 0.1), 0 1px 3px -2px rgb(0 0 0 / 0.1);
+  flex-direction: column;
+  flex-grow: 1;
+  box-sizing: border-box;
+  min-height: 80vh;
+  /* ADJUSTED: Increased min-height for more vertical space */
+  display: flex;
 }
 
 .cardHeader h1 {
@@ -115,55 +136,184 @@
   ==============================================================
 */
 
+.tableWrapper {
+  overflow-x: auto;
+  box-shadow: 0 3px 5px -1px rgb(0 0 0 / 0.1), 0 1px 3px -2px rgb(0 0 0 / 0.1);
+  border-radius: 0.6rem;
+  border: 1px solid #e0e0e0;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
+  /* MODIFIED: ซ่อนแถบเลื่อนแนวนอนแต่ยังเลื่อนได้ */
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
 .tableGrid {
   display: grid;
-  grid-template-columns: 0.5fr 1fr 0.8fr 2fr 1fr 0.8fr 0.8fr 1fr 1fr 1.2fr 1fr;
-  gap: 1rem;
-  padding: 1rem 0;
+  /* Define grid columns based on the image and provided headers */
+  /* Adjust column widths as needed to match the image precisely */
+  grid-template-columns:
+    minmax(50px, 0.5fr)
+    /* ลำดับ (Order) */
+    minmax(100px, 1fr)
+    /* รหัส (Code) - Corresponds to SKU in image, but "รหัส" in provided headers */
+    minmax(70px, 0.7fr)
+    /* รูปภาพ (Image) */
+    minmax(160px, 2fr)
+    /* ชื่อ (Name) - Corresponds to Product name */
+    minmax(100px, 1.5fr)
+    /* หมวดหมู่ (Category) */
+    minmax(100px, 1fr)
+    /* จำนวน (Quantity) */
+    minmax(100px, 1fr)
+    /* หน่วย (Unit) - Not directly in image, but in headers */
+    minmax(120px, 1.2fr)
+    /* สถานะ (Status) */
+    minmax(120px, 1.2fr)
+    /*สถานที่จัดเก็บ (Storage Location) - Not directly in image, but in headers */
+    minmax(100px, 1.5fr)
+    /* แก้ไขล่าสุด (Last Modified) - Not directly in image, but in headers */
+    minmax(200px, 2fr);
+  /* การจัดการ (Management) - Corresponds to Actions */
   align-items: center;
-  border-bottom: 1px solid #e0e0e0;
-  font-size: 0.9rem;
+  padding: 0px;
+  /* Horizontal padding for the entire grid */
 }
 
 .tableHeader {
-  font-weight: 700;
-  color: #333;
   background-color: #f5f5f5;
-  border-bottom: 2px solid #ccc;
-  border-radius: 8px 8px 0 0;
+  /* Light grey background for header */
+  border-bottom: 1px solid #e0e0e0;
+  font-weight: 500;
+  color: #555;
+  height: 48px;
+  /* Standard height for header row */
+  font-size: 0.875rem;
+  /* 14px */
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .headerItem {
-  text-align: left;
+  padding: 0 8px;
+  /* Padding for header cells */
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  /* Prevent text wrapping */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ลบคอมเมนต์และโค้ดด้านล่างนี้ออกไป เพื่อไม่ให้มันไปตั้งค่าการจัดกึ่งกลางทับ */
+/*
+.headerItem:nth-child(1), // ลำดับ
+.headerItem:nth-child(6), // จำนวน
+.headerItem:nth-child(7), // หน่วย
+.headerItem:nth-child(8), // สถานะ
+*/
+.headerItem:nth-child(11) {
+  justify-content: center;
+}
+
+.inventory {
+  background-color: #ffffff;
+  flex-grow: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  min-height: calc(7 * 47px);
+  /* ADJUSTED: Increased min-height to show more rows */
 }
 
 .tableRow {
-  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #eeeeee;
+  /* Lighter border for rows */
+  height: 60px;
+  /* Slightly taller rows for content */
+  font-size: 0.9375rem;
+  /* 15px */
+  color: #333;
 }
 
-.tableRow:nth-child(even) {
-  background-color: #fafafa;
-}
-
-.tableRow:hover {
-  background-color: #f1f1f1;
-}
 
 .tableCell {
-  word-break: break-word;
-  padding: 0.5rem 0;
+  padding: 8px;
+  /* Padding for table cells */
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.centerCell {
-  text-align: center;
+/* ลบคอมเมนต์และโค้ดด้านล่างนี้ออกไป เพื่อไม่ให้มันไปตั้งค่าการจัดกึ่งกลางทับ */
+/*
+.tableCell:nth-child(1), // ลำดับ
+.tableCell:nth-child(6), // จำนวน
+.tableCell:nth-child(7), // หน่วย
+.tableCell:nth-child(8), // สถานะ*/
+.tableCell:nth-child(11) {
+  justify-content: center;
+}
+
+
+.tableCell:first-child {
+  font-weight: 500;
+  color: #1f2937;
 }
 
 .imageCell {
   width: 50px;
   height: 50px;
   object-fit: cover;
-  border-radius: 6px;
-  border: 1px solid #eee;
+  border-radius: 0.4rem;
+  border: 1px solid #e5e7eb;
+  display: block;
+  margin: 0 auto;
+}
+
+.noDataCell {
+  grid-column: 1 / -1;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+  font-size: 1rem;
+}
+
+.statusBadge {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.3em 0.75em;
+  /* ระยะห่างภายใน */
+  font-size: 0.7rem;
+  /* ขนาดตัวอักษร */
+  font-weight: 600;
+  /* น้ำหนักตัวอักษร */
+  border-radius: 9999px;
+  /* ทำให้ขอบโค้งมนเป็นวงรี/วงกลม */
+  line-height: 1;
+  text-transform: uppercase;
+  /* ตัวพิมพ์ใหญ่ทั้งหมด */
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+}
+
+.statusAvailable {
+  color: #065f46;
+  /* สีตัวอักษรสีเขียวเข้ม */
 }
 
 /*
@@ -187,12 +337,12 @@
 }
 
 .editButton {
-  background-color: #ffc107;
-  color: #333;
+  background-color: #1E90FF;
+  color: #ffffff;
 }
 
 .editButton:hover {
-  background-color: #e0a800;
+  background-color: #0000FF;
   transform: translateY(-2px);
 }
 
@@ -263,7 +413,7 @@
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .filterAddData {
     margin: 1rem 0 0 0;
     flex-direction: row;
@@ -277,7 +427,8 @@
   }
 
   .tableHeader {
-    display: none; /* Hide the header on smaller screens */
+    display: none;
+    /* Hide the header on smaller screens */
   }
 
   .tableRow {
@@ -289,7 +440,7 @@
     margin-bottom: 1rem;
   }
 
-  .tableRow > div:before {
+  .tableRow>div:before {
     content: attr(data-label);
     font-weight: 700;
     color: #555;
@@ -304,7 +455,7 @@
     display: flex;
     align-items: center;
   }
-  
+
   .tableCell:last-child {
     border-bottom: none;
   }
