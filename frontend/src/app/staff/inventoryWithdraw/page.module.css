@@ -202,7 +202,7 @@
 }
 
 .tableGrid {
-     display: grid;
+    display: grid;
     /* Define grid columns based on the image and provided headers */
     /* Adjust column widths as needed to match the image precisely */
     grid-template-columns:
@@ -299,7 +299,6 @@
 
 /* Added for image cell alignment */
 .imageCell {
-
     padding: 4px; /* Adjust padding for image cell */
     /* Adjust padding for image cell */
 }
@@ -430,20 +429,7 @@
 
 /* General container for the table to ensure proper width and spacing */
 .inventoryTableContainer {
-    /* เปลี่ยนจาก max-width ให้เป็น width: 100% แทน */
     width: 100%;
-    /* คุณอาจจะไม่ต้องใช้ max-width อีกแล้วถ้าต้องการให้เต็มจอเสมอ */
-    /* max-width: 1200px; */
-
-    /* ลบ margin: 20px auto; ออก ถ้าต้องการให้ชิดขอบจอพอดี */
-    /* ถ้ายังต้องการ padding รอบๆ จอ ก็อาจจะใช้ padding-left/right ใน body/html หรือใน container ที่ใหญ่กว่านี้ */
-    /* margin: 20px auto; */
-
-    /* ถ้าต้องการให้มันชิดขอบซ้ายขวาของจอ (รวมไปถึงขอบบนล่างถ้าไม่มี content อื่น) */
-    /* คุณอาจจะต้อง set margin ของ body และ html เป็น 0 ด้วย */
-    /* ในไฟล์ CSS หลัก (หรือ Global CSS) ของคุณ */
-    /* html, body { margin: 0; padding: 0; width: 100%; height: 100%; } */
-
     background-color: white;
     border-radius: 8px; /* คุณอาจจะลบ border-radius ออกถ้าต้องการให้เต็มขอบจอจริงๆ */
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* คุณอาจจะลบ box-shadow ออกถ้าต้องการให้เต็มขอบจอจริงๆ */

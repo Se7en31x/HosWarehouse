@@ -340,10 +340,7 @@ export default function Cart() {
               >
                 ยกเลิก
               </button>
-<<<<<<< Updated upstream
-=======
-              
->>>>>>> Stashed changes
+
               <button
                 className={styles.confirm}
                 onClick={handleSubmit}
