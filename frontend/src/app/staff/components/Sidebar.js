@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import styles from './Sidebar.module.css';
+import { FaUndo } from 'react-icons/fa';
 
 import {
   FaHome,
@@ -40,7 +41,6 @@ export default function Sidebar() {
           <FaSearch className={styles.headerIcon} />
         </button>
       </div>
-
       <nav>
         <ul className={styles.navLinks}>
           <li className={`${styles.sidebarItem} ${isActive('/staff') ? styles.active : ''}`}>
@@ -59,6 +59,12 @@ export default function Sidebar() {
             <Link href="/staff/cart" className={styles.noStyleLink}>
               <FaShoppingCart className={styles.sidebarIcon} />
               <span className={styles.sidebarText}>ตะกร้า</span>
+            </Link>
+          </li>
+          <li className={`${styles.sidebarItem} ${isActive('/staff/inventoryReturn') ? styles.active : ''}`}>
+            <Link href="/staff/inventoryReturn" className={styles.noStyleLink}>
+              <FaUndo className={styles.sidebarIcon} />
+              <span className={styles.sidebarText}>คืน</span>
             </Link>
           </li>
           <li className={`${styles.sidebarItem} ${isActive('/staff/my-requests') ? styles.active : ''}`}>

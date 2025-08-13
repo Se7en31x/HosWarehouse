@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import styles from './Sidebar.module.css';
+import { FaUndo } from 'react-icons/fa';
 
 // Import icons from react-icons
 import {
@@ -64,6 +65,12 @@ export default function Sidebar() {
             <Link href="/manage/requestList" className={styles.noStyleLink}>
               <FaListAlt className={styles.sidebarIcon} />
               <span className={styles.sidebarText}>ตรวจสอบคำขอเบิก</span>
+            </Link>
+          </li>
+          <li className={`${styles.sidebarItem} ${isActive('/manage/inventoryReturn') ? styles.active : ''}`}>
+            <Link href="/manage/inventoryReturn" className={styles.noStyleLink}>
+              <FaUndo className={styles.sidebarIcon} />
+              <span className={styles.sidebarText}>ตรวจสอบคำขอคืน</span>
             </Link>
           </li>
           <li className={`${styles.sidebarItem} ${isActive('/manage/request-status-manager') ? styles.active : ''}`}>

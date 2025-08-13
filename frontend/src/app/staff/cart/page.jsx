@@ -11,11 +11,11 @@ export default function Cart() {
   const { cartItems, removeFromCart, clearCart, updateQuantity, updateReturnDate } = useContext(CartContext);
 
   const [urgent, setUrgent] = useState(false);
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split('T')[0];
   const [requestDate, setRequestDate] = useState(today);
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const userId = 1; // จะปรับเป็น login user ในภายหลัง
+  const userId = 1; // TODO: replace with logged-in user id
 
   const [minReturnDate, setMinReturnDate] = useState('');
   const [maxReturnDate, setMaxReturnDate] = useState('');
@@ -29,39 +29,25 @@ export default function Cart() {
     setMaxReturnDate(maxDate.toISOString().split('T')[0]);
   }, []);
 
-  const handleUrgentChange = (e) => {
-    setUrgent(e.target.checked);
-  };
+  const handleUrgentChange = (e) => setUrgent(e.target.checked);
 
   const handleQuantityChange = async (itemId, newQuantityStr) => {
     const newQuantity = Number(newQuantityStr);
-    const itemInCart = cartItems.find(item => item.id === itemId);
+    const itemInCart = cartItems.find((item) => item.id === itemId);
 
     if (isNaN(newQuantity) || newQuantity <= 0) {
-      await Swal.fire({
-        icon: 'error',
-        title: 'จำนวนไม่ถูกต้อง',
-        text: 'กรุณากรอกจำนวนเป็นตัวเลขบวกที่มากกว่า 0',
-      });
+      await Swal.fire({ icon: 'error', title: 'จำนวนไม่ถูกต้อง', text: 'กรุณากรอกจำนวนเป็นตัวเลขบวกที่มากกว่า 0' });
       return;
     }
 
-    if (!itemInCart || typeof itemInCart.item_qty === 'undefined' || itemInCart.item_qty === null || isNaN(itemInCart.item_qty)) {
-      await Swal.fire({
-        icon: 'error',
-        title: 'ข้อผิดพลาดข้อมูลสินค้า',
-        text: 'ไม่สามารถตรวจสอบจำนวนคงเหลือของสินค้าได้ กรุณาลองใหม่อีกครั้ง',
-      });
+    if (!itemInCart || itemInCart.item_qty == null || isNaN(itemInCart.item_qty)) {
+      await Swal.fire({ icon: 'error', title: 'ข้อผิดพลาดข้อมูลสินค้า', text: 'ไม่สามารถตรวจสอบจำนวนคงเหลือของสินค้าได้ กรุณาลองใหม่อีกครั้ง' });
       console.error(`[Cart.js] Missing or invalid item_qty for item ID: ${itemId}`, itemInCart);
       return;
     }
 
     if (newQuantity > itemInCart.item_qty) {
-      await Swal.fire({
-        icon: 'error',
-        title: 'จำนวนไม่เพียงพอ',
-        text: `จำนวนที่ต้องการเกินกว่าจำนวนคงเหลือในคลัง (${itemInCart.item_qty} ${itemInCart.unit || ''})`,
-      });
+      await Swal.fire({ icon: 'error', title: 'จำนวนไม่เพียงพอ', text: `จำนวนที่ต้องการเกินกว่าจำนวนคงเหลือในคลัง (${itemInCart.item_qty} ${itemInCart.unit || ''})` });
       return;
     }
 
@@ -70,36 +56,24 @@ export default function Cart() {
 
   const handleReturnDateChange = async (itemId, newReturnDateStr) => {
     if (!newReturnDateStr) {
-      await Swal.fire({
-        icon: 'error',
-        title: 'วันที่คืนไม่ถูกต้อง',
-        text: 'กรุณาระบุวันที่คืน',
-      });
+      await Swal.fire({ icon: 'error', title: 'วันที่คืนไม่ถูกต้อง', text: 'กรุณาระบุวันที่คืน' });
       return;
     }
 
     const selectedReturnDate = new Date(newReturnDateStr);
-    const today = new Date(minReturnDate);
+    const todayD = new Date(minReturnDate);
     const maxAllowedDate = new Date(maxReturnDate);
 
-    today.setHours(0, 0, 0, 0);
+    todayD.setHours(0, 0, 0, 0);
     selectedReturnDate.setHours(0, 0, 0, 0);
     maxAllowedDate.setHours(0, 0, 0, 0);
 
-    if (selectedReturnDate < today) {
-      await Swal.fire({
-        icon: 'error',
-        title: 'วันที่คืนไม่ถูกต้อง',
-        text: 'วันที่คืนต้องไม่ย้อนหลังกว่าวันนี้',
-      });
+    if (selectedReturnDate < todayD) {
+      await Swal.fire({ icon: 'error', title: 'วันที่คืนไม่ถูกต้อง', text: 'วันที่คืนต้องไม่ย้อนหลังกว่าวันนี้' });
       return;
     }
     if (selectedReturnDate > maxAllowedDate) {
-      await Swal.fire({
-        icon: 'error',
-        title: 'วันที่คืนไม่ถูกต้อง',
-        text: 'วันที่คืนต้องไม่เกิน 3 เดือนนับจากวันนี้',
-      });
+      await Swal.fire({ icon: 'error', title: 'วันที่คืนไม่ถูกต้อง', text: 'วันที่คืนต้องไม่เกิน 3 เดือนนับจากวันนี้' });
       return;
     }
 
@@ -108,57 +82,41 @@ export default function Cart() {
 
   const handleSubmit = async () => {
     if (!requestDate || cartItems.length === 0) {
-      await Swal.fire({
-        icon: 'warning',
-        title: 'กรุณากรอกข้อมูลให้ครบ',
-        text: 'กรุณาเลือกวันที่ และเพิ่มรายการเบิก/ยืม',
-      });
+      await Swal.fire({ icon: 'warning', title: 'กรุณากรอกข้อมูลให้ครบ', text: 'กรุณาเลือกวันที่ และเพิ่มรายการเบิก/ยืม' });
       return;
     }
 
-    const allActions = cartItems.map(item => item.action);
-    const allSameAction = allActions.every(action => action === allActions[0]);
-
+    const allActions = cartItems.map((item) => item.action);
+    const allSameAction = allActions.every((action) => action === allActions[0]);
     if (!allSameAction) {
-      await Swal.fire({
-        icon: 'warning',
-        title: 'ไม่สามารถส่งรายการได้',
-        text: 'ไม่สามารถเบิกและยืมพร้อมกันได้ กรุณาเลือกอย่างใดอย่างหนึ่ง',
-      });
+      await Swal.fire({ icon: 'warning', title: 'ไม่สามารถส่งรายการได้', text: 'ไม่สามารถเบิกและยืมพร้อมกันได้ กรุณาเลือกอย่างใดอย่างหนึ่ง' });
       return;
     }
 
     setIsSubmitting(true);
 
-    // ********* แก้ไขตรงนี้ให้ส่งค่าภาษาอังกฤษไป *********
+    // ส่งค่า EN เดิมอยู่แล้ว: 'withdraw' | 'borrow'
     const requestType = cartItems[0]?.action || 'withdraw';
 
     const payload = {
-      items: cartItems.map((item) => {
-        return {
-          id: item.id,
-          quantity: item.quantity,
-          action: item.action,
-          returnDate: item.action === 'borrow' ? item.returnDate : null,
-          borrowedFromLocation: item.action === 'return' ? item.borrowedFromLocation : null,
-        };
-      }),
+      items: cartItems.map((item) => ({
+        id: item.id,
+        quantity: item.quantity,
+        action: item.action,
+        returnDate: item.action === 'borrow' ? item.returnDate : null,
+        borrowedFromLocation: item.action === 'return' ? item.borrowedFromLocation : null,
+      })),
       note,
       urgent,
       date: requestDate,
-      type: requestType, // ใช้ค่า 'withdraw' หรือ 'borrow' ตรงๆ
+      type: requestType,
       user_id: userId,
     };
 
     try {
       const res = await axiosInstance.post('/requests', payload);
       if (res.status === 200 || res.status === 201) {
-        await Swal.fire({
-          icon: 'success',
-          title: 'ส่งคำขอสำเร็จ',
-          showConfirmButton: false,
-          timer: 2000,
-        });
+        await Swal.fire({ icon: 'success', title: 'ส่งคำขอสำเร็จ', showConfirmButton: false, timer: 2000 });
         setNote('');
         setUrgent(false);
         setRequestDate(today);
@@ -166,11 +124,7 @@ export default function Cart() {
       }
     } catch (err) {
       console.error(err);
-      await Swal.fire({
-        icon: 'error',
-        title: 'เกิดข้อผิดพลาด',
-        text: 'ไม่สามารถส่งคำขอได้ โปรดลองใหม่ภายหลัง',
-      });
+      await Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่สามารถส่งคำขอได้ โปรดลองใหม่ภายหลัง' });
     } finally {
       setIsSubmitting(false);
     }
@@ -194,67 +148,128 @@ export default function Cart() {
     }
   };
 
+  const handleClearCart = async () => {
+    const result = await Swal.fire({
+      title: 'ล้างตะกร้าทั้งหมด?',
+      text: 'คุณต้องการลบรายการทั้งหมดออกจากตะกร้าหรือไม่',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ล้างตะกร้า',
+      cancelButtonText: 'ยกเลิก',
+    });
+    if (result.isConfirmed) clearCart();
+  };
+
   const translateAction = (action) => {
     switch (action) {
-      case 'withdraw': return 'เบิก';
-      case 'borrow': return 'ยืม';
-      case 'return': return 'คืน';
-      default: return action;
+      case 'withdraw':
+        return 'เบิก';
+      case 'borrow':
+        return 'ยืม';
+      case 'return':
+        return 'คืน';
+      default:
+        return action;
     }
   };
 
   return (
-    <div className={styles.container}>
-      <h2 className={styles.header}>
-        รายการ{translateAction(cartItems[0]?.action || '')}
-      </h2>
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>ลำดับ</th>
-              <th>รหัส</th>
-              <th>รูปภาพ</th>
-              <th>ชื่อ</th>
-              <th>จำนวน</th>
-              <th>หน่วย</th>
-              <th>หมวดหมู่</th>
-              <th>ประเภท</th>
-              <th>วันที่คืน</th>
-              <th>การจัดการ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {cartItems.map((item, index) => {
-              return (
-                <tr key={item.id}>
-                  <td>{index + 1}</td>
-                  <td>{item.code || '-'}</td>
-                  <td>
+    <div className={styles.mainHome}>
+      <div className={styles.infoContainer}>
+        {/* Header */}
+        <div className={styles.pageBar}>
+          <div className={styles.titleGroup}>
+            <h2 className={styles.pageTitle}>รายการ{translateAction(cartItems[0]?.action || '')}</h2>
+          </div>
+          <div className={styles.actionsRight}>
+            <button className={`${styles.ghostBtn} ${styles.clearButton}`} onClick={handleClearCart} disabled={isSubmitting}>
+              ล้างตะกร้า
+            </button>
+          </div>
+        </div>
+
+        {/* Toolbar (form controls) */}
+        <div className={styles.toolbar}>
+          <div className={styles.filterGrid}>
+            <div className={styles.filterGroup}>
+              <label className={styles.label}>เร่งด่วน</label>
+              <label className={styles.checkboxLabel}>
+                <input type="checkbox" checked={urgent} onChange={handleUrgentChange} disabled={isSubmitting} />
+                <span>ต้องการเร่งด่วน</span>
+              </label>
+            </div>
+
+            <div className={styles.filterGroup}>
+              <label className={styles.label}>วันที่ขอ</label>
+              <input
+                type="date"
+                className={styles.input}
+                value={requestDate}
+                onChange={(e) => setRequestDate(e.target.value)}
+                disabled={isSubmitting}
+              />
+            </div>
+
+            <div className={`${styles.filterGroup} ${styles.noteGroup}`}>
+              <label className={styles.label}>หมายเหตุ</label>
+              <textarea
+                className={`${styles.input} ${styles.textarea}`}
+                placeholder="หมายเหตุ..."
+                rows={2}
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                disabled={isSubmitting}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Table Section */}
+        <div className={styles.tableSection}>
+          <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+            <div className={styles.headerItem}>ลำดับ</div>
+            <div className={styles.headerItem}>รหัส</div>
+            <div className={styles.headerItem}>รูปภาพ</div>
+            <div className={styles.headerItem}>ชื่อ</div>
+            <div className={styles.headerItem}>จำนวน</div>
+            <div className={styles.headerItem}>หน่วย</div>
+            <div className={styles.headerItem}>หมวดหมู่</div>
+            <div className={styles.headerItem}>ประเภท</div>
+            <div className={styles.headerItem}>วันที่คืน</div>
+            <div className={styles.headerItem}>การจัดการ</div>
+          </div>
+
+          <div className={styles.inventory} style={{ '--rows-per-page': 10 }}>
+            {cartItems.length > 0 ? (
+              cartItems.map((item, index) => (
+                <div key={item.id} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                  <div className={`${styles.tableCell} ${styles.centerCell}`}>{index + 1}</div>
+                  <div className={styles.tableCell}>{item.code || '-'}</div>
+                  <div className={`${styles.tableCell} ${styles.imageCell}`}>
                     <Image
                       src={item.item_img || '/defaults/landscape.png'}
                       alt={item.name}
                       width={50}
                       height={50}
-                      style={{ objectFit: 'cover', borderRadius: '4px' }}
+                      style={{ objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }}
                     />
-                  </td>
-                  <td>{item.name || '-'}</td>
-                  <td>
+                  </div>
+                  <div className={styles.tableCell}>{item.name || '-'}</div>
+                  <div className={styles.tableCell}>
                     <input
                       type="number"
-                      min="1"
+                      min={1}
                       max={item.item_qty || 1}
                       value={item.quantity || 1}
                       onChange={(e) => handleQuantityChange(item.id, e.target.value)}
                       className={styles.quantityInput}
                       disabled={isSubmitting}
                     />
-                  </td>
-                  <td>{item.unit || '-'}</td>
-                  <td>{item.type || '-'}</td>
-                  <td>{translateAction(item.action)}</td>
-                  <td>
+                  </div>
+                  <div className={styles.tableCell}>{item.unit || '-'}</div>
+                  <div className={styles.tableCell}>{item.type || '-'}</div>
+                  <div className={styles.tableCell}>{translateAction(item.action)}</div>
+                  <div className={styles.tableCell}>
                     {item.action === 'borrow' ? (
                       <input
                         type="date"
@@ -268,87 +283,33 @@ export default function Cart() {
                     ) : (
                       '-'
                     )}
-                  </td>
-                  <td>
-                    <button
-                      className={styles.delete}
-                      onClick={() => removeFromCart(item.id)}
-                      disabled={isSubmitting}
-                    >
+                  </div>
+                  <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                    <button className={`${styles.actionButton} ${styles.dangerBtnOutline}`} onClick={() => removeFromCart(item.id)} disabled={isSubmitting}>
                       ลบ
                     </button>
-                  </td>
-                </tr>
-              );
-            })}
-
-            {cartItems.length === 0 && (
-              <tr>
-                <td colSpan={10} style={{ textAlign: 'center', padding: '1rem', color: '#999' }}>ไม่มีรายการในตะกร้า กรุณาเพิ่มรายการก่อนยืนยัน</td>
-              </tr>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className={styles.noDataMessage}>ไม่มีรายการในตะกร้า กรุณาเพิ่มรายการก่อนยืนยัน</div>
             )}
-            {[...Array(Math.max(0, 10 - cartItems.length))].map((_, i) => (
-              <tr key={`empty-${i}`}>
-                <td colSpan={10}>&nbsp;</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className={styles.footer}>
-        <div className={styles.formRow}>
-          <div className={styles.leftColumn}>
-            <div className={styles.topRow}>
-              <div className={styles.checkboxGroup}>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={urgent}
-                    onChange={handleUrgentChange}
-                    disabled={isSubmitting}
-                  />
-                  <span>ต้องการเร่งด่วน</span>
-                </label>
-              </div>
-
-              <input
-                type="date"
-                className={styles.datePicker}
-                value={requestDate}
-                onChange={(e) => setRequestDate(e.target.value)}
-                disabled={isSubmitting}
-              />
-            </div>
-
-            <textarea
-              className={styles.textarea}
-              placeholder="หมายเหตุ"
-              rows={3}
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              disabled={isSubmitting}
-            />
           </div>
+        </div>
 
-          <div className={styles.rightColumn}>
-            <div className={styles.buttons}>
-              <button
-                className={styles.cancel}
-                onClick={handleCancel}
-                disabled={isSubmitting}
-              >
-                ยกเลิก
-              </button>
-
-              <button
-                className={styles.confirm}
-                onClick={handleSubmit}
-                disabled={isSubmitting || cartItems.length === 0 || !requestDate}
-              >
-                {isSubmitting ? 'กำลังส่ง...' : 'ยืนยัน'}
-              </button>
-            </div>
+        {/* Footer actions */}
+        <div className={styles.footerBar}>
+          <div className={styles.footerActions}>
+            <button className={`${styles.actionButton} ${styles.cancelBtn}`} onClick={handleCancel} disabled={isSubmitting}>
+              ยกเลิก
+            </button>
+            <button
+              className={`${styles.actionButton} ${styles.successBtn}`}
+              onClick={handleSubmit}
+              disabled={isSubmitting || cartItems.length === 0 || !requestDate}
+            >
+              {isSubmitting ? 'กำลังส่ง...' : 'ยืนยัน'}
+            </button>
           </div>
         </div>
       </div>
