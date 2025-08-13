@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import axiosInstance from '@/app/utils/axiosInstance'; // ปรับ Path ให้ถูกต้อง
+import axiosInstance from '@/app/utils/axiosInstance';
 import Swal from 'sweetalert2';
 import styles from './page.module.css';
 
@@ -11,25 +11,25 @@ export default function RequestStatusManagerPage() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const itemsPerPage = 9; // จำนวนรายการต่อหน้า
+  const itemsPerPage = 9;
 
-  // 1. statusMap: ควรมีคำแปลสำหรับทุกสถานะที่เป็นไปได้ในระบบ
+  // แผนที่สถานะ -> label ภาษาไทย
   const statusMap = {
-    waiting_approval: 'รอการอนุมัติ', // สถานะเริ่มต้นของคำขอ (ผู้อนุมัติจัดการ)
+    waiting_approval: 'รอการอนุมัติ',
     approved_all: 'อนุมัติทั้งหมด',
     rejected_all: 'ปฏิเสธทั้งหมด',
-    approved_partial: 'อนุมัติบางส่วน', // มีรายการที่อนุมัติและรายการที่รอตัดสินใจ
-    rejected_partial: 'ปฏิเสธบางส่วน', // มีรายการที่ปฏิเสธและรายการที่รอตัดสินใจ
-    approved_partial_and_rejected_partial: 'อนุมัติ/ปฏิเสธบางส่วน', // ทุกรายการย่อยได้รับการตัดสินใจแล้ว
+    approved_partial: 'อนุมัติบางส่วน',
+    rejected_partial: 'ปฏิเสธบางส่วน',
+    approved_partial_and_rejected_partial: 'อนุมัติ/ปฏิเสธบางส่วน',
     pending: 'อยู่ระหว่างการดำเนินการ',
     preparing: 'กำลังจัดเตรียม',
     delivering: 'นำส่งแล้ว',
     completed: 'เสร็จสิ้น',
     canceled: 'ยกเลิกคำขอ',
-    stock_deducted: 'ตัดสต็อกแล้ว', // เปลี่ยนคำแปลตรงนี้
+    stock_deducted: 'ตัดสต็อกแล้ว',
   };
 
-  // 2. statusToClass: กำหนดคลาส CSS สำหรับแต่ละสถานะเพื่อการแสดงผล
+  // สถานะ -> ชื่อคลาส (ให้มี default เสมอ)
   const statusToClass = {
     waiting_approval: 'waiting_approval',
     approved_all: 'approved_all',
@@ -42,11 +42,11 @@ export default function RequestStatusManagerPage() {
     delivering: 'delivering',
     completed: 'completed',
     canceled: 'canceled',
-    stock_deducted: 'stock_deducted', // คลาสสำหรับสถานะใหม่
+    stock_deducted: 'stock_deducted',
+    __default: 'defaultStatus',
   };
 
-  // 3. allowedStatuses: หน้านี้ควรแสดงเฉพาะคำขอที่ "จบกระบวนการอนุมัติแล้ว"
-  // หรืออยู่ในขั้นตอนการดำเนินการจัดส่งพัสดุ
+  // แสดงเฉพาะคำขอที่จบการอนุมัติแล้วหรือกำลังดำเนินการ
   const allowedStatuses = [
     'approved_all',
     'rejected_all',
@@ -59,47 +59,97 @@ export default function RequestStatusManagerPage() {
     'canceled',
   ];
 
+  // สถานะที่เป็น view-only (ไม่มีปุ่ม "จัดการสถานะ")
+  const viewOnlyStatuses = ['rejected_all', 'completed', 'canceled'];
+
+  // จัดเรียงล่าสุดก่อน
+  const sortedRequests = useMemo(() => {
+    return [...requests].sort((a, b) => {
+      const da = new Date(a.request_date).getTime();
+      const db = new Date(b.request_date).getTime();
+      return db - da; // ใหม่ก่อน
+    });
+  }, [requests]);
+
+  const totalPages = Math.ceil(sortedRequests.length / itemsPerPage);
+  const currentItems = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return sortedRequests.slice(start, end);
+  }, [sortedRequests, currentPage]);
+
   useEffect(() => {
     fetchRequests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchRequests = async () => {
+  async function fetchRequests() {
     setLoading(true);
     try {
+      // ส่งเป็น comma-separated ตามที่ backend คาดหวัง
       const statusQuery = allowedStatuses.join(',');
-      const res = await axiosInstance.get(`/requestStatus?status=${statusQuery}`);
+      const res = await axiosInstance.get('/requestStatus', {
+        params: { status: statusQuery },
+      });
+
+      if (!Array.isArray(res.data)) {
+        throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
+      }
+
       setRequests(res.data);
+      setCurrentPage(1); // รีเซ็ตกลับหน้าแรกเผื่อจำนวนหน้าเปลี่ยน
     } catch (err) {
       console.error('โหลดคำขอล้มเหลว', err);
       Swal.fire('ผิดพลาด', 'โหลดคำขอไม่สำเร็จ กรุณาลองใหม่', 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const totalPages = Math.ceil(requests.length / itemsPerPage);
-  const currentItems = requests.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // เลือกปฏิทิน/ภาษาและ timezone ชัดเจน
+  // ถ้าอยากได้ปี ค.ศ. ใช้ 'en-GB' แทน 'th-TH' (เพราะ th-TH จะเป็น พ.ศ. ตามดีไซน์)
+  const LOCALE_DATE = 'th-TH'; // หรือ 'en-GB' ถ้าต้องการ ค.ศ.
+  const TIMEZONE = 'Asia/Bangkok';
 
-  const handlePageChange = (page) => {
-    if (page < 1 || page > totalPages) return;
+  function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr);
+    if (isNaN(d)) return '-';
+    return new Intl.DateTimeFormat(LOCALE_DATE, {
+      timeZone: TIMEZONE,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(d);
+  }
+
+  function formatTime(dateStr) {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr);
+    if (isNaN(d)) return '-';
+    return new Intl.DateTimeFormat(LOCALE_DATE, {
+      timeZone: TIMEZONE,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(d);
+  }
+
+  function handlePageChange(page) {
+    if (page < 1) return;
+    if (totalPages === 0 && page !== 1) return;
+    if (totalPages > 0 && page > totalPages) return;
     setCurrentPage(page);
-  };
+  }
 
   if (loading) {
     return (
       <div className={styles.loadingContainer}>
-        <div className={styles.spinner}></div>
+        <div className={styles.spinner} />
         <p className={styles.loading}>กำลังโหลดข้อมูล...</p>
       </div>
     );
   }
-
-  // กำหนดสถานะที่ไม่ต้องการให้ "จัดการ" (ปุ่มจะเปลี่ยนเป็น "ดูรายละเอียด" แทน)
-  // ลบ 'stock_deducted' ออกจากรายการนี้ เพื่อให้สามารถ "จัดการสถานะ" ได้
-  const viewOnlyStatuses = ['rejected_all', 'completed', 'canceled']; 
 
   return (
     <div className={styles.container}>
@@ -121,56 +171,64 @@ export default function RequestStatusManagerPage() {
           </thead>
           <tbody>
             {currentItems.length > 0 ? (
-              currentItems.map((r) => (
-                <tr key={r.request_id}>
-                  <td>{r.request_code}</td>
-                  <td>{r.user_name}</td>
-                  <td>{r.department}</td>
-                  <td>{new Date(r.request_date).toLocaleDateString('th-TH')}</td>
-                  <td>{new Date(r.request_date).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</td>
-                  <td>
-                    {r.request_due_date
-                      ? new Date(r.request_due_date).toLocaleDateString('th-TH')
-                      : '-'}
-                  </td>
-                  <td>
-                    <span
-                      className={`${styles.statusBadge} ${styles[statusToClass[r.request_status]] || styles.defaultStatus}`}
-                    >
-                      {statusMap[r.request_status] || r.request_status}
-                    </span>
-                  </td>
-                  <td>
-                    <Link href={`/manage/request-status-manager/${r.request_id}`}> 
-                      <button
-                        className={`${styles.manageBtn} ${viewOnlyStatuses.includes(r.request_status) ? styles.viewOnlyBtn : ''}`}
-                        title={viewOnlyStatuses.includes(r.request_status) ? "ดูรายละเอียดคำขอนี้" : "จัดการสถานะคำขอนี้"}
-                      >
-                        {viewOnlyStatuses.includes(r.request_status) ? 'ดูรายละเอียด' : 'จัดการสถานะ'}
-                      </button>
-                    </Link>
-                  </td>
-                </tr>
-              ))
+              currentItems.map((r) => {
+                const statusKey = r.request_status;
+                const label = statusMap[statusKey] || statusKey || 'ไม่ทราบสถานะ';
+                const badgeClass =
+                  styles[statusToClass[statusKey]] || styles[statusToClass.__default];
+
+                return (
+                  <tr key={r.request_id}>
+                    <td>{r.request_code}</td>
+                    <td>{r.user_name}</td>
+                    <td>{r.department}</td>
+                    <td>{formatDate(r.request_date)}</td>
+                    <td>{formatTime(r.request_date)}</td>
+                    <td>{r.request_due_date ? formatDate(r.request_due_date) : '-'}</td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${badgeClass}`}>{label}</span>
+                    </td>
+                    <td>
+                      <Link href={`/manage/request-status-manager/${r.request_id}`}>
+                        <button
+                          className={`${styles.manageBtn} ${
+                            viewOnlyStatuses.includes(statusKey) ? styles.viewOnlyBtn : ''
+                          }`}
+                          title={
+                            viewOnlyStatuses.includes(statusKey)
+                              ? 'ดูรายละเอียดคำขอนี้'
+                              : 'จัดการสถานะคำขอนี้'
+                          }
+                        >
+                          {viewOnlyStatuses.includes(statusKey) ? 'ดูรายละเอียด' : 'จัดการสถานะ'}
+                        </button>
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
                 <td colSpan={8} className={styles.emptyRow}>
-                  {requests.length === 0 ? "ยังไม่มีคำขอในระบบสำหรับสถานะที่แสดง" : "ไม่พบคำขอในสถานะที่แสดงในหน้าปัจจุบัน"}
+                  {requests.length === 0
+                    ? 'ยังไม่มีคำขอในระบบสำหรับสถานะที่แสดง'
+                    : 'ไม่พบคำขอในหน้าปัจจุบัน'}
                 </td>
               </tr>
             )}
 
-            {/* แถวว่างสำหรับเติมเต็มตารางให้ครบตาม itemsPerPage เพื่อความสวยงาม */}
-            {Array.from({ length: itemsPerPage - currentItems.length }).map((_, idx) => (
-              <tr key={`empty-${idx}`} className={styles.emptyFillerRow}>
-                <td colSpan={8}>&nbsp;</td>
-              </tr>
-            ))}
+            {/* เติมแถวว่างให้เต็มตาราง (เพื่อ UI ไม่กระดก) */}
+            {currentItems.length < itemsPerPage &&
+              Array.from({ length: itemsPerPage - currentItems.length }).map((_, idx) => (
+                <tr key={`empty-${idx}`} className={styles.emptyFillerRow}>
+                  <td colSpan={8}>&nbsp;</td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
 
-      {/* ส่วนควบคุม Pagination */}
+      {/* Pagination */}
       <div className={styles.pagination}>
         <button
           onClick={() => handlePageChange(1)}
@@ -190,30 +248,29 @@ export default function RequestStatusManagerPage() {
           ◀ ก่อนหน้า
         </button>
 
-        {totalPages > 0 ? (
-          Array.from({ length: totalPages }, (_, i) => (
-            <button
-              key={i + 1}
-              onClick={() => handlePageChange(i + 1)}
-              className={`${styles.pageBtn} ${currentPage === i + 1 ? styles.activePage : ''}`}
-              title={`หน้า ${i + 1}`}
-            >
-              {i + 1}
+        {totalPages > 0
+          ? Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => handlePageChange(i + 1)}
+                className={`${styles.pageBtn} ${currentPage === i + 1 ? styles.activePage : ''}`}
+                title={`หน้า ${i + 1}`}
+              >
+                {i + 1}
+              </button>
+            ))
+          : (
+            <button className={`${styles.pageBtn} ${styles.activePage}`} disabled>
+              1
             </button>
-          ))
-        ) : (
-          <button
-            className={`${styles.pageBtn} ${styles.activePage}`}
-            disabled
-          >
-            1
-          </button>
-        )}
+          )}
 
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages || totalPages === 0}
-          className={`${styles.pageBtn} ${currentPage === totalPages || totalPages === 0 ? styles.disabledBtn : ''}`}
+          className={`${styles.pageBtn} ${
+            currentPage === totalPages || totalPages === 0 ? styles.disabledBtn : ''
+          }`}
           title="ถัดไป"
         >
           ถัดไป ▶
@@ -222,7 +279,9 @@ export default function RequestStatusManagerPage() {
         <button
           onClick={() => handlePageChange(totalPages || 1)}
           disabled={currentPage === totalPages || totalPages === 0}
-          className={`${styles.pageBtn} ${currentPage === totalPages || totalPages === 0 ? styles.disabledBtn : ''}`}
+          className={`${styles.pageBtn} ${
+            currentPage === totalPages || totalPages === 0 ? styles.disabledBtn : ''
+          }`}
           title="หน้าสุดท้าย"
         >
           หน้าสุดท้าย ⏭

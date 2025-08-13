@@ -35,7 +35,7 @@ html, body {
 /* --- Main Content Area (where individual page content goes) --- */
 .content-area {
   flex-grow: 1;
-  background-color: #ffffff; /* พื้นหลังสีขาวสำหรับพื้นที่เนื้อหาหลัก */
+  background-color: #f0f2f5; /* พื้นหลังสีขาวสำหรับพื้นที่เนื้อหาหลัก */
   border-radius: 15px; /* มุมโค้งมนที่เข้ากับ Sidebar */
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   /* padding: 30px; */

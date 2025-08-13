@@ -1,0 +1,153 @@
+/* Layout */
+.container {
+  /* padding: 16px; */
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.06);
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.heading {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.backButton {
+  background: #e9ecef;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.subHeading {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 16px 0 8px;
+}
+
+/* Tabs */
+.tabBar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tabBtn {
+  background: #f1f3f5;
+  border: 1px solid #e5e7eb;
+  border-radius: 9999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.tabActive {
+  background: #0ea5e9;
+  color: #fff;
+  border-color: #0ea5e9;
+}
+
+/* Summary grid */
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+  margin-bottom: 8px;
+}
+
+.detailItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detailItem strong {
+  min-width: 120px;
+}
+
+/* Table */
+.tableWrapper {
+  width: 100%;
+  overflow: auto;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.94rem;
+}
+
+.table thead th {
+  background: #f8fafc;
+  font-weight: 700;
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid #e9ecef;
+  white-space: nowrap;
+}
+
+.table tbody td {
+  padding: 10px;
+  border-bottom: 1px solid #f1f3f5;
+  vertical-align: top;
+}
+
+.noDataRow td {
+  text-align: center;
+  color: #6b7280;
+  padding: 16px;
+}
+
+/* Loading / Error */
+.loadingContainer, .errorContainer {
+  display: grid;
+  place-items: center;
+  min-height: 200px;
+}
+
+.loading {
+  margin-top: 8px;
+}
+
+/* Status badges */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 12px;
+  color: #fff;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.badgeGreen  { background: #16a34a; }
+.badgeYellow { background: #f59e0b; }
+.badgeBlue   { background: #2563eb; }
+.badgeRed    { background: #ef4444; }
+.badgeGray   { background: #6b7280; }
+
+/* Buttons */
+.retryBtn {
+  background: #0ea5e9;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+}

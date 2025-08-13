@@ -1,91 +1,107 @@
-'use client'; // จำเป็นต้องใช้เพื่อเปิดใช้งาน Client Components ใน Next.js
+'use client';
 
-import { useState, useEffect } from 'react'; // import hooks ที่จำเป็น
-import { useRouter } from 'next/navigation'; // สำหรับการนำทางใน Next.js App Router
-import Swal from 'sweetalert2'; 
+import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import Swal from 'sweetalert2';
+import axiosInstance from '@/app/utils/axiosInstance';
+import styles from './page.module.css';
 
-import axiosInstance from '@/app/utils/axiosInstance'; 
-import styles from './page.module.css'; 
-
-// Map สถานะเพื่อให้แสดงผลเป็นภาษาไทยและมี class สำหรับ styling
+// Map สถานะของ "ใบคำขอ"
 const statusMap = {
   approved_all: { text: 'อนุมัติทั้งหมด', class: styles.statusApproved },
   approved_partial: { text: 'อนุมัติบางส่วน', class: styles.statusPartial },
+  approved_partial_and_rejected_partial: { text: 'อนุมัติ/ปฏิเสธบางส่วน', class: styles.statusPartial },
   stock_deducted: { text: 'เบิก-จ่ายแล้ว', class: styles.statusDeducted },
   completed: { text: 'เสร็จสิ้น', class: styles.statusCompleted },
   pending_deduction: { text: 'รอเบิก-จ่าย', class: styles.statusPendingDeduction },
 };
+const typeMap = { borrow: 'ยืม', withdraw: 'เบิก', transfer: 'โอน' };
 
-// Map ประเภทคำขอ (request_type) เป็นภาษาไทย
-const typeMap = {
-  'borrow': 'ยืม',
-  'withdraw': 'เบิก',
-  'transfer': 'โอน',
-};
-
-// **ฟังก์ชันใหม่สำหรับแปลสถานะ**
-const getStatusTranslation = (status) => {
-  if (statusMap[status]) {
-    return statusMap[status];
-  }
-  return {
-    text: status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' '),
-    class: styles.statusDefault || styles.statusPending,
+const getStatusTranslation = (status) =>
+  statusMap[status] || {
+    text: (status || '').toString().replace(/_/g, ' ').replace(/^./, c => c.toUpperCase()),
+    class: styles.statusDefault || styles.statusPendingDeduction,
   };
+
+const getTypeTranslation = (type) => typeMap[type] || type || '-';
+
+const fmtDate = (d) => {
+  if (!d) return '-';
+  const dt = new Date(d);
+  return Number.isNaN(dt.getTime()) ? '-' : dt.toLocaleDateString('th-TH');
 };
 
-// **ฟังก์ชันใหม่สำหรับแปลประเภทคำขอ**
-const getTypeTranslation = (type) => {
-  // ตรวจสอบว่าประเภทมีอยู่ใน typeMap หรือไม่
-  if (typeMap[type]) {
-    // ถ้ามี ให้คืนค่าภาษาไทย
-    return typeMap[type];
-  }
-  // ถ้าไม่มี ให้คืนค่าเดิม (เช่นถ้า Backend ส่งค่าที่ไม่คาดคิดมา)
-  return type;
-};
+// ✅ ดึงจำนวนแบบยืดหยุ่น: รองรับทั้งคอลัมน์แยก และ status_counts JSON
+function getBreakdown(row) {
+  const toNum = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+  const sc = (row?.status_counts && typeof row.status_counts === 'object') ? row.status_counts : null;
+
+  const pending = toNum(row?.pending_count) || toNum(row?.pending_items_count) || toNum(sc?.pending);
+  const preparing = toNum(row?.preparing_count) || toNum(sc?.preparing);
+  const delivering = toNum(row?.delivering_count) || toNum(sc?.delivering);
+  const completed = toNum(row?.completed_count) || toNum(sc?.completed);
+
+  const total =
+    toNum(row?.total_approved_count) ||
+    toNum(row?.total_items_count) ||
+    (pending + preparing + delivering + completed);
+
+  // ตัดสต็อกแล้ว = preparing + delivering + completed
+  const deductedSoFar = preparing + delivering + completed;
+
+  return { pending, preparing, delivering, completed, total, deductedSoFar };
+}
 
 export default function StockDeductionPage() {
-  const router = useRouter(); 
-
-  const [requests, setRequests] = useState([]); 
-  const [isLoading, setIsLoading] = useState(true); 
-  const [error, setError] = useState(null); 
-  const [currentPage, setCurrentPage] = useState(1); 
-  const itemsPerPage = 12; 
+  const router = useRouter();
+  const [requests, setRequests] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
 
   useEffect(() => {
-    const fetchRequestsForStockDeduction = async () => {
+    const fetchData = async () => {
       try {
-        setIsLoading(true); 
-        setError(null); 
+        setIsLoading(true);
+        setError(null);
+        const res = await axiosInstance.get('/stockDeduction/ready');
+        const data = Array.isArray(res.data) ? res.data : [];
 
-        const response = await axiosInstance.get('/stockDeduction/ready');
-        const data = response.data;
+        // เรียงล่าสุดก่อน
+        data.sort((a, b) => {
+          const da = new Date(a?.request_date).getTime();
+          const db = new Date(b?.request_date).getTime();
+          return (Number.isNaN(db) ? 0 : db) - (Number.isNaN(da) ? 0 : da);
+        });
 
-        setRequests(data); 
+        setRequests(data);
+        setCurrentPage(1);
       } catch (err) {
-        console.error("Error fetching requests ready for stock deduction:", err);
-        setError(err.response?.data?.message || "ไม่สามารถโหลดรายการคำขอที่พร้อมเบิก-จ่ายได้ กรุณาลองใหม่อีกครั้ง"); 
+        const msg = err?.response?.data?.message || 'ไม่สามารถโหลดรายการคำขอที่พร้อมเบิก-จ่ายได้ กรุณาลองใหม่อีกครั้ง';
+        console.error('Error fetching requests:', err);
+        setError(msg);
+        Swal.fire('ผิดพลาด', msg, 'error');
       } finally {
-        setIsLoading(false); 
+        setIsLoading(false);
       }
     };
+    fetchData();
+  }, []);
 
-    fetchRequestsForStockDeduction(); 
-  }, []); 
-
-  const totalPages = Math.ceil(requests.length / itemsPerPage);
-  const currentItems = requests.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const totalPages = Math.max(1, Math.ceil((requests?.length || 0) / itemsPerPage));
+  const currentItems = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return (requests || []).slice(start, end);
+  }, [requests, currentPage]);
 
   const handleDeductStockClick = (requestId) => {
+    if (!requestId) return;
     router.push(`/manage/stockDeduction/${requestId}`);
   };
 
-  const tableColSpan = 8; 
+  const colSpan = 10; // เพิ่มคอลัมน์ "ตัดสต็อกแล้ว" เป็น 10 คอลัมน์
 
   return (
     <div className={styles.pageBackground}>
@@ -93,81 +109,102 @@ export default function StockDeductionPage() {
         <h1 className={styles.title}>รายการคำขอที่รอเบิก-จ่ายสต็อก</h1>
 
         {isLoading && <p className={styles.infoMessage}>กำลังโหลดข้อมูลรายการคำขอ...</p>}
-        {error && <p className={styles.errorMessage}>{error}</p>}
+        {error && !isLoading && <p className={styles.errorMessage}>{error}</p>}
 
         {!isLoading && !error && (
           <>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>ลำดับ</th>
-                  <th>รหัสคำขอ</th>
-                  <th>วันที่ขอ</th>
-                  <th>ผู้ขอ</th>
-                  <th>แผนก</th>
-                  <th>ประเภท</th>
-                  <th>สถานะ</th>
-                  <th>การจัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentItems.length > 0 ? (
-                  currentItems.map((item, index) => {
-                    const translatedStatus = getStatusTranslation(item.status);
-                    const translatedType = getTypeTranslation(item.type); // **เรียกใช้ฟังก์ชันแปลประเภท**
-                    return (
-                      <tr key={item.request_id || item.request_code}>
-                        <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                        <td>{item.request_code}</td>
-                        <td>{new Date(item.request_date).toLocaleDateString('th-TH')}</td>
-                        <td>{item.requester}</td>
-                        <td>{item.department}</td>
-                        <td>
-                          {/* **แสดงประเภทที่ถูกแปลแล้ว** */}
-                          {translatedType}
-                        </td>
-                        <td>
-                          <span className={`${styles.statusBadge} ${translatedStatus.class}`}>
-                            {translatedStatus.text}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            className={`${styles.button} ${styles.primaryButton}`}
-                            onClick={() => handleDeductStockClick(item.request_id)}
-                          >
-                            📦 ดำเนินการเบิก-จ่าย
-                          </button>
+            <div className={styles.card}>
+              <div className={styles.tableWrapper}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>ลำดับ</th>
+                      <th>รหัสคำขอ</th>
+                      <th>วันที่ขอ</th>
+                      <th>พร้อมตัด / ทั้งหมด</th>
+                      <th>ตัดสต็อกแล้ว</th>
+                      <th>ผู้ขอ</th>
+                      <th>แผนก</th>
+                      <th>ประเภท</th>
+                      <th>สถานะ</th>
+                      <th>การจัดการ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentItems.length > 0 ? (
+                      currentItems.map((item, index) => {
+                        const st = getStatusTranslation(item?.status);
+                        const ty = getTypeTranslation(item?.type);
+                        const { pending, preparing, delivering, completed, total, deductedSoFar } = getBreakdown(item);
+                        const partsSum = pending + preparing + delivering + completed;
+                        const consistent = partsSum === total;
+
+                        return (
+                          <tr key={item?.request_id ?? item?.request_code ?? `${index}`}>
+                            <td className="nowrap">{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                            <td className="nowrap">{item?.request_code || '-'}</td>
+                            <td className="nowrap">{fmtDate(item?.request_date)}</td>
+
+                            {/* พร้อมตัด / ทั้งหมด = pending / total */}
+                            <td className="nowrap">
+                              <span className={styles.countPill} title="พร้อมตัด (pending)"> {pending} รายการ</span>
+                            </td>
+                            {/* ตัดสต็อกแล้ว = preparing + delivering + completed */}
+                            <td className="nowrap">
+                              <span className={styles.countPill} title="ตัดสต็อกแล้ว (preparing + delivering + completed)">
+                                {deductedSoFar} /&nbsp;
+                              </span>
+                              <span className={styles.countPill} title="ทั้งหมด (อนุมัติแล้ว)"> {total} รายการ</span>
+                            </td>
+
+                            <td>{item?.requester || item?.user_name || '-'}</td>
+                            <td>{item?.department || item?.department_name || '-'}</td>
+                            <td className="nowrap">{ty}</td>
+                            <td className="nowrap">
+                              <span className={`${styles.statusBadge} ${st.class}`}>{st.text}</span>
+                            </td>
+                            <td className="nowrap">
+                              <button
+                                className={`${styles.button} ${styles.primaryButton}`}
+                                onClick={() => handleDeductStockClick(item?.request_id)}
+                                disabled={!item?.request_id}
+                                title={pending > 0 ? 'ดำเนินการเบิก-จ่าย' : 'ดูรายละเอียด'}
+                              >
+                                {pending > 0 ? '📦 ดำเนินการเบิก-จ่าย' : '🔎 ดูรายละเอียด'}
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan={colSpan} className={styles.emptyRow}>
+                          ไม่พบรายการคำขอที่รอการเบิก-จ่ายสต็อกในขณะนี้
                         </td>
                       </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={tableColSpan} className={styles.infoMessage}>ไม่พบรายการคำขอที่รอการเบิก-จ่ายสต็อกในขณะนี้</td>
-                  </tr>
-                )}
-                {Array.from({ length: itemsPerPage - currentItems.length }).map((_, index) => (
-                  <tr key={`placeholder-${index}`}>
-                    <td colSpan={tableColSpan} className={styles.placeholderRow}>&nbsp;</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
             <div className={styles.pagination}>
               <button
                 className={styles.pageButton}
                 disabled={currentPage === 1}
-                onClick={() => setCurrentPage((prev) => prev - 1)}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                title="ก่อนหน้า"
               >
                 ⬅️ ก่อนหน้า
               </button>
+
               <span>หน้า {currentPage} / {totalPages}</span>
+
               <button
                 className={styles.pageButton}
                 disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((prev) => prev + 1)}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                title="ถัดไป"
               >
                 ถัดไป ➡️
               </button>

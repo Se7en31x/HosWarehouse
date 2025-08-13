@@ -153,7 +153,7 @@ export default function SingleStockDeductionPage() {
           requested_qty: item.actual_deducted_qty,
           deduction_reason: item.deduction_reason
         })),
-        userId: 1, // TODO: Replace with actual logged-in user ID
+        userId: 999, // TODO: Replace with actual logged-in user ID
       });
 
       setDeductionSuccess(true);
