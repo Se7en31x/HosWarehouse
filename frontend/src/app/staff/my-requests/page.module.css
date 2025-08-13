@@ -1,195 +1,195 @@
-/* page.module.css additions (updated) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* General Container for MyRequestsPage */
-.container {
-    padding: 2rem;
-    height: 100%;
-    width: 100%;
-    margin: 2rem auto;
-    background-color: #ffffff;
-    border-radius: 0.8rem;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+/* ----- Layout ----- */
+.mainHome{
+  min-height:100vh;
+  background:#f3f4f6;
+  font-family:'Inter',sans-serif;
+  display:flex;
+  flex-direction:column;
 }
 
-/* Header for MyRequestsPage */
-.header {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #1f2937;
-    margin-bottom: 1.5rem;
-    text-align: center;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #e0e0e0;
+.contentWrapper{
+  width:100%;
+  height: 100vh;
+  margin:0 auto;
+  background:#fff;
+  border-radius:.6rem;
+  box-shadow:0 3px 5px -1px rgb(0 0 0 / .1), 0 1px 3px -2px rgb(0 0 0 / .1);
+  padding:clamp(1rem,2vw,1.5rem) clamp(1rem,3vw,2.5rem);
+  display:flex;
+  flex-direction:column;
+  /* สำคัญ: ยืดการ์ดให้ใกล้เต็มจอ เพื่อดัน pagination ลงล่าง */
+  box-sizing:border-box;
 }
 
-/* Table Styling */
-.table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1.5rem;
-    font-size: 0.95rem;
+/* ----- Heading ----- */
+.pageTitle{
+  font-size:clamp(1.8rem,3vw,2.5rem);
+  font-weight:700;
+  line-height:1.2;
+  color:#1f2937;
+  margin:0 0 1rem 0;
+  padding-bottom:.5rem;
+  border-bottom:1px solid #e5e7eb;
 }
 
-.table th,
-.table td {
-    padding: 0.8rem 1rem;
-    /* REMOVED: border: 1px solid #e5e7eb; */ /* <--- Remove this line */
-    text-align: left;
-    vertical-align: middle;
+/* ----- Table section (กินพื้นที่ที่เหลือ) ----- */
+.tableSection{
+  flex:1;               /* ดันให้โซนนี้กินพื้นที่ที่เหลือทั้งหมด */
+  display:flex;
+  flex-direction:column;
 }
 
-.table th {
-    background-color: #f9fafb;
-    font-weight: 600;
-    color: #374151;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-    border-bottom: 1px solid #e0e0e0; /* Keep bottom border for header */
+/* ----- Grid Table ----- */
+.tableGrid{
+  display:grid;
+  grid-template-columns:
+    minmax(58px,.6fr)      /* ลำดับ */
+    minmax(140px,1.1fr)    /* รหัสคำขอ */
+    minmax(200px,1.4fr)    /* วันที่/เวลา */
+    minmax(160px,1.2fr)    /* ประเภท */
+    minmax(140px,1.1fr)    /* สถานะ */
+    minmax(100px,.9fr)     /* จำนวน */
+    minmax(160px,1.2fr);   /* จัดการ */
+  align-items:center;
+  column-gap: clamp(6px, 1.2vw, 12px);
 }
 
-.table tbody tr:nth-child(even) {
-    background-color: #fdfdfd;
+.tableHeader{
+  background:#f9fafb;
+  font-weight:600;
+  color:#374151;
+  border-top-left-radius:.4rem;
+  border-top-right-radius:.4rem;
+  border-bottom:1px solid #e5e7eb;
 }
 
-.table tbody tr:hover {
-    background-color: #f5f5f5;
+.headerItem,
+.tableCell{
+  padding: clamp(.6rem, 1.3vw, .9rem) clamp(.6rem, 1.3vw, .9rem);
+  font-size: clamp(.88rem, 1.6vw, .95rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Add a bottom border to each row instead of cell borders */
-.table tbody tr {
-    border-bottom: 1px solid #e5e7eb;
+.tableRow{
+  border-bottom:1px solid #e5e7eb;
+}
+.tableRow:nth-child(even){
+  background:#fafafa;
+}
+.tableRow:hover{
+  background:#f1faff;
 }
 
-/* Remove border from the last row */
-.table tbody tr:last-child {
-    border-bottom: none;
+/* ----- Empty state ----- */
+.noDataRow{
+  padding:1.4rem 1rem;
+  text-align:center;
+  color:#6b7280;
+  font-style:italic;
+  border:1px dashed #e5e7eb;
+  border-radius:.5rem;
+  margin-top:.8rem;
 }
 
-
-/* Actions Column Styling */
-.actions {
-    display: flex;
-    gap: 0.5rem; /* Space between buttons */
-    justify-content: center; /* Center buttons horizontally */
-    align-items: center; /* Center buttons vertically */
-    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+/* ----- Actions ----- */
+.actionCell{
+  display:flex;
+  gap:.4rem;
+  align-items:center;
+  justify-content:flex-start;
+  flex-wrap:wrap;
+  min-width: 160px;
 }
-
-/* Base Button Styling for actions */
-.actions button {
-    padding: 0.5rem 1rem;
-    border-radius: 0.4rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    border: none;
-    white-space: nowrap; /* Prevent text wrapping inside buttons */
+.actionButton{
+  padding:.45rem .85rem;
+  border:none;
+  border-radius:.45rem;
+  font-weight:600;
+  cursor:pointer;
+  color:#fff;
+  transition:background-color .2s, transform .1s, box-shadow .2s;
+  white-space:nowrap;
 }
+.actionButton:hover{ transform:translateY(-1px); box-shadow:0 2px 5px rgba(0,0,0,.1); }
+.actionButton:active{ transform:translateY(0); box-shadow:none; }
+.view{ background:#3b82f6; } .view:hover{ background:#2563eb; }
+.edit{ background:#10b981; } .edit:hover{ background:#059669; }
+.cancel{ background:#ef4444; } .cancel:hover{ background:#dc2626; }
 
-.actions button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+/* ----- Pagination bottom stick ----- */
+.paginationWrapper{
+  margin-top:auto;          /* ดันลงล่างสุดของ contentWrapper */
+  padding-top:1rem;
+  display:flex;
+  justify-content:center;
 }
-
-.actions button:active {
-    transform: translateY(0);
-    box-shadow: none;
+.paginationControls{
+  list-style:none;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:.5rem;
+  margin:0;
+  padding:0;
 }
-
-
-/* Specific Button Styles */
-.view {
-    background-color: #3b82f6; /* Blue */
-    color: #ffffff;
+.pageButton{
+  background:#f3f4f6;
+  border:none;
+  padding:.38rem .75rem;
+  border-radius:.375rem;
+  cursor:pointer;
+  font-size:.875rem;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:background-color .2s;
 }
+.pageButton:hover:not(:disabled){ background:#e5e7eb; }
+.pageButton:disabled{ background:#e5e7eb; color:#9ca3af; cursor:not-allowed; }
+.activePage{ background:#3b82f6; color:#fff; }
+.ellipsis{ padding:0 .5rem; color:#6b7280; }
 
-.view:hover {
-    background-color: #2563eb;
+/* ----- Responsive ----- */
+@media (max-width: 1024px){
+  .tableGrid{
+    grid-template-columns:
+      minmax(50px,.6fr)
+      minmax(120px,1fr)
+      minmax(180px,1.2fr)
+      minmax(140px,1.1fr)
+      minmax(120px,1fr)
+      minmax(90px,.9fr)
+      minmax(150px,1.1fr);
+  }
 }
-
-.edit {
-    background-color: #10b981; /* Green */
-    color: #ffffff;
+@media (max-width: 768px){
+  .contentWrapper{ padding:1.1rem 1.1rem; }
+  .tableGrid{
+    grid-template-columns:
+      minmax(46px,.6fr)
+      minmax(110px,1fr)
+      minmax(160px,1.2fr)
+      minmax(130px,1fr)
+      minmax(110px,1fr)
+      minmax(80px,.9fr)
+      minmax(140px,1fr);
+  }
+  .actionButton{ padding:.4rem .75rem; font-size:.85rem; }
 }
-
-.edit:hover {
-    background-color: #059669;
-}
-
-.cancel {
-    background-color: #ef4444; /* Red */
-    color: #ffffff;
-}
-
-.cancel:hover {
-    background-color: #dc2626;
-}
-
-/* Empty Table Message */
-.empty {
-    text-align: center;
-    padding: 2rem;
-    color: #6b7280;
-    font-style: italic;
-    font-size: 1.1rem;
-    background-color: #fdfdfd;
-}
-
-/* Responsive adjustments for this specific component */
-@media (max-width: 768px) {
-    .container {
-        padding: 1rem;
-        margin: 1rem auto;
-    }
-
-    .header {
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .table {
-        font-size: 0.85rem;
-        /* Ensure table is scrollable on small screens */
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap; /* Prevents cell content from wrapping */
-    }
-
-    .table th,
-    .table td {
-        padding: 0.6rem 0.8rem;
-    }
-
-    .actions {
-        flex-direction: column; /* Stack buttons vertically on small screens */
-        gap: 0.3rem;
-        /* NEW: Align items to the start (left) when in column layout */
-        align-items: flex-start;
-        /* NEW: Justify content to the start (top) when in column layout */
-        justify-content: flex-start;
-    }
-
-    .actions button {
-        width: 100%; /* Make buttons full width */
-        padding: 0.4rem 0.8rem;
-        font-size: 0.8rem;
-    }
-
-    .empty {
-        font-size: 0.9rem;
-        padding: 1rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .container {
-        border-radius: 0; /* No border-radius on very small screens for full width */
-    }
-    .header {
-        font-size: 1.3rem;
-    }
-    .table th,
-    .table td {
-        padding: 0.5rem 0.6rem;
-    }
+@media (max-width: 540px){
+  .tableGrid{
+    grid-template-columns:
+      minmax(42px,.6fr)
+      minmax(100px,1fr)
+      minmax(150px,1.2fr)
+      minmax(120px,1fr)
+      minmax(100px,1fr)
+      minmax(70px,.9fr)
+      minmax(130px,1fr);
+  }
+  .pageTitle{ font-size:1.6rem; }
 }
