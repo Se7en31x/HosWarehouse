@@ -76,83 +76,55 @@ exports.updateRequestDetailApprovalStatus = async (request_detail_id, newApprova
 
         // 1. ดึงสถานะ approval_status, approved_qty, และ request_id เดิม
         const oldStatusResult = await client.query(
-            `SELECT approval_status, approved_qty, request_id, processing_status FROM request_details WHERE request_detail_id = $1`, // ดึง processing_status เดิมมาด้วย
+            `SELECT approval_status, approved_qty, request_id, processing_status FROM request_details WHERE request_detail_id = $1 FOR UPDATE`,
             [request_detail_id]
         );
         if (oldStatusResult.rows.length === 0) {
             throw new Error(`Request detail with ID ${request_detail_id} not found.`);
         }
-        const oldApprovalStatus = oldStatusResult.rows[0].approval_status;
-        const oldApprovedQty = oldStatusResult.rows[0].approved_qty;
-        const oldProcessingStatus = oldStatusResult.rows[0].processing_status; // เก็บค่าเดิม
-        const request_id_from_detail = oldStatusResult.rows[0].request_id;
+        const oldRow = oldStatusResult.rows[0];
+        const oldApprovalStatus = oldRow.approval_status;
+        const oldApprovedQty = oldRow.approved_qty;
+        const oldProcessingStatus = oldRow.processing_status;
+        const request_id_from_detail = oldRow.request_id;
 
         // 2. กำหนดค่า processing_status ใหม่ตามเงื่อนไข
-        let newProcessingStatusForUpdate = oldProcessingStatus; // ตั้งต้นด้วยค่าเดิม
+        let newProcessingStatusForUpdate = oldProcessingStatus;
         if (newApprovalStatus === 'approved') {
             newProcessingStatusForUpdate = 'approved_in_queue';
-        } else if (newApprovalStatus === 'rejected') {
-            // เมื่อถูกปฏิเสธ processing_status ควรถูกเคลียร์ หรือตั้งเป็นสถานะที่บ่งบอกว่าไม่ได้อยู่ในคิวประมวลผล
-            newProcessingStatusForUpdate = null; // หรือ 'rejected_queue' ขึ้นอยู่กับดีไซน์
+        } else if (newApprovalStatus === 'rejected' || newApprovalStatus === 'waiting_approval_detail') {
+            newProcessingStatusForUpdate = null;
         }
-        // ถ้าสถานะยังเป็น 'waiting_approval_detail' ให้ processing_status เป็น null
-        else if (newApprovalStatus === 'waiting_approval_detail') {
-             newProcessingStatusForUpdate = null;
-        }
-
-
-        // *** DEBUG LOG: ก่อนการอัปเดต ***
-        console.log(`[DEBUG - approvalModel] Before update: Detail ID: ${request_detail_id}, Old Approval Status: ${oldApprovalStatus}, New Approval Status: ${newApprovalStatus}, Old Approved Qty: ${oldApprovedQty}, New Approved Qty: ${newApprovedQty}, Intended New Processing Status: ${newProcessingStatusForUpdate}`);
 
         // 3. อัปเดต approval_status, approved_qty, request_detail_note และ processing_status
-        let query, params;
-        const hasApprovalStatusOrQtyChanged = (oldApprovalStatus !== newApprovalStatus) || (oldApprovedQty !== newApprovedQty);
-        const hasProcessingStatusChanged = (oldProcessingStatus !== newProcessingStatusForUpdate);
-
-        // เราจะอัปเดต processing_status เสมอในฟังก์ชันนี้ตาม logic การอนุมัติ/ปฏิเสธ
-        // เนื่องจากสถานะนี้ถูกควบคุมโดยการอนุมัติ
-        if (note) {
-            query = `
-                UPDATE request_details
-                SET approval_status = $1, approved_qty = $2, request_detail_note = $3, processing_status = $4, updated_at = NOW()
-                WHERE request_detail_id = $5
-            `;
-            params = [newApprovalStatus, newApprovedQty, note, newProcessingStatusForUpdate, request_detail_id];
-        } else {
-            query = `
-                UPDATE request_details
-                SET approval_status = $1, approved_qty = $2, request_detail_note = NULL, processing_status = $3, updated_at = NOW()
-                WHERE request_detail_id = $4
-            `;
-            params = [newApprovalStatus, newApprovedQty, newProcessingStatusForUpdate, request_detail_id];
-        }
+        const query = `
+            UPDATE request_details
+            SET approval_status = $1, approved_qty = $2, request_detail_note = $3, processing_status = $4, updated_at = NOW()
+            WHERE request_detail_id = $5
+            RETURNING *
+        `;
+        const params = [newApprovalStatus, newApprovedQty, note, newProcessingStatusForUpdate, request_detail_id];
         const result = await client.query(query, params);
 
-        // *** DEBUG LOG: หลังการอัปเดตใน DB (ดึงค่าจาก DB อีกครั้งเพื่อยืนยัน) ***
-        const verificationResult = await client.query(
-            `SELECT approval_status, approved_qty, processing_status FROM request_details WHERE request_detail_id = $1`,
-            [request_detail_id]
-        );
-        console.log(`[DEBUG - approvalModel] After update in DB: Detail ID: ${request_detail_id}, Current Approval Status: ${verificationResult.rows[0]?.approval_status}, Current Approved Qty: ${verificationResult.rows[0]?.approved_qty}, Current Processing Status: ${verificationResult.rows[0]?.processing_status}`);
-
         // 4. บันทึกประวัติสถานะการอนุมัติของรายการย่อย
-        if (result.rowCount > 0 && hasApprovalStatusOrQtyChanged) { // บันทึกเฉพาะถ้าสถานะอนุมัติหรือจำนวนมีการเปลี่ยนแปลง
+        const hasApprovalStatusOrQtyChanged = (oldApprovalStatus !== newApprovalStatus) || (oldApprovedQty !== newApprovedQty);
+        if (result.rowCount > 0 && hasApprovalStatusOrQtyChanged) {
             await client.query(
                 `INSERT INTO request_status_history
-                 (request_id, request_detail_id, old_status, new_status, changed_by, changed_at, note, status_type, old_approved_qty, new_approved_qty)
-                 VALUES ($1, $2, $3, $4, $5, NOW(), $6, 'approval_detail', $7, $8)`,
-                [request_id_from_detail, request_detail_id, oldApprovalStatus, newApprovalStatus, changed_by, note || `อัปเดตสถานะอนุมัติรายการย่อย ID: ${request_detail_id}`, oldApprovedQty, newApprovedQty]
+                 (request_id, request_detail_id, old_value_type, old_value, new_value, changed_by, changed_at, note, history_type)
+                 VALUES ($1, $2, 'approval_status', $3, $4, $5, NOW(), $6, 'approval_detail_status_change')`,
+                [request_id_from_detail, request_detail_id, oldApprovalStatus, newApprovalStatus, changed_by, note || `อัปเดตสถานะอนุมัติรายการย่อย ID: ${request_detail_id}`]
             );
         }
 
         // 5. บันทึกประวัติ processing_status ถ้ามีการเปลี่ยนแปลง
-        // ควรบันทึกเป็น 'processing_detail' type หรือคล้ายกัน
+        const hasProcessingStatusChanged = (oldProcessingStatus !== newProcessingStatusForUpdate);
         if (result.rowCount > 0 && hasProcessingStatusChanged) {
             await client.query(
                 `INSERT INTO request_status_history
-                 (request_id, request_detail_id, old_status, new_status, changed_by, changed_at, note, status_type)
-                 VALUES ($1, $2, $3, $4, $5, NOW(), $6, 'processing_detail')`,
-                [request_id_from_detail, request_detail_id, oldProcessingStatus, newProcessingStatusForUpdate, changed_by, `เปลี่ยนสถานะการประมวลผลรายการย่อยเป็น: ${newProcessingStatusForUpdate}`]
+                 (request_id, request_detail_id, old_value_type, old_value, new_value, changed_by, changed_at, note, history_type)
+                 VALUES ($1, $2, 'processing_status', $3, $4, $5, NOW(), $6, 'processing_status_change')`,
+                [request_id_from_detail, request_detail_id, oldProcessingStatus, newProcessingStatusForUpdate, changed_by, `เปลี่ยนสถานะการดำเนินการของรายการย่อยเป็น: ${newProcessingStatusForUpdate}`]
             );
         }
 
@@ -169,9 +141,6 @@ exports.updateRequestDetailApprovalStatus = async (request_detail_id, newApprova
 
 /**
  * คำนวณและคืนค่าการนับสถานะของรายการย่อยทั้งหมดสำหรับคำขอที่ระบุ
- *
- * @param {number} request_id - ID ของคำขอ
- * @returns {object} Object ที่มีจำนวน approved, rejected, waiting และ total ของรายการย่อย
  */
 exports.calculateOverallApprovalStatus = async (request_id) => {
     const query = `
@@ -193,19 +162,15 @@ exports.calculateOverallApprovalStatus = async (request_id) => {
 /**
  * อัปเดตสถานะคำขอหลัก (requests.request_status) ตามสถานะ approval_status ของรายการย่อย
  * และบันทึกประวัติการเปลี่ยนแปลง
- *
- * @param {number} request_id - ID ของคำขอ
- * @param {number} changed_by - ID ผู้ใช้งานที่ทำการเปลี่ยนแปลง (ผู้ที่อนุมัติ/ปฏิเสธ)
- * @returns {Promise<boolean>} true หากอัปเดตสำเร็จ
  */
 exports.updateRequestOverallStatusByDetails = async (request_id, changed_by) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
 
-        // 1. ดึงสถานะปัจจุบันของคำขอหลัก
+        // 1. ดึงสถานะปัจจุบันของคำขอหลักและ lock row
         const oldRequestStatusResult = await client.query(
-            `SELECT request_status FROM requests WHERE request_id = $1`,
+            `SELECT request_status FROM requests WHERE request_id = $1 FOR UPDATE`,
             [request_id]
         );
         if (oldRequestStatusResult.rows.length === 0) {
@@ -213,14 +178,12 @@ exports.updateRequestOverallStatusByDetails = async (request_id, changed_by) => 
         }
         const oldRequestStatus = oldRequestStatusResult.rows[0].request_status;
 
-        // 2. คำนวณสถานะใหม่จากรายการย่อย (เฉพาะ approval_status)
+        // 2. คำนวณสถานะใหม่จากรายการย่อย
         const { total, approvedCount, rejectedCount, waitingCount } = await exports.calculateOverallApprovalStatus(request_id);
 
-        // 3. กำหนด finalOverallStatus ตามผลการนับ
         let finalOverallStatus;
-
         if (total === 0) {
-            finalOverallStatus = 'waiting_approval'; // อาจจะไม่มีรายการย่อยเลย หรือเป็นสถานะเริ่มต้น
+            finalOverallStatus = 'waiting_approval';
         } else if (approvedCount === total) {
             finalOverallStatus = 'approved_all';
         } else if (rejectedCount === total) {
@@ -234,26 +197,32 @@ exports.updateRequestOverallStatusByDetails = async (request_id, changed_by) => 
         } else if (waitingCount > 0) {
             finalOverallStatus = 'waiting_approval';
         } else {
-            finalOverallStatus = 'unknown_status'; // ควรจัดการเคสนี้ให้ดี หรือไม่ควรเกิดขึ้น
+            finalOverallStatus = 'unknown_status';
         }
 
-        // 4. อัปเดตสถานะคำขอหลัก หากมีการเปลี่ยนแปลงจากสถานะเดิม
+        // 3. อัปเดตสถานะคำขอหลัก หากมีการเปลี่ยนแปลง
         let updateSuccess = false;
         if (oldRequestStatus !== finalOverallStatus) {
-            updateSuccess = await exports.updateRequestOverallStatus(request_id, finalOverallStatus);
+            // อัปเดตสถานะคำขอหลัก
+            const updateResult = await client.query(
+                `UPDATE requests SET request_status = $1, updated_at = NOW() WHERE request_id = $2`,
+                [finalOverallStatus, request_id]
+            );
+            updateSuccess = updateResult.rowCount > 0;
+            
+            // 4. บันทึกประวัติสถานะของคำขอหลักทันที
+            if (updateSuccess) {
+                await client.query(
+                    `INSERT INTO request_status_history
+                     (request_id, changed_by, changed_at, old_value_type, old_value, new_value, note, history_type)
+                     VALUES ($1, $2, NOW(), 'request_status', $3, $4, 'อัปเดตสถานะคำขอรวมจากการอนุมัติ/ปฏิเสธรายการย่อย', 'approval_overall_status_change')`,
+                    [request_id, changed_by, oldRequestStatus, finalOverallStatus]
+                );
+            }
         } else {
-            updateSuccess = true; // ไม่มีอะไรเปลี่ยนแปลง ถือว่าดำเนินการสำเร็จ
+            updateSuccess = true;
         }
 
-        // 5. บันทึกประวัติสถานะของคำขอหลัก หากมีการเปลี่ยนแปลงและอัปเดตสำเร็จ
-        if (updateSuccess && oldRequestStatus !== finalOverallStatus) {
-            await client.query(
-                `INSERT INTO request_status_history
-                 (request_id, old_status, new_status, changed_by, changed_at, note, status_type, request_detail_id)
-                 VALUES ($1, $2, $3, $4, NOW(), 'อัปเดตสถานะคำขอรวมจากการอนุมัติ/ปฏิเสธรายการย่อย', 'request_overall', NULL)`,
-                [request_id, oldRequestStatus, finalOverallStatus, changed_by]
-            );
-        }
         await client.query('COMMIT');
         return updateSuccess;
     } catch (err) {

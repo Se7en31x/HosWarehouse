@@ -39,11 +39,19 @@ exports.createRequest = async ({ user_id, note, urgent, date, type }) => {
 
     // 2. บันทึกประวัติสถานะของคำขอหลัก (request_overall)
     await client.query(
-      `INSERT INTO request_status_history
-        (request_id, old_status, new_status, changed_by, changed_at, note, status_type, request_detail_id)
-        VALUES ($1, NULL, 'waiting_approval', $2, NOW(), 'สร้างคำขอใหม่', 'request_overall', NULL)`,
-      [newRequestId, user_id]
-    );
+    `INSERT INTO request_status_history
+        (request_id, changed_by, changed_at, history_type, old_value_type, old_value, new_value, note)
+        VALUES ($1, $2, NOW(), $3, $4, $5, $6, $7)`,
+    [
+        newRequestId,
+        user_id,
+        'request_creation',     // history_type
+        'request_status',       // old_value_type
+        null,                   // old_value (สถานะเดิมไม่มี)
+        'waiting_approval',     // new_value
+        'สร้างคำขอใหม่'           // note
+    ]
+);
 
     await client.query('COMMIT'); // Commit Transaction
 
@@ -85,12 +93,22 @@ exports.addRequestDetail = async ({ request_id, item_id, quantity, request_detai
 
         const newRequestDetailId = result.rows[0].request_detail_id;
 
-        await client.query(
-            `INSERT INTO request_status_history
-            (request_id, request_detail_id, old_status, new_status, changed_by, changed_at, note, status_type)
-            VALUES ($1, $2, NULL, 'waiting_approval_detail', $3, NOW(), 'สร้างรายการย่อยใหม่', 'approval_detail')`,
-            [request_id, newRequestDetailId, user_id]
-        );
+        // โค้ดที่แก้ไขให้ใช้กับตารางใหม่
+await client.query(
+    `INSERT INTO request_status_history
+        (request_id, request_detail_id, changed_by, changed_at, history_type, old_value_type, old_value, new_value, note)
+        VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, $8)`,
+    [
+        request_id,
+        newRequestDetailId,
+        user_id,
+        'detail_creation',         // history_type
+        'approval_status',          // old_value_type
+        null,                       // old_value (สถานะเดิมไม่มี)
+        'waiting_approval_detail',  // new_value
+        'สร้างรายการย่อยใหม่'         // note
+    ]
+);
 
         await client.query('COMMIT');
     } catch (err) {

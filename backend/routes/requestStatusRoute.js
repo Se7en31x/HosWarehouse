@@ -9,7 +9,4 @@ router.get("/requestStatus/:request_id", RequestStatusController.getRequestById)
 // Route เดิมสำหรับอัปเดตสถานะย่อยแบบ Batch
 router.put('/requestStatus/:requestId/processing-status-batch', RequestStatusController.updateProcessingStatusBatch);
 
-// Route ใหม่สำหรับอัปเดตสถานะรวม
-router.put('/requestStatus/:requestId/overall-processing-status', RequestStatusController.updateOverallProcessingStatus);
-
 module.exports = router;

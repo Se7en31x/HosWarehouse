@@ -1,14 +1,15 @@
-// routes/routes.js
-
+// routes/transactionRoutes.js
 const express = require('express');
 const router = express.Router();
 const transactionHistoryController = require('../controllers/transactionHistoryController');
 
-// กำหนดเส้นทางสำหรับดึงประวัติการทำรายการทั้งหมด
-// Endpoint: /api/v1/transaction-history
+// GET /api/v1/transaction-history?group=true
 router.get('/transaction-history', transactionHistoryController.getAllLogs);
 
-// สามารถเพิ่ม routes อื่นๆ ที่เกี่ยวข้องได้ที่นี่
-// router.get('/transaction-history/:id', transactionHistoryController.getLogDetails);
+// GET /api/v1/transaction-history/request/:requestId
+router.get('/transaction-history/request/:requestId', transactionHistoryController.getRequestDetails);
+
+// ★ NEW: GET /api/v1/transaction-history/stock-movement?move_code=XXXX
+router.get('/transaction-history/stock-movement', transactionHistoryController.getStockMovementByCode);
 
 module.exports = router;
