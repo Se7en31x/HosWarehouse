@@ -1,3 +1,4 @@
+// models/transactionHistoryModel.js
 const { pool } = require('../config/db');
 
 const TransactionHistory = {
@@ -9,27 +10,27 @@ const TransactionHistory = {
       WITH unified_logs AS (
         /* ---------- คำขอ: เหตุการณ์ระดับคำขอ (header) + สรุปรายการ ---------- */
         SELECT
-          r.request_id                                  AS id,
-          r.request_id                                  AS request_id,
-          r.request_code                                AS reference_code,
-          u.department                                  AS department_name,
+          r.request_id AS id,
+          r.request_id AS request_id,
+          r.request_code AS reference_code,
+          NULL::text AS parent_reference_code,
+          u.department AS department_name,
           CASE
             WHEN rsh.history_type = 'request_creation' THEN 'CREATE_REQUEST'
             WHEN rsh.history_type = 'approval_overall_status_change' THEN 'APPROVAL'
             WHEN rsh.history_type = 'status_change' THEN 'PROCESSING'
             ELSE 'REQUEST_META'
-          END::text                                     AS group_type,
+          END::text AS group_type,
           CASE
             WHEN rsh.history_type = 'request_creation' THEN 'สร้างคำขอ'
             WHEN rsh.history_type = 'approval_overall_status_change' THEN 'การอนุมัติคำขอ'
             WHEN rsh.history_type = 'status_change' THEN 'อัปเดตสถานะคำขอ'
             ELSE 'เหตุการณ์อื่น'
-          END::text                                     AS event_type,
-          COALESCE(rsh.note, 'สถานะ: ' || rsh.old_value || ' -> ' || rsh.new_value) AS detail,
-          rsh.changed_at                                AS "timestamp",
-          rsh.new_value                                 AS status,
+          END::text AS event_type,
+          COALESCE(rsh.note, 'สถานะ: ' || COALESCE(rsh.old_value,'') || ' -> ' || COALESCE(rsh.new_value,'')) AS detail,
+          rsh.changed_at AS "timestamp",
+          rsh.new_value AS status,
           COALESCE(u.user_fname, '') || ' ' || COALESCE(u.user_lname, '') AS user_name,
-
           STRING_AGG(
             i.item_name || ' (' ||
               CASE
@@ -38,16 +39,13 @@ const TransactionHistory = {
               END
             || ')',
             ', ' ORDER BY rd.request_detail_id
-          )                                             AS items_summary,
+          ) AS items_summary,
           CASE
             WHEN LOWER(COALESCE(r.request_type, '')) IN ('borrow','ยืม') THEN 'ยืม'
             ELSE 'เบิก'
-          END                                           AS request_mode_thai
-
+          END AS request_mode_thai
         FROM requests r
-        JOIN request_status_history rsh
-          ON rsh.request_id = r.request_id
-         AND rsh.request_detail_id IS NULL
+        JOIN request_status_history rsh ON rsh.request_id = r.request_id AND rsh.request_detail_id IS NULL
         LEFT JOIN users u ON rsh.changed_by = u.user_id
         LEFT JOIN request_details rd ON rd.request_id = r.request_id
         LEFT JOIN items i ON i.item_id = rd.item_id
@@ -61,29 +59,30 @@ const TransactionHistory = {
 
         /* ---------- คำขอ: เหตุการณ์ระดับรายการย่อย (detail) ---------- */
         SELECT
-          rsh.history_id                                AS id,
-          r.request_id                                  AS request_id,
-          r.request_code                                AS reference_code,
-          u.department                                  AS department_name,
+          rsh.history_id AS id,
+          r.request_id AS request_id,
+          r.request_code AS reference_code,
+          NULL::text AS parent_reference_code,
+          u.department AS department_name,
           CASE
             WHEN rsh.history_type = 'approval_detail_status_change' THEN 'APPROVAL'
             WHEN rsh.history_type = 'processing_status_change' THEN 'PROCESSING'
             ELSE 'REQUEST_DETAIL'
-          END::text                                     AS group_type,
+          END::text AS group_type,
           CASE
             WHEN rsh.history_type = 'approval_detail_status_change' THEN 'อนุมัติ/ปฏิเสธรายการย่อย'
             WHEN rsh.history_type = 'processing_status_change' THEN 'สถานะการดำเนินการ'
             ELSE 'รายละเอียด'
-          END::text                                     AS event_type,
+          END::text AS event_type,
           COALESCE(
             rsh.note,
-            'รายการ: ' || i.item_name || ' (สถานะ ' || rsh.old_value || ' -> ' || rsh.new_value || ')'
-          )                                             AS detail,
-          rsh.changed_at                                AS "timestamp",
-          rsh.new_value                                 AS status,
+            'รายการ: ' || COALESCE(i.item_name,'') || ' (สถานะ ' || COALESCE(rsh.old_value,'') || ' -> ' || COALESCE(rsh.new_value,'') || ')'
+          ) AS detail,
+          rsh.changed_at AS "timestamp",
+          rsh.new_value AS status,
           COALESCE(u.user_fname, '') || ' ' || COALESCE(u.user_lname, '') AS user_name,
-          NULL::text                                    AS items_summary,
-          NULL::text                                    AS request_mode_thai
+          NULL::text AS items_summary,
+          NULL::text AS request_mode_thai
         FROM requests r
         JOIN request_details rd ON rd.request_id = r.request_id
         JOIN request_status_history rsh ON rsh.request_detail_id = rd.request_detail_id
@@ -95,71 +94,102 @@ const TransactionHistory = {
 
         /* ---------- นำเข้า ---------- */
         SELECT
-          i.import_id                                   AS id,
-          NULL::int                                     AS request_id,
-          ('IMP-' || i.import_id)::text                 AS reference_code,
-          u.department                                  AS department_name,
-          'IMPORT'::text                                AS group_type,
-          'นำเข้า'::text                                AS event_type,
+          i.import_id AS id,
+          NULL::int AS request_id,
+          ('IMP-' || i.import_id)::text AS reference_code,
+          NULL::text AS parent_reference_code,
+          u.department AS department_name,
+          'IMPORT'::text AS group_type,
+          'นำเข้า'::text AS event_type,
           COALESCE(i.import_note, 'นำเข้าสินค้าจากซัพพลายเออร์') AS detail,
-          i.import_date::timestamp                      AS "timestamp",
-          i.import_status                               AS status,
+          i.import_date::timestamp AS "timestamp",
+          i.import_status AS status,
           COALESCE(u.user_fname, '') || ' ' || COALESCE(u.user_lname, '') AS user_name,
-          NULL::text                                    AS items_summary,
-          NULL::text                                    AS request_mode_thai
+          NULL::text AS items_summary,
+          NULL::text AS request_mode_thai
         FROM imports i
         LEFT JOIN users u ON i.user_id = u.user_id
 
         UNION ALL
 
-        /* ---------- คืนสินค้า (ระบบยืม-คืน) ---------- */
+        /* ---------- คืนสินค้า (ระบบยืม-คืน) : แยกเป็นราย "ครั้งที่คืน" ---------- */
         SELECT
-          br.return_id                                  AS id,
-          req.request_id                                AS request_id,
-          COALESCE(req.request_code, ('REQ-' || req.request_id)) AS reference_code,
-          u.department                                  AS department_name,
-          'RETURN'::text                                AS group_type,
-          'คืนสินค้า'::text                             AS event_type,
-          'รายการ: ' || i.item_name || ' จำนวน ' || br.return_qty || ' ชิ้น' AS detail,
-          br.return_date::timestamp                     AS "timestamp",
-          CASE WHEN br.return_qty = rd.approved_qty THEN 'returned_complete' ELSE 'returned_partially' END::text AS status,
-          COALESCE(u.user_fname, '') || ' ' || COALESCE(u.user_lname, '') AS user_name,
-          NULL::text                                    AS items_summary,
-          NULL::text                                    AS request_mode_thai
-        FROM borrow_returns br
-        JOIN request_details rd ON rd.request_detail_id = br.request_detail_id
-        JOIN requests req ON req.request_id = rd.request_id
-        LEFT JOIN items i ON rd.item_id = i.item_id
-        LEFT JOIN users u ON br.inspected_by = u.user_id
+  br.return_id AS id,
+  req.request_id AS request_id,
+  ('RET-' || br.return_id)::text AS reference_code,
+  req.request_code AS parent_reference_code,
+  u.department AS department_name,
+  'RETURN'::text AS group_type,
+  'คืนสินค้า'::text AS event_type,
+  -- รายละเอียดครั้งนี้ (ชื่อรายการ × จำนวน (หน่วย) + อนุมัติเดิม + คงเหลือหลังคืน)
+  STRING_AGG(
+    COALESCE(i.item_name,'-') || ' × ' || br.return_qty::text || ' ' || COALESCE(i.item_unit,'') ||
+    ' (อนุมัติ ' || COALESCE(rd.approved_qty,0)::text || ', คงเหลือ ' ||
+      GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(sum_so_far.sum_before,0) - br.return_qty, 0)::text
+    || ')'
+  , ', ' ORDER BY i.item_name
+  ) AS detail,
+  br.return_date::timestamp AS "timestamp",
+
+  /* ✅ แก้: ใช้ aggregate ครอบ move_type เพื่อหลุด GROUP BY */
+  CASE
+    WHEN MIN(sm.move_type) = 'return_lost'    THEN 'lost'
+    WHEN MIN(sm.move_type) = 'return_damaged' THEN 'damaged'
+    WHEN MIN(sm.move_type) = 'return_in'      THEN 'returned'
+    ELSE MIN(br.return_status)
+  END::text AS status,
+
+  (COALESCE(u.user_fname,'') || ' ' || COALESCE(u.user_lname,'')) AS user_name,
+  NULL::text AS items_summary,
+  'ยืม'::text AS request_mode_thai
+FROM borrow_returns br
+JOIN request_details rd ON rd.request_detail_id = br.request_detail_id
+JOIN requests req ON req.request_id = rd.request_id
+LEFT JOIN items i ON rd.item_id = i.item_id
+LEFT JOIN users u ON br.inspected_by = u.user_id
+-- รวมคืนก่อนหน้านี้ของ detail เดียวกัน เพื่อคำนวณคงเหลือหลังจาก "ครั้งนี้"
+LEFT JOIN LATERAL (
+  SELECT COALESCE(SUM(br2.return_qty),0) AS sum_before
+  FROM borrow_returns br2
+  WHERE br2.request_detail_id = br.request_detail_id
+    AND (br2.return_date < br.return_date OR (br2.return_date = br.return_date AND br2.return_id < br.return_id))
+) AS sum_so_far ON TRUE
+-- ดึง move_type จาก stock_movements โดยอ้างอิง note: 'ref=RET-<id>'
+LEFT JOIN stock_movements sm
+  ON sm.note ILIKE ('ref=RET-' || br.return_id || '%')
+
+GROUP BY
+  br.return_id, req.request_id, req.request_code, u.department,
+  br.return_date, u.user_fname, u.user_lname
 
         UNION ALL
 
         /* ---------- จัดการสต็อก ---------- */
         SELECT
-          sm.move_id                                    AS id,
-          NULL::int                                     AS request_id,
-          COALESCE(sm.move_code, ('MOV-' || sm.move_id)::text) AS reference_code,  -- ★ ใช้ move_code
-          u.department                                  AS department_name,
-          'STOCK_MOVEMENT'::text                        AS group_type,
+          sm.move_id AS id,
+          NULL::int AS request_id,
+          COALESCE(sm.move_code, ('MOV-' || sm.move_id)::text) AS reference_code,
+          NULL::text AS parent_reference_code,
+          u.department AS department_name,
+          'STOCK_MOVEMENT'::text AS group_type,
           CASE
             WHEN sm.move_type = 'stock_cut' THEN 'ตัดสต็อก'
             WHEN sm.move_type = 'stock_add' THEN 'เพิ่มสต็อก'
             ELSE sm.move_type
-          END::text                                     AS event_type,
-          COALESCE(sm.note, '')                         AS detail,
-          sm.move_date::timestamp                       AS "timestamp",
-          sm.move_status                                AS status,
+          END::text AS event_type,
+          COALESCE(sm.note, '') AS detail,
+          sm.move_date::timestamp AS "timestamp",
+          sm.move_status AS status,
           COALESCE(u.user_fname, '') || ' ' || COALESCE(u.user_lname, '') AS user_name,
-          NULL::text                                    AS items_summary,
-          NULL::text                                    AS request_mode_thai
+          NULL::text AS items_summary,
+          NULL::text AS request_mode_thai
         FROM stock_movements sm
         LEFT JOIN users u ON sm.user_id = u.user_id
       )
     `;
 
-    // ฟิลเตอร์
     let whereClause = `WHERE 1=1 `;
-    const validSortColumns = ['timestamp', 'reference_code', 'group_type', 'event_type', 'user_name'];
+    const validSortColumns = ['timestamp', 'reference_code', 'group_type', 'event_type', 'user_name', 'department_name'];
     const finalSortColumn = validSortColumns.includes(sort_by) ? sort_by : 'timestamp';
     const finalSortOrder = (String(sort_order || '').toLowerCase() === 'asc') ? 'ASC' : 'DESC';
 
@@ -172,6 +202,7 @@ const TransactionHistory = {
       whereClause += ` AND (
         LOWER(user_name) LIKE $${paramIndex}
         OR LOWER(reference_code) LIKE $${paramIndex}
+        OR LOWER(COALESCE(parent_reference_code,'')) LIKE $${paramIndex}
         OR LOWER(detail) LIKE $${paramIndex}
         OR LOWER(COALESCE(items_summary,'')) LIKE $${paramIndex}
       )`;
@@ -189,9 +220,9 @@ const TransactionHistory = {
         const countQuery = `
           ${baseQuery}
           SELECT COUNT(*) FROM (
-              SELECT DISTINCT reference_code, group_type
-              FROM unified_logs
-              ${whereClause}
+            SELECT DISTINCT reference_code, group_type
+            FROM unified_logs
+            ${whereClause}
           ) x;
         `;
         const dataQuery = `
@@ -201,6 +232,7 @@ const TransactionHistory = {
               id,
               request_id,
               reference_code,
+              parent_reference_code,
               group_type,
               event_type,
               detail,
@@ -232,7 +264,6 @@ const TransactionHistory = {
         return { data: rowsRes.rows, totalCount, totalPages, currentPage: safePage };
       }
 
-      // DETAIL: ไทม์ไลน์ทั้งหมด
       const countQuery = `
         ${baseQuery}
         SELECT COUNT(*) FROM unified_logs ${whereClause};
@@ -243,6 +274,7 @@ const TransactionHistory = {
           id,
           request_id,
           reference_code,
+          parent_reference_code,
           group_type,
           event_type,
           detail,
@@ -284,7 +316,6 @@ const TransactionHistory = {
         r.request_note,
         r.request_type,
         r.request_status,
-        r.overall_processing_status,
         u.user_id,
         COALESCE(u.user_fname, '') || ' ' || COALESCE(u.user_lname, '') AS user_name,
         u.department
@@ -303,7 +334,7 @@ const TransactionHistory = {
       const approvalQuery = `
         SELECT
           rsh.changed_at,
-          u.user_fname || ' ' || u.user_lname AS changed_by_user,
+          (COALESCE(u.user_fname,'') || ' ' || COALESCE(u.user_lname,'')) AS changed_by_user,
           i.item_name,
           rd.requested_qty,
           rd.approved_qty,
@@ -323,7 +354,7 @@ const TransactionHistory = {
       const processingQuery = `
         SELECT
           rsh.changed_at,
-          u.user_fname || ' ' || u.user_lname AS changed_by_user,
+          (COALESCE(u.user_fname,'') || ' ' || COALESCE(u.user_lname,'')) AS changed_by_user,
           i.item_name,
           rsh.old_value,
           rsh.new_value,
@@ -360,18 +391,18 @@ const TransactionHistory = {
         i.item_unit,
         rd.requested_qty,
         rd.approved_qty,
-        COALESCE(lat_appr.new_value, rd.approval_status)   AS approval_status,
+        COALESCE(lat_appr.new_value, rd.approval_status) AS approval_status,
         COALESCE(lat_proc.new_value, rd.processing_status) AS processing_status,
         rd.expected_return_date,
         rd.request_detail_note,
-        COALESCE(rd.request_detail_type, r.request_type)   AS request_mode,
+        COALESCE(rd.request_detail_type, r.request_type) AS request_mode,
         CASE
           WHEN LOWER(COALESCE(rd.request_detail_type, r.request_type)) IN ('borrow','ยืม') THEN 'ยืม'
           ELSE 'เบิก'
-        END                                               AS request_mode_thai
+        END AS request_mode_thai
       FROM request_details rd
       JOIN requests r ON r.request_id = rd.request_id
-      JOIN items i   ON i.item_id    = rd.item_id
+      JOIN items i ON i.item_id = rd.item_id
 
       LEFT JOIN LATERAL (
         SELECT rsh.new_value
@@ -398,7 +429,7 @@ const TransactionHistory = {
     return rows;
   },
 
-    async getStockMovementByCode(moveCode) {
+  async getStockMovementByCode(moveCode) {
     const sql = `
       SELECT
         sm.move_id,
@@ -409,7 +440,7 @@ const TransactionHistory = {
         sm.move_date,
         sm.move_status,
         sm.note,
-        COALESCE(u.user_fname, '') || ' ' || COALESCE(u.user_lname, '') AS user_name
+        (COALESCE(u.user_fname,'') || ' ' || COALESCE(u.user_lname,'')) AS user_name
       FROM stock_movements sm
       LEFT JOIN items i ON i.item_id = sm.item_id
       LEFT JOIN users u ON u.user_id = sm.user_id
@@ -419,7 +450,102 @@ const TransactionHistory = {
     const { rows } = await pool.query(sql, [moveCode]);
     return rows;
   },
-  
+
+  async getReturnHistoryByRequestId(requestId) {
+    const sql = `
+      WITH base AS (
+  SELECT
+    br.return_id,
+    br.request_detail_id,
+    br.return_date,
+    br.return_qty,
+    br.return_status,
+    br.inspected_by,
+    br.return_note,
+    rd.request_id,
+    rd.item_id,
+    COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0)::int AS baseline_qty,
+    rd.approved_qty::int,
+    i.item_name,
+    i.item_unit,
+    (COALESCE(u.user_fname,'') || ' ' || COALESCE(u.user_lname,'')) AS inspected_by_name
+  FROM borrow_returns br
+  JOIN request_details rd ON rd.request_detail_id = br.request_detail_id
+  LEFT JOIN items i ON i.item_id = rd.item_id
+  LEFT JOIN users u ON u.user_id = br.inspected_by
+  WHERE rd.request_id = $1
+),
+agg AS (
+  SELECT
+    *,
+    SUM(return_qty) OVER (
+      PARTITION BY request_detail_id
+      ORDER BY return_date, return_id
+      ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    )::int AS returned_total
+  FROM base
+),
+status_resolved AS (
+  SELECT
+    a.*,
+    /* ดึง move_type ถ้ามี จาก stock_movements.note = 'ref=RET-<id>...' */
+    (
+      SELECT MIN(sm.move_type)
+      FROM stock_movements sm
+      WHERE sm.note ILIKE ('ref=RET-' || a.return_id || '%')
+    ) AS move_type_resolved
+  FROM agg a
+)
+SELECT
+  'RET-' || s.return_id AS return_code,
+  s.return_id,
+  s.request_detail_id,
+  s.request_id,
+  s.item_id,
+  s.item_name,
+  s.item_unit,
+  s.approved_qty,
+  s.baseline_qty,
+  s.return_date,
+
+  /* ส่งทั้งรหัสสถานะ (code) และคำแปลไทย (thai) ออกไป */
+  (
+    CASE
+      WHEN s.move_type_resolved = 'return_lost'    THEN 'lost'
+      WHEN s.move_type_resolved = 'return_damaged' THEN 'damaged'
+      WHEN s.move_type_resolved = 'return_in'      THEN 'returned'
+      /* ถ้าไม่มี move_type ให้ fallback ตามค่าเดิมของ borrow_returns */
+      WHEN LOWER(COALESCE(s.return_status,'')) IN ('lost')    THEN 'lost'
+      WHEN LOWER(COALESCE(s.return_status,'')) IN ('damaged') THEN 'damaged'
+      WHEN LOWER(COALESCE(s.return_status,'')) IN ('received','completed','accepted') THEN 'returned'
+      ELSE 'unknown'
+    END
+  ) AS return_status_code,
+
+  (
+    CASE
+      WHEN s.move_type_resolved = 'return_lost'    THEN 'สูญหาย'
+      WHEN s.move_type_resolved = 'return_damaged' THEN 'คืนชำรุด'
+      WHEN s.move_type_resolved = 'return_in'      THEN 'คืนปกติ'
+      WHEN LOWER(COALESCE(s.return_status,'')) IN ('lost')     THEN 'สูญหาย'
+      WHEN LOWER(COALESCE(s.return_status,'')) IN ('damaged')  THEN 'คืนชำรุด'
+      WHEN LOWER(COALESCE(s.return_status,'')) IN ('received','completed','accepted') THEN 'คืนปกติ'
+      ELSE 'สถานะไม่ทราบ'
+    END
+  ) AS return_status_thai,
+
+  s.return_qty AS returned_this_time,
+  s.returned_total,
+  GREATEST(s.baseline_qty - s.returned_total, 0)::int AS remaining_qty,
+  s.inspected_by,
+  s.inspected_by_name,
+  s.return_note
+FROM status_resolved s
+ORDER BY s.return_date DESC, s.return_id DESC;
+    `;
+    const { rows } = await pool.query(sql, [requestId]);
+    return rows;
+  },
 };
 
 module.exports = TransactionHistory;

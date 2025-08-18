@@ -14,7 +14,11 @@ const { socketSetup } = require('./socket'); // 🔄 แยกออก
 const helmet = require('helmet');
 const server = http.createServer(app);
 const multer = require('multer');
+require('./cronJobs');
 const upload = multer({ dest: 'uploads/' });
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use(morgan('dev'));
 app.use(cors({

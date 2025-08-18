@@ -5,7 +5,7 @@ const { pool } = require('../config/db');
 
 exports.getManageData = async (req, res) => {
   try {
-    const data = await manageDataModel.allItems();
+    const data = await manageDataModel.getAllItemsDetailed();
     res.status(200).json(data);
   } catch (error) {
     res.status(500).json({ error: 'เกิดข้อผิดพลาดในการดึงข้อมูล', details: error.message });
@@ -16,10 +16,12 @@ exports.deleteItem = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const query = `UPDATE items SET is_deleted = true, item_update = CURRENT_TIMESTAMP WHERE item_id = $1`;
+    // ✅ แก้ไขจาก item_update เป็น updated_at
+    const query = `UPDATE items SET is_deleted = true, updated_at = CURRENT_TIMESTAMP WHERE item_id = $1`;
     await pool.query(query, [id]);
 
     const io = getIO();
+    // โค้ดตรงนี้จะทำงานได้อย่างถูกต้องหลังจากคุณแก้ไข inventoryModel.js แล้ว
     const updatedItems = await inventoryModel.getAllItemsDetailed();
     io.emit('itemsData', updatedItems);
 
@@ -29,7 +31,6 @@ exports.deleteItem = async (req, res) => {
     res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการลบข้อมูล', error: error.message });
   }
 };
-
 
 exports.getItemById = async (req, res) => {
 

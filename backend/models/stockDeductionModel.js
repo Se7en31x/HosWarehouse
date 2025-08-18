@@ -1,13 +1,12 @@
 // backend/models/stockDeductionModel.js
-const { pool } = require('../config/db'); // ตรวจสอบ Path ของ db.js ให้ถูกต้อง
+const { pool } = require('../config/db'); // ตรวจสอบ path ให้ถูกต้อง
 
 /* ====================== Helpers ====================== */
 /** ใช้ตารางตัวนับรายวัน เพื่อสร้างรหัส MOV-YYYYMMDD-#### แบบกันชนพร้อมกัน */
 async function generateMoveBatchCode(client) {
-  // ใช้เวลา DB (เสถียรกว่า server)
   const { rows: nowRows } = await client.query(`SELECT CURRENT_DATE::date AS d`);
-  const d = nowRows[0].d; // JS Date
-  // เตรียมแถววันนี้ถ้ายังไม่มี
+  const d = nowRows[0].d;
+
   await client.query(`
     CREATE TABLE IF NOT EXISTS stock_move_counter (
       counter_date date PRIMARY KEY,
@@ -19,7 +18,6 @@ async function generateMoveBatchCode(client) {
      ON CONFLICT (counter_date) DO NOTHING`,
     [d]
   );
-  // อัปเดตเลขลำดับแบบ atomic แล้วอ่านกลับ
   const { rows } = await client.query(
     `UPDATE stock_move_counter
        SET last_seq = last_seq + 1
@@ -27,7 +25,7 @@ async function generateMoveBatchCode(client) {
     RETURNING last_seq`,
     [d]
   );
-  const seq = rows[0].last_seq; // 1,2,3,...
+  const seq = rows[0].last_seq;
   const y  = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');
@@ -37,7 +35,7 @@ async function generateMoveBatchCode(client) {
 
 /* ====================== Queries หลัก ====================== */
 
-/** รายการคำขอที่มีแถวอนุมัติแล้ว */
+/** ดึงรายการคำขอที่มีแถวอนุมัติแล้ว */
 async function getApprovedRequestsForDeduction() {
   try {
     const query = `
@@ -66,12 +64,12 @@ async function getApprovedRequestsForDeduction() {
     const { rows } = await pool.query(query);
     return rows;
   } catch (error) {
-    console.error('Error fetching requests ready for processing from DB (Model):', error);
+    console.error('Error fetching requests ready for processing (Model):', error);
     throw new Error('Failed to retrieve requests ready for processing.');
   }
 }
 
-/** รายละเอียดคำขอ + รายการ */
+/** ดึงรายละเอียดคำขอ + รายการ */
 async function getRequestDetailsForProcessing(requestId) {
   try {
     const requestQuery = `
@@ -91,7 +89,6 @@ async function getRequestDetailsForProcessing(requestId) {
     `;
     const { rows: requestRows } = await pool.query(requestQuery, [requestId]);
     if (requestRows.length === 0) return null;
-
     const request = requestRows[0];
 
     const itemsQuery = `
@@ -104,14 +101,16 @@ async function getRequestDetailsForProcessing(requestId) {
         rd.approved_qty,
         rd.approval_status,
         rd.processing_status,
-        i.item_qty AS current_stock_qty,
-        i.item_exp,
-        i.item_status,
         rd.request_detail_note,
-        rd.updated_at AS detail_updated_at
+        rd.updated_at AS detail_updated_at,
+        COALESCE(SUM(il.qty_remaining), 0) AS current_stock_qty
       FROM request_details rd
       JOIN items i ON rd.item_id = i.item_id
+      LEFT JOIN item_lots il ON rd.item_id = il.item_id
       WHERE rd.request_id = $1
+      GROUP BY rd.request_detail_id, rd.item_id, i.item_name, i.item_unit,
+               rd.requested_qty, rd.approved_qty, rd.approval_status,
+               rd.processing_status, rd.request_detail_note, rd.updated_at
       ORDER BY rd.request_detail_id ASC;
     `;
     const { rows: itemRows } = await pool.query(itemsQuery, [requestId]);
@@ -119,25 +118,19 @@ async function getRequestDetailsForProcessing(requestId) {
     request.details = itemRows;
     return request;
   } catch (error) {
-    console.error(`Error fetching details for request ${requestId} from DB (Model):`, error);
+    console.error(`Error fetching details for request ${requestId}:`, error);
     throw new Error('Failed to retrieve request details for processing.');
   }
 }
 
 /**
- * ตัดสต็อกทั้งคำขอ (transaction เดียว):
- * - อัปเดต items
- * - insert stock_movements (ใช้ move_code เดียวทั้งก้อน)
- * - บันทึก request_status_history (processing_status_change)
- * - อัปเดต request_details.processing_status
- * - ถ้ามี error ตรงไหน → ROLLBACK ทั้งหมด
+ * ตัดสต็อก (ใช้ FEFO จาก item_lots)
  */
 async function deductStock(requestId, updates, userId) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
-    // ★ รหัสก้อน movement แบบมาตรฐาน MOV-YYYYMMDD-#### (atomic)
     const moveBatchCode = await generateMoveBatchCode(client);
 
     for (const update of updates) {
@@ -155,44 +148,60 @@ async function deductStock(requestId, updates, userId) {
         throw new Error(`Item ${request_detail_id} (item ${item_id}) approval_status='${current_approval_status}'`);
       }
 
-      // จาก 'pending' -> 'preparing' ตัดสต็อก
       if (newStatus === 'preparing' && current_processing_status === 'pending') {
-        // 1) ล็อคสต็อก
-        const { rows: itemRows } = await client.query(
-          `SELECT item_qty FROM items WHERE item_id = $1 FOR UPDATE`,
+        let remainingToDeduct = requested_qty;
+
+        // ดึง lot ตามวันหมดอายุ (FEFO)
+        const { rows: lots } = await client.query(
+          `SELECT lot_id, qty_remaining, exp_date
+             FROM item_lots
+            WHERE item_id = $1 AND qty_remaining > 0
+            ORDER BY exp_date ASC
+            FOR UPDATE`,
           [item_id]
         );
-        if (itemRows.length === 0) throw new Error(`Item ${item_id} not found in stock.`);
-        const currentStock = itemRows[0].item_qty;
 
-        if (requested_qty > currentStock) {
-          throw new Error(`Insufficient stock for item ${item_id}. Have ${currentStock}, need ${requested_qty}.`);
+        for (const lot of lots) {
+          if (remainingToDeduct <= 0) break;
+
+          const deductQty = Math.min(remainingToDeduct, lot.qty_remaining);
+
+          // update lot
+          await client.query(
+            `UPDATE item_lots
+                SET qty_remaining = qty_remaining - $1,
+                    updated_at = NOW()::timestamp
+              WHERE lot_id = $2`,
+            [deductQty, lot.lot_id]
+          );
+
+          // insert stock movement
+          const note =
+            `ตัดสต็อกจาก lot #${lot.lot_id} (exp=${lot.exp_date}), ` +
+            `request #${requestId}, item ${item_id}, qty ${deductQty}` +
+            (deduction_reason ? `, เหตุผล: ${deduction_reason}` : '');
+
+          await client.query(
+            `INSERT INTO stock_movements
+                (item_id, move_type, move_qty, move_date,
+                 move_status, user_id, note, move_code, lot_id)
+             VALUES
+                ($1, 'stock_cut', $2, NOW()::timestamp,
+                 'completed', $3, $4, $5, $6)`,
+            [item_id, deductQty, userId, note, moveBatchCode, lot.lot_id]
+          );
+
+          remainingToDeduct -= deductQty;
         }
 
-        // 2) อัปเดตคงเหลือ (timestamp without time zone)
-        await client.query(
-          `UPDATE items
-             SET item_qty = item_qty - $1,
-                 item_update = NOW()::timestamp
-           WHERE item_id = $2`,
-          [requested_qty, item_id]
-        );
-
-        // 3) insert movement (ใช้ move_code เดียวทั้งก้อน)
-        const note =
-          `ตัดสต็อกจากคำขอ #${requestId}, item ${item_id}, qty ${requested_qty}` +
-          (deduction_reason ? `, เหตุผล: ${deduction_reason}` : '');
-
-        await client.query(
-          `INSERT INTO stock_movements
-              (item_id, move_type, move_qty, move_date, move_status, user_id, note, move_code)
-           VALUES
-              ($1,      'stock_cut', $2,       NOW()::timestamp, 'completed', $3,     $4,   $5)`,
-          [item_id, requested_qty, userId, note, moveBatchCode]
-        );
+        if (remainingToDeduct > 0) {
+          throw new Error(
+            `Insufficient stock for item ${item_id}. Need ${requested_qty}, deducted only ${requested_qty - remainingToDeduct}.`
+          );
+        }
       }
 
-      // 4) บันทึกประวัติการเปลี่ยนสถานะ (ให้ตรงกับหน้าประวัติ)
+      // ประวัติการเปลี่ยนสถานะ
       await client.query(
         `INSERT INTO request_status_history
            (request_id, request_detail_id, changed_by, changed_at,
@@ -207,11 +216,11 @@ async function deductStock(requestId, updates, userId) {
           userId,
           current_processing_status,
           newStatus,
-          `เปลี่ยนสถานะการดำเนินการจาก '${current_processing_status || 'ไม่ระบุ'}' เป็น '${newStatus}'.`
+          `เปลี่ยนสถานะจาก '${current_processing_status || 'ไม่ระบุ'}' → '${newStatus}'.`
         ]
       );
 
-      // 5) อัปเดตสถานะ detail (optimistic check)
+      // อัปเดตสถานะ detail
       const resUpd = await client.query(
         `UPDATE request_details
             SET processing_status = $1,
@@ -222,12 +231,12 @@ async function deductStock(requestId, updates, userId) {
         [newStatus, request_detail_id, current_processing_status]
       );
       if (resUpd.rowCount === 0) {
-        throw new Error(`Failed to update processing status for detail ${request_detail_id} (concurrent update?).`);
+        throw new Error(`Failed to update processing status for detail ${request_detail_id}.`);
       }
 
-      // 6) แนบเหตุผล (ถ้ามี)
+      // เหตุผลเพิ่มเติม
       if (deduction_reason && deduction_reason.trim() !== '') {
-        const reasonNote = `\n[${new Date().toLocaleString('th-TH')}] เหตุผลเบิกไม่ครบ: ${deduction_reason}.`;
+        const reasonNote = `\n[${new Date().toLocaleString('th-TH')}] เหตุผลเบิกไม่ครบ: ${deduction_reason}`;
         await client.query(
           `UPDATE request_details
               SET request_detail_note = COALESCE(request_detail_note, '') || $1
@@ -238,15 +247,10 @@ async function deductStock(requestId, updates, userId) {
     }
 
     await client.query('COMMIT');
-    return {
-      success: true,
-      message: `Updated processing & stock for request ${requestId}`,
-      move_code: moveBatchCode
-    };
+    return { success: true, message: `Stock deducted for request ${requestId}`, move_code: moveBatchCode };
   } catch (error) {
-    // ★ rollback ทั้งก้อน
-    try { await client.query('ROLLBACK'); } catch (e) { /* ignore */ }
-    console.error('Error during stock deduction transaction (Model):', error);
+    try { await client.query('ROLLBACK'); } catch (e) {}
+    console.error('Error during stock deduction transaction:', error);
     throw error;
   } finally {
     client.release();

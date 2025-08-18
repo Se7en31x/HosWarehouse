@@ -12,4 +12,9 @@ router.get('/transaction-history/request/:requestId', transactionHistoryControll
 // ★ NEW: GET /api/v1/transaction-history/stock-movement?move_code=XXXX
 router.get('/transaction-history/stock-movement', transactionHistoryController.getStockMovementByCode);
 
+router.get(
+  '/transaction-history/request/:requestId/returns/history',
+  transactionHistoryController.getRequestReturnHistory
+);
+
 module.exports = router;
