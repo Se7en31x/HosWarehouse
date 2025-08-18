@@ -1,4 +1,4 @@
-// backend/socketIO.js
+// backend/socket.js
 const { Server } = require("socket.io");
 let io;
 

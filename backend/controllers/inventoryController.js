@@ -52,45 +52,44 @@ exports.getItemById = async (req, res) => {
 // POST /api/damaged
 // ----------------------------------------------------------------------
 exports.reportDamaged = async (req, res) => {
-  try {
-    const { lot_id, item_id, qty, note, damaged_type } = req.body;
-    const reported_by = req.user?.user_id || 1; // MOCK
+  try {
+    const { lot_id, item_id, qty, note, damaged_type } = req.body;
+    const reported_by = req.user?.user_id || 1; // MOCK
 
-    // ✅ ตรวจสอบข้อมูลที่ได้รับจาก client ก่อนส่งไปยัง model
-    // เพิ่มการตรวจสอบว่า lot_id และ item_id ไม่เป็นค่าว่าง
-    if (!lot_id || !item_id || !qty || qty <= 0 || !damaged_type) {
-      return res.status(400).json({ message: 'ข้อมูลที่ส่งมาไม่ครบถ้วนหรือไม่ถูกต้อง' });
-    }
+    if (!lot_id || !item_id || !qty || qty <= 0 || !damaged_type) {
+      return res.status(400).json({ message: 'ข้อมูลที่ส่งมาไม่ครบถ้วนหรือไม่ถูกต้อง' });
+    }
 
-    // ✅ เรียกใช้ฟังก์ชัน reportDamaged จาก inventoryModel.js
-    await inventoryModel.reportDamaged({ lot_id, item_id, qty, note, reported_by, damaged_type });
+    // ✅ บันทึกการชำรุด + ตัดสต็อก
+    await inventoryModel.reportDamaged({ lot_id, item_id, qty, note, reported_by, damaged_type });
 
-    // ✅ ส่งสัญญาณ WebSocket เพื่ออัปเดตข้อมูล
-    const io = getIO();
-    if (io) {
-      const updatedDamagedItems = await damagedModel.getAll();
-      io.emit('damagedUpdated', updatedDamagedItems);
-      
-      const updatedInventory = await inventoryModel.getAllItemsDetailed();
-      io.emit('itemsData', updatedInventory);
-    }
+    const io = getIO();
+    if (io) {
+      // 🔹 อัปเดตหน้ารวม damaged
+      const updatedDamagedItems = await damagedModel.getAll();
+      io.emit('damagedUpdated', updatedDamagedItems);
 
-    res.status(201).json({ message: 'บันทึกของชำรุดเรียบร้อยแล้ว' });
-  } catch (error) {
-    console.error('❌ Error reporting damaged item:', error);
-    res.status(500).json({ message: error.message || 'ไม่สามารถบันทึกรายการชำรุดได้' });
-  }
-};
+      // 🔹 อัปเดตหน้ารวม inventory
+      const updatedInventory = await inventoryModel.getAllItemsDetailed();
+      io.emit('itemsData', updatedInventory);
 
-// --------------------------- WebSocket --------------------------- //
-// เดิมที่เป็น socket-only -> ให้เรียกใช้ model เหมือนกัน
-exports.getItemsWS = async (socket) => {
-  try {
-    const items = await inventoryModel.getAllItemsDetailed();
-    console.log('🟢 ส่งข้อมูล inventory ผ่าน WS:', items.length, 'รายการ');
-    socket.emit('itemsData', items); // ตอบกลับเฉพาะ client ที่ขอ
-  } catch (err) {
-    console.error('❌ ดึงข้อมูลล้มเหลว (WS):', err);
-    socket.emit('itemsError', 'เกิดข้อผิดพลาดขณะดึงข้อมูล');
-  }
+      // 🔹 ส่งสัญญาณเฉพาะ item ที่เพิ่งถูกตัด (เหมือน deductStock)
+      const updatedItem = await inventoryModel.getItemById(item_id);
+      if (updatedItem) {
+        io.emit("itemUpdated", {
+          item_id: updatedItem.item_id,
+          item_name: updatedItem.item_name,
+          item_unit: updatedItem.item_unit,
+          item_img: updatedItem.item_img,    // ✅ ส่งชื่อไฟล์
+          deducted: qty,                     // จำนวนที่เสียหาย
+          current_stock: updatedItem.total_on_hand_qty // จำนวนคงเหลือใหม่
+        });
+      }
+    }
+
+    res.status(201).json({ message: 'บันทึกของชำรุดเรียบร้อยแล้ว' });
+  } catch (error) {
+    console.error('❌ Error reporting damaged item:', error);
+    res.status(500).json({ message: error.message || 'ไม่สามารถบันทึกรายการชำรุดได้' });
+  }
 };

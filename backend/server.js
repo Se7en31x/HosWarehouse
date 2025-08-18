@@ -17,6 +17,8 @@ const multer = require('multer');
 require('./cronJobs');
 const upload = multer({ dest: 'uploads/' });
 
+
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -43,7 +45,10 @@ connectDB();
 
 // ให้เข้าถึงรูปจาก URL เช่น http://localhost:5000/uploads/xxx.jpg
 app.use('/uploads', express.static('uploads'));
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: false,  // ปิดการ block รูปจาก cross-origin
+  crossOriginEmbedderPolicy: false,  // กัน resource บางประเภทโดนบล็อค
+}));
 app.use((err, req, res, next) => {
   console.error('Global Error:', err.stack);
   res.status(500).json({ error: 'Internal Server Error' });

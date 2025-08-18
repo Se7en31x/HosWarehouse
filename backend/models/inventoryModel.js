@@ -32,7 +32,10 @@ exports.getAllItemsDetailed = async () => {
             LEFT JOIN equipment_detail e ON i.item_id = e.item_id
             LEFT JOIN meddevices_detail md ON i.item_id = md.item_id
             LEFT JOIN generalsup_detail g ON i.item_id = g.item_id
-            LEFT JOIN item_lots il ON i.item_id = il.item_id AND il.qty_remaining > 0 AND il.is_expired = false
+            LEFT JOIN item_lots il 
+              ON i.item_id = il.item_id 
+             AND il.qty_remaining > 0 
+             AND il.is_expired = false   -- ✅ ใช้ is_expired เป็นหลัก
             WHERE i.is_deleted = false
             GROUP BY 
                 i.item_id, m.med_id, ms.medsup_id, e.equip_id, md.meddevice_id, g.gen_id
@@ -56,7 +59,7 @@ exports.getItemById = async (id) => {
             SELECT
                 i.*,
                 m.med_id, m.med_code, m.med_generic_name, m.med_thai_name, m.med_marketing_name, m.med_counting_unit, m.med_dosage_form, m.med_medical_category, m.med_medium_price, m.med_tmt_code, m.med_tpu_code, m.med_tmt_gp_name, m.med_tmt_tp_name, m.med_severity, m.med_essential_med_list, m.med_pregnancy_category, m.med_dose_dialogue, m.med_replacement,
-                 ms.medsup_id, ms.medsup_category, ms.medsup_brand, ms.medsup_serial_no, ms.medsup_status, ms.medsup_code, ms.medsup_price,
+                ms.medsup_id, ms.medsup_category, ms.medsup_brand, ms.medsup_serial_no, ms.medsup_status, ms.medsup_code, ms.medsup_price,
                 e.equip_id, e.equip_brand, e.equip_model, e.equip_maintenance_cycle, e.equip_note, e.equip_code,
                 md.meddevice_id, md.meddevice_type, md.meddevice_brand, md.meddevice_model, md.meddevice_serial_no, md.meddevice_status, md.meddevice_price, md.meddevice_note, md.meddevice_code,
                 g.gen_id, g.gen_brand, g.gen_model, g.gen_spec, g.gen_price, g.gen_code,
@@ -67,8 +70,12 @@ exports.getItemById = async (id) => {
             LEFT JOIN equipment_detail e ON i.item_id = e.item_id
             LEFT JOIN meddevices_detail md ON i.item_id = md.item_id
             LEFT JOIN generalsup_detail g ON i.item_id = g.item_id
-            LEFT JOIN item_lots il ON i.item_id = il.item_id AND il.qty_remaining > 0 AND (il.exp_date IS NULL OR il.exp_date > NOW())
-            WHERE i.item_id = $1 AND i.is_deleted = false
+            LEFT JOIN item_lots il 
+              ON i.item_id = il.item_id 
+             AND il.qty_remaining > 0 
+             AND il.is_expired = false   -- ✅ ปรับมาใช้ is_expired เหมือนกัน
+            WHERE i.item_id = $1 
+              AND i.is_deleted = false
             GROUP BY
                 i.item_id, m.med_id, ms.medsup_id, e.equip_id, md.meddevice_id, g.gen_id
             LIMIT 1;
@@ -89,8 +96,8 @@ exports.getItemById = async (id) => {
                 item_id
             FROM item_lots
             WHERE item_id = $1
-            AND qty_remaining > 0
-            AND (exp_date IS NULL OR exp_date > NOW())
+              AND qty_remaining > 0
+              AND is_expired = false   -- ✅ ใช้เหมือนกัน
             ORDER BY import_date DESC;
         `;
         const lotResult = await pool.query(lotQuery, [id]);
