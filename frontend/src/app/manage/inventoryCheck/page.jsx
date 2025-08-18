@@ -66,8 +66,9 @@ export default function InventoryCheck() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedUnit, setSelectedUnit] = useState("");
   const [selectedStorage, setSelectedStorage] = useState("");
-  const [allInventoryItems, setAllInventoryItems] = useState([]);
+  const [allItems, setAllItems] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
   const ITEMS_PER_PAGE = 10;
 
   const menuPortalTarget = useMemo(
@@ -102,33 +103,70 @@ export default function InventoryCheck() {
     }
   };
 
-  // ✅ โหลดข้อมูลครั้งแรกผ่าน REST
+  // ✅ Hybrid REST + Socket
   useEffect(() => {
-    const fetchData = async () => {
+    let isMounted = true;
+
+    const fetchInitialData = async () => {
       try {
         const res = await axiosInstance.get("/inventoryCheck/all");
-        setAllInventoryItems(res.data || []);
+        if (isMounted) {
+          setAllItems(Array.isArray(res.data) ? res.data.filter(Boolean) : []);
+        }
       } catch (err) {
         console.error("❌ โหลด REST ไม่สำเร็จ:", err);
+        toast.error("ไม่สามารถโหลดข้อมูลจากเซิร์ฟเวอร์ได้");
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
     };
-    fetchData();
-  }, []);
 
-  // ✅ sync real-time ผ่าน socket
-  useEffect(() => {
+    fetchInitialData();
+
+    // ── 2. เปิด socket realtime ─────────────────────
     const socket = connectSocket();
-    socket.emit("requestInventoryData");
-    socket.on("itemsData", (items) => {
-      setAllInventoryItems(Array.isArray(items) ? items.filter(Boolean) : []);
+
+    // อัปเดตเฉพาะ record
+    socket.on("itemUpdated", (updatedItem) => {
+      console.log("📦 itemUpdated ได้รับ:", updatedItem);
+
+      setAllItems((prevItems) => {
+        const index = prevItems.findIndex((i) => i.item_id === updatedItem.item_id);
+        if (index !== -1) {
+          const newItems = [...prevItems];
+          newItems[index] = {
+            ...newItems[index],
+            ...updatedItem,
+            total_on_hand_qty: updatedItem.current_stock, // ✅ map ให้ตรง
+            item_img: updatedItem.item_img || updatedItem.item_img_url // กันกรณีชื่อไม่ตรง
+          };
+          return newItems;
+        } else {
+          return [
+            ...prevItems,
+            {
+              ...updatedItem,
+              total_on_hand_qty: updatedItem.current_stock, // ✅ ให้ค่าเริ่มต้นตรง
+              item_img: updatedItem.item_img || updatedItem.item_img_url
+            }
+          ];
+        }
+      });
     });
-    return () => disconnectSocket();
+
+    // ── 3. cleanup ─────────────────────
+    return () => {
+      isMounted = false;
+      socket.off("itemUpdated");
+
+      disconnectSocket();
+    };
   }, []);
 
   // คัดกรอง
   const filteredInventory = useMemo(() => {
     const f = searchText.toLowerCase();
-    return allInventoryItems.filter((item) => {
+    return allItems.filter((item) => {
       const itemThaiCategory =
         categoryThaiMap[item.item_category?.toLowerCase()] || item.item_category;
       const matchCategory = selectedCategory ? itemThaiCategory === selectedCategory : true;
@@ -136,11 +174,11 @@ export default function InventoryCheck() {
       const matchStorage = selectedStorage ? item.item_location === selectedStorage : true;
       const matchSearchText = searchText
         ? (item.item_name || "").toLowerCase().includes(f) ||
-          (getItemCode(item) || "").toLowerCase().includes(f)
+        (getItemCode(item) || "").toLowerCase().includes(f)
         : true;
       return matchCategory && matchUnit && matchStorage && matchSearchText;
     });
-  }, [allInventoryItems, selectedCategory, selectedUnit, selectedStorage, searchText]);
+  }, [allItems, selectedCategory, selectedUnit, selectedStorage, searchText]);
 
   const totalPages = Math.max(1, Math.ceil(filteredInventory.length / ITEMS_PER_PAGE));
   const paginatedItems = useMemo(() => {
@@ -163,7 +201,15 @@ export default function InventoryCheck() {
     } else if (currentPage <= 4) {
       pages.push(1, 2, 3, 4, 5, "...", totalPages);
     } else if (currentPage >= totalPages - 3) {
-      pages.push(1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      pages.push(
+        1,
+        "...",
+        totalPages - 4,
+        totalPages - 3,
+        totalPages - 2,
+        totalPages - 1,
+        totalPages
+      );
     } else {
       pages.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
     }
@@ -182,13 +228,13 @@ export default function InventoryCheck() {
     try {
       return d
         ? new Date(d).toLocaleString("th-TH", {
-            timeZone: "Asia/Bangkok",
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-          })
+          timeZone: "Asia/Bangkok",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
         : "-";
     } catch {
       return "-";
@@ -262,7 +308,6 @@ export default function InventoryCheck() {
               />
             </div>
           </div>
-
           <div className={styles.searchCluster}>
             <button
               onClick={clearFilters}
@@ -273,101 +318,107 @@ export default function InventoryCheck() {
           </div>
         </div>
 
-        {/* Table */}
-        <div className={styles.tableSection}>
-          <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
-            <div className={styles.headerItem}>ลำดับ</div>
-            <div className={styles.headerItem}>รหัส</div>
-            <div className={styles.headerItem}>รูปภาพ</div>
-            <div className={styles.headerItem}>รายการ</div>
-            <div className={styles.headerItem}>หมวดหมู่</div>
-            <div className={styles.headerItem}>คงเหลือ</div>
-            <div className={styles.headerItem}>หน่วย</div>
-            <div className={styles.headerItem}>สถานะ</div>
-            <div className={styles.headerItem}>ที่เก็บ</div>
-            <div className={styles.headerItem}>อัปเดตล่าสุด</div>
-            <div className={styles.headerItem}>ดำเนินการ</div>
+        {/* แสดงสถานะ Loading ก่อนแสดงตาราง */}
+        {isLoading ? (
+          <div className={styles.loadingContainer}>
+            {/* อาจเพิ่ม animation loading ที่นี่ */}
           </div>
+        ) : (
+          <div className={styles.tableSection}>
+            <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+              <div className={styles.headerItem}>ลำดับ</div>
+              <div className={styles.headerItem}>รหัส</div>
+              <div className={styles.headerItem}>รูปภาพ</div>
+              <div className={styles.headerItem}>รายการ</div>
+              <div className={styles.headerItem}>หมวดหมู่</div>
+              <div className={styles.headerItem}>คงเหลือ</div>
+              <div className={styles.headerItem}>หน่วย</div>
+              <div className={styles.headerItem}>สถานะ</div>
+              <div className={styles.headerItem}>ที่เก็บ</div>
+              <div className={styles.headerItem}>อัปเดตล่าสุด</div>
+              <div className={styles.headerItem}>ดำเนินการ</div>
+            </div>
 
-          <div className={styles.inventory} style={{ "--rows-per-page": ITEMS_PER_PAGE }}>
-            {paginatedItems.length > 0 ? (
-              paginatedItems.map((item, index) => (
-                <div key={item.item_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
-                  <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                    {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
+            <div className={styles.inventory} style={{ "--rows-per-page": ITEMS_PER_PAGE }}>
+              {paginatedItems.length > 0 ? (
+                paginatedItems.map((item, index) => (
+                  <div key={item.item_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
+                    </div>
+                    <div className={styles.tableCell}>{getItemCode(item)}</div>
+                    <div className={`${styles.tableCell} ${styles.imageCell}`}>
+                      <img
+                        src={
+                          item.item_img
+                            ? `http://localhost:5000/uploads/${item.item_img}`
+                            : "http://localhost:5000/public/defaults/landscape.png"
+                        }
+                        alt={item.item_name}
+                      />
+                    </div>
+                    <div className={styles.tableCell} title={item.item_name}>{item.item_name}</div>
+                    <div className={styles.tableCell}>
+                      {categoryThaiMap[item.item_category?.toLowerCase()] || item.item_category}
+                    </div>
+                    <div className={styles.tableCell}>{item.total_on_hand_qty}</div>
+                    <div className={styles.tableCell}>{item.item_unit}</div>
+                    <div className={styles.tableCell}>พร้อมใช้งาน</div>
+                    <div className={styles.tableCell}>{item.item_location}</div>
+                    <div className={styles.tableCell}>{formatDateTime(item.created_at)}</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      <Link
+                        href={`/manage/inventoryCheck/${item.item_id}/inventoryDetail`}
+                        className={styles.actionButton}
+                        title="ตรวจสอบ"
+                      >
+                        <Search size={18} />
+                      </Link>
+                    </div>
                   </div>
-                  <div className={styles.tableCell}>{getItemCode(item)}</div>
-                  <div className={`${styles.tableCell} ${styles.imageCell}`}>
-                    <img
-                      src={
-                        item.item_img
-                          ? `http://localhost:5000/uploads/${item.item_img}`
-                          : "http://localhost:5000/public/defaults/landscape.png"
-                      }
-                      alt={item.item_name}
-                    />
-                  </div>
-                  <div className={styles.tableCell} title={item.item_name}>{item.item_name}</div>
-                  <div className={styles.tableCell}>
-                    {categoryThaiMap[item.item_category?.toLowerCase()] || item.item_category}
-                  </div>
-                  <div className={styles.tableCell}>{item.total_on_hand_qty}</div>
-                  <div className={styles.tableCell}>{item.item_unit}</div>
-                  <div className={styles.tableCell}>พร้อมใช้งาน</div>
-                  <div className={styles.tableCell}>{item.item_location}</div>
-                  <div className={styles.tableCell}>{formatDateTime(item.created_at)}</div>
-                  <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                    <Link
-                      href={`/manage/inventoryCheck/${item.item_id}/inventoryDetail`}
-                      className={styles.actionButton}
-                      title="ตรวจสอบ"
-                    >
-                      <Search size={18} />
-                    </Link>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className={styles.noDataMessage}>ไม่พบข้อมูล</div>
-            )}
-          </div>
-
-          {/* Pagination */}
-          <ul className={styles.paginationControls}>
-            <li>
-              <button
-                className={styles.pageButton}
-                onClick={goToPreviousPage}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft size={16} />
-              </button>
-            </li>
-            {getPageNumbers().map((p, idx) =>
-              p === "..." ? (
-                <li key={`ellipsis-${idx}`} className={styles.ellipsis}>…</li>
+                ))
               ) : (
-                <li key={`page-${p}`}>
-                  <button
-                    className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
-                    onClick={() => setCurrentPage(p)}
-                  >
-                    {p}
-                  </button>
-                </li>
-              )
-            )}
-            <li>
-              <button
-                className={styles.pageButton}
-                onClick={goToNextPage}
-                disabled={currentPage >= totalPages}
-              >
-                <ChevronRight size={16} />
-              </button>
-            </li>
-          </ul>
-        </div>
+                <div className={styles.noDataMessage}>ไม่พบข้อมูล</div>
+              )}
+            </div>
+
+            {/* Pagination */}
+            <ul className={styles.paginationControls}>
+              <li>
+                <button
+                  className={styles.pageButton}
+                  onClick={goToPreviousPage}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+              </li>
+              {getPageNumbers().map((p, idx) =>
+                p === "..." ? (
+                  <li key={`ellipsis-${idx}`} className={styles.ellipsis}>…</li>
+                ) : (
+                  <li key={`page-${p}`}>
+                    <button
+                      className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
+                      onClick={() => setCurrentPage(p)}
+                    >
+                      {p}
+                    </button>
+                  </li>
+                )
+              )}
+              <li>
+                <button
+                  className={styles.pageButton}
+                  onClick={goToNextPage}
+                  disabled={currentPage >= totalPages}
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </li>
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );

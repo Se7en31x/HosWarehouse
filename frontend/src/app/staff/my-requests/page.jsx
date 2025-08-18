@@ -7,6 +7,32 @@ import Swal from 'sweetalert2';
 import { ChevronLeft, ChevronRight, X, Eye, Trash2, RotateCw } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────
+// แผนที่สำหรับแปลสถานะ (ย้ายมาไว้ด้านนอกเพื่อให้ใช้ได้ทั่วถึง)
+const statusMap = {
+  waiting_approval_detail: 'รออนุมัติ',
+  waiting_approval: 'รอการอนุมัติ',
+  approved: 'อนุมัติแล้ว',
+  approved_all: 'อนุมัติทั้งหมด',
+  rejected: 'ปฏิเสธแล้ว',
+  rejected_all: 'ปฏิเสธทั้งหมด',
+  approved_partial: 'อนุมัติบางส่วน',
+  rejected_partial: 'ปฏิเสธบางส่วน',
+  approved_partial_and_rejected_partial: 'อนุมัติ/ปฏิเสธบางส่วน',
+  preparing: 'กำลังจัดเตรียม',
+  delivering: 'กำลังนำส่ง',
+  completed: 'เสร็จสิ้น',
+  canceled: 'ยกเลิกคำขอ',
+  approved_in_queue: 'รอดำเนินการ',
+  in_progress: 'กำลังดำเนินการ',
+  // เพิ่มสถานะอื่น ๆ ที่ต้องการแปลได้ที่นี่
+};
+
+// ฟังก์ชันสำหรับแปลสถานะ
+const translateStatus = (status) => {
+  return statusMap[String(status).toLowerCase()] || status || '-';
+};
+
+// ─────────────────────────────────────────────────────────────
 // กันรูปเสีย
 function ItemImage({ item_img, alt }) {
   const defaultImg = 'http://localhost:5000/public/defaults/landscape.png';
@@ -77,11 +103,6 @@ function RequestDetailBody({ requestId }) {
     return () => { alive = false; };
   }, [requestId]);
 
-  const totalQuantity = useMemo(
-    () => items.reduce((sum, it) => sum + (it.quantity || 0), 0),
-    [items]
-  );
-
   const uniqueTranslatedTypes = useMemo(
     () => [...new Set(items.map((it) => translateRequestType(it.request_detail_type || it.request_type)))],
     [items]
@@ -126,9 +147,12 @@ function RequestDetailBody({ requestId }) {
         <div className={styles.infoCard}>
           <div className={styles.infoLabel}>สถานะ</div>
           <div className={styles.infoValue}>
-            <span className={`${styles.badge} ${statusClass}`}>{statusText}</span>
+            <span className={`${styles.badge} ${statusClass}`}>
+              {translateStatus(detail.request_status)}
+            </span>
           </div>
         </div>
+
         <div className={`${styles.infoCard} ${styles.infoCardFull}`}>
           <div className={styles.infoLabel}>หมายเหตุ</div>
           <div className={styles.infoValue}>{detail.request_note || '-'}</div>
@@ -169,19 +193,6 @@ function RequestDetailBody({ requestId }) {
               </tr>
             )}
           </tbody>
-          {/* <tfoot className={styles.modalTfoot}>
-            <tr className={styles.modalFootRow}>
-              <td className={styles.modalFootLeft} colSpan={3}>
-                <span className={styles.sumIcon}>Σ</span>
-                <span>รวมทั้งหมด</span>
-              </td>
-              <td className={styles.modalFootRight} colSpan={3}>
-                <span className={styles.totalBadge}>
-                  {totalQuantity.toLocaleString('th-TH')}
-                </span>
-              </td>
-            </tr>
-          </tfoot> */}
         </table>
       </div>
     </div>
@@ -263,7 +274,6 @@ export default function MyRequestsPage() {
     }
   };
 
-  // ลบคำขอถาวร
   const handleDelete = async (requestId) => {
     const result = await Swal.fire({
       title: 'ลบคำขอถาวร?',
@@ -342,7 +352,7 @@ export default function MyRequestsPage() {
     if (s.includes('รอ') || s.includes('pending')) cls = styles.badgeWarning;
     else if (s.includes('อนุมัติ') || s.includes('เสร็จสิ้น') || s.includes('approved') || s.includes('complete') || s.includes('success') || s.includes('stock_deducted')) cls = styles.badgeSuccess;
     else if (s.includes('ยกเลิก') || s.includes('ปฏิเสธ') || s.includes('cancel') || s.includes('reject')) cls = styles.badgeDanger;
-    return <span className={`${styles.badge} ${cls}`}>{status || '-'}</span>;
+    return <span className={`${styles.badge} ${cls}`}>{translateStatus(status)}</span>;
   };
 
   // สถิติบนหัว
@@ -364,7 +374,6 @@ export default function MyRequestsPage() {
   const filtered = useMemo(() => {
     let list = Array.isArray(requests) ? requests : [];
     if (statusFilter !== 'all') {
-      // กรองแบบยืดหยุ่น: "รอ", "อนุมัติ", "ยกเลิก"
       const key = String(statusFilter).toLowerCase();
       list = list.filter((r) => String(r.request_status || '').toLowerCase().includes(key));
     }
