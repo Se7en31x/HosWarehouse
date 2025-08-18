@@ -1,5 +1,5 @@
 /* =============================
-   Cart — page.module.css (prototype UI)
+   Cart — page.module.css (unified table frame)
    Palette: #008dda #41c9e2 #ace2e1 #1685bb
    ============================= */
 
@@ -25,12 +25,15 @@
   --row-h: 60px;
   --rows-per-page: 10;
   --table-gap: 12px;
+
   --th-font: 1.05rem;
   --th-min-h: 60px;
   --th-pad-y: 14px;
   --th-pad-x: 12px;
   --th-letter: 0.01em;
   --th-line: 1.25;
+
+  --radius: 10px;
 
   --z-header: 10;
   --z-toolbar: 100;
@@ -40,7 +43,6 @@
 .mainHome {
   min-height: 100vh;
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial;
-  /* padding: 24px; */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -213,53 +215,80 @@
   grid-column: span 2;
 }
 
-/* Table */
+/* =========================
+   Table (One-frame layout)
+   ========================= */
+
 .tableSection {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+/* กรอบเดียวครอบ header + body */
+.tableFrame {
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
+  background: #fff;
+  overflow: hidden;
+  /* ให้มุมโค้งเนียน */
+}
+
+/* ใช้ grid เดียวกันทั้ง header และแถว */
 .tableGrid {
   display: grid;
-  grid-template-columns: minmax(44px, .5fr) minmax(100px, 1fr) minmax(70px, .8fr) minmax(180px, 2fr) minmax(110px, 1fr) minmax(90px, .9fr) minmax(120px, 1.2fr) minmax(100px, 1fr) minmax(140px, 1.2fr) minmax(110px, 1fr);
+  grid-template-columns:
+    minmax(44px, .5fr) minmax(80px, .5fr) minmax(100px, 1fr) minmax(180px, 2fr) minmax(110px, 1fr) minmax(100px, 1fr) minmax(120px, 1.2fr) minmax(100px, 1fr) minmax(140px, 1fr) minmax(110px, 1fr);
   align-items: center;
 }
 
+/* Header เป็นส่วนหนึ่งของกรอบ (ไม่มีกระกรอบแยก) */
 .tableHeader {
-  margin-bottom: var(--table-gap);
   position: sticky;
   top: 0;
   z-index: var(--z-header);
   background: #eef9fc;
-  border: 1px solid var(--tint-200);
-  border-radius: 10px;
-  padding: 10px;
+
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  border-bottom: 1px solid var(--tint-200);
+
+  padding-block: var(--th-pad-y);
+  padding-inline: var(--th-pad-x);
+
   font-weight: 700;
   color: #374151;
   font-size: var(--th-font);
   line-height: var(--th-line);
   min-height: var(--th-min-h);
-  padding-block: var(--th-pad-y);
-  padding-inline: var(--th-pad-x);
 }
 
-.tableHeader .headerItem,
-.tableHeader>div {
+.tableHeader.tableGrid>div,
+.tableHeader .headerItem {
   font-weight: 700;
   letter-spacing: var(--th-letter);
   display: flex;
   align-items: center;
   white-space: nowrap;
+  padding: 0;
 }
 
-.tableHeader>div:last-child {
+/* คอลัมน์สุดท้ายจัดกลาง */
+.tableHeader>div:last-child,
+.tableHeader .headerItem:last-child {
+  justify-content: center;
+  text-align: center;
+}
+
+.tableHeader > div:nth-child(3){
   justify-content: center;
 }
 
+/* Body (ไม่มีกรอบของตัวเองแล้ว) */
 .inventory {
-  border: 1px solid var(--tint-200);
-  border-radius: 10px;
+  border: 0;
+  border-radius: 0;
   background: #fff;
   height: calc(var(--row-h) * var(--rows-per-page));
   overflow: hidden;
@@ -267,9 +296,11 @@
 
 .tableRow {
   box-sizing: border-box;
-  border-top: 1px solid #deedf1;
   height: var(--row-h);
-  padding: 0 10px;
+  padding: 0 var(--th-pad-x);
+  /* ให้เท่ากับ header */
+  border-top: 1px solid #deedf1;
+  /* เส้นคั่นระหว่างแถว */
 }
 
 .tableRow:first-child {
@@ -283,7 +314,7 @@
 .tableCell {
   display: flex;
   align-items: center;
-  padding: 4px 6px;
+  padding: 4px 0px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -300,6 +331,7 @@
   justify-content: center;
 }
 
+/* No data */
 .noDataMessage {
   height: calc(var(--row-h) * var(--rows-per-page));
   display: flex;
@@ -308,6 +340,7 @@
   color: var(--muted);
 }
 
+/* Inputs inside table */
 .quantityInput {
   width: 80px;
   height: 36px;
@@ -361,5 +394,11 @@
 
   .noteGroup {
     grid-column: span 1;
+  }
+
+  /* ลดความกว้างบางคอลัมน์เพื่อไม่ให้ล้น */
+  .tableGrid {
+    grid-template-columns:
+      40px 100px 60px 160px 100px 80px 110px 90px 120px 90px;
   }
 }

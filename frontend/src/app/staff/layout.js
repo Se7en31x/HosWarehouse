@@ -2,6 +2,9 @@
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import './globals.css';
+import 'react-day-picker/dist/style.css';
+
+
 import { CartProvider } from './context/CartContext'; // ✅ เพิ่มบรรทัดนี้
 
 export default function RootLayout({ children }) {

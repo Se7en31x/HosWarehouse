@@ -226,74 +226,83 @@ export default function Cart() {
 
         {/* Table Section */}
         <div className={styles.tableSection}>
-          <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
-            <div className={styles.headerItem}>ลำดับ</div>
-            <div className={styles.headerItem}>รหัส</div>
-            <div className={styles.headerItem}>รูปภาพ</div>
-            <div className={styles.headerItem}>ชื่อ</div>
-            <div className={styles.headerItem}>จำนวน</div>
-            <div className={styles.headerItem}>หน่วย</div>
-            <div className={styles.headerItem}>หมวดหมู่</div>
-            <div className={styles.headerItem}>ประเภท</div>
-            <div className={styles.headerItem}>วันที่คืน</div>
-            <div className={styles.headerItem}>การจัดการ</div>
-          </div>
+          {/* ใช้กรอบเดียวครอบ header + body */}
+          <div className={`${styles.tableFrame} ${styles.scrollable}`}>
+            <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+              <div className={styles.headerItem}>ลำดับ</div>
+              <div className={styles.headerItem}>รหัส</div>
+              <div className={styles.headerItem}>รูปภาพ</div>
+              <div className={styles.headerItem}>ชื่อ</div>
+              <div className={styles.headerItem}>จำนวน</div>
+              <div className={styles.headerItem}>หน่วย</div>
+              <div className={styles.headerItem}>หมวดหมู่</div>
+              <div className={styles.headerItem}>ประเภท</div>
+              <div className={styles.headerItem}>วันที่คืน</div>
+              <div className={styles.headerItem}>การจัดการ</div>
+            </div>
 
-          <div className={styles.inventory} style={{ '--rows-per-page': 10 }}>
-            {cartItems.length > 0 ? (
-              cartItems.map((item, index) => (
-                <div key={item.id} className={`${styles.tableGrid} ${styles.tableRow}`}>
-                  <div className={`${styles.tableCell} ${styles.centerCell}`}>{index + 1}</div>
-                  <div className={styles.tableCell}>{item.code || '-'}</div>
-                  <div className={`${styles.tableCell} ${styles.imageCell}`}>
-                    <Image
-                      src={item.item_img || '/defaults/landscape.png'}
-                      alt={item.name}
-                      width={50}
-                      height={50}
-                      style={{ objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }}
-                    />
-                  </div>
-                  <div className={styles.tableCell}>{item.name || '-'}</div>
-                  <div className={styles.tableCell}>
-                    <input
-                      type="number"
-                      min={1}
-                      max={item.item_qty || 1}
-                      value={item.quantity || 1}
-                      onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                      className={styles.quantityInput}
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                  <div className={styles.tableCell}>{item.unit || '-'}</div>
-                  <div className={styles.tableCell}>{item.type || '-'}</div>
-                  <div className={styles.tableCell}>{translateAction(item.action)}</div>
-                  <div className={styles.tableCell}>
-                    {item.action === 'borrow' ? (
+            <div className={styles.inventory} style={{ '--rows-per-page': 10 }}>
+              {cartItems.length > 0 ? (
+                cartItems.map((item, index) => (
+                  <div key={item.id} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>{index + 1}</div>
+                    <div className={styles.tableCell}>{item.code || '-'}</div>
+                    <div className={`${styles.tableCell} ${styles.imageCell}`}>
+                      <Image
+                        src={item.item_img || '/defaults/landscape.png'}
+                        alt={item.name}
+                        width={50}
+                        height={50}
+                        style={{ objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }}
+                      />
+                    </div>
+                    <div className={styles.tableCell}>{item.name || '-'}</div>
+                    <div className={styles.tableCell}>
                       <input
-                        type="date"
-                        value={item.returnDate || ''}
-                        onChange={(e) => handleReturnDateChange(item.id, e.target.value)}
-                        min={minReturnDate}
-                        max={maxReturnDate}
-                        className={styles.dateInput}
+                        type="number"
+                        min={1}
+                        max={item.item_qty || 1}
+                        value={item.quantity || 1}
+                        onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                        className={styles.quantityInput}
                         disabled={isSubmitting}
                       />
-                    ) : (
-                      '-'
-                    )}
+                    </div>
+                    <div className={styles.tableCell}>{item.unit || '-'}</div>
+                    <div className={styles.tableCell}>{item.type || '-'}</div>
+                    <div className={styles.tableCell}>
+                      {item.action === 'borrow' ? 'ยืม' : item.action === 'withdraw' ? 'เบิก' : 'คืน'}
+                    </div>
+                    <div className={styles.tableCell}>
+                      {item.action === 'borrow' ? (
+                        <input
+                          type="date"
+                          value={item.returnDate || ''}
+                          onChange={(e) => handleReturnDateChange(item.id, e.target.value)}
+                          min={minReturnDate}
+                          max={maxReturnDate}
+                          className={styles.dateInput}
+                          disabled={isSubmitting}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      <button
+                        className={`${styles.actionButton} ${styles.dangerBtnOutline}`}
+                        onClick={() => removeFromCart(item.id)}
+                        disabled={isSubmitting}
+                      >
+                        ลบ
+                      </button>
+                    </div>
                   </div>
-                  <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                    <button className={`${styles.actionButton} ${styles.dangerBtnOutline}`} onClick={() => removeFromCart(item.id)} disabled={isSubmitting}>
-                      ลบ
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className={styles.noDataMessage}>ไม่มีรายการในตะกร้า กรุณาเพิ่มรายการก่อนยืนยัน</div>
-            )}
+                ))
+              ) : (
+                <div className={styles.noDataMessage}>ไม่มีรายการในตะกร้า กรุณาเพิ่มรายการก่อนยืนยัน</div>
+              )}
+            </div>
           </div>
         </div>
 

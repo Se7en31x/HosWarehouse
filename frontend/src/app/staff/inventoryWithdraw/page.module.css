@@ -66,7 +66,7 @@
   background: var(--panel);
   color: var(--text);
   border-radius: 0;
-  padding: 24;
+  padding: 24px;         /* fixed unit */
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -212,6 +212,16 @@
 .clearButton { display: inline-flex; align-items: center; gap: 8px; color: var(--primary-600); }
 
 /* ---- Table ---- */
+
+/* กรอบเดียวครอบทั้งหัวตารางและบอดี้ */
+.tableFrame {
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
+  background: #fff;
+  overflow: hidden; /* ให้มุมโค้งเนียน */
+}
+
+/* ใช้ grid เดียวกันทั้ง header และ body */
 .tableGrid {
   display: grid;
   grid-template-columns:
@@ -221,53 +231,60 @@
   align-items: center;
 }
 
-/* Header row (sticky) */
+/* Header อยู่ในกรอบเดียวกัน (ไม่มีขอบแยก) */
 .tableHeader {
-  margin-bottom: var(--table-gap);
   position: sticky;
   top: 0;
   z-index: var(--z-header);
   background: #eef9fc;
-  border: 1px solid var(--tint-200);
-  border-radius: 10px;
-  padding: 10px;
+
+  /* ปรับให้เป็นส่วนหนึ่งของกรอบ */
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  border-bottom: 1px solid var(--tint-200);
+
+  /* ระยะให้ตรงกับแถวด้านล่าง */
+  padding-block: var(--th-pad-y);
+  padding-inline: var(--th-pad-x);
+
   font-weight: 700;
   color: #374151;
   font-size: var(--th-font);
   line-height: var(--th-line);
   min-height: var(--th-min-h);
-  padding-block: var(--th-pad-y);
-  padding-inline: var(--th-pad-x);
 }
-.tableHeader .headerItem,
-.tableHeader > div {
+
+.tableHeader.tableGrid > div,
+.tableHeader .headerItem {
   font-weight: 700;
   letter-spacing: var(--th-letter);
-  padding-inline: 0;
-  display: flex;
-  align-items: center;
+  display: flex; align-items: center;
   white-space: nowrap;
+  padding: 0;
 }
+
 /* center header for last column */
 .tableHeader > div:last-child,
 .tableHeader .headerItem:last-child { justify-content: center; text-align: center; }
 
-/* Body */
+/* Body – ไม่ต้องมีกรอบเองแล้ว */
 .inventory {
-  border: 1px solid var(--tint-200);
-  border-radius: 10px;
+  border: 0;
+  border-radius: 0;
   background: #fff;
   height: calc(var(--row-h) * var(--rows-per-page)); /* fixed 10 rows */
   overflow: hidden;
 }
+
 .tableRow {
   box-sizing: border-box;
-  border-top: 1px solid #deedf1;
   height: var(--row-h);
-  padding: 0 10px;
+  padding: 0 var(--th-pad-x);     /* ให้เท่ากับ header */
+  border-top: 1px solid #deedf1;  /* เส้นคั่นระหว่างแถว */
 }
 .tableRow:hover { background: var(--tint-100); }
-.tableRow:first-child { border-top: 0; }
+.tableRow:first-child { border-top: 0; } /* ไม่ชนกับเส้นล่างของ header */
 .inventory .tableRow:last-child { border-bottom: 0; }
 
 .cell { padding: 4px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

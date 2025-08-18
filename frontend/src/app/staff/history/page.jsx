@@ -22,29 +22,45 @@ const unitOptions = [
   { value: "ห่อ", label: "ห่อ" },
 ];
 
-// ► custom styles for react-select
+// ► custom styles for react-select (ให้ z-index ต่ำกว่ modal ของเรา)
 const customSelectStyles = {
   control: (base, state) => ({
     ...base,
-    borderRadius: "0.4rem",
+    borderRadius: "0.5rem",
     minHeight: "2.5rem",
-    borderColor: state.isFocused ? "#3b82f6" : "#d1d5db",
-    boxShadow: state.isFocused ? "0 0 0 2px #3b82f6" : "none",
+    borderColor: state.isFocused ? "#3b82f6" : "#e5e7eb",
+    boxShadow: "none",
     "&:hover": { borderColor: "#3b82f6" },
   }),
-  menu: (base) => ({ ...base, borderRadius: "0.4rem", marginTop: 4 }),
+  menu: (base) => ({
+    ...base,
+    borderRadius: "0.5rem",
+    marginTop: 6,
+    boxShadow: "none",
+    border: "1px solid #e5e7eb",
+    zIndex: 9000,
+  }),
+  menuPortal: (base) => ({
+    ...base,
+    zIndex: 9000,
+  }),
   option: (base, state) => ({
     ...base,
-    backgroundColor: state.isFocused ? "#f3f4f6" : "#fff",
-    color: "#374151",
+    backgroundColor: state.isFocused ? "#f1f5ff" : "#fff",
+    color: "#111827",
     padding: "8px 12px",
   }),
   placeholder: (base) => ({ ...base, color: "#9ca3af" }),
-  clearIndicator: (base) => ({ ...base, padding: 4 }),
-  dropdownIndicator: (base) => ({ ...base, padding: 4 }),
+  clearIndicator: (base) => ({ ...base, padding: 6 }),
+  dropdownIndicator: (base) => ({ ...base, padding: 6 }),
 };
 
 export default function TransactionHistory() {
+  const menuPortalTarget = useMemo(
+    () => (typeof window !== "undefined" ? document.body : null),
+    []
+  );
+
   const [filter, setFilter] = useState("");
   const [category, setCategory] = useState("");
   const [unit, setUnit] = useState("");
@@ -60,7 +76,7 @@ export default function TransactionHistory() {
     setCurrentPage(1);
   };
 
-  // Mock data (เดิม)
+  // Mock data
   const inventoryData = Array.from({ length: 25 }, (_, index) => {
     let operationStatus;
     if (index % 3 === 0) operationStatus = "สำเร็จ";
@@ -80,7 +96,7 @@ export default function TransactionHistory() {
     };
   });
 
-  // กรองข้อมูล (เดิม)
+  // กรองข้อมูล
   const filteredItems = useMemo(() => {
     const f = filter.toLowerCase();
     return inventoryData.filter((item) => {
@@ -96,8 +112,8 @@ export default function TransactionHistory() {
     });
   }, [inventoryData, filter, category, unit, storage]);
 
-  // แบ่งหน้า (เหมือนหน้า InventoryWithdraw)
-  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  // แบ่งหน้า (แบบเดียวกับต้นแบบ)
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / itemsPerPage));
   const currentItems = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredItems.slice(start, start + itemsPerPage);
@@ -138,7 +154,7 @@ export default function TransactionHistory() {
     return pages;
   };
 
-  // Badge สถานะ (เดิม)
+  // Badge สถานะ
   const getStatusBadge = (status) => {
     let statusClass = styles.statusBadge;
     if (status === "สำเร็จ") statusClass += ` ${styles.statusSuccess}`;
@@ -150,19 +166,18 @@ export default function TransactionHistory() {
   return (
     <div className={styles.mainHome}>
       <div className={styles.infoContainer}>
-        {/* Header */}
-        <div className={styles.cardHeader}>
-          <h1>ประวัติการเบิก-ยืม</h1>
+        {/* Header (เหมือนหน้าเดิม) */}
+        <div className={styles.pageBar}>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.pageTitle}>ประวัติการเบิก-ยืม</h1>
+          </div>
         </div>
 
-        {/* Filters */}
-        <div className={styles.filterControls}>
+        {/* Toolbar (ตัวกรอง + ค้นหา) แบบเดียวกับหน้า InventoryWithdraw */}
+        <div className={styles.toolbar}>
           <div className={styles.filterGrid}>
-            {/* หมวดหมู่: react-select */}
             <div className={styles.filterGroup}>
-              <label htmlFor="category" className={styles.filterLabel}>
-                หมวดหมู่:
-              </label>
+              <label className={styles.label}>หมวดหมู่</label>
               <Select
                 inputId="category"
                 options={categoryOptions}
@@ -175,14 +190,14 @@ export default function TransactionHistory() {
                   setCategory(opt?.value || "");
                   setCurrentPage(1);
                 }}
+                menuPlacement="auto"
+                menuPosition="fixed"
+                menuPortalTarget={menuPortalTarget}
               />
             </div>
 
-            {/* หน่วย: react-select */}
             <div className={styles.filterGroup}>
-              <label htmlFor="unit" className={styles.filterLabel}>
-                หน่วย:
-              </label>
+              <label className={styles.label}>หน่วย</label>
               <Select
                 inputId="unit"
                 options={unitOptions}
@@ -195,41 +210,42 @@ export default function TransactionHistory() {
                   setUnit(opt?.value || "");
                   setCurrentPage(1);
                 }}
+                menuPlacement="auto"
+                menuPosition="fixed"
+                menuPortalTarget={menuPortalTarget}
               />
             </div>
           </div>
 
-          {/* Search Controls — ใช้แบบเดียวกับ InventoryWithdraw พร้อมไอคอน Trash2 */}
-          <div className={styles.searchControls}>
-            <div className={styles.searchGroup}>
-              <label className={styles.filterLabel} htmlFor="filter">
-                ค้นหา:
-              </label>
+          <div className={styles.searchCluster}>
+            <div className={styles.filterGroup}>
+              <label className={styles.label} htmlFor="filter">ค้นหา</label>
               <input
                 id="filter"
-                className={styles.searchInput}
+                className={styles.input}
                 type="text"
                 value={filter}
                 onChange={(e) => {
                   setFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                placeholder="รายการ, สถานะ..."
+                placeholder="ชื่อ, รหัส, หน่วย, สถานะ..."
               />
             </div>
+
             <button
-              className={styles.clearButton}
+              className={`${styles.ghostBtn} ${styles.clearButton}`}
               onClick={clearFilters}
               aria-label="ล้างตัวกรอง"
               title="ล้างตัวกรอง"
             >
-              <Trash2 size={20} />
+              <Trash2 size={18} /> ล้างตัวกรอง
             </button>
           </div>
         </div>
 
-        {/* Table */}
-        <div className={styles.tableWrapper}>
+        {/* ตาราง + หน้า */}
+        <div className={styles.tableFrame}>
           <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
             <div className={styles.headerItem}>หมายเลขรายการ</div>
             <div className={styles.headerItem}>รายการ</div>
@@ -240,77 +256,67 @@ export default function TransactionHistory() {
             <div className={styles.headerItem}>วันที่ดำเนินการ</div>
           </div>
 
-          <div className={styles.inventory}>
+          <div className={styles.inventory} style={{ "--rows-per-page": itemsPerPage }}>
             {currentItems.length > 0 ? (
               currentItems.map((item) => (
-                <div
-                  className={`${styles.tableGrid} ${styles.tableRow}`}
-                  key={item.id}
-                >
+                <div className={`${styles.tableGrid} ${styles.tableRow}`} key={item.id}>
                   <div className={styles.tableCell}>{item.id}</div>
                   <div className={styles.tableCell}>{item.list}</div>
                   <div className={styles.tableCell}>{item.quantity}</div>
                   <div className={styles.tableCell}>{item.unit}</div>
                   <div className={styles.tableCell}>{item.type}</div>
-                  <div className={styles.tableCell}>
-                    {getStatusBadge(item.operation)}
-                  </div>
+                  <div className={styles.tableCell}>{getStatusBadge(item.operation)}</div>
                   <div className={styles.tableCell}>{item.processing}</div>
                 </div>
               ))
             ) : (
-              <div className={`${styles.tableRow} ${styles.noDataCell}`}>
+              <div className={styles.noDataCell}>
                 ไม่พบข้อมูลที่ตรงกับเงื่อนไขการค้นหาของคุณ
               </div>
             )}
           </div>
+
+          <ul className={styles.paginationControls}>
+            <li>
+              <button
+                className={styles.pageButton}
+                onClick={handlePrev}
+                disabled={currentPage === 1}
+                aria-label="หน้าก่อนหน้า"
+                title="หน้าก่อนหน้า"
+              >
+                <ChevronLeft size={16} />
+              </button>
+            </li>
+
+            {getPageNumbers().map((p, idx) =>
+              p === "..." ? (
+                <li key={idx} className={styles.ellipsis}>…</li>
+              ) : (
+                <li key={idx}>
+                  <button
+                    className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
+                    onClick={() => setCurrentPage(p)}
+                  >
+                    {p}
+                  </button>
+                </li>
+              )
+            )}
+
+            <li>
+              <button
+                className={styles.pageButton}
+                onClick={handleNext}
+                disabled={currentPage >= totalPages}
+                aria-label="หน้าถัดไป"
+                title="หน้าถัดไป"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </li>
+          </ul>
         </div>
-
-        {/* Pagination — เหมือนหน้า InventoryWithdraw */}
-        <ul className={styles.paginationControls}>
-          <li>
-            <button
-              className={styles.pageButton}
-              onClick={handlePrev}
-              disabled={currentPage === 1}
-              aria-label="หน้าก่อนหน้า"
-              title="หน้าก่อนหน้า"
-            >
-              <ChevronLeft size={16} />
-            </button>
-          </li>
-
-          {getPageNumbers().map((p, idx) =>
-            p === "..." ? (
-              <li key={idx} className={styles.ellipsis}>
-                …
-              </li>
-            ) : (
-              <li key={idx}>
-                <button
-                  className={`${styles.pageButton} ${
-                    p === currentPage ? styles.activePage : ""
-                  }`}
-                  onClick={() => setCurrentPage(p)}
-                >
-                  {p}
-                </button>
-              </li>
-            )
-          )}
-
-          <li>
-            <button
-              className={styles.pageButton}
-              onClick={handleNext}
-              disabled={currentPage >= totalPages}
-              aria-label="หน้าถัดไป"
-              title="หน้าถัดไป"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </li>
-        </ul>
       </div>
     </div>
   );
