@@ -63,17 +63,6 @@ export default function BasicForm({ form, handleChange, handleImageChange }) {
                 <legend className={styles.legend}>จำนวนและหน่วย</legend>
                 <div className={styles.grid}>
                     <div className={styles.field}>
-                        <label htmlFor="item_qty">จำนวนคงเหลือ</label>
-                        <input
-                            type="number"
-                            id="item_qty"
-                            name="item_qty"
-                            value={form.item_qty ?? 0}
-                            onChange={handleChange}
-                            min="0"
-                        />
-                    </div>
-                    <div className={styles.field}>
                         <label htmlFor="item_unit">หน่วย</label>
                         <input id="item_unit" name="item_unit" value={form.item_unit ?? ''} onChange={handleChange} />
                     </div>
@@ -138,7 +127,6 @@ export default function BasicForm({ form, handleChange, handleImageChange }) {
             {/* Form เฉพาะหมวดหมู่ */}
             {form.item_category && (
                 <div className={styles.section}>
-                    <legend className={styles.legend}>{form.item_category === 'medicine' ? 'ยา' : 'รายละเอียดเพิ่มเติม'}</legend>
                     {renderCategoryForm()}
                 </div>
             )}

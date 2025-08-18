@@ -10,8 +10,6 @@ export default function MedicineDetail({ form = {} }) {
     med_counting_unit = '-',
     med_dosage_form = '-',
     med_medical_category = '-',
-    med_cost_price = '-',
-    med_selling_price = '-',
     med_medium_price = '-',
     med_tmt_code = '-',
     med_tpu_code = '-',
@@ -20,8 +18,6 @@ export default function MedicineDetail({ form = {} }) {
     med_severity = '-',
     med_essential_med_list = '-',
     med_pregnancy_cagetory = '-',
-    med_mfg = '',
-    med_exp = '',
     med_dose_dialogue = '-',
     med_replacement = '-',
   } = form;
@@ -67,17 +63,6 @@ export default function MedicineDetail({ form = {} }) {
           <label>หมวดทางการแพทย์</label>
           <input value={med_medical_category} disabled />
         </div>
-
-        <div className={styles.field}>
-          <label>ราคาทุน (บาท)</label>
-          <input value={med_cost_price} disabled />
-        </div>
-
-        <div className={styles.field}>
-          <label>ราคาขาย (บาท)</label>
-          <input value={med_selling_price} disabled />
-        </div>
-
         <div className={styles.field}>
           <label>ราคากลาง (บาท)</label>
           <input value={med_medium_price} disabled />
@@ -116,16 +101,6 @@ export default function MedicineDetail({ form = {} }) {
         <div className={styles.field}>
           <label>หมวดหญิงตั้งครรภ์</label>
           <input value={med_pregnancy_cagetory} disabled />
-        </div>
-
-        <div className={styles.field}>
-          <label>วันที่ผลิต</label>
-          <input type="date" value={validDate(med_mfg)} disabled />
-        </div>
-
-        <div className={styles.field}>
-          <label>วันหมดอายุ</label>
-          <input type="date" value={validDate(med_exp)} disabled />
         </div>
 
         <div className={styles.field}>

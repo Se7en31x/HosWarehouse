@@ -17,12 +17,12 @@ export default function EditItem() {
     item_sub_category: '',
     item_location: '',
     item_zone: '',
-    item_exp: '',
-    item_qty: 0,
     item_unit: '',
     item_min: 0,
     item_max: 0,
+    item_img: null,
     imagePreview: null,
+    item_barcode: '',
 
     // medicine
     med_generic_name: '',
@@ -31,49 +31,31 @@ export default function EditItem() {
     med_counting_unit: '',
     med_dosage_form: '',
     med_medical_category: '',
-    med_cost_price: '',
-    med_selling_price: '',
     med_medium_price: '',
-    med_tmt_code: '',          // แก้จาก med_TMT_code
-    med_tpu_code: '',          // แก้จาก med_TPU_code
-    med_tmt_gp_name: '',       // แก้จาก med_TMT_GP_name
-    med_tmt_tp_name: '',       // แก้จาก med_TMT_TP_name
-    med_quantity: '',
+    med_tmt_code: '',
+    med_tpu_code: '',
+    med_tmt_gp_name: '',
+    med_tmt_tp_name: '',
     med_severity: '',
     med_essential_med_list: '',
-    med_pregnancy_cagetory: '',
-    med_mfg: '',
-    med_exp: '',
+    med_pregnancy_category: '',
     med_dose_dialogue: '',
     med_replacement: '',
 
     // medsup
     medsup_category: '',
-    medsup_name: '',
     medsup_brand: '',
     medsup_serial_no: '',
     medsup_status: '',
-    medsup_qty: '',
     medsup_price: '',
 
     // equipment
-    equip_id: '',
     equip_brand: '',
     equip_model: '',
-    equip_serial_no: '',
-    equip_status: '',
-    equip_location: '',
-    equip_price: '',
-    equip_purchase_date: '',
-    equip_warranty_expire: '',
     equip_maintenance_cycle: '',
-    equip_last_maintenance: '',
-    equip_qr_code: '',
     equip_note: '',
 
     // meddevice
-    meddevice_id: '',
-    meddevice_name: '',
     meddevice_type: '',
     meddevice_brand: '',
     meddevice_model: '',
@@ -83,7 +65,6 @@ export default function EditItem() {
     meddevice_note: '',
 
     // general
-    gen_id: '',
     gen_brand: '',
     gen_model: '',
     gen_spec: '',
@@ -113,18 +94,31 @@ export default function EditItem() {
     const formData = new FormData();
 
     for (const key in form) {
-      if (key === 'item_img' && typeof form[key] === 'string') continue;
-      if (form[key] !== undefined && form[key] !== null) {
+      // ไม่ต้องส่ง imagePreview กลับไป
+      if (key === 'imagePreview') {
+        continue;
+      }
+
+      // ถ้าเป็นรูปภาพและเป็น object (ไฟล์ใหม่) ให้ส่งไป
+      if (key === 'item_img' && typeof form[key] === 'object' && form[key] !== null) {
+        formData.append(key, form[key]);
+      }
+      // ถ้าเป็นข้อมูลอื่น ๆ ที่ไม่ใช่รูปภาพ (หรือเป็นรูปภาพเดิมที่เป็น string)
+      else if (form[key] !== undefined && form[key] !== null) {
         formData.append(key, form[key]);
       }
     }
+
+    // ตรวจสอบข้อมูลใน FormData ก่อนส่ง (สำหรับ Debug)
+    // for (const [key, value] of formData.entries()) {
+    //   console.log(`${key}: ${value}`);
+    // }
 
     try {
       await axiosInstance.put(`/manageData/${id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      // ✅ ใช้ Swal เมื่อบันทึกสำเร็จ
       Swal.fire({
         icon: 'success',
         title: 'บันทึกสำเร็จ',
@@ -134,22 +128,19 @@ export default function EditItem() {
 
       setTimeout(() => {
         router.push('/manage/manageData');
-      }, 1600); // รอให้ Swal แสดงก่อนค่อยเปลี่ยนหน้า
+      }, 1600);
 
     } catch (error) {
       console.error(error);
 
-      // ❌ ใช้ Swal เมื่อเกิดข้อผิดพลาด
       Swal.fire({
-        title: 'บันทึกสำเร็จ',
-        icon: 'success',
+        icon: 'error',
+        title: 'บันทึกไม่สำเร็จ',
+        text: 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล',
         confirmButtonText: 'ตกลง'
-      }).then(() => {
-        router.push('/manage/manageData');
       });
     }
   };
-
 
   useEffect(() => {
     if (!id) return;
@@ -159,34 +150,27 @@ export default function EditItem() {
         const fetchedData = res.data;
         console.log('✅ fetchedData:', res.data);
 
+        // สร้าง object ใหม่ที่ตรงกับ initialFormState
         const cleanedData = {};
         for (const key in initialFormState) {
-          cleanedData[key] = fetchedData[key] ?? ''; // ใช้ "" แทน null/undefined
+          if (key === 'item_img' || key === 'imagePreview') {
+            continue;
+          }
+          cleanedData[key] = fetchedData[key] ?? '';
         }
 
-        if (fetchedData.item_exp) {
-          cleanedData.item_exp = new Date(fetchedData.item_exp).toISOString().slice(0, 10);
-        }
-
-        // แปลงวันที่ med_mfg และ med_exp ให้เป็นรูปแบบ YYYY-MM-DD
-        if (cleanedData.med_mfg) {
-          cleanedData.med_mfg = new Date(cleanedData.med_mfg).toISOString().slice(0, 10);
-        }
-        if (cleanedData.med_exp) {
-          cleanedData.med_exp = new Date(cleanedData.med_exp).toISOString().slice(0, 10);
-        }
-
+        // ตั้งค่า form state
         setForm({
           ...initialFormState,
           ...cleanedData,
           imagePreview: fetchedData.item_img_url || null,
+          item_img: fetchedData.item_img || null, // เก็บชื่อไฟล์เดิมไว้เผื่อไม่ได้อัปโหลดใหม่
         });
       })
       .catch((error) => {
         console.error('Error fetching item data:', error);
       });
   }, [id]);
-
 
   return (
     <div className={styles.container}>

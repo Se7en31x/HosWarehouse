@@ -13,20 +13,14 @@ export default function AddItem() {
         item_sub_category: '',
         item_location: '',
         item_zone: '',
-        item_exp: '',
-        item_qty: 0,
         item_unit: '',
         item_min: 0,
         item_max: 0,
-        item_po: '',
-        item_lot: '',
-        item_order_date: '',
-        item_seller: '',
-        item_receiver: '',
         item_barcode: '',
         image: null,
         imagePreview: null,
-        // เฉพาะฟอร์มยา
+
+        // medicine
         med_generic_name: '',
         med_thai_name: '',
         med_marketing_name: '',
@@ -40,40 +34,27 @@ export default function AddItem() {
         med_TPU_code: '',
         med_TMT_GP_name: '',
         med_TMT_TP_name: '',
-        med_quantity: '',
         med_severity: '',
         med_essential_med_list: '',
-        med_pregnancy_cagetory: '',
-        med_mfg: '',
-        med_exp: '',
+        med_pregnancy_category: '',
         med_dose_dialogue: '',
         med_replacement: '',
-        // เวชัภัณฑ์
+
+        // medsup
         medsup_category: '',
-        medsup_name: '',
         medsup_brand: '',
         medsup_serial_no: '',
         medsup_status: '',
-        medsup_expiry_date: '',
-        medsup_qty: '',
         medsup_price: '',
-        // Epuipment ครุภัณฑ์
-        equip_id: '',
+
+        // equipment
         equip_brand: '',
         equip_model: '',
-        equip_serial_no: '',
-        equip_status: '',
-        equip_location: '',
         equip_price: '',
-        equip_purchase_date: '',
-        equip_warranty_expire: '',
         equip_maintenance_cycle: '',
-        equip_last_maintenance: '',
-        equip_qr_code: '',
         equip_note: '',
-        //meddevice อุปกรณ์ทงการแพทยื
-        meddevice_id: '',
-        meddevice_name: '',
+
+        // meddevice
         meddevice_type: '',
         meddevice_brand: '',
         meddevice_model: '',
@@ -81,16 +62,15 @@ export default function AddItem() {
         meddevice_status: '',
         meddevice_price: '',
         meddevice_note: '',
-        // เฉพาะพัสดุทั่วไป (GeneralSupForm)
-        gen_id: '',
+
+        // general
         gen_brand: '',
         gen_model: '',
         gen_spec: '',
         gen_price: '',
     };
-
     const [form, setForm] = useState(initialFormState);
-    
+
     useEffect(() => {
         return () => {
             if (form.imagePreview) URL.revokeObjectURL(form.imagePreview);
@@ -98,13 +78,16 @@ export default function AddItem() {
     }, [form.imagePreview]);
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setForm((prev) => ({ ...prev, [name]: value }));
+        const { name, value, type } = e.target;
+        setForm((prev) => ({
+            ...prev,
+            [name]: type === "number" ? Number(value) : value
+        }));
     };
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
-        const maxSize = 5 * 1024 * 1024; // กำหนดขนาดไฟล์สูงสุด 5MB
+        const maxSize = 5 * 1024 * 1024; // 5MB
 
         if (!file) {
             if (form.imagePreview) URL.revokeObjectURL(form.imagePreview);
@@ -125,7 +108,7 @@ export default function AddItem() {
             e.target.value = null;
             return;
         }
-        
+
         if (form.imagePreview) {
             URL.revokeObjectURL(form.imagePreview);
         }
@@ -138,27 +121,27 @@ export default function AddItem() {
     };
 
     const validateForm = () => {
-        const min = form.item_min ? Number(form.item_min) : null;
-        const max = form.item_max ? Number(form.item_max) : null;
-        const qty = Number(form.item_qty);
+        const min = Number(form.item_min);
+        const max = Number(form.item_max);
+
         if (!form.item_name.trim()) {
             Swal.fire({ icon: 'error', title: 'กรุณากรอกชื่อพัสดุ' });
             return false;
         }
-        if (!form.item_qty || isNaN(qty) || qty <= 0) {
-            Swal.fire({ icon: 'error', title: 'กรุณากรอกจำนวนคงเหลือให้ถูกต้อง' });
+        if (!form.item_category.trim()) {
+            Swal.fire({ icon: 'error', title: 'กรุณาเลือกประเภทพัสดุ' });
             return false;
         }
-        if (min !== null && min < 0) {
+        if (min < 0) {
             Swal.fire({ icon: 'error', title: 'จำนวนขั้นต่ำต้องไม่ติดลบ' });
             return false;
         }
-        if (max !== null && min !== null && max < min) {
-            Swal.fire({ icon: 'error', title: 'จำนวนสูงสุดต้องไม่น้อยกว่าจำนวนขั้นต่ำ' });
+        if (max < 0) {
+            Swal.fire({ icon: 'error', title: 'จำนวนสูงสุดต้องไม่ติดลบ' });
             return false;
         }
-        if (max !== null && qty > max) {
-            Swal.fire({ icon: 'error', title: 'จำนวนคงเหลือไม่ควรเกินจำนวนสูงสุด' });
+        if (max < min) {
+            Swal.fire({ icon: 'error', title: 'จำนวนสูงสุดต้องไม่น้อยกว่าจำนวนขั้นต่ำ' });
             return false;
         }
         return true;
@@ -173,10 +156,6 @@ export default function AddItem() {
         e.preventDefault();
 
         if (!validateForm()) return;
-
-        if (form.item_category === 'medicine') {
-            form.item_exp = form.med_exp || '';
-        }
 
         const formData = new FormData();
         Object.entries(form).forEach(([key, value]) => {
@@ -230,7 +209,7 @@ export default function AddItem() {
             <header className={styles.header}>
                 <h1 className={styles.title}>เพิ่มรายการพัสดุ</h1>
             </header>
-            
+
             <main className={styles.mainContent}>
                 <form onSubmit={handleSubmit} className={styles.formCard}>
                     <BasicForm

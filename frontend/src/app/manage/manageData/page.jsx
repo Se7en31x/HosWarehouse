@@ -234,7 +234,7 @@ export default function ManageDataPage() {
                 {categoryLabels[item.item_category] || item.item_category}
               </div>
               <div className={styles.tableCell} data-label="จำนวน">
-                {item.item_qty}
+                {item.total_on_hand_qty}
               </div>
               <div className={styles.tableCell} data-label="หน่วย">
                 {item.item_unit}
@@ -246,7 +246,7 @@ export default function ManageDataPage() {
                 {item.item_location}
               </div>
               <div className={styles.tableCell} data-label="แก้ไขล่าสุด">
-                {formatThaiDateTime(item.item_update)}
+                {formatThaiDateTime(item.created_at)}
               </div>
               <div className={`${styles.tableCell} ${styles.centerCell}`} data-label="การจัดการ">
                 {/* ปุ่มแก้ไขพร้อมไอคอน */}

@@ -1,3 +1,4 @@
+// TransactionHistoryLogPage — page.jsx
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import Swal from 'sweetalert2';
@@ -17,6 +18,12 @@ import Link from 'next/link';
 
 // --- Utility: สถานะ ---
 const statusMap = {
+  // 🆕 สถานะการคืนจากโมเดลใหม่
+  returned: 'คืนปกติ',
+  damaged: 'คืนชำรุด',
+  lost: 'สูญหาย',
+  return_in: 'รับคืนเข้าคลังแล้ว',
+  RETURN: 'คืนพัสดุ', // เพิ่มสถานะนี้
   approved_all: 'อนุมัติทั้งหมด',
   approved_partial: 'อนุมัติบางส่วน',
   waiting_approval: 'รอการอนุมัติ',
@@ -51,10 +58,26 @@ const statusMap = {
   null: 'ยังไม่ระบุ',
   unknown_status: 'สถานะไม่ทราบ',
 };
-const getTranslatedStatus = (status) => {
+
+const getTranslatedStatus = (status, eventType, groupType, moveType) => {
+  // หากเป็น groupType 'RETURN' ให้แสดงผลเป็น 'คืนสินค้า'
+  if (groupType === 'RETURN') {
+    return 'คืนสินค้า';
+  }
+
+  // กรณีเป็นการคืนเข้าคลัง
+  if (
+    moveType === 'return_in' ||
+    status === 'return_in' ||
+    eventType === 'return_in'
+  ) {
+    return 'รับคืนเข้าคลังแล้ว';
+  }
+
   if (status == null || status === '') return 'ยังไม่ระบุ';
-  return statusMap[status] || status;
+  return statusMap[status] || statusMap[eventType] || status;
 };
+
 const formatDate = (dateStr) => {
   if (!dateStr) return '-';
   try {
@@ -89,9 +112,9 @@ const typeMap = {
   'คำขอเบิก (สร้างคำขอ)': 'CREATE_REQUEST',
   'คำขอเบิก (อนุมัติ)': 'APPROVAL',
   'คำขอเบิก (ดำเนินการ)': 'PROCESSING',
-  'นำเข้า': 'IMPORT',
-  'คืนสินค้า': 'RETURN',
-  'จัดการสต็อก': 'STOCK_MOVEMENT',
+  นำเข้า: 'IMPORT',
+  คืนสินค้า: 'RETURN',
+  จัดการสต็อก: 'STOCK_MOVEMENT',
 };
 
 export default function TransactionHistoryLogPage() {
@@ -130,6 +153,7 @@ export default function TransactionHistoryLogPage() {
           sort_by: sortColumn,
           sort_order: sortOrder,
           group: true,
+          _t: Date.now(), // bust cache to avoid 304 issues
         },
       });
       const { data, totalPages: tp } = response.data || {};
@@ -145,15 +169,22 @@ export default function TransactionHistoryLogPage() {
     }
   }, [currentPage, filterType, debouncedSearchTerm, sortColumn, sortOrder]);
 
-  useEffect(() => { fetchHistoryLogs(); }, [fetchHistoryLogs]);
+  useEffect(() => {
+    fetchHistoryLogs();
+  }, [fetchHistoryLogs]);
 
   // ⭐ ดึงชนิดคำขอสำหรับแถวที่เป็น CREATE_REQUEST (ถ้ายังไม่มีใน cache)
   useEffect(() => {
     const idsToFetch = Array.from(
       new Set(
         (logs || [])
-          .filter(l => l?.group_type === 'CREATE_REQUEST' && (l.request_id || l.id) && !reqTypeMap[l.request_id || l.id])
-          .map(l => l.request_id || l.id)
+          .filter(
+            (l) =>
+              l?.group_type === 'CREATE_REQUEST' &&
+              (l.request_id || l.id) &&
+              !reqTypeMap[l.request_id || l.id]
+          )
+          .map((l) => l.request_id || l.id)
       )
     );
     if (idsToFetch.length === 0) return;
@@ -162,31 +193,39 @@ export default function TransactionHistoryLogPage() {
       const pairs = await Promise.all(
         idsToFetch.map(async (rid) => {
           try {
-            const res = await axiosInstance.get(`/transaction-history/request/${rid}`);
+            const res = await axiosInstance.get(`/transaction-history/request/${rid}`, {
+              params: { _t: Date.now() },
+            });
             const data = res?.data?.data || {};
             const items = Array.isArray(data.lineItems) ? data.lineItems : [];
             const sumType = String(data?.summary?.request_type || '').toLowerCase();
 
-            const anyBorrow = items.some(it => {
+            const anyBorrow = items.some((it) => {
               const a = String(it?.request_mode_thai || '').toLowerCase();
               const b = String(it?.request_mode || '').toLowerCase();
               return a === 'ยืม' || b === 'borrow';
             });
 
-            const modeTH = anyBorrow ? 'ยืม' : (sumType === 'borrow' || sumType === 'ยืม' ? 'ยืม' : 'เบิก');
+            const modeTH =
+              anyBorrow || sumType === 'borrow' || sumType === 'ยืม' ? 'ยืม' : 'เบิก';
             return [rid, modeTH];
           } catch {
-            // ถ้าดึงไม่ได้ก็ไม่ใส่ค่า ปล่อยให้ fallback เป็น "สร้างคำขอ..."
             return [rid, null];
           }
         })
       );
-      setReqTypeMap(prev => ({ ...prev, ...Object.fromEntries(pairs) }));
+      setReqTypeMap((prev) => ({ ...prev, ...Object.fromEntries(pairs) }));
     })();
-  }, [logs]);
+  }, [logs, reqTypeMap]);
 
-  const handleFilterChange = (e) => { setFilterType(e.target.value); setCurrentPage(1); };
-  const handleSearchChange = (e) => { setSearchTerm(e.target.value); setCurrentPage(1); };
+  const handleFilterChange = (e) => {
+    setFilterType(e.target.value);
+    setCurrentPage(1);
+  };
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
 
   const handleSort = (column) => {
     const backendColumn =
@@ -195,22 +234,39 @@ export default function TransactionHistoryLogPage() {
         latest_type: 'event_type',
         latest_user_name: 'user_name',
         reference_code: 'reference_code',
-      }[column] || 'timestamp';
+      }[column] || (column === 'timestamp' ? 'timestamp' : 'timestamp');
 
     if (sortColumn === backendColumn) setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    else { setSortColumn(backendColumn); setSortOrder('asc'); }
+    else {
+      setSortColumn(backendColumn);
+      setSortOrder('asc');
+    }
     setCurrentPage(1);
   };
 
   const handleClearFilters = () => {
-    setFilterType(''); setSearchTerm(''); setDebouncedSearchTerm('');
-    setSortColumn('timestamp'); setSortOrder('desc'); setCurrentPage(1);
+    setFilterType('');
+    setSearchTerm('');
+    setDebouncedSearchTerm('');
+    setSortColumn('timestamp');
+    setSortOrder('desc');
+    setCurrentPage(1);
   };
 
-  const handlePageChange = (page) => { if (page > 0 && page <= totalPages) setCurrentPage(page); };
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) setCurrentPage(page);
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
+      // 🆕 สีสำหรับสถานะคืน
+      case 'returned':
+        return '#28a745'; // เขียว (คืนปกติ)
+      case 'damaged':
+        return '#ff5722'; // ส้มแดง (ชำรุด)
+      case 'lost':
+        return '#9e9e9e'; // เทา (สูญหาย)
+
       case 'อนุมัติทั้งหมด':
       case 'approved_all':
       case 'อนุมัติบางส่วน':
@@ -222,6 +278,9 @@ export default function TransactionHistoryLogPage() {
       case 'รอดำเนินการ':
       case 'approved_in_queue':
         return '#FFC107';
+      case 'คืนบางส่วน':
+      case 'returned_partially':
+        return '#FF9800';
       case 'เสร็จสิ้น':
       case 'completed':
       case 'นำเข้าแล้ว':
@@ -243,28 +302,67 @@ export default function TransactionHistoryLogPage() {
     }
   };
 
-  // 🆕 ตัวช่วยสร้างลิงก์ “ดูรายละเอียด” ให้ใช้หน้าเดียวกันได้
+  // 🆕 ตัวช่วยสร้างลิงก์ “ดูรายละเอียด” ให้ใช้หน้าเดียวกันได้ (รองรับ RETURN)
   const buildDetailLink = (log) => {
     if (!log || !log.reference_code) return '';
     const isRequest = ['CREATE_REQUEST', 'APPROVAL', 'PROCESSING'].includes(log.group_type);
 
     if (isRequest) {
       const view =
-        log.group_type === 'CREATE_REQUEST' ? 'create' :
-        log.group_type === 'APPROVAL'       ? 'approval' :
-                                              'processing';
+        log.group_type === 'CREATE_REQUEST'
+          ? 'create'
+          : log.group_type === 'APPROVAL'
+          ? 'approval'
+          : 'processing';
       const requestIdForLink = log.request_id ?? log.id;
       return `/manage/transactionHistory/${requestIdForLink}?view=${view}`;
     }
 
     // STOCK_MOVEMENT → ใช้หน้าเดียวกันแต่ส่ง move_code
     if (log.group_type === 'STOCK_MOVEMENT') {
-      // transactionId ไม่สำคัญในโหมด move_code (ใส่ 0/any ก็ได้)
-      return `/manage/transactionHistory/0?move_code=${encodeURIComponent(log.reference_code)}`;
+      return `/manage/transactionHistory/0?move_code=${encodeURIComponent(
+        log.reference_code
+      )}`;
     }
 
-    // RETURN / IMPORT ยังไม่มีหน้า detail เฉพาะ → ไม่ลิงก์ (หรือจะทำในอนาคต)
+    // RETURN → พาไปหน้าใบคำขอแม่ โดยใช้ request_id และแนบ ret เพื่อโฟกัสครั้งที่คืน
+    if (log.group_type === 'RETURN') {
+      const requestIdForLink = log.request_id ?? null;
+      if (requestIdForLink) {
+        return `/manage/transactionHistory/${requestIdForLink}?view=return&ret=${encodeURIComponent(
+          log.reference_code
+        )}`;
+      }
+    }
+
+    // IMPORT (ยังไม่ทำหน้าเจาะ) → ไม่ลิงก์
     return '';
+  };
+
+  // สร้าง label "ประเภทล่าสุด" ให้แถว
+  const renderEventType = (log) => {
+    if (log?.group_type === 'CREATE_REQUEST') {
+      const rid = log.request_id || log.id;
+      const cached = reqTypeMap[rid];
+      if (cached) return `สร้างคำขอ${cached}`;
+      // fallback
+      const mode = toThaiMode(log.request_type_thai || log.request_type || log.request_mode);
+      return mode ? `สร้างคำขอ${mode}` : 'สร้างคำขอ…';
+    }
+
+    // แก้ไข: เพิ่มการตรวจสอบ event_type สำหรับสถานะการคืน
+    if (log?.group_type === 'RETURN') {
+      const t = (log?.status || '').toLowerCase();
+      const thai =
+        t === 'damaged' ? 'คืน (ชำรุด)' :
+        t === 'lost' ? 'คืน (สูญหาย)' :
+        'คืน (ปกติ)';
+      return thai;
+    }
+    
+    // Fallback สำหรับ event_type อื่นๆ
+    const translated = statusMap[log?.event_type];
+    return translated || log?.event_type || '-';
   };
 
   const displayLogs = [...logs];
@@ -294,23 +392,12 @@ export default function TransactionHistoryLogPage() {
     return (
       <div className={`${styles.container} ${styles.errorContainer}`}>
         <p>{error}</p>
-        <button onClick={fetchHistoryLogs} className={styles.retryBtn}>ลองโหลดใหม่</button>
+        <button onClick={fetchHistoryLogs} className={styles.retryBtn}>
+          ลองโหลดใหม่
+        </button>
       </div>
     );
   }
-
-  // สร้าง label "ประเภทล่าสุด" ให้แถว
-  const renderEventType = (log) => {
-    if (log?.group_type === 'CREATE_REQUEST') {
-      const rid = log.request_id || log.id;
-      const cached = reqTypeMap[rid];
-      if (cached) return `สร้างคำขอ${cached}`;
-      // fallback
-      const mode = toThaiMode(log.request_type_thai || log.request_type || log.request_mode);
-      return mode ? `สร้างคำขอ${mode}` : 'สร้างคำขอ…';
-    }
-    return log?.event_type || '-';
-  };
 
   return (
     <div className={styles.container}>
@@ -346,7 +433,11 @@ export default function TransactionHistoryLogPage() {
             </select>
           </div>
 
-          <button onClick={handleClearFilters} className={styles.clearBtn} title="ล้างตัวกรองทั้งหมด">
+          <button
+            onClick={handleClearFilters}
+            className={styles.clearBtn}
+            title="ล้างตัวกรองทั้งหมด"
+          >
             <FontAwesomeIcon icon={faTimes} /> ล้างตัวกรอง
           </button>
         </div>
@@ -361,25 +452,53 @@ export default function TransactionHistoryLogPage() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th onClick={() => handleSort('reference_code')} className={styles.sortableHeader}>
+                <th
+                  onClick={() => handleSort('reference_code')}
+                  className={styles.sortableHeader}
+                >
                   รหัสอ้างอิง{' '}
                   {sortColumn === 'reference_code' &&
-                    (sortOrder === 'asc' ? <FontAwesomeIcon icon={faSortUp} /> : <FontAwesomeIcon icon={faSortDown} />)}
+                    (sortOrder === 'asc' ? (
+                      <FontAwesomeIcon icon={faSortUp} />
+                    ) : (
+                      <FontAwesomeIcon icon={faSortDown} />
+                    ))}
                 </th>
-                <th onClick={() => handleSort('timestamp')} className={styles.sortableHeader}>
+                <th
+                  onClick={() => handleSort('timestamp')}
+                  className={styles.sortableHeader}
+                >
                   เวลา/วันที่ล่าสุด{' '}
                   {sortColumn === 'timestamp' &&
-                    (sortOrder === 'asc' ? <FontAwesomeIcon icon={faSortUp} /> : <FontAwesomeIcon icon={faSortDown} />)}
+                    (sortOrder === 'asc' ? (
+                      <FontAwesomeIcon icon={faSortUp} />
+                    ) : (
+                      <FontAwesomeIcon icon={faSortDown} />
+                    ))}
                 </th>
-                <th onClick={() => handleSort('latest_type')} className={styles.sortableHeader}>
-                  ประเภทล่าสุด{' '}
+                <th
+                  onClick={() => handleSort('latest_type')}
+                  className={styles.sortableHeader}
+                >
+                  ประเภท{' '}
                   {sortColumn === 'event_type' &&
-                    (sortOrder === 'asc' ? <FontAwesomeIcon icon={faSortUp} /> : <FontAwesomeIcon icon={faSortDown} />)}
+                    (sortOrder === 'asc' ? (
+                      <FontAwesomeIcon icon={faSortUp} />
+                    ) : (
+                      <FontAwesomeIcon icon={faSortDown} />
+                    ))}
                 </th>
-                <th onClick={() => handleSort('latest_user_name')} className={styles.sortableHeader}>
+                <th
+                  onClick={() => handleSort('latest_user_name')}
+                  className={styles.sortableHeader}
+                >
                   ผู้ทำรายการล่าสุด{' '}
                   {sortColumn === 'user_name' &&
-                    (sortOrder === 'asc' ? <FontAwesomeIcon icon={faSortUp} /> : <FontAwesomeIcon icon={faSortDown} />)}
+                    (sortOrder === 'asc' ? (
+                      <FontAwesomeIcon icon={faSortUp} />
+                    ) : (
+                      <FontAwesomeIcon icon={faSortDown} />
+                    ))}
                 </th>
                 <th>แผนก</th>
                 <th>สถานะ</th>
@@ -388,41 +507,64 @@ export default function TransactionHistoryLogPage() {
             </thead>
 
             <tbody>
-              {displayLogs.map((log, index) => {
-                const isEmpty = !log.reference_code;
-                const rowKey = log.reference_code
-                  ? `${log.reference_code}-${log.group_type}`
-                  : `empty-${currentPage}-${index}`;
+              {(() => {
+                const display = [...logs];
+                while (display.length < logsPerPage) display.push({});
+                return display.map((log, index) => {
+                  const isEmpty = !log.reference_code;
+                  const rowKey = log.reference_code
+                    ? `${log.reference_code}-${log.group_type}`
+                    : `empty-${currentPage}-${index}`;
 
-                const detailLink = buildDetailLink(log);
+                  const detailLink = buildDetailLink(log);
 
-                return (
-                  <tr key={rowKey} className={!isEmpty ? styles.rowWithData : styles.emptyRowPlaceholder}>
-                    <td>{isEmpty ? '' : log.reference_code || '-'}</td>
-                    <td>{isEmpty ? '' : formatDate(log.timestamp)}</td>
-                    <td>{isEmpty ? '' : renderEventType(log)}</td>
-                    <td>{isEmpty ? '' : log.user_name || '-'}</td>
-                    <td>{isEmpty ? '' : log.department_name || '-'}</td>
-                    <td>
-                      {!isEmpty && (
-                        <span
-                          className={styles.statusBadge}
-                          style={{ backgroundColor: getStatusColor(log.status) }}
-                        >
-                          {getTranslatedStatus(log.status)}
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      {!isEmpty && detailLink && (
-                        <Link href={detailLink}>
-                          <button className={styles.detailButton}>ดูรายละเอียด</button>
-                        </Link>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
+                  return (
+                    <tr
+                      key={rowKey}
+                      className={!isEmpty ? styles.rowWithData : styles.emptyRowPlaceholder}
+                    >
+                      <td>
+                        {isEmpty ? (
+                          ''
+                        ) : (
+                          <>
+                            {log.reference_code || '-'}
+                            {log.group_type === 'RETURN' &&
+                              log.parent_reference_code && (
+                                <div className={styles.subRef}>
+                                  จากคำขอ: {log.parent_reference_code}
+                                </div>
+                              )}
+                          </>
+                        )}
+                      </td>
+                      <td>{isEmpty ? '' : formatDate(log.timestamp)}</td>
+                      <td>
+                        {isEmpty ? '' : renderEventType(log)}
+                      </td>
+                      <td>{isEmpty ? '' : log.user_name || '-'}</td>
+                      <td>{isEmpty ? '' : log.department_name || '-'}</td>
+                      <td>
+                        {!isEmpty && (
+                          <span
+                            className={styles.statusBadge}
+                            style={{ backgroundColor: getStatusColor(log.status) }}
+                          >
+                            {getTranslatedStatus(log.status, log.event_type, log.group_type, log.move_type)}
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        {!isEmpty && detailLink && (
+                          <Link href={detailLink}>
+                            <button className={styles.detailButton}>ดูรายละเอียด</button>
+                          </Link>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                });
+              })()}
               {logs.length === 0 && !loading && !error && (
                 <tr className={styles.noDataRow}>
                   <td colSpan="7">ไม่พบข้อมูลประวัติ</td>
@@ -445,7 +587,8 @@ export default function TransactionHistoryLogPage() {
             {Array.from({ length: totalPages }, (_, i) => (
               <button
                 key={i}
-                className={`${styles.paginationBtn} ${currentPage === i + 1 ? styles.activePage : ''}`}
+                className={`${styles.paginationBtn} ${currentPage === i + 1 ? styles.activePage : ''
+                  }`}
                 onClick={() => handlePageChange(i + 1)}
               >
                 {i + 1}

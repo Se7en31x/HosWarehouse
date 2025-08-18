@@ -34,7 +34,7 @@ export default function GeneralSupForm({ form, handleChange }) {
           />
         </div>
         <div className={styles.field}>
-          <label>ราคา:</label>
+          <label>ราคากลาง:</label>
           <input
             type="number"
             step="0.01"

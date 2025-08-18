@@ -61,12 +61,6 @@ export default function Sidebar() {
               <span className={styles.sidebarText}>ตะกร้า</span>
             </Link>
           </li>
-          <li className={`${styles.sidebarItem} ${isActive('/staff/inventoryReturn') ? styles.active : ''}`}>
-            <Link href="/staff/inventoryReturn" className={styles.noStyleLink}>
-              <FaUndo className={styles.sidebarIcon} />
-              <span className={styles.sidebarText}>คืน</span>
-            </Link>
-          </li>
           <li className={`${styles.sidebarItem} ${isActive('/staff/my-requests') ? styles.active : ''}`}>
             <Link href="/staff/my-requests" className={styles.noStyleLink}>
               <FaListAlt className={styles.sidebarIcon} />

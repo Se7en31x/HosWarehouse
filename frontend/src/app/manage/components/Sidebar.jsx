@@ -3,8 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import styles from './Sidebar.module.css';
-import { FaUndo } from 'react-icons/fa';
-
+import { FaUndo, FaTools, FaCalendarTimes } from 'react-icons/fa';
 // Import icons from react-icons
 import {
   FaHome,
@@ -20,6 +19,7 @@ import {
   FaTruck,
   FaBars, // ✅ ปุ่มเมนู 3 ขีด
   FaSearch, // ✅ ปุ่มค้นหา
+
 } from 'react-icons/fa';
 
 export default function Sidebar() {
@@ -67,10 +67,10 @@ export default function Sidebar() {
               <span className={styles.sidebarText}>ตรวจสอบคำขอเบิก</span>
             </Link>
           </li>
-          <li className={`${styles.sidebarItem} ${isActive('/manage/inventoryReturn') ? styles.active : ''}`}>
-            <Link href="/manage/inventoryReturn" className={styles.noStyleLink}>
+          <li className={`${styles.sidebarItem} ${isActive('/manage/manageReturn') ? styles.active : ''}`}>
+            <Link href="/manage/manageReturn" className={styles.noStyleLink}>
               <FaUndo className={styles.sidebarIcon} />
-              <span className={styles.sidebarText}>ตรวจสอบคำขอคืน</span>
+              <span className={styles.sidebarText}>จัดการคำขอยืม</span>
             </Link>
           </li>
           <li className={`${styles.sidebarItem} ${isActive('/manage/request-status-manager') ? styles.active : ''}`}>
@@ -95,6 +95,18 @@ export default function Sidebar() {
             <Link href="/manage/itemReceiving" className={styles.noStyleLink}>
               <FaTruck className={styles.sidebarIcon} />
               <span className={styles.sidebarText}>นำเข้าสินค้า</span>
+            </Link>
+          </li>
+          <li className={`${styles.sidebarItem} ${isActive('/manage/expired') ? styles.active : ''}`}>
+            <Link href="/manage/expired" className={styles.noStyleLink}>
+              <FaCalendarTimes className={styles.sidebarIcon} />
+              <span className={styles.sidebarText}>จัดการของหมดอายุ</span>
+            </Link>
+          </li>
+          <li className={`${styles.sidebarItem} ${isActive('/manage/damaged') ? styles.active : ''}`}>
+            <Link href="/manage/damaged" className={styles.noStyleLink}>
+              <FaTools className={styles.sidebarIcon} />
+              <span className={styles.sidebarText}>จัดการของชำรุด</span>
             </Link>
           </li>
           <li className={`${styles.sidebarItem} ${isActive('/manage/transactionHistory') ? styles.active : ''}`}>

@@ -1,0 +1,78 @@
+/* page.module.css */
+.container {
+  background-color: #f5f7fa;
+  min-height: 100vh;
+}
+
+.title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #2d3748;
+  margin-bottom: 20px;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  /* ✅ เลื่อนในแนวนอนได้ ถ้าตารางยาว */
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 10px;
+}
+
+.table {
+  width: 100%;
+  /* ✅ ขยายเต็ม container */
+  border-collapse: collapse;
+}
+
+.table thead {
+  background-color: #edf2f7;
+}
+
+.table th,
+.table td {
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+  /* ✅ เปลี่ยนเป็นชิดซ้าย */
+  font-size: 0.95rem;
+}
+
+.table th {
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.actionBtn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  border: none;
+  cursor: pointer;
+  margin: 2px;
+  transition: 0.2s;
+}
+
+.btnRepair {
+  background-color: #38a169;
+  color: white;
+}
+
+.btnRepair:hover {
+  background-color: #2f855a;
+}
+
+.btnDispose {
+  background-color: #e53e3e;
+  color: white;
+}
+
+.btnDispose:hover {
+  background-color: #c53030;
+}
+
+.doneLabel {
+  font-weight: bold;
+  color: #718096;
+}

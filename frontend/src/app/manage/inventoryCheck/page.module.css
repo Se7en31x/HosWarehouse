@@ -134,7 +134,20 @@
 .actionButton { display: inline-flex; align-items: center; justify-content: center; background: #3b82f6; color: #fff; border-radius: 8px; padding: 6px; transition: background-color .2s ease, transform .15s ease; }
 .actionButton:hover { background: #2563eb; transform: scale(1.05); }
 .actionButton:active { transform: scale(.95); }
+.damagedButton {
+  background-color: #ffa114;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-left: 6px;
+  transition: background 0.2s;
+}
 
+.damagedButton:hover {
+  background-color: #d17016;
+}
 /* Pagination */
 .paginationControls { display: flex; list-style: none; padding: 10px; margin: 6px 0 0; gap: 6px; justify-content: center; align-items: center; background: #fff; border-top: 0; }
 .pageButton { background: #fff; border: 1px solid var(--tint-200); border-radius: 8px; padding: 6px 10px; min-width: 34px; cursor: pointer; }

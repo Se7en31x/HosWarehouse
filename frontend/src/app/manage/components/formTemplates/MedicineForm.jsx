@@ -73,30 +73,6 @@ export default function MedicineForm({ form, handleChange }) {
 
                 {/*–– 2 กลุ่มราคา ––*/}
                 <div className={styles.field}>
-                    <label htmlFor="med_cost_price">ราคาทุน (บาท)</label>
-                    <input
-                        type="number"
-                        step="0.01"
-                        id="med_cost_price"
-                        name="med_cost_price"
-                        value={form.med_cost_price ?? ''}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                <div className={styles.field}>
-                    <label htmlFor="med_selling_price">ราคาขาย (บาท)</label>
-                    <input
-                        type="number"
-                        step="0.01"
-                        id="med_selling_price"
-                        name="med_selling_price"
-                        value={form.med_selling_price ?? ''}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                <div className={styles.field}>
                     <label htmlFor="med_medium_price">ราคากลาง (บาท)</label>
                     <input
                         type="number"
@@ -180,29 +156,6 @@ export default function MedicineForm({ form, handleChange }) {
                         id="med_pregnancy_cagetory"
                         name="med_pregnancy_cagetory"
                         value={form.med_pregnancy_cagetory ?? ''}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                {/*–– 5 กลุ่มวันหมดอายุ/ผลิต ––*/}
-                <div className={styles.field}>
-                    <label htmlFor="med_mfg">วันที่ผลิต</label>
-                    <input
-                        type="date"
-                        id="med_mfg"
-                        name="med_mfg"
-                        value={form.med_mfg ?? ''}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                <div className={styles.field}>
-                    <label htmlFor="med_exp">วันหมดอายุ</label>
-                    <input
-                        type="date"
-                        id="med_exp"
-                        name="med_exp"
-                        value={form.med_exp ?? ''}
                         onChange={handleChange}
                     />
                 </div>

@@ -1,0 +1,153 @@
+/* app/manageReturn/page.module.css */
+
+.container {
+
+  background-color: #f5f7fa;
+  min-height: 100vh;
+}
+
+.card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.heading {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+}
+
+.select {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+}
+
+.refreshBtn {
+  background-color: #3498db;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.refreshBtn:hover {
+  background-color: #2980b9;
+}
+
+.loading, .error, .noData {
+  text-align: center;
+  padding: 20px;
+  color: #555;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th, 
+.table td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.table th {
+  background-color: #f1f3f6;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.badgeWarn {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.badgeDanger {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.actionBtn {
+  display: inline-block;
+  padding: 6px 10px;
+  background-color: #2ecc71;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.actionBtn:hover {
+  background-color: #27ae60;
+}
+
+.pagination {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+}
+
+.pageBtn {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pageBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* แถวพิเศษ */
+.rowOverdue {
+  background-color: #fdecea !important;
+}
+
+.rowDueSoon {
+  background-color: #fff8e5 !important;
+}
+    

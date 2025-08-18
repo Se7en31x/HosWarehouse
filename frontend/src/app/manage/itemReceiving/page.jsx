@@ -24,30 +24,29 @@ export default function ItemReceivingPage() {
     const itemsPerPage = 10;
     const totalPages = Math.ceil(allItems.length / itemsPerPage);
 
-    // เพิ่ม state สำหรับ Vendor Item Code
     const [quantity, setQuantity] = useState('');
     const [pricePerUnit, setPricePerUnit] = useState('');
     const [expiryDate, setExpiryDate] = useState('');
     const [notes, setNotes] = useState('');
     const [vendorItemCode, setVendorItemCode] = useState('');
+    const [lotNo, setLotNo] = useState('');
+    const [mfgDate, setMfgDate] = useState('');
+    const [sellingPrice, setSellingPrice] = useState('');
+    const [documentNo, setDocumentNo] = useState('');
 
-    // *** ส่วนที่ถูกปรับปรุง: useRef เพื่ออ้างอิงช่องค้นหา ***
     const searchFieldRef = useRef(null);
 
     useEffect(() => {
         fetchItems();
     }, []);
 
-    // *** ส่วนที่ถูกปรับปรุง: useEffect เพื่อ auto-focus และ auto-search ***
     useEffect(() => {
-        // ให้ช่องค้นหามีการ focus ทันทีที่หน้าจอโหลด
         if (searchFieldRef.current) {
             searchFieldRef.current.focus();
         }
     }, [isLoading]);
 
     useEffect(() => {
-        // เมื่อมีผลลัพธ์การค้นหาเพียง 1 รายการ ให้เลือกอัตโนมัติ
         if (filteredItems.length === 1) {
             handleSelectItem(filteredItems[0]);
         }
@@ -80,7 +79,13 @@ export default function ItemReceivingPage() {
             try {
                 if (!isNaN(term) && term.length > 5) {
                     const response = await axiosInstance.get(`/receiving/barcode?barcode=${term}`);
-                    setFilteredItems(response.data ? [response.data] : []);
+                    const item = response.data;
+                    if (item) {
+                        setFilteredItems([item]);
+                        setSellingPrice(item.unit_price || '');
+                    } else {
+                        setFilteredItems([]);
+                    }
                 } else {
                     const filtered = allItems.filter(item =>
                         item.item_name.toLowerCase().includes(term.toLowerCase()) ||
@@ -123,10 +128,20 @@ export default function ItemReceivingPage() {
             errors.quantity = "ต้องเป็นตัวเลขมากกว่า 0";
         }
 
+        if (!lotNo) {
+            errors.lotNo = "กรุณาใส่เลข Lot";
+        }
+
         if (!pricePerUnit) {
-            errors.pricePerUnit = "กรุณาใส่ราคา";
+            errors.pricePerUnit = "กรุณาใส่ราคาต้นทุน";
         } else if (isNaN(pricePerUnit) || parseFloat(pricePerUnit) < 0) {
             errors.pricePerUnit = "ต้องเป็นตัวเลขที่ไม่ติดลบ";
+        }
+
+        if (!sellingPrice) {
+            errors.sellingPrice = "กรุณาใส่ราคาขาย";
+        } else if (isNaN(sellingPrice) || parseFloat(sellingPrice) < 0) {
+            errors.sellingPrice = "ต้องเป็นตัวเลขที่ไม่ติดลบ";
         }
 
         if (!expiryDate) {
@@ -161,6 +176,10 @@ export default function ItemReceivingPage() {
             notes: notes,
             tempId: Date.now(),
             vendor_item_code: vendorItemCode,
+            lotNo: lotNo,
+            mfgDate: mfgDate,
+            sellingPrice: parseFloat(sellingPrice),
+            documentNo: documentNo,
         };
 
         setReceivingItems([...receivingItems, newItem]);
@@ -182,6 +201,10 @@ export default function ItemReceivingPage() {
         setFormErrors({});
         setVendorItemCode('');
         setCurrentPage(1);
+        setLotNo('');
+        setMfgDate('');
+        setSellingPrice('');
+        setDocumentNo('');
         if (searchFieldRef.current) {
             searchFieldRef.current.focus();
         }
@@ -217,8 +240,8 @@ export default function ItemReceivingPage() {
     
     const handleConfirmSave = async () => {
         const payload = {
-            user_id: 1,
-            supplier_id: null,
+            user_id: 999,
+            supplier_id: 1,
             receiving_note: notes,
             receivingItems: receivingItems.map(item => ({
                 item_id: item.id,
@@ -227,8 +250,13 @@ export default function ItemReceivingPage() {
                 expiryDate: item.expiryDate,
                 notes: item.notes,
                 vendor_item_code: item.vendor_item_code,
+                lotNo: item.lotNo,
+                mfgDate: item.mfgDate,
+                sellingPrice: item.sellingPrice,
+                documentNo: item.documentNo
             })),
         };
+        console.log("Payload to be sent:", payload);
 
         try {
             await axiosInstance.post('/receiving', payload);
@@ -243,15 +271,28 @@ export default function ItemReceivingPage() {
             
             setReceivingItems([]);
             handleClearForm();
-        } catch (error) {
+         } catch (error) {
             console.error("Error saving items:", error);
-            MySwal.fire({
-                title: 'เกิดข้อผิดพลาด!',
-                text: 'ไม่สามารถบันทึกการรับเข้าสินค้าได้',
-                icon: 'error',
-                confirmButtonColor: '#d33',
-                confirmButtonText: 'ตกลง',
-            });
+            
+            // ตรวจสอบว่ามีข้อมูลจากเซิร์ฟเวอร์ตอบกลับมาหรือไม่
+            if (error.response && error.response.data) {
+                console.error("Server responded with:", error.response.data);
+                MySwal.fire({
+                    title: 'เกิดข้อผิดพลาด!',
+                    text: error.response.data.message || 'ไม่สามารถบันทึกการรับเข้าสินค้าได้',
+                    icon: 'error',
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'ตกลง',
+                });
+            } else {
+                MySwal.fire({
+                    title: 'เกิดข้อผิดพลาด!',
+                    text: 'ไม่สามารถบันทึกการรับเข้าสินค้าได้',
+                    icon: 'error',
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'ตกลง',
+                });
+            }
         }
     };
 
@@ -280,7 +321,6 @@ export default function ItemReceivingPage() {
                                     onChange={(e) => {
                                         setSearchTerm(e.target.value);
                                     }}
-                                    // *** ส่วนที่ถูกปรับปรุง: useRef และ onKeyDown ***
                                     ref={searchFieldRef}
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter' && searchTerm) {
@@ -400,35 +440,62 @@ export default function ItemReceivingPage() {
                                     <label>หน่วยนับ</label>
                                     <input type="text" value={selectedItem?.item_unit || ''} disabled />
                                 </div>
+                                
                                 <div className={styles.formField}>
-                                    <label>ราคาต่อหน่วย</label>
+                                    <label>เลขที่ Lot</label>
+                                    <input
+                                        type="text"
+                                        placeholder="กรอกเลข Lot"
+                                        value={lotNo}
+                                        onChange={(e) => handleFormChange(e, setLotNo)}
+                                        disabled={!selectedItem}
+                                    />
+                                    {formErrors.lotNo && <p className={styles.errorText}>{formErrors.lotNo}</p>}
+                                </div>
+                                <div className={styles.formField}>
+                                    <label>วันผลิต (Mfg Date)</label>
+                                    <input
+                                        type="date"
+                                        value={mfgDate}
+                                        onChange={(e) => handleFormChange(e, setMfgDate)}
+                                        disabled={!selectedItem}
+                                    />
+                                </div>
+                                
+                                <div className={styles.formField}>
+                                    <label>ราคาต้นทุนต่อหน่วย</label>
                                     <input
                                         type="number"
-                                        placeholder="กรอกราคา"
+                                        placeholder="กรอกราคาต้นทุน"
                                         value={pricePerUnit}
                                         onChange={(e) => handleFormChange(e, setPricePerUnit)}
                                         min="0"
+                                        disabled={!selectedItem}
                                     />
                                     {formErrors.pricePerUnit && <p className={styles.errorText}>{formErrors.pricePerUnit}</p>}
                                 </div>
+                                <div className={styles.formField}>
+                                    <label>ราคาขายต่อหน่วย</label>
+                                    <input
+                                        type="number"
+                                        placeholder="กรอกราคาขาย"
+                                        value={sellingPrice}
+                                        onChange={(e) => handleFormChange(e, setSellingPrice)}
+                                        min="0"
+                                        disabled={!selectedItem}
+                                    />
+                                    {formErrors.sellingPrice && <p className={styles.errorText}>{formErrors.sellingPrice}</p>}
+                                </div>
+
                                 <div className={styles.formField}>
                                     <label>วันหมดอายุ</label>
                                     <input
                                         type="date"
                                         value={expiryDate}
                                         onChange={(e) => handleFormChange(e, setExpiryDate)}
+                                        disabled={!selectedItem}
                                     />
                                     {formErrors.expiryDate && <p className={styles.errorText}>{formErrors.expiryDate}</p>}
-                                </div>
-                                <div className={styles.formField}>
-                                    <label>Barcode สินค้า</label>
-                                    <input
-                                        type="text"
-                                        value={selectedItem?.item_barcode || ''}
-                                        placeholder="Barcode จะแสดงที่นี่"
-                                        disabled
-                                    />
-                                    {formErrors.selectedItem && <p className={styles.errorText}>{formErrors.selectedItem}</p>}
                                 </div>
                                 <div className={styles.formField}>
                                     <label>รหัสสินค้าผู้ขาย</label>
@@ -436,18 +503,29 @@ export default function ItemReceivingPage() {
                                         type="text"
                                         placeholder="กรอกรหัสสินค้าจากผู้ขาย"
                                         value={vendorItemCode}
-                                        onChange={(e) => setVendorItemCode(e.target.value)}
+                                        onChange={(e) => handleFormChange(e, setVendorItemCode)}
+                                        disabled={!selectedItem}
+                                    />
+                                </div>
+                                <div className={styles.formField}>
+                                    <label>เลขที่เอกสาร</label>
+                                    <input
+                                        type="text"
+                                        placeholder="เช่น PO-001"
+                                        value={documentNo}
+                                        onChange={(e) => handleFormChange(e, setDocumentNo)}
                                         disabled={!selectedItem}
                                     />
                                 </div>
                             </div>
                             <div className={styles.formField}>
-                                <label>บันทึก / อ้างอิง (เช่น เลขที่ PO)</label>
+                                <label>บันทึก / อ้างอิง</label>
                                 <textarea
                                     className={styles.notesField}
                                     rows="2"
                                     value={notes}
                                     onChange={(e) => handleFormChange(e, setNotes)}
+                                    disabled={!selectedItem}
                                 />
                             </div>
                             <div className={styles.formActions}>
@@ -476,13 +554,14 @@ export default function ItemReceivingPage() {
                                 <table className={styles.itemTable}>
                                     <thead>
                                         <tr>
-                                        <th>ชื่อสินค้า</th>
-                                        <th>จำนวน</th>
-                                        <th>ราคา/หน่วย</th>
-                                        <th>วันหมดอายุ</th>
-                                        <th>Barcode</th>
-                                        <th>รหัสผู้ขาย</th>
-                                        <th className={styles.textRight}></th>
+                                            <th>ชื่อสินค้า</th>
+                                            <th>จำนวน</th>
+                                            <th>ราคาต้นทุน</th>
+                                            <th>ราคาขาย</th>
+                                            <th>วันหมดอายุ</th>
+                                            <th>Lot No.</th>
+                                            <th>เลขที่เอกสาร</th>
+                                            <th className={styles.textRight}></th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -492,9 +571,10 @@ export default function ItemReceivingPage() {
                                                     <td className={styles.itemName}>{item.name}</td>
                                                     <td>{item.quantity} {item.item_unit}</td>
                                                     <td>{item.pricePerUnit?.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '-'}</td>
+                                                    <td>{item.sellingPrice?.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '-'}</td>
                                                     <td>{item.expiryDate || '-'}</td>
-                                                    <td>{item.item_barcode || '-'}</td>
-                                                    <td>{item.vendor_item_code || '-'}</td>
+                                                    <td>{item.lotNo || '-'}</td>
+                                                    <td>{item.documentNo || '-'}</td>
                                                     <td className={styles.textRight}>
                                                         <button onClick={() => handleRemoveItem(item.tempId)} className={styles.deleteButton}>
                                                             <Trash2 size={16} />
@@ -504,7 +584,7 @@ export default function ItemReceivingPage() {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="7" className={styles.emptyMessage}>
+                                                <td colSpan="8" className={styles.emptyMessage}>
                                                     ไม่มีรายการสินค้าที่รอการบันทึก
                                                 </td>
                                             </tr>

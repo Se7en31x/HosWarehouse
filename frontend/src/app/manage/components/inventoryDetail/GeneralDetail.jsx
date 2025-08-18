@@ -27,7 +27,7 @@ export default function GeneralDetail({ form = {} }) {
           <input type="text" value={gen_spec} disabled />
         </div>
         <div className={styles.field}>
-          <label>ราคา:</label>
+          <label>ราคากลาง:</label>
           <input type="text" value={gen_price} disabled />
         </div>
       </div>

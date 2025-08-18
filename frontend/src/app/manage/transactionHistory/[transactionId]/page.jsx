@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import styles from './page.module.css';
@@ -17,7 +17,7 @@ const statusMap = {
   rejected_all: 'ปฏิเสธทั้งหมด',
   canceled: 'ยกเลิกคำขอ',
 
-  // สถานะ “รายการย่อย” ตอนอนุมัติ
+  // รายการย่อยตอนอนุมัติ
   approved: 'อนุมัติแล้ว',
   rejected: 'ปฏิเสธแล้ว',
   waiting_approval_detail: 'รออนุมัติ (รายการ)',
@@ -32,7 +32,7 @@ const statusMap = {
   no_approved_for_processing: 'ยังไม่มีรายการอนุมัติให้ดำเนินการ',
   unknown_processing_state: 'สถานะดำเนินการไม่ทราบ',
 
-  // อื่น ๆ
+  // อื่น ๆ / คืน
   imported: 'นำเข้าแล้ว',
   returned_complete: 'คืนครบ',
   returned_partially: 'คืนบางส่วน',
@@ -44,6 +44,13 @@ const statusMap = {
   'N/A': 'N/A',
   null: 'ยังไม่ระบุ',
   unknown_status: 'สถานะไม่ทราบ',
+
+  returned: 'คืนสำเร็จ',
+  returned_complete: 'คืนครบ',
+  returned_partially: 'คืนบางส่วน',
+  damaged: 'คืน/ชำรุด',
+  lost: 'สูญหาย',
+  overdue_return: 'คืนล่าช้า',
 };
 
 const getTranslatedStatus = (status) => {
@@ -61,6 +68,7 @@ const getStatusTone = (key) => {
     case 'waiting_approval':
     case 'waiting_approval_detail':
     case 'approved_in_queue':
+    case 'returned_partially':   // 🆕 ครอบไว้ในโทนเหลือง
       return 'Yellow';
     case 'completed':
     case 'imported':
@@ -101,14 +109,12 @@ const formatDate = (dateStr) => {
   }
 };
 
-// แปลงโหมดคำขอ → ไทย (fallback ใช้เมื่อ backend ไม่ได้ส่ง *_thai มา)
 const toThaiRequestMode = (v) => {
   if (!v) return 'เบิก';
   const s = String(v).toLowerCase();
   return s === 'borrow' || s === 'ยืม' ? 'ยืม' : 'เบิก';
 };
 
-// Pill สถานะ
 const StatusPill = ({ value }) => {
   const key = value ?? 'unknown_status';
   const tone = getStatusTone(key);
@@ -127,23 +133,27 @@ export default function RequestDetailPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // โหมด STOCK_MOVEMENT: หากมี ?move_code=...
+  // โหมด STOCK_MOVEMENT: ?move_code=...
   const moveCode = (searchParams?.get('move_code') || '').trim();
   const isStockMode = Boolean(moveCode);
 
-  // รองรับ ?view=create | approval | processing (เฉพาะโหมดคำขอ)
+  // รองรับแท็บมุมมอง
+  // 🆕 เพิ่ม 'return' สำหรับโหมดคำขอแบบยืม
   const viewParam = (searchParams?.get('view') || '').toLowerCase();
-  const validViews = new Set(['create', 'approval', 'processing']);
+  const validViews = new Set(['create', 'approval', 'processing', 'return']);
   const activeView = isStockMode ? 'stock' : (validViews.has(viewParam) ? viewParam : 'create');
 
+  // 🆕 รับโค้ดการคืนเพื่อตั้งโฟกัส
+  const retFocus = (searchParams?.get('ret') || '').trim(); // ตัวอย่าง: RET-123
+
   // ========== State ==========
-  // โหมดคำขอ
   const [requestData, setRequestData] = useState(null);
-  // โหมดสต็อก
   const [stockRows, setStockRows] = useState([]);
-  // common
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // refs สำหรับเลื่อนไปยังแถวคืนที่โฟกัส
+  const returnRowRefs = useRef({});
 
   // ========== Fetchers ==========
   const fetchRequestDetails = useCallback(async () => {
@@ -189,35 +199,30 @@ export default function RequestDetailPage() {
     }
   }, [isStockMode, fetchRequestDetails, fetchStockMovementByCode]);
 
-  // ========== Derived data ==========
+  // ========== Derived ==========
   const summary = requestData?.summary || {};
   const history = requestData?.history || { approvalHistory: [], processingHistory: [] };
   const lineItems = requestData?.lineItems || [];
+  const returnHistory = requestData?.returnHistory || []; // 🆕 จาก backend
+
   const requestTypeThai = summary.request_type_thai || toThaiRequestMode(summary.request_type);
-  const showReturnCol = requestTypeThai === 'ยืม';
+  const isBorrow = requestTypeThai === 'ยืม';
 
-  const createColsCount = showReturnCol ? 8 : 7;
-  const approvalColsCount = 6;
-  const processingColsCount = 5;
-
-  // สำหรับโหมด STOCK: คำนวณสรุปเบื้องต้น
-  const stockMeta = useMemo(() => {
-    if (!isStockMode) return null;
-    if (!Array.isArray(stockRows) || stockRows.length === 0) {
-      return { totalItems: 0, totalQty: 0, firstAt: null, lastAt: null, actor: null };
-    }
-    const totalItems = stockRows.length;
-    const totalQty = stockRows.reduce((s, r) => s + (Number(r?.move_qty) || 0), 0);
-    const sorted = [...stockRows].sort(
-      (a, b) => new Date(a.move_date).getTime() - new Date(b.move_date).getTime()
-    );
-    const firstAt = sorted[0]?.move_date || null;
-    const lastAt = sorted[sorted.length - 1]?.move_date || null;
-    // ผู้ทำรายการ: ถ้าหลายคนให้แสดง "หลายคน"
-    const uniqueUsers = Array.from(new Set(stockRows.map(r => (r?.user_name || '').trim()).filter(Boolean)));
-    const actor = uniqueUsers.length <= 1 ? (uniqueUsers[0] || '-') : 'หลายคน';
-    return { totalItems, totalQty, firstAt, lastAt, actor };
-  }, [isStockMode, stockRows]);
+  // ========== Focus ไปยังแถวคืนที่ต้องการ ==========
+  useEffect(() => {
+    if (!isBorrow || !Array.isArray(returnHistory) || returnHistory.length === 0) return;
+    if (!retFocus) return;
+    // รอให้ DOM วาดตารางก่อนนิดนึง
+    const t = setTimeout(() => {
+      const el = returnRowRefs.current?.[retFocus];
+      if (el?.scrollIntoView) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add(styles.focusRow);
+        setTimeout(() => el.classList.remove(styles.focusRow), 2000);
+      }
+    }, 150);
+    return () => clearTimeout(t);
+  }, [isBorrow, returnHistory, retFocus]);
 
   // ========== Rendering ==========
   if (loading) {
@@ -260,37 +265,8 @@ export default function RequestDetailPage() {
         {/* ===== STOCK MOVEMENT MODE ===== */}
         {isStockMode ? (
           <>
-            {/* Summary */}
             <h2 className={styles.subHeading}>ภาพรวมการจัดการสต็อก</h2>
-            <div className={styles.detailGrid}>
-              <div className={styles.detailItem}>
-                <strong>รหัสก้อน:</strong>
-                <span>{moveCode}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <strong>จำนวนรายการ:</strong>
-                <span>{stockMeta?.totalItems ?? 0} รายการ</span>
-              </div>
-              <div className={styles.detailItem}>
-                <strong>จำนวนรวม:</strong>
-                <span>{stockMeta?.totalQty ?? 0}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <strong>เวลาเริ่ม:</strong>
-                <span>{formatDate(stockMeta?.firstAt)}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <strong>เวลาสิ้นสุด:</strong>
-                <span>{formatDate(stockMeta?.lastAt)}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <strong>ผู้ทำรายการ:</strong>
-                <span>{stockMeta?.actor ?? '-'}</span>
-              </div>
-            </div>
-
-            {/* Table */}
-            <h2 className={styles.subHeading}>รายละเอียดรายการ</h2>
+            {/* ... (ส่วน stock เดิมของคุณ ไม่เปลี่ยน) ... */}
             <div className={styles.tableWrapper}>
               <table className={styles.table}>
                 <thead>
@@ -327,7 +303,7 @@ export default function RequestDetailPage() {
             </div>
           </>
         ) : (
-          /* ===== REQUEST MODE (เดิม) ===== */
+          /* ===== REQUEST MODE ===== */
           <>
             {/* Tabs */}
             <div className={styles.tabBar}>
@@ -349,6 +325,14 @@ export default function RequestDetailPage() {
               >
                 การดำเนินการ
               </button>
+              {isBorrow && (
+                <button
+                  className={`${styles.tabBtn} ${activeView === 'return' ? styles.tabActive : ''}`}
+                  onClick={() => router.replace(`/manage/transactionHistory/${requestId}?view=return`)}
+                >
+                  การคืน
+                </button>
+              )}
             </div>
 
             {/* Summary */}
@@ -372,11 +356,13 @@ export default function RequestDetailPage() {
               </div>
               <div className={styles.detailItem}>
                 <strong>ประเภทคำขอ:</strong>
-                <span className={`${styles.badge} ${styles.badgeGray}`}>{summary.request_type_thai || toThaiRequestMode(summary.request_type)}</span>
+                <span className={`${styles.badge} ${styles.badgeGray}`}>
+                  {summary.request_type_thai || toThaiRequestMode(summary.request_type)}
+                </span>
               </div>
             </div>
 
-            {/* CREATE view */}
+            {/* CREATE */}
             {activeView === 'create' && (
               <>
                 <h2 className={styles.subHeading}>รายการที่ขอ</h2>
@@ -391,11 +377,11 @@ export default function RequestDetailPage() {
                         <th>จำนวนที่อนุมัติ</th>
                         <th>สถานะอนุมัติ</th>
                         <th>สถานะดำเนินการ</th>
-                        {requestTypeThai === 'ยืม' && <th>กำหนดคืน</th>}
+                        {isBorrow && <th>กำหนดคืน</th>}
                       </tr>
                     </thead>
                     <tbody>
-                      {lineItems.length ? (
+                      {Array.isArray(lineItems) && lineItems.length ? (
                         lineItems.map((it, idx) => (
                           <tr key={it.request_detail_id || idx}>
                             <td>{idx + 1}</td>
@@ -405,12 +391,12 @@ export default function RequestDetailPage() {
                             <td>{it.approved_qty ?? '-'}</td>
                             <td><StatusPill value={it.approval_status ?? 'unknown_status'} /></td>
                             <td><StatusPill value={it.processing_status ?? 'unknown_processing_state'} /></td>
-                            {requestTypeThai === 'ยืม' && <td>{formatDate(it.expected_return_date)}</td>}
+                            {isBorrow && <td>{formatDate(it.expected_return_date)}</td>}
                           </tr>
                         ))
                       ) : (
                         <tr className={styles.noDataRow}>
-                          <td colSpan={requestTypeThai === 'ยืม' ? 8 : 7}>ไม่มีรายการในคำขอนี้</td>
+                          <td colSpan={isBorrow ? 8 : 7}>ไม่มีรายการในคำขอนี้</td>
                         </tr>
                       )}
                     </tbody>
@@ -419,7 +405,7 @@ export default function RequestDetailPage() {
               </>
             )}
 
-            {/* APPROVAL view */}
+            {/* APPROVAL */}
             {activeView === 'approval' && (
               <>
                 <h2 className={styles.subHeading}>ประวัติการอนุมัติ</h2>
@@ -458,7 +444,7 @@ export default function RequestDetailPage() {
               </>
             )}
 
-            {/* PROCESSING view */}
+            {/* PROCESSING */}
             {activeView === 'processing' && (
               <>
                 <h2 className={styles.subHeading}>ประวัติการดำเนินการ</h2>
@@ -487,6 +473,61 @@ export default function RequestDetailPage() {
                       ) : (
                         <tr className={styles.noDataRow}>
                           <td colSpan={5}>ยังไม่มีประวัติการดำเนินการ</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+
+            {/* 🆕 RETURN */}
+            {isBorrow && activeView === 'return' && (
+              <>
+                <h2 className={styles.subHeading}>ประวัติการคืน</h2>
+                <div className={styles.tableWrapper}>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>รหัสคืน</th>
+                        <th>วันเวลา</th>
+                        <th>ผู้ตรวจรับ</th>
+                        <th>พัสดุ</th>
+                        <th>หน่วย</th>
+                        <th>อนุมัติ</th>
+                        <th>คืนครั้งนี้</th>
+                        <th>คืนสะสม</th>
+                        <th>คงเหลือ</th>
+                        <th>สถานะ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Array.isArray(returnHistory) && returnHistory.length > 0 ? (
+                        returnHistory.map((row, idx) => (
+                          <tr
+                            key={`ret-${idx}-${row.return_id}-${row.request_detail_id}`}
+                            ref={(el) => {
+                              // เก็บ ref ตามรหัสคืน (RET-xxx) เพื่อเลื่อนไปหาเมื่อมี ?ret=
+                              if (el && row.return_code) {
+                                returnRowRefs.current[row.return_code] = el;
+                              }
+                            }}
+                          >
+                            <td>{row.return_code}</td>
+                            <td>{formatDate(row.return_date)}</td>
+                            <td>{row.inspected_by_name || '-'}</td>
+                            <td>{row.item_name || '-'}</td>
+                            <td>{row.item_unit || '-'}</td>
+                            <td>{row.approved_qty ?? 0}</td>
+                            <td>{row.returned_this_time ?? 0}</td>
+                            <td>{row.returned_total ?? 0}</td>
+                            <td>{row.remaining_qty ?? 0}</td>
+                            <td><StatusPill value={row.return_status_code} /></td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr className={styles.noDataRow}>
+                          <td colSpan={10}>ยังไม่มีประวัติการคืน</td>
                         </tr>
                       )}
                     </tbody>

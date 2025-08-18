@@ -170,7 +170,7 @@
     /* รหัส (Code) - Corresponds to SKU in image, but "รหัส" in provided headers */
     minmax(70px, 0.7fr)
     /* รูปภาพ (Image) */
-    minmax(160px, 2fr)
+    minmax(200px, 2fr)
     /* ชื่อ (Name) - Corresponds to Product name */
     minmax(100px, 1.5fr)
     /* หมวดหมู่ (Category) */

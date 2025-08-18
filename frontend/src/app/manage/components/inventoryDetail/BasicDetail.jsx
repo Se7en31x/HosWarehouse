@@ -8,8 +8,6 @@ export default function BasicDetail({ form = {} }) {
     item_sub_category = '-',
     item_location = '-',
     item_zone = '-',
-    item_exp = '',
-    item_qty = '-',
     item_unit = '-',
     item_min = '-',
     item_max = '-',
@@ -41,22 +39,11 @@ export default function BasicDetail({ form = {} }) {
             <label>โซนจัดเก็บ</label>
             <input value={item_zone || '-'} disabled />
           </div>
-          {item_category !== 'medicine' && (
-            <div className={styles.field}>
-              <label>วันหมดอายุ</label>
-              <input type="date" value={item_exp ? item_exp.slice(0, 10) : ''} disabled />
-            </div>
-          )}
         </div>
       </fieldset>
-
       <fieldset className={styles.section}>
         <legend>จำนวนและหน่วย</legend>
         <div className={styles.grid}>
-          <div className={styles.field}>
-            <label>จำนวนคงเหลือ</label>
-            <input value={item_qty || '-'} disabled />
-          </div>
           <div className={styles.field}>
             <label>หน่วย</label>
             <input value={item_unit || '-'} disabled />

@@ -12,7 +12,10 @@ import { io } from 'socket.io-client';
 import Image from 'next/image';
 import Swal from 'sweetalert2';
 import { Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
-import Select from 'react-select';
+
+// ✅ แก้ไข: ใช้ dynamic import เพื่อป้องกัน Hydration Error
+import dynamic from 'next/dynamic';
+const Select = dynamic(() => import('react-select'), { ssr: false });
 
 // ► Options สำหรับ dropdown (static)
 const categoryOptions = [
@@ -238,8 +241,8 @@ export default function InventoryWithdraw() {
   const handleConfirm = () => {
     if (!inputQuantity || inputQuantity <= 0) { toast.error('กรุณากรอกจำนวนให้ถูกต้อง'); return; }
     if (!selectedItem) { toast.error('ไม่พบสินค้า'); return; }
-    if (selectedItem.item_qty == null || isNaN(selectedItem.item_qty)) { toast.error('จำนวนคงเหลือไม่ถูกต้อง'); return; }
-    if (inputQuantity > selectedItem.item_qty) { toast.error('จำนวนไม่เพียงพอ'); return; }
+    if (selectedItem.total_on_hand_qty == null || isNaN(selectedItem.total_on_hand_qty)) { toast.error('จำนวนคงเหลือไม่ถูกต้อง'); return; }
+    if (inputQuantity > selectedItem.total_on_hand_qty) { toast.error('จำนวนไม่เพียงพอ'); return; }
     if (actionType === 'borrow') {
       if (!returnDate) { toast.error('กรุณาเลือกวันที่คืน'); return; }
       const sel = new Date(returnDate), min = new Date(minReturnDate), max = new Date(maxReturnDate);
@@ -259,7 +262,8 @@ export default function InventoryWithdraw() {
       location: selectedItem.item_location,
       action: actionType,
       returnDate: actionType === 'borrow' ? returnDate : null,
-      item_qty: selectedItem.item_qty,
+      // ✅ แก้ไข: เปลี่ยน item_qty เป็น total_on_hand_qty
+      item_qty: selectedItem.total_on_hand_qty,
     });
     toast.success('เพิ่มเข้าตะกร้าแล้ว');
     closeModal();
@@ -395,19 +399,19 @@ export default function InventoryWithdraw() {
                   </div>
                   <div className={styles.tableCell}>{item.item_name}</div>
                   <div className={styles.tableCell}>{translateCategory(item.item_category)}</div>
-                  <div className={styles.tableCell}>{item.item_qty}</div>
+                  <div className={styles.tableCell}>{item.total_on_hand_qty}</div>
                   <div className={styles.tableCell}>{item.item_unit}</div>
                   <div className={styles.tableCell}>{item.item_status}</div>
                   <div className={styles.tableCell}>
-                    {item.item_update ? new Date(item.item_update).toLocaleDateString() : ''}
+                    {item.created_at ? new Date(item.created_at).toLocaleDateString() : ''}
                   </div>
                   <div className={`${styles.tableCell} ${styles.centerCell}`}>
                     {actionType === 'withdraw' ? (
                       <button
                         className={`${styles.actionButton} ${styles.withdrawButton}`}
                         onClick={() => handleWithdraw(item)}
-                        disabled={!item.item_qty || item.item_qty <= 0}
-                        title={!item.item_qty || item.item_qty <= 0 ? 'สต็อกหมด' : 'เบิก'}
+                        disabled={!item.total_on_hand_qty || item.total_on_hand_qty <= 0}
+                        title={!item.total_on_hand_qty || item.total_on_hand_qty <= 0 ? 'สต็อกหมด' : 'เบิก'}
                       >
                         เบิก
                       </button>
@@ -415,8 +419,8 @@ export default function InventoryWithdraw() {
                       <button
                         className={`${styles.actionButton} ${styles.borrowButton}`}
                         onClick={() => handleBorrow(item)}
-                        disabled={!item.item_qty || item.item_qty <= 0}
-                        title={!item.item_qty || item.item_qty <= 0 ? 'สต็อกหมด' : 'ยืม'}
+                        disabled={!item.total_on_hand_qty || item.total_on_hand_qty <= 0}
+                        title={!item.total_on_hand_qty || item.total_on_hand_qty <= 0 ? 'สต็อกหมด' : 'ยืม'}
                       >
                         ยืม
                       </button>
@@ -476,7 +480,7 @@ export default function InventoryWithdraw() {
                   <div><strong>ชื่อ:</strong> {selectedItem.item_name}</div>
                   <div><strong>รหัส:</strong> {selectedItem.item_id}</div>
                   <div><strong>หมวดหมู่:</strong> {translateCategory(selectedItem.item_category)}</div>
-                  <div><strong>คงเหลือ:</strong> {selectedItem.item_qty} {selectedItem.item_unit}</div>
+                  <div><strong>คงเหลือ:</strong> {selectedItem.total_on_hand_qty} {selectedItem.item_unit}</div>
                 </div>
               </div>
               <div className={styles.modalForm}>
@@ -487,7 +491,7 @@ export default function InventoryWithdraw() {
                   className={styles.input}
                   value={inputQuantity}
                   min={1}
-                  max={selectedItem.item_qty}
+                  max={selectedItem.total_on_hand_qty}
                   onChange={e => setInputQuantity(Number(e.target.value))}
                 />
                 {actionType === 'borrow' && (

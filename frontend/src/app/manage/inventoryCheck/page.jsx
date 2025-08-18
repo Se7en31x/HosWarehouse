@@ -2,11 +2,14 @@
 import { useEffect, useMemo, useState } from "react";
 import styles from "./page.module.css";
 import { connectSocket, disconnectSocket } from "../../utils/socket";
+import axiosInstance from "../../utils/axiosInstance";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Trash2, Search } from "lucide-react";
-import Select from "react-select";
 
-// ── Options (ข้อมูลเดิม) ──────────────────────────────────────────
+import dynamic from "next/dynamic";
+const Select = dynamic(() => import("react-select"), { ssr: false });
+
+// ── Options ──────────────────────────────────────────
 const categoryOptions = [
   { value: "ยา", label: "ยา" },
   { value: "เวชภัณฑ์", label: "เวชภัณฑ์" },
@@ -28,7 +31,7 @@ const storageOptions = [
   { value: "ห้องเวชภัณฑ์", label: "ห้องเวชภัณฑ์" },
 ];
 
-// ── react-select styles (layer เหมือนต้นแบบ) ─────────────────────
+// ── react-select styles ─────────────────────────────
 const customSelectStyles = {
   control: (base, state) => ({
     ...base,
@@ -60,7 +63,7 @@ const customSelectStyles = {
 
 export default function InventoryCheck() {
   const [searchText, setSearchText] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState(""); // เก็บเป็น "ไทย"
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedUnit, setSelectedUnit] = useState("");
   const [selectedStorage, setSelectedStorage] = useState("");
   const [allInventoryItems, setAllInventoryItems] = useState([]);
@@ -72,7 +75,7 @@ export default function InventoryCheck() {
     []
   );
 
-  // แผนที่ EN -> TH (ข้อมูลเดิม)
+  // EN → TH map
   const categoryThaiMap = {
     medicine: "ยา",
     medsup: "เวชภัณฑ์",
@@ -81,7 +84,7 @@ export default function InventoryCheck() {
     general: "ของใช้ทั่วไป",
   };
 
-  // ดึงรหัสสินค้า ตามหมวด (ข้อมูลเดิม)
+  // รหัสสินค้า
   const getItemCode = (item) => {
     switch (item.item_category?.toLowerCase()) {
       case "medicine":
@@ -99,7 +102,20 @@ export default function InventoryCheck() {
     }
   };
 
-  // โหลดข้อมูลผ่าน socket (ข้อมูลเดิม)
+  // ✅ โหลดข้อมูลครั้งแรกผ่าน REST
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await axiosInstance.get("/inventoryCheck/all");
+        setAllInventoryItems(res.data || []);
+      } catch (err) {
+        console.error("❌ โหลด REST ไม่สำเร็จ:", err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // ✅ sync real-time ผ่าน socket
   useEffect(() => {
     const socket = connectSocket();
     socket.emit("requestInventoryData");
@@ -109,7 +125,7 @@ export default function InventoryCheck() {
     return () => disconnectSocket();
   }, []);
 
-  // คัดกรอง (ข้อมูลเดิม)
+  // คัดกรอง
   const filteredInventory = useMemo(() => {
     const f = searchText.toLowerCase();
     return allInventoryItems.filter((item) => {
@@ -127,22 +143,19 @@ export default function InventoryCheck() {
   }, [allInventoryItems, selectedCategory, selectedUnit, selectedStorage, searchText]);
 
   const totalPages = Math.max(1, Math.ceil(filteredInventory.length / ITEMS_PER_PAGE));
-
   const paginatedItems = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredInventory.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredInventory, currentPage]);
 
-  // รีเซ็ตหน้าเมื่อกรอง/ค้นหาเปลี่ยน (ข้อมูลเดิม)
   useEffect(() => {
     setCurrentPage(1);
   }, [searchText, selectedCategory, selectedUnit, selectedStorage]);
 
-  // เพจจิเนชัน (ข้อมูลเดิม)
+  // Pagination
   const goToPreviousPage = () => currentPage > 1 && setCurrentPage((c) => c - 1);
   const goToNextPage = () =>
     currentPage * ITEMS_PER_PAGE < filteredInventory.length && setCurrentPage((c) => c + 1);
-
   const getPageNumbers = () => {
     const pages = [];
     if (totalPages <= 7) {
@@ -192,13 +205,13 @@ export default function InventoryCheck() {
           </div>
         </div>
 
-        {/* Filters (UI ตามต้นแบบ) */}
+        {/* Filters */}
         <div className={styles.toolbar}>
           <div className={styles.filterGrid}>
+            {/* หมวดหมู่ */}
             <div className={styles.filterGroup}>
-              <label className={styles.label} htmlFor="category">หมวดหมู่</label>
+              <label className={styles.label}>หมวดหมู่</label>
               <Select
-                inputId="category"
                 options={categoryOptions}
                 isClearable
                 isSearchable={false}
@@ -206,16 +219,13 @@ export default function InventoryCheck() {
                 styles={customSelectStyles}
                 value={categoryOptions.find((o) => o.value === selectedCategory) || null}
                 onChange={(opt) => setSelectedCategory(opt?.value || "")}
-                menuPlacement="auto"
-                menuPosition="fixed"
                 menuPortalTarget={menuPortalTarget}
               />
             </div>
-
+            {/* หน่วย */}
             <div className={styles.filterGroup}>
-              <label className={styles.label} htmlFor="unit">หน่วย</label>
+              <label className={styles.label}>หน่วย</label>
               <Select
-                inputId="unit"
                 options={unitOptions}
                 isClearable
                 isSearchable={false}
@@ -223,33 +233,27 @@ export default function InventoryCheck() {
                 styles={customSelectStyles}
                 value={unitOptions.find((o) => o.value === selectedUnit) || null}
                 onChange={(opt) => setSelectedUnit(opt?.value || "")}
-                menuPlacement="auto"
-                menuPosition="fixed"
                 menuPortalTarget={menuPortalTarget}
               />
             </div>
-
+            {/* ที่เก็บ */}
             <div className={styles.filterGroup}>
-              <label className={styles.label} htmlFor="storage">สถานที่จัดเก็บ</label>
+              <label className={styles.label}>สถานที่จัดเก็บ</label>
               <Select
-                inputId="storage"
                 options={storageOptions}
                 isClearable
                 isSearchable={false}
-                placeholder="เลือกสถานที่จัดเก็บ..."
+                placeholder="เลือกสถานที่..."
                 styles={customSelectStyles}
                 value={storageOptions.find((o) => o.value === selectedStorage) || null}
                 onChange={(opt) => setSelectedStorage(opt?.value || "")}
-                menuPlacement="auto"
-                menuPosition="fixed"
                 menuPortalTarget={menuPortalTarget}
               />
             </div>
-
+            {/* ค้นหา */}
             <div className={styles.filterGroup}>
-              <label className={styles.label} htmlFor="filter">ค้นหา</label>
+              <label className={styles.label}>ค้นหา</label>
               <input
-                id="filter"
                 className={styles.input}
                 type="text"
                 value={searchText}
@@ -263,8 +267,6 @@ export default function InventoryCheck() {
             <button
               onClick={clearFilters}
               className={`${styles.ghostBtn} ${styles.clearButton}`}
-              aria-label="ล้างตัวกรอง"
-              title="ล้างตัวกรอง"
             >
               <Trash2 size={18} /> ล้างตัวกรอง
             </button>
@@ -273,7 +275,6 @@ export default function InventoryCheck() {
 
         {/* Table */}
         <div className={styles.tableSection}>
-          {/* Header */}
           <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
             <div className={styles.headerItem}>ลำดับ</div>
             <div className={styles.headerItem}>รหัส</div>
@@ -283,16 +284,15 @@ export default function InventoryCheck() {
             <div className={styles.headerItem}>คงเหลือ</div>
             <div className={styles.headerItem}>หน่วย</div>
             <div className={styles.headerItem}>สถานะ</div>
-            <div className={styles.headerItem}>สถานที่จัดเก็บ</div>
+            <div className={styles.headerItem}>ที่เก็บ</div>
             <div className={styles.headerItem}>อัปเดตล่าสุด</div>
             <div className={styles.headerItem}>ดำเนินการ</div>
           </div>
 
-          {/* Rows */}
           <div className={styles.inventory} style={{ "--rows-per-page": ITEMS_PER_PAGE }}>
             {paginatedItems.length > 0 ? (
               paginatedItems.map((item, index) => (
-                <div key={item.item_id || index} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                <div key={item.item_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
                   <div className={`${styles.tableCell} ${styles.centerCell}`}>
                     {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
                   </div>
@@ -311,11 +311,11 @@ export default function InventoryCheck() {
                   <div className={styles.tableCell}>
                     {categoryThaiMap[item.item_category?.toLowerCase()] || item.item_category}
                   </div>
-                  <div className={styles.tableCell}>{item.item_qty}</div>
+                  <div className={styles.tableCell}>{item.total_on_hand_qty}</div>
                   <div className={styles.tableCell}>{item.item_unit}</div>
                   <div className={styles.tableCell}>พร้อมใช้งาน</div>
                   <div className={styles.tableCell}>{item.item_location}</div>
-                  <div className={styles.tableCell}>{formatDateTime(item.item_update)}</div>
+                  <div className={styles.tableCell}>{formatDateTime(item.created_at)}</div>
                   <div className={`${styles.tableCell} ${styles.centerCell}`}>
                     <Link
                       href={`/manage/inventoryCheck/${item.item_id}/inventoryDetail`}
@@ -328,24 +328,21 @@ export default function InventoryCheck() {
                 </div>
               ))
             ) : (
-              <div className={styles.noDataMessage}>ไม่พบข้อมูลตามเงื่อนไข</div>
+              <div className={styles.noDataMessage}>ไม่พบข้อมูล</div>
             )}
           </div>
 
           {/* Pagination */}
-          <ul className={styles.paginationControls} role="navigation" aria-label="เปลี่ยนหน้า">
+          <ul className={styles.paginationControls}>
             <li>
               <button
                 className={styles.pageButton}
                 onClick={goToPreviousPage}
                 disabled={currentPage === 1}
-                aria-label="หน้าก่อนหน้า"
-                title="หน้าก่อนหน้า"
               >
                 <ChevronLeft size={16} />
               </button>
             </li>
-
             {getPageNumbers().map((p, idx) =>
               p === "..." ? (
                 <li key={`ellipsis-${idx}`} className={styles.ellipsis}>…</li>
@@ -354,21 +351,17 @@ export default function InventoryCheck() {
                   <button
                     className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
                     onClick={() => setCurrentPage(p)}
-                    aria-current={p === currentPage ? "page" : undefined}
                   >
                     {p}
                   </button>
                 </li>
               )
             )}
-
             <li>
               <button
                 className={styles.pageButton}
                 onClick={goToNextPage}
                 disabled={currentPage >= totalPages}
-                aria-label="หน้าถัดไป"
-                title="หน้าถัดไป"
               >
                 <ChevronRight size={16} />
               </button>

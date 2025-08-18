@@ -7,26 +7,6 @@ export default function MedDeviceForm({ form, handleChange }) {
       <legend className={styles.legend}>อุปกรณ์ทางการแพทย์</legend>
       <div className={styles.grid}>
         <div className={styles.field}>
-          <label>ชื่ออุปกรณ์:</label>
-          <input
-            type="text"
-            name="meddevice_name"
-            value={form.meddevice_name ?? ''}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className={styles.field}>
-          <label>ประเภทอุปกรณ์:</label>
-          <input
-            type="text"
-            name="meddevice_type"
-            value={form.meddevice_type ?? ''}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className={styles.field}>
           <label>ยี่ห้อ (Brand):</label>
           <input
             type="text"
@@ -41,24 +21,6 @@ export default function MedDeviceForm({ form, handleChange }) {
             type="text"
             name="meddevice_model"
             value={form.meddevice_model ?? ''}
-            onChange={handleChange}
-          />
-        </div>
-        <div className={styles.field}>
-          <label>หมายเลขเครื่อง (Serial No.):</label>
-          <input
-            type="text"
-            name="meddevice_serial_no"
-            value={form.meddevice_serial_no ?? ''}
-            onChange={handleChange}
-          />
-        </div>
-        <div className={styles.field}>
-          <label>สถานะการใช้งาน:</label>
-          <input
-            type="text"
-            name="meddevice_status"
-            value={form.meddevice_status ?? ''}
             onChange={handleChange}
           />
         </div>

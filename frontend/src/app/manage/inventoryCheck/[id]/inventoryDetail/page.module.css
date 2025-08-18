@@ -1,99 +1,313 @@
-/* Container for the whole page */
+/* page.module.css */
+
 .container {
-  padding: 2rem; /* Ample padding around content */
-  max-width: 900px; /* Limit width for readability on large screens */
-  margin: 0 auto; /* Center the container */
-  background-color: #ffffff; /* Light background for the page */
-  border-radius: 8px; /* Slightly rounded corners */
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Page Title */
 .title {
-  font-size: 2.2em; /* Larger, more prominent title */
-  color: #333;
-  text-align: center; /* Center the title */
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #eee; /* A subtle separator */
-}
-
-/* Common Card/Panel Style */
-.detailCard {
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem; /* Space between cards */
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03); /* Lighter shadow for cards */
-}
-
-.cardTitle {
-  font-size: 1.5em;
-  color: #555;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #eee;
-}
-
-/* Styling for individual detail rows (label-value pairs) */
-.detailRow {
-  display: flex; /* Or grid for more complex layouts */
-  margin-bottom: 0.8rem;
-  align-items: baseline; /* Align text baselines */
-}
-
-.detailLabel {
-  font-weight: 600; /* Bold labels */
-  color: #666;
-  width: 150px; /* Fixed width for labels for alignment */
-  flex-shrink: 0; /* Prevent label from shrinking */
-  margin-right: 1rem;
-}
-
-.detailValue {
-  color: #333;
-  flex-grow: 1; /* Allow value to take remaining space */
-}
-
-/* Button Styling */
-.buttonContainer {
-  text-align: center; /* Center the button */
-  margin-top: 2rem;
-}
-
-.backButton {
-  padding: 0.8rem 1.5rem;
-  font-size: 1.1em;
-  background-color: #007bff; /* Primary blue color */
+  font-size: 2.5rem;
+  font-weight: 700;
   color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-}
-
-.backButton:hover {
-  background-color: #0056b3; /* Darker on hover */
-}
-
-/* Loading and Error Messages */
-.loading {
   text-align: center;
-  font-size: 1.2em;
-  color: #007bff;
-  margin-top: 50px;
+  margin-bottom: 2rem;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.categoryBox {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2d3748;
+  text-align: center;
+}
+
+.categoryBox strong {
+  color: #667eea;
+  margin-right: 0.5rem;
+}
+
+/* Loading, Error, No Data States */
+.loading, .error, .noData {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: white;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  margin: 2rem 0;
+  padding: 3rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .error {
-  text-align: center;
-  font-size: 1.2em;
-  color: #dc3545; /* Red for errors */
-  margin-top: 50px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
 }
 
-.noData {
+.loading {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+}
+
+/* Lot Section */
+.lotSection {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 2rem;
+  margin: 2rem 0;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 
+              0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.subTitle {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 1.5rem;
   text-align: center;
-  font-size: 1.2em;
-  color: #6c757d; /* Grey for no data */
-  margin-top: 50px;
+  position: relative;
+}
+
+.subTitle::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  border-radius: 2px;
+}
+
+/* Table Styles */
+.lotTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.lotTable thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.lotTable th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.lotTable td {
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.95rem;
+  color: #4a5568;
+  transition: background-color 0.2s ease;
+}
+
+.lotTable tbody tr:hover {
+  background-color: #f7fafc;
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
+}
+
+.lotTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Empty state */
+.lotTable td[colspan="7"] {
+  text-align: center;
+  font-style: italic;
+  color: #a0aec0;
+  padding: 3rem;
+  font-size: 1.1rem;
+}
+
+/* Damaged Button */
+.damagedButton {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px -1px rgba(255, 107, 107, 0.3);
+}
+
+.damagedButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px -3px rgba(255, 107, 107, 0.4);
+  background: linear-gradient(135deg, #ff5252 0%, #e53e3e 100%);
+}
+
+.damagedButton:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 6px -1px rgba(255, 107, 107, 0.3);
+}
+
+/* Button Container */
+.buttonContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 3rem;
+  padding-top: 2rem;
+}
+
+.backButton {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 1rem 2rem;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.backButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.2);
+}
+
+.backButton:active {
+  transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .title {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .lotTable {
+    font-size: 0.85rem;
+  }
+  
+  .lotTable th,
+  .lotTable td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .damagedButton {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+  
+  .categoryBox {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+  
+  .lotSection {
+    padding: 1.5rem;
+    margin: 1rem 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .lotTable {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  
+  .title {
+    font-size: 1.75rem;
+  }
+  
+  .subTitle {
+    font-size: 1.5rem;
+  }
+}
+
+/* Animation for page load */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.container > * {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.container > *:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.container > *:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.container > *:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+/* Status indicators */
+.lotTable td:nth-child(6) {
+  font-weight: 600;
+}
+
+/* Add some visual indicators for different statuses if needed */
+.statusActive {
+  color: #48bb78;
+}
+
+.statusExpired {
+  color: #f56565;
+}
+
+.statusWarning {
+  color: #ed8936;
 }
