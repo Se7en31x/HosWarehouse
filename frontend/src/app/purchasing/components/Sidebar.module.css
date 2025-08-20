@@ -1,0 +1,197 @@
+/* src/app/components/Sidebar.module.css */
+
+.sidebar {
+  flex-basis: 20%;
+  flex-shrink: 1;
+  flex-grow: 1;
+  min-width: 180px;
+  max-width: 280px;
+  height: 100%;
+  background-color: #ffffff; /* ✅ ใช้สีขาว */
+  color: #333;
+  border-radius: 12px;
+  box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  overflow: hidden;
+  position: relative;
+}
+
+.sidebar.collapsed {
+  flex-basis: 70px;
+  min-width: 70px;
+  max-width: 70px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* ✅ HEADER ของ Sidebar: ปุ่มเมนูและปุ่มค้นหา */
+.sidebarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  margin-bottom: 25px;
+}
+
+.headerIcon {
+  font-size: 20px;
+  color: #555; /* ✅ สีไอคอนเริ่มต้น */
+}
+
+.searchButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  transition: color 0.2s ease-in-out;
+}
+
+.sidebar.collapsed .searchButton {
+  display: none;
+}
+
+.searchButton:hover .headerIcon {
+  color: #008dda; /* ✅ สีไอคอนค้นหาเมื่อ Hover */
+}
+
+/* ✅ ลบสไตล์ logoContainer, logo, และ logoText ออก */
+
+.divider {
+  border: none;
+  border-bottom: 1px solid #eee;
+  margin: 10px 0;
+  transition: all 0.3s ease-in-out;
+}
+
+.sidebar.collapsed .divider {
+  margin: 5px 0;
+}
+
+.navLinks {
+  list-style-type: none;
+  padding: 0;
+  margin-top: 10px;
+}
+
+.navLinks li {
+  margin: 5px 0;
+}
+
+.sidebarItem {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  color: #333;
+  text-decoration: none;
+}
+
+.sidebar.collapsed .sidebarItem {
+  justify-content: center;
+  padding: 12px;
+}
+
+.sidebarItem:hover {
+  background-color: #ace2e1; /* ✅ สีพื้นหลังเมื่อ Hover */
+  color: #008dda;
+  transform: translateX(3px);
+  box-shadow: 2px 2px 5px rgba(0, 137, 218, 0.05);
+}
+
+.sidebarItem.active {
+  background: linear-gradient(to right, #008dda, #41c9e2); /* ✅ ใช้ Gradient สีน้ำเงิน */
+  color: #ffffff;
+  font-weight: bold;
+  box-shadow: 2px 2px 8px rgba(0, 137, 218, 0.2);
+}
+
+.sidebarItem.active .sidebarIcon {
+  color: #ffffff;
+}
+
+.sidebarIcon {
+  font-size: 20px;
+  margin-right: 15px;
+  color: #555;
+  transition: margin-right 0.3s ease-in-out, color 0.2s ease-in-out;
+}
+
+.sidebar.collapsed .sidebarIcon {
+  margin-right: 0;
+}
+
+.sidebarItem:hover .sidebarIcon {
+  color: #008dda;
+}
+
+.sidebarText {
+  font-size: 16px;
+  font-weight: 400;
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.sidebar.collapsed .sidebarText {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+.noStyleLink {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  justify-content: flex-start;
+  transition: justify-content 0.3s ease-in-out;
+}
+
+.sidebar.collapsed .noStyleLink {
+  justify-content: center;
+}
+
+/* ✅ สไตล์ปุ่มยุบ/ขยายแบบ 3 ขีด */
+.collapseButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  transition: all 0.2s ease-in-out;
+  z-index: 10;
+}
+
+.collapseButton:hover .headerIcon {
+  color: #008dda; /* ✅ สีไอคอนเมนูเมื่อ Hover */
+}
+
+/* ✅ ลบสไตล์ collapseButton ที่เป็นลูกศรออก */
+
+/* Responsive adjustments for smaller screens (Mobile) */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1000;
+    transform: translateX(-100%);
+    box-shadow: 10px 0 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar.collapsed {
+    min-width: 60px;
+    max-width: 60px;
+    flex-basis: 60px;
+  }
+}

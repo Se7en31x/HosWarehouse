@@ -1,0 +1,116 @@
+.container {
+  padding: 16px 20px 28px;
+  background: #f5f7fb;
+  min-height: 100dvh;
+}
+
+.header { margin-bottom: 12px; }
+.title { font-size: 1.4rem; font-weight: 700; color: #1f2937; }
+.subtitle { color: #6b7280; margin-top: 4px; }
+
+.toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 12px 0 16px;
+  flex-wrap: wrap;
+}
+
+.input {
+  flex: 1 1 280px;
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  outline: none;
+}
+
+.checkbox { display: flex; align-items: center; gap: 8px; color: #374151; }
+
+.spacer { flex: 1; }
+
+.primary, .secondary {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.primary { background: #2563eb; color: #fff; }
+.primary:disabled { background: #93c5fd; cursor: not-allowed; }
+
+.secondary { background: #111827; color: #fff; }
+.secondary:disabled { background: #9ca3af; cursor: not-allowed; }
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+
+.tableWrap { width: 100%; overflow: auto; }
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 860px;
+}
+
+.table thead th {
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #374151;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 10px;
+  position: sticky;
+  top: 0;
+}
+
+.table tbody td {
+  padding: 10px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #111827;
+  vertical-align: middle;
+}
+
+.rowSelected { background: #eef2ff; }
+
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+
+.empty {
+  text-align: center;
+  padding: 24px 0;
+  color: #6b7280;
+}
+
+.footer {
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #4b5563;
+  font-size: 0.95rem;
+}
+
+/* Badges */
+.badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.ok { background: #ecfdf5; color: #065f46; }
+.warn { background: #fffbeb; color: #92400e; }
+.danger { background: #fef2f2; color: #991b1b; }
+
+.dangerText { color: #b91c1c; font-weight: 700; }
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .table { min-width: 720px; }
+}

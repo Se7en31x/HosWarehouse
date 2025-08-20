@@ -1,0 +1,50 @@
+/* src/app/globals.css */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box; /* สำคัญมาก: ทำให้ padding/border ไม่เพิ่มขนาดกล่อง */
+}
+
+html, body {
+  width: 100%;
+  height: 100%; /* ✨ สำคัญ: กำหนดให้ html และ body สูงเต็มหน้าจอ */
+  font-family: 'Anuphan', sans-serif; /* แนะนำให้ใช้ font นี้ ถ้าไม่ได้ติดตั้งให้ใช้ 'Noto Sans Thai', sans-serif; */
+  overflow: hidden; /* ✨ สำคัญ: ป้องกัน Scrollbar โดยรวมที่เกิดจาก body/html */
+}
+
+/* --- App Layout Container (Header + Sidebar & Main Content) --- */
+.app-layout-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* ✨ สำคัญ: ทำให้ Container หลักสูงเต็ม Viewport Height */
+  /* min-height: 100vh; */ /* ไม่ต้องใช้ min-height แล้ว ใช้ height: 100vh แทน */
+  background-color: #f0f2f5; /* สีพื้นหลังโดยรวมที่อ่อนลงและดูเข้ากัน */
+  overflow: hidden; /* ป้องกัน Scrollbar ในระดับ Container หลัก */
+}
+
+/* --- Main Content Wrapper (Sidebar + Main Content Area) --- */
+.main-content-wrapper {
+  display: flex;
+  flex-grow: 1; /* ✨ สำคัญ: ทำให้ส่วนนี้ขยายเต็มพื้นที่ที่เหลือหลังจาก Header */
+  padding: 15 0 15px;
+  gap: 15px;
+  overflow: hidden; /* ป้องกัน Scrollbar ในส่วน wrapper นี้ */
+}
+
+/* --- Main Content Area (where individual page content goes) --- */
+.content-area {
+  flex-grow: 1;
+  background-color: #f0f2f5; /* พื้นหลังสีขาวสำหรับพื้นที่เนื้อหาหลัก */
+  border-radius: 15px; /* มุมโค้งมนที่เข้ากับ Sidebar */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  /* padding: 30px; */
+  overflow-y: auto; /* ✨ สำคัญ: ให้ Scrollbar อยู่แค่ใน Content Area เท่านั้น */
+  min-width: 320px;
+}
+
+/* --- Header Component (ถ้ามี) --- */
+/* สมมติว่ามี Header Component อยู่ด้านบนสุด */
+/* ถ้า Header มีความสูงคงที่ (เช่น 60px) คุณอาจจะต้องปรับ main-content-wrapper */
+/* เช่น: height: calc(100vh - 60px); */
+/* แต่โดยทั่วไป ถ้าใช้ flex-direction: column บน .app-layout-container และ .main-content-wrapper มี flex-grow: 1 จะจัดการให้เอง */

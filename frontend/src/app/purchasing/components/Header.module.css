@@ -1,0 +1,50 @@
+/* src/app/components/Header.module.css */
+
+.header {
+  position: sticky; /* Keeps the header at the top when scrolling */
+  top: 0;
+  z-index: 1000; /* Ensures the header stays on top of other elements */
+  background-color: #ffffff; /* White background to match the sidebar */
+  display: flex;
+  justify-content: flex-start; /* Align content to the start (left) */
+  align-items: center;
+  height: 65px; /* Standard height for the header */
+  padding: 0 30px; /* Increased horizontal padding for a cleaner look */
+  border-bottom: 1px solid #e0e0e0; /* Lighter and softer bottom border */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow for a floating effect */
+  transition: all 0.3s ease-in-out; /* Smooth transitions for any changes */
+  /* border-radius: 12px; */
+}
+
+.headerTitle {
+  font-size: 24px; /* Larger font size for prominence */
+  font-weight: 600; /* Bolder font weight */
+  color: #333; /* Darker text color for better contrast */
+  margin: 0; /* Remove default margin */
+  padding: 0; /* Remove default padding */
+  line-height: 1; /* Ensures text is vertically centered within its line box */
+}
+
+.userIcon {
+  color: #555;
+  margin-right: 10px;
+}
+
+.iconGroup {
+  margin-left: auto; /* ดันไอคอนไปชิดขวาสุด */
+  display: flex;
+  align-items: center;
+  gap: 16px; /* ระยะห่างระหว่างไอคอน */
+}
+
+.icon {
+  color: #555;
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
+}
+
+.icon:hover {
+  color: #007bff; /* เปลี่ยนสีเมื่อ hover */
+}
+
+/* Since the icons are moved, .headerIcons and .iconButton styles are no longer needed here */
