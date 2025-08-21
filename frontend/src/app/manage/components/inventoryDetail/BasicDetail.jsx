@@ -59,7 +59,7 @@ export default function BasicDetail({ form = {} }) {
         </div>
       </fieldset>
 
-      <fieldset className={styles.section}>
+      {/* <fieldset className={styles.section}>
         <legend>รูปภาพพัสดุ</legend>
         {item_img ? (
           <div className={styles.imagePreview}>
@@ -68,7 +68,7 @@ export default function BasicDetail({ form = {} }) {
         ) : (
           <p>ไม่มีรูปภาพ</p>
         )}
-      </fieldset>
+      </fieldset> */}
     </>
   );
 }

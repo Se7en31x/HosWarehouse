@@ -1,476 +1,203 @@
-/*
-  ==============================================================
-  Global Layout and Typography
-  ==============================================================
-*/
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-.mainHome {
-  /* กำหนดให้ mainHome ใช้ความสูงเต็ม viewport */
-  min-height: 100vh;
-  padding: 0;
-  margin: 0;
-  /* ลบ margin เริ่มต้นของ body/html */
-  background-color: #f3f4f6;
-  /* Soft gray background */
-  font-family: 'Inter', sans-serif;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background-color: #f8f9fa;
-  /* สีพื้นหลังหน้าจอที่ดูสะอาดและสว่าง */
-  overflow: auto;
-  /* ให้หน้าจอสามารถเลื่อนได้ถ้าเนื้อหายาวเกิน */
+:root{
+  --bg:#f0fbfe; --panel:#fff; --muted:#6b7280; --text:#111827; --border:#e5e7eb;
+  --primary:#008dda; --primary-500:#41c9e2; --primary-600:#1685bb;
+  --success:#16a34a; --danger:#ef4444;
+  --tint-100:#e9f6fb; --tint-200:#ace2e1;
+  --radius:10px; --row-h:60px; --rows-per-page:9;
+  --th-font:1.05rem; --th-min-h:60px; --th-pad-y:14px; --th-pad-x:12px; --th-letter:.01em; --th-line:1.25;
+  --z-header:10; --z-toolbar:100;
 }
 
-.infoContainer {
-  width: 100%;
-  height: 100%;
-  margin: 0 auto;
-  background-color: #ffffff;
-  padding: 1.5rem 2.5rem;
-  border-radius: 0.6rem;
-  box-shadow: 0 3px 5px -1px rgb(0 0 0 / 0.1), 0 1px 3px -2px rgb(0 0 0 / 0.1);
-  flex-direction: column;
-  flex-grow: 1;
-  box-sizing: border-box;
-  min-height: 80vh;
-  /* ADJUSTED: Increased min-height for more vertical space */
-  display: flex;
+.mainHome{
+  min-height:100vh;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Inter',system-ui;
 }
-
-.cardHeader h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 1.5rem;
-  display: inline-block;
+.infoContainer{
+  width:100%;min-height:100vh;background:var(--panel);color:var(--text);
+  padding:24px;display:flex;flex-direction:column;gap:14px;
 }
+.pageBar{display:flex;justify-content:space-between;align-items:center;}
+.titleGroup{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.pageTitle{font-weight:700;font-size:clamp(1.4rem,2.2vw,2rem);margin:0;}
 
-/*
-  ==============================================================
-  Filter and Actions Section
-  ==============================================================
-*/
-
-.filterContainer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  align-items: flex-end;
-  margin-bottom: 2rem;
-  padding: 1rem;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+/* Toolbar (ให้เหมือนทุกหน้า) */
+.toolbar{
+  position:relative;z-index:var(--z-toolbar);
+  display:flex;gap:12px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;
+  border:1px solid var(--tint-200);border-radius:12px;padding:12px;background:#f6fbfd;
 }
-
-.filterGroup {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 200px;
+.filterGrid{display:grid;gap:12px;flex:1;}
+/* 3 คอลัมน์: หมวดหมู่ / หน่วย / สถานะ */
+.filterGrid3{grid-template-columns:repeat(3,minmax(180px,1fr));}
+.filterGroup{display:flex;flex-direction:column;gap:6px;}
+.label{font-size:.85rem;color:#374151;font-weight:600;}
+.input{
+  height:40px;border:1px solid var(--border);border-radius:8px;
+  padding:0 12px;font-size:.95rem;background:#fff;
 }
-
-.filterLabel {
-  font-weight: 600;
-  color: #555;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
+.input:focus{outline:2px solid var(--primary-500);outline-offset:1px;}
+.searchCluster{display:flex;align-items:flex-end;gap:10px;margin-left:auto;}
+.ghostBtn{
+  background:#fff;color:#374151;border:1px solid var(--border);
+  border-radius:8px;height:40px;padding:0 12px;cursor:pointer;
 }
+.ghostBtn:hover{background:#e9f6fb;}
+.clearButton{display:inline-flex;align-items:center;gap:8px;color:var(--primary-600);}
 
-.filterSelect,
-.filterInput {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  background-color: #fff;
+/* ✅ สถานะให้แคบลง */
+.statusGroup{max-width:240px;}
+.statusInput{max-width:240px;}
+
+/* ปุ่มเพิ่มข้อมูลใหม่ */
+.addButton{
+  display:inline-flex;align-items:center;gap:8px;
+  height:40px;padding:0 14px;border-radius:8px;
+  background:var(--primary);color:#fff;border:1px solid var(--primary);
+  font-weight:700;text-decoration:none;
 }
+.addButton:hover{background:#1685bb;border-color:#1685bb;}
 
-.filterSelect:focus,
-.filterInput:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
-}
-
-.filterAddData {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  margin-left: auto;
-}
-
-.addButton {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 50px;
-  height: 50px;
-  background-color: #28a745;
-  color: #fff;
-  font-size: 2rem;
-  font-weight: 300;
-  border-radius: 50%;
-  text-decoration: none;
-  box-shadow: 0 2px 6px rgba(40, 167, 69, 0.4);
-  transition: transform 0.2s ease, background-color 0.2s ease;
-}
-
-.addButton:hover {
-  background-color: #218838;
-  transform: scale(1.1);
-}
-
-.addLabel {
-  font-size: 0.9rem;
-  color: #555;
-  text-align: center;
-}
-
-/*
-  ==============================================================
-  Table Grid Layout
-  ==============================================================
-*/
-
-.tableWrapper {
-  overflow-x: auto;
-  box-shadow: 0 3px 5px -1px rgb(0 0 0 / 0.1), 0 1px 3px -2px rgb(0 0 0 / 0.1);
-  border-radius: 0.6rem;
-  border: 1px solid #e0e0e0;
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-
-  /* MODIFIED: ซ่อนแถบเลื่อนแนวนอนแต่ยังเลื่อนได้ */
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  &::-webkit-scrollbar {
-    display: none;
-  }
-
-  /* Hide scrollbar for IE, Edge and Firefox */
-  -ms-overflow-style: none;
-  /* IE and Edge */
-  scrollbar-width: none;
-  /* Firefox */
-}
-
-.tableGrid {
-  display: grid;
-  /* Define grid columns based on the image and provided headers */
-  /* Adjust column widths as needed to match the image precisely */
+/* ตาราง */
+.tableFrame{border:1px solid var(--tint-200);border-radius:var(--radius);background:#fff;overflow:hidden;}
+.tableGrid{
+  display:grid;
   grid-template-columns:
-    minmax(50px, 0.5fr)
-    /* ลำดับ (Order) */
-    minmax(100px, 1fr)
-    /* รหัส (Code) - Corresponds to SKU in image, but "รหัส" in provided headers */
-    minmax(70px, 0.7fr)
-    /* รูปภาพ (Image) */
-    minmax(200px, 2fr)
-    /* ชื่อ (Name) - Corresponds to Product name */
-    minmax(100px, 1.5fr)
-    /* หมวดหมู่ (Category) */
-    minmax(100px, 1fr)
-    /* จำนวน (Quantity) */
-    minmax(100px, 1fr)
-    /* หน่วย (Unit) - Not directly in image, but in headers */
-    minmax(120px, 1.2fr)
-    /* สถานะ (Status) */
-    minmax(120px, 1.2fr)
-    /*สถานที่จัดเก็บ (Storage Location) - Not directly in image, but in headers */
-    minmax(100px, 1.5fr)
-    /* แก้ไขล่าสุด (Last Modified) - Not directly in image, but in headers */
-    minmax(200px, 2fr);
-  /* การจัดการ (Management) - Corresponds to Actions */
-  align-items: center;
-  padding: 0px;
-  /* Horizontal padding for the entire grid */
+    minmax(50px,.6fr) minmax(120px,1.1fr) minmax(70px,.8fr) minmax(200px,2fr) minmax(120px,1.2fr)
+    minmax(100px,1fr) minmax(100px,1fr) minmax(140px,1.2fr) minmax(140px,1.2fr) minmax(160px,1.3fr);
+  align-items:center;
 }
-
-.tableHeader {
-  background-color: #f5f5f5;
-  /* Light grey background for header */
-  border-bottom: 1px solid #e0e0e0;
-  font-weight: 500;
-  color: #555;
-  height: 48px;
-  /* Standard height for header row */
-  font-size: 0.875rem;
-  /* 14px */
-  text-transform: uppercase;
-  letter-spacing: 0.01em;
+.tableHeader{
+  position:sticky;top:0;z-index:var(--z-header);
+  background:#eef9fc;border-bottom:1px solid var(--tint-200);
+  padding-block:var(--th-pad-y);padding-inline:var(--th-pad-x);
+  font-weight:700;color:#374151;font-size:var(--th-font);line-height:var(--th-line);min-height:var(--th-min-h);
 }
+.tableHeader.tableGrid>div{font-weight:700;letter-spacing:var(--th-letter);display:flex;align-items:center;white-space:nowrap;padding:0;}
+.tableHeader>div:last-child{justify-content:center;}
+.inventory{background:#fff;height:calc(var(--row-h)*var(--rows-per-page));overflow:hidden;}
+.tableRow{height:var(--row-h);padding:0 var(--th-pad-x);border-top:1px solid #deedf1;}
+.tableRow:first-child{border-top:0;}
+.tableRow:hover{background:#e9f6fb;}
+.tableCell{padding:4px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.centerCell{display:flex;justify-content:center;}
+.imageCell{width:50px;height:50px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;display:block;margin:0 auto;}
+.noDataMessage{height:calc(var(--row-h)*6);display:flex;align-items:center;justify-content:center;color:var(--muted);}
 
-.headerItem {
-  padding: 0 8px;
-  /* Padding for header cells */
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-  /* Prevent text wrapping */
-  overflow: hidden;
-  text-overflow: ellipsis;
+/* ปุ่มแอคชัน */
+.actionButton{padding:8px 12px;border-radius:8px;border:none;font-weight:700;cursor:pointer;color:#fff;margin:0 4px;}
+.editButton{background:#1E90FF;}
+.editButton:hover{background:#0f6bd6;}
+.deleteButton{background:#dc3545;}
+.deleteButton:hover{background:#c82333;}
+
+/* เพจจิเนชันแบบเลข + … + ลูกศร */
+.paginationControls{
+  display:flex;list-style:none;padding:10px;margin:0;gap:6px;
+  justify-content:center;align-items:center;background:#fff;margin-top:10px;
 }
+.pageButton{background:#fff;border:1px solid var(--border);border-radius:8px;padding:6px 10px;min-width:34px;cursor:pointer;}
+.pageButton:hover:not(:disabled){background:#e9f6fb;}
+.pageButton:disabled{opacity:.5;cursor:not-allowed;}
+.activePage{background:var(--primary);color:#fff;border-color:var(--primary);}
+.ellipsis{color:var(--muted);}
 
-/* ลบคอมเมนต์และโค้ดด้านล่างนี้ออกไป เพื่อไม่ให้มันไปตั้งค่าการจัดกึ่งกลางทับ */
-/*
-.headerItem:nth-child(1), // ลำดับ
-.headerItem:nth-child(6), // จำนวน
-.headerItem:nth-child(7), // หน่วย
-.headerItem:nth-child(8), // สถานะ
-*/
-.headerItem:nth-child(11) {
-  justify-content: center;
+/* ตอบสนอง */
+@media (max-width:1024px){
+  .filterGrid3{grid-template-columns:repeat(2,minmax(180px,1fr));}
 }
-
-.inventory {
-  background-color: #ffffff;
-  flex-grow: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  min-height: calc(7 * 47px);
-  /* ADJUSTED: Increased min-height to show more rows */
-}
-
-.tableRow {
-  border-bottom: 1px solid #eeeeee;
-  /* Lighter border for rows */
-  height: 60px;
-  /* Slightly taller rows for content */
-  font-size: 0.9375rem;
-  /* 15px */
-  color: #333;
-}
-
-
-.tableCell {
-  padding: 8px;
-  /* Padding for table cells */
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ลบคอมเมนต์และโค้ดด้านล่างนี้ออกไป เพื่อไม่ให้มันไปตั้งค่าการจัดกึ่งกลางทับ */
-/*
-.tableCell:nth-child(1), // ลำดับ
-.tableCell:nth-child(6), // จำนวน
-.tableCell:nth-child(7), // หน่วย
-.tableCell:nth-child(8), // สถานะ*/
-.tableCell:nth-child(11) {
-  justify-content: center;
-}
-
-
-.tableCell:first-child {
-  font-weight: 500;
-  color: #1f2937;
-}
-
-.imageCell {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 0.4rem;
-  border: 1px solid #e5e7eb;
-  display: block;
-  margin: 0 auto;
-}
-
-.noDataCell {
-  grid-column: 1 / -1;
-  padding: 2rem 1rem;
-  text-align: center;
-  color: #6b7280;
-  font-style: italic;
-  font-size: 1rem;
-}
-
-.statusBadge {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0.3em 0.75em;
-  /* ระยะห่างภายใน */
-  font-size: 0.7rem;
-  /* ขนาดตัวอักษร */
-  font-weight: 600;
-  /* น้ำหนักตัวอักษร */
-  border-radius: 9999px;
-  /* ทำให้ขอบโค้งมนเป็นวงรี/วงกลม */
-  line-height: 1;
-  text-transform: uppercase;
-  /* ตัวพิมพ์ใหญ่ทั้งหมด */
-  letter-spacing: 0.025em;
-  white-space: nowrap;
-}
-
-.statusAvailable {
-  color: #065f46;
-  /* สีตัวอักษรสีเขียวเข้ม */
-}
-
-/*
-  ==============================================================
-  Action Buttons
-  ==============================================================
-*/
-
-.actionButton {
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: none;
-  color: #fff;
-  transition: background-color 0.2s ease, transform 0.2s ease;
-  display: inline-block;
-  text-align: center;
-  margin: 0 0.25rem;
-}
-
-.editButton {
-  background-color: #1E90FF;
-  color: #ffffff;
-}
-
-.editButton:hover {
-  background-color: #0000FF;
-  transform: translateY(-2px);
-}
-
-.deleteButton {
-  background-color: #dc3545;
-}
-
-.deleteButton:hover {
-  background-color: #c82333;
-  transform: translateY(-2px);
-}
-
-/*
-  ==============================================================
-  Pagination
-  ==============================================================
-*/
-
-.pagination {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-top: 2rem;
-  gap: 0.5rem;
-}
-
-.prevButton,
-.nextButton {
-  padding: 0.75rem 1.5rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background-color: #fff;
-  color: #333;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.2s ease;
-}
-
-.prevButton:hover,
-.nextButton:hover {
-  background-color: #e9ecef;
-  border-color: #adb5bd;
-}
-
-.prevButton:disabled,
-.nextButton:disabled {
-  background-color: #f8f9fa;
-  color: #adb5bd;
-  cursor: not-allowed;
-  border-color: #e9ecef;
-}
-
-/*
-  ==============================================================
-  Responsive Design
-  ==============================================================
-*/
-
-@media (max-width: 1200px) {
-  .tableGrid {
-    grid-template-columns: 0.5fr 1fr 1fr 2fr 1fr 1fr 1fr 1fr 1fr 1.5fr 1fr;
-    font-size: 0.85rem;
+@media (max-width:640px){
+  .filterGrid3{grid-template-columns:1fr;}
+  .statusGroup,.statusInput{max-width:100%;}
+  .tableGrid{
+    grid-template-columns:
+      50px 120px 70px 200px 120px 100px 100px 140px 140px 160px;
   }
 }
 
-@media (max-width: 992px) {
-  .filterContainer {
-    flex-direction: column;
-    align-items: stretch;
-  }
+/* ── Status Badge: simple, flat, accessible ───────────────────── */
+.badge{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:.35rem .7rem; border-radius:999px; font-weight:700; font-size:.86rem;
+  line-height:1; white-space:nowrap; min-width:104px;
+  border:1px solid transparent; letter-spacing:.01em;
+}
 
-  .filterAddData {
-    margin: 1rem 0 0 0;
-    flex-direction: row;
-    justify-content: flex-end;
-    gap: 1rem;
-  }
+/* Dot นำหน้าเล็ก ๆ (ช่วยสแกนด้วยสายตา) */
+.badge::before{
+  content:""; width:8px; height:8px; border-radius:999px; margin-right:8px;
+  background: currentColor; box-shadow:0 0 0 2px rgba(255,255,255,.7) inset;
+}
 
-  .tableGrid {
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 0.5rem;
-  }
+/* ── Palettes ── */
+/* ดีฟอลต์ */
+.st-generic{
+  color:#374151; background:#F3F4F6; border-color:#E5E7EB;
+}
 
-  .tableHeader {
-    display: none;
-    /* Hide the header on smaller screens */
-  }
+/* พร้อมใช้ */
+.st-ok{
+  color:#166534; background:#DCFCE7; border-color:#86EFAC;
+}
 
-  .tableRow {
-    display: flex;
-    flex-direction: column;
-    padding: 1rem;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-  }
+/* ไม่พร้อมใช้ / ปิดใช้งาน */
+.st-inactive{
+  color:#374151; background:#F3F4F6; border-color:#E5E7EB;
+}
 
-  .tableRow>div:before {
-    content: attr(data-label);
-    font-weight: 700;
-    color: #555;
-    margin-right: 1rem;
-    display: inline-block;
-    width: 100px;
-  }
+/* กำลังซ่อมบำรุง */
+.st-maintenance{
+  color:#1F2937; background:#E5E7EB; border-color:#D1D5DB;
+}
 
-  .tableCell {
-    padding: 0.5rem 0;
-    border-bottom: 1px dashed #eee;
-    display: flex;
-    align-items: center;
-  }
+/* ชำรุด */
+.st-broken{
+  color:#9F1239; background:#FFE4E6; border-color:#FECDD3;
+}
 
-  .tableCell:last-child {
-    border-bottom: none;
-  }
+/* หมดสต็อก */
+.st-out{
+  color:#991B1B; background:#FEE2E2; border-color:#FCA5A5;
+}
 
-  .actionButton {
-    margin: 0.25rem 0;
-    width: 100%;
-  }
+/* ใกล้หมด */
+.st-low{
+  color:#92400E; background:#FEF3C7; border-color:#FDE68A;
+}
 
-  .centerCell {
-    text-align: left;
-  }
+/* หมดอายุ */
+.st-expired{
+  color:#7C2D12; background:#FFEDD5; border-color:#FDBA74;
+}
 
-  .imageCell {
-    width: 80px;
-    height: 80px;
-  }
+/* ใกล้หมดอายุ */
+.st-near-exp{
+  color:#92400E; background:#FFF7ED; border-color:#FED7AA;
+}
+
+/* สงวนไว้ */
+.st-reserved{
+  color:#1F2937; background:#E5E7EB; border-color:#D1D5DB;
+}
+
+/* เลิกผลิต / ระงับจำหน่าย */
+.st-disc{
+  color:#334155; background:#E2E8F0; border-color:#CBD5E1;
+}
+
+/* รอตรวจรับ / กำลังรับเข้า */
+.st-incoming{
+  color:#1D4ED8; background:#DBEAFE; border-color:#93C5FD;
+}
+
+/* รอคืน */
+.st-return{
+  color:#0369A1; background:#E0F2FE; border-color:#7DD3FC;
+}
+
+/* มือถือ: ลดขนาดนิดหน่อย */
+@media (max-width:640px){
+  .badge{ padding:.28rem .55rem; font-size:.8rem; min-width:92px; }
 }

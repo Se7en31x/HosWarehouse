@@ -1,216 +1,454 @@
-/* page.module.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-.container {
-    /* padding: 20px; */
-    background-color: #f0f2f5;
-    min-height: 100vh;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+:root {
+  --bg: #f0fbfe;
+  --panel: #fff;
+  --muted: #6b7280;
+  --text: #111827;
+  --border: #e5e7eb;
+  --primary: #008dda;
+  --primary-500: #41c9e2;
+  --primary-600: #1685bb;
+  --tint-100: #e9f6fb;
+  --tint-200: #ace2e1;
+  --radius: 10px;
+  --row-h: 56px;
+  /* สูงแถวคงที่ */
+  --rows-per-page: 10;
+  /* คงที่ 10 แถว/หน้า */
+  --th-font: .98rem;
+  --th-min-h: 56px;
+  --th-pad-y: 12px;
+  --th-pad-x: 12px;
+  --th-line: 1.25;
+  --z-header: 10;
+  --z-header: 10;
+  --z-toolbar: 1000;
 }
 
-.card {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 24px;
-    /* margin-bottom: 20px; */
+/* Layout */
+.pageBackground {
+  background: var(--bg);
+  min-height: 100vh;
+  font-family: 'Inter', system-ui;
 }
 
-.heading {
-    font-size: 24px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #e0e0e0;
-    padding-bottom: 10px;
+.containerCard {
+  background: var(--panel);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-.controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-bottom: 20px;
-    align-items: center;
+.title {
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  font-weight: 700;
+  color: #34495e;
+  text-align: center;
+  margin: 0 0 6px;
+}
+
+.title::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 4px;
+  background: var(--primary);
+  margin: .5rem auto 0;
+  border-radius: 2px;
+}
+
+/* Toolbar (ไม่มีตัวกรองเวลาแล้ว) */
+.toolbar {
+  position: relative;
+  /* << เพื่อให้ z-index ทำงาน */
+  z-index: var(--z-toolbar);
+  /* << ลอยเหนือหัวตาราง */
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  border: 1px solid #ace2e1;
+  border-radius: 12px;
+  padding: 12px;
+  background: #f6fbfd;
 }
 
 .filterGroup {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  display: flex;
+  gap: 8px;
 }
 
-.filterLabel {
-    color: #555;
-    font-weight: 500;
+.filterCol {
+  flex-direction: column;
+  align-items: flex-start;
 }
 
-.searchInput,
-.typeSelect {
-    padding: 8px 12px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 14px;
-    transition: border-color 0.3s;
+.label {
+  font-size: .9rem;
+  color: #374151;
+  font-weight: 600;
 }
 
-.searchInput:focus,
-.typeSelect:focus {
-    border-color: #007bff;
-    outline: none;
+.input {
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: .95rem;
+  background: #fff;
+  min-width: 220px;
+}
+
+.input:focus {
+  outline: 2px solid var(--primary-500);
+  outline-offset: 1px;
+}
+
+.typeGroup {
+  flex: 0 0 320px;
+  /* ความกว้างคงที่ ~320px */
+  max-width: 360px;
 }
 
 .clearBtn {
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background-color: #f44336;
-    color: #fff;
-    border: none;
+  background: #f44336;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 12px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
 }
 
 .clearBtn:hover {
-    background-color: #d32f2f;
+  background: #d32f2f;
 }
 
-.tableWrapper {
-    overflow-x: auto;
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
+/* Table (โค้ดหลักแบบ Grid) */
+.tableFrame {
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
+  background: #fff;
+  overflow: hidden;
+
+  /* คุมความกว้างคอลัมน์ที่เดียว ใช้ได้ทั้ง header/body */
+  --cols:
+    minmax(160px, 1.2fr)
+    /* รหัสอ้างอิง */
+    minmax(190px, 1.2fr)
+    /* เวลา/วันที่ล่าสุด */
+    minmax(160px, 1fr)
+    /* ประเภท */
+    minmax(180px, 1.1fr)
+    /* ผู้ทำรายการล่าสุด */
+    minmax(160px, 1fr)
+    /* แผนก */
+    minmax(160px, .9fr)
+    /* สถานะ */
+    minmax(150px, .9fr);
+  /* ดูรายละเอียด */
 }
 
-.table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 800px;
+.tableGrid {
+  display: grid;
+  grid-template-columns: var(--cols);
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.table th,
-.table td {
-    padding: 12px 16px;
-    text-align: left;
-    border-bottom: 1px solid #e0e0e0;
+.tableHeader {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  background: #eef9fc;
+  border-bottom: 1px solid var(--tint-200);
+  padding: var(--th-pad-y) var(--th-pad-x);
+  font-weight: 700;
+  color: #374151;
+  font-size: var(--th-font);
+  line-height: var(--th-line);
+  min-height: var(--th-min-h);
 }
 
-.table th {
-    background-color: #f8f9fa;
-    color: #555;
-    font-weight: 600;
-    cursor: pointer;
-    position: relative;
-    user-select: none;
+.headerItem {
+  padding: 0 var(--th-pad-x);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
 }
 
-.sortableHeader {
-    cursor: pointer;
+.sortable {
+  cursor: pointer;
+  user-select: none;
 }
 
-.sortableHeader svg {
-    margin-left: 5px;
+.sortIcon {
+  margin-left: 6px;
+  color: #68778a;
 }
 
-.rowWithData:hover {
-    background-color: #f0f0f0;
+/* Body */
+.inventory {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  overflow: hidden;
+  background: #fff;
 }
 
-.emptyRowPlaceholder td {
-    height: 50px;
-    border-bottom: 1px solid #e0e0e0;
+.tableRow {
+  box-sizing: border-box;
+  height: var(--row-h);
+  padding: 0 var(--th-pad-x);
+  border-top: 1px solid #deedf1;
 }
 
-.noDataRow td {
-    text-align: center;
-    padding: 20px;
-    color: #777;
-    font-style: italic;
+.tableRow:hover {
+  background: var(--tint-100);
 }
 
+.tableCell {
+  padding: 0 var(--th-pad-x);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+
+.centerCell {
+  display: flex;
+  justify-content: center;
+}
+
+/* .placeholderRow{ border-top:1px dashed #e2e8f0; color:transparent; } เติมแถวว่างให้ครบ 10 */
+
+.subRef {
+  font-size: .8rem;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+/* Status pill */
 .statusBadge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 12px;
-    color: #fff;
-    font-weight: bold;
-    font-size: 12px;
-    text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .35rem .7rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .8rem;
+  color: #fff;
+  min-width: 110px;
 }
 
+/* Detail button */
 .detailButton {
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.3s;
+  background: #007bff;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: .9rem;
+  transition: background-color .2s;
 }
 
 .detailButton:hover {
-    background-color: #0056b3;
+  background: #0056b3;
 }
 
-/* Pagination */
-.pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    margin-top: 20px;
-}
-
-.paginationBtn {
-    background-color: #fff;
-    color: #007bff;
-    border: 1px solid #ddd;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.paginationBtn:hover:not(:disabled) {
-    background-color: #e9ecef;
-}
-
-.paginationBtn:disabled {
-    color: #ccc;
-    cursor: not-allowed;
-}
-
-.activePage {
-    background-color: #007bff;
-    color: #fff;
-    border-color: #007bff;
-}
-
+/* Loading */
 .loadingContainer {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
 }
 
 .spinner {
-    border: 4px solid rgba(0, 0, 0, 0.1);
-    border-left-color: #007bff;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
+  border: 4px solid rgba(0, 0, 0, .1);
+  border-left-color: #007bff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
 }
 
 .loading {
-    margin-top: 10px;
-    color: #555;
+  margin-top: 10px;
+  color: #555;
 }
 
 @keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Pagination … + arrows */
+.paginationControls {
+  display: flex;
+  list-style: none;
+  padding: 10px;
+  margin: 0;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  background: #fff;
+  border-top: 1px
+    /*solid var(--tint-200);*/
+}
+
+.pageButton {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  min-width: 34px;
+  cursor: pointer;
+}
+
+.pageButton:hover:not(:disabled) {
+  background: #e9f6fb;
+}
+
+.pageButton:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.activePage {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.ellipsis {
+  color: var(--muted);
+}
+
+/* Errors / retry */
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.retryBtn {
+  border: none;
+  background: #0e86fd;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.retryBtn:hover {
+  background: #2368ad;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .tableFrame {
+    --cols:
+      minmax(140px, 1.1fr) minmax(170px, 1.1fr) minmax(150px, 1fr) minmax(160px, 1.1fr) minmax(140px, 1fr) minmax(140px, .9fr) minmax(130px, .9fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .inventory {
+    height: auto;
+  }
+
+  /* มือถือให้สูงตามเนื้อหา */
+}
+
+.typeGroup {
+  order: 1;
+  margin-right: auto;
+}
+
+.searchGroup {
+  order: 3;
+  margin-left: auto;
+}
+
+.clearBtn {
+  order: 4;
+}
+
+/* รองรับจอแคบ: เรียงลงมาเป็น ประเภท -> ค้นหา -> ล้าง */
+@media (max-width: 640px) {
+
+  .typeGroup,
+  .searchGroup,
+  .clearBtn {
+    order: initial;
+  }
+}
+
+/* ซ่อนเส้นคั่นของแถวว่างทั้งหมด */
+.placeholderRow {
+  border-top-color: transparent !important;
+  background: transparent !important;
+  pointer-events: none;
+  /* กัน hover/click เปล่า ๆ */
+}
+
+/* กันแถวว่างถัด ๆ ไปเกิดเส้นคั่นซ้ำ */
+.placeholderRow+.placeholderRow {
+  border-top-color: transparent !important;
+}
+
+.typeGroup {
+  max-width: 240px;
+}
+
+/* ── Base badge ───────────────────────────────── */
+.statusBadge{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:.35rem .7rem;border-radius:999px;font-weight:700;font-size:.8rem;
+  min-width:110px;line-height:1;border:1px solid transparent;
+}
+
+/* ── Generic ─────────────────────────────────── */
+.stDefault{ color:#374151; background:#F3F4F6; border-color:#E5E7EB; }
+
+/* ── Approval / Review ───────────────────────── */
+.stWaiting{  color:#92400E; background:#FEF3C7; border-color:#FDE68A; }      /* รอ/เข้าคิว */
+.stApproved{ color:#166534; background:#DCFCE7; border-color:#86EFAC; }      /* อนุมัติ */
+.stApprovedPartial{ color:#075985; background:#E0F2FE; border-color:#BAE6FD;}/* อนุฯ บางส่วน */
+.stMixed{    color:#5B21B6; background:#EDE9FE; border-color:#C4B5FD; }      /* อนุ/ปฏิเสธบางส่วน */
+.stRejected{ color:#9F1239; background:#FFE4E6; border-color:#FECDD3; }      /* ปฏิเสธ */
+.stRejectedPartial{ color:#7C2D12; background:#FFEDD5; border-color:#FDBA74;}/* ปฏิเสธบางส่วน */
+.stCanceled{ color:#374151; background:#F3F4F6; border-color:#E5E7EB; }      /* ยกเลิก */
+
+/* ── Processing / Movement ───────────────────── */
+.stProcessing{ color:#1E3A8A; background:#DBEAFE; border-color:#93C5FD; }    /* กำลังดำเนินการ */
+.stMoved{      color:#3730A3; background:#E0E7FF; border-color:#C7D2FE; }    /* โอน/เคลื่อนย้าย */
+.stAdjusted{   color:#86198F; background:#FAE8FF; border-color:#F5D0FE; }    /* ปรับปรุง */
+
+/* ── Done / Imported ─────────────────────────── */
+.stCompleted{ color:#1F2937; background:#E2E8F0; border-color:#CBD5E1; }     /* เสร็จสิ้น/นำเข้าแล้ว */
+
+/* ── Returns ─────────────────────────────────── */
+.stReturn{          color:#115E59; background:#CCFBF1; border-color:#99F6E4; }/* คืน (ปกติ) */
+.stReturnPartial{   color:#075985; background:#E0F2FE; border-color:#BAE6FD; }/* คืนบางส่วน */
+.stReturnComplete{  color:#166534; background:#DCFCE7; border-color:#86EFAC; }/* คืนครบ */
+.stReturnDamaged{   color:#9F1239; background:#FFE4E6; border-color:#FECDD3; }/* คืนชำรุด */
+.stReturnLost{      color:#334155; background:#F1F5F9; border-color:#E2E8F0; }/* สูญหาย */
+
+/* มือถือ: ย่อขนาดนิดนึง */
+@media (max-width:640px){
+  .statusBadge{ padding:.28rem .55rem; font-size:.78rem; min-width:98px; }
 }

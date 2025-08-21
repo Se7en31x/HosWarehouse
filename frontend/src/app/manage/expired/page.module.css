@@ -1,96 +1,509 @@
-/* page.module.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #f0fbfe;
+  --panel: #fff;
+  --muted: #6b7280;
+  --text: #111827;
+  --border: #e5e7eb;
+  --primary: #008dda;
+  --primary-500: #41c9e2;
+  --primary-600: #1685bb;
+  --tint-100: #e9f6fb;
+  --tint-200: #ace2e1;
+  --radius: 10px;
+  --row-h: 56px;
+  --rows-per-page: 12;
+  --th-font: 1.0rem;
+  --th-min-h: 56px;
+  --th-pad-y: 12px;
+  --th-pad-x: 12px;
+  --th-line: 1.25;
+  --z-header: 10;
+  /* ปรับความสูงช่องกรอกได้จากตัวแปรนี้ */
+  --swal-focus: #0e86fd;
+  --swal-input-w: 320px;    /* ลอง 280px, 300px, 360px ได้ */
+  --swal-input-h: 40px;     /* สูงเท่าเดิม (ปรับได้) */
+}
+
+/* ===== Layout ===== */
+.pageBackground {
+  background: var(--bg);
+  min-height: 100vh;
+  font-family: 'Inter', system-ui;
+}
 
 .container {
-  padding: 20px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  height: 100%; /* ให้ container ใช้ความสูงเต็มที่ของ parent */
+  min-height: 100vh;
+  background: var(--panel);
+  color: var(--text);
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  background-color: white;
+  gap: 14px;
 }
 
 .title {
-  font-size: 2.5rem;
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
   font-weight: 700;
-  color: #1a202c;
-  margin-bottom: 2rem;
+  color: #34495e;
+  text-align: center;
+  margin: 0 0 4px;
+}
+
+.title::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 4px;
+  background: var(--primary);
+  margin: .5rem auto 0;
+  border-radius: 2px;
+}
+
+.infoMessage {
+  text-align: center;
+  padding: 12px;
+  border: 1px solid #cce7ff;
+  background: #eaf6ff;
+  color: #0e86fd;
+  border-radius: 8px;
+}
+
+.errorMessage {
+  text-align: center;
+  padding: 12px;
+  border: 1px solid #f5c6cb;
+  background: #ffeaea;
+  color: #c0392b;
+  border-radius: 8px;
+}
+
+/* ===== Table Frame: ใช้ grid เดียวกันทั้ง header/body ===== */
+.tableFrame {
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
+  background: #fff;
+  overflow: hidden;
+
+  /* คุมความกว้างคอลัมน์จากที่เดียว */
+  --cols:
+    minmax(140px, 1.2fr)
+    /* Lot Number */
+    minmax(180px, 2fr)
+    /* ชื่อพัสดุ */
+    minmax(120px, .9fr)
+    /* จำนวนทั้งหมด */
+    minmax(140px, .9fr)
+    /* เหลือให้ทำลาย */
+    minmax(120px, .9fr)
+    /* ทำลายแล้ว */
+    minmax(100px, .8fr)
+    /* หน่วย */
+    minmax(150px, 1.1fr)
+    /* วันที่หมดอายุ */
+    minmax(160px, 1.2fr)
+    /* สถานะ */
+    minmax(160px, 1.1fr)
+    /* จัดการ */
+  ;
+}
+
+.tableGrid {
+  display: grid;
+  grid-template-columns: var(--cols);
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Header sticky */
+.tableHeader {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  background: #eef9fc;
+  border-bottom: 1px solid var(--tint-200);
+  padding: var(--th-pad-y) var(--th-pad-x);
+  font-weight: 700;
+  color: #374151;
+  font-size: var(--th-font);
+  line-height: var(--th-line);
+  min-height: var(--th-min-h);
+}
+
+.headerItem {
+  padding: 0 var(--th-pad-x);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+
+/* Body: ล็อกสูง 12 แถว */
+.inventory {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  overflow: hidden;
+  background: #fff;
+}
+
+.tableRow {
+  box-sizing: border-box;
+  height: var(--row-h);
+  padding: 0 var(--th-pad-x);
+  border-top: 1px solid #deedf1;
+}
+
+.tableRow:hover {
+  background: var(--tint-100);
+}
+
+.tableCell {
+  padding: 0 var(--th-pad-x);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+
+.centerCell {
+  display: flex;
+  justify-content: center;
+}
+
+/* จัดแนวหัว/บอดี้ให้ตรงกันสำหรับคอลัมน์ตัวเลข/สถานะ/ปุ่ม */
+.tableHeader .headerItem:nth-child(3),
+.tableHeader .headerItem:nth-child(4),
+.tableHeader .headerItem:nth-child(5),
+.tableHeader .headerItem:nth-child(6),
+.tableHeader .headerItem:nth-child(8),
+.tableHeader .headerItem:nth-child(9) {
   text-align: center;
 }
 
-.tableWrapper {
-  flex: 1; /* ขยายให้เต็มพื้นที่ที่เหลือ */
-  overflow-x: auto;
-  overflow-y: auto;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+.inventory .tableRow>.tableCell:nth-child(3),
+.inventory .tableRow>.tableCell:nth-child(4),
+.inventory .tableRow>.tableCell:nth-child(5),
+.inventory .tableRow>.tableCell:nth-child(6),
+.inventory .tableRow>.tableCell:nth-child(8),
+.inventory .tableRow>.tableCell:nth-child(9) {
+  display: flex;
+  justify-content: center;
 }
 
-.table {
-  width: 100%;
-  border-collapse: collapse;
+/* ไม่มีข้อมูล */
+.noDataMessage {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
 }
 
-.table thead {
-  background-color: #e2e8f0;
-  color: #4a5568;
+/* ===== สถานะ & ป้ายครบแล้ว ===== */
+.statusBadge{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:.35rem .7rem; border-radius:999px; font-weight:700; font-size:.86rem;
+  min-width:110px; line-height:1; white-space:nowrap; border:1px solid transparent;
 }
 
-.table th,
-.table td {
-  padding: 1rem;
-  text-align: left;
-  border-bottom: 1px solid #e2e8f0;
-  white-space: nowrap;
+/* ทำลายครบแล้ว (เขียว) */
+.statusComplete{
+  color:#166534;               /* emerald-800 */
+  background:#DCFCE7;          /* emerald-100 */
+  border-color:#86EFAC;        /* emerald-300 */
 }
 
-.table th {
-  font-weight: 600;
-  font-size: 0.9rem;
+/* ทำลายบางส่วนแล้ว (ฟ้า) */
+.statusPartial{
+  color:#1E3A8A;               /* blue-800 */
+  background:#DBEAFE;          /* blue-100 */
+  border-color:#93C5FD;        /* blue-300 */
 }
 
-.table tbody tr:hover {
-  background-color: #f0f4f8;
+/* รอดำเนินการ (เหลือง) */
+.statusPending{
+  color:#92400E;               /* amber-800 */
+  background:#FEF3C7;          /* amber-100 */
+  border-color:#FDE68A;        /* amber-200/300 */
 }
 
-.actionBtn {
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  border: none;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.actionBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.btnDispose {
-  background-color: #f56565; /* Red */
-  color: #fff;
+/* ป้าย “ครบแล้ว” ข้างปุ่ม (คงโทนให้เข้ากัน) */
+.doneLabel{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:4px 10px; border-radius:999px; font-weight:700; font-size:.85rem;
+  color:#166534; background:#ECFDF5; border:1px solid #86EFAC; min-height:28px; margin-right:8px;
 }
 
 .doneLabel {
-  background-color: #a0aec0; /* Gray */
-  color: #fff;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-weight: 500;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .85rem;
+  background: #ecfdf5;
+  color: #166534;
+  border: 1px solid #86efac;
+  min-height: 28px;
+  margin-right: 8px;
 }
 
-/* Responsive styles */
-@media (max-width: 768px) {
-  .title {
-    font-size: 2rem;
+/* ===== ปุ่มจัดการ ===== */
+.actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actions > * + *{
+  margin-left: 8px;  /* ปรับเป็น 10 หรือ 12 ได้ตามต้องการ */
+}
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: .85rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color .2s, transform .1s;
+  color: #fff;
+  line-height: 1;
+  min-height: 32px;
+}
+
+.actionBtn:active {
+  transform: translateY(1px);
+}
+
+.btnDispose {
+  background: #e53e3e;
+}
+
+.btnDispose:hover {
+  background: #c53030;
+}
+
+.btnHistory {
+  background: #4b5563;
+}
+
+.btnHistory:hover {
+  background: #374151;
+}
+
+/* ไอคอน 'ครบแล้ว' (ไม่สามารถกดได้) */
+
+.doneIcon{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:6px 12px; min-height:32px; border-radius:8px;
+  background:#ecfdf5; border:1px solid #86efac; color:#16a34a;
+  pointer-events:none; user-select:none; line-height:1; box-sizing:border-box;
+}
+.doneIcon svg{ width:16px; height:16px; }
+
+/* ===== Pagination (เลขหน้า + … + ลูกศร) ===== */
+.paginationControls {
+  display: flex;
+  list-style: none;
+  padding: 10px;
+  margin: 0;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  background: #fff;
+  /* border-top: 1px solid var(--tint-200); */
+}
+
+.pageButton {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  min-width: 34px;
+  cursor: pointer;
+}
+
+.pageButton:hover:not(:disabled) {
+  background: #e9f6fb;
+}
+
+.pageButton:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.activePage {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.ellipsis {
+  color: var(--muted);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1024px) {
+  .tableFrame {
+    --cols:
+      minmax(120px, 1.2fr) minmax(160px, 2fr) minmax(100px, .9fr) minmax(120px, .9fr) minmax(100px, .9fr) minmax(90px, .8fr) minmax(130px, 1.1fr) minmax(140px, 1.2fr) minmax(140px, 1.1fr);
   }
 }
 
-@media (max-width: 480px) {
-  .title {
-    font-size: 1.5rem;
+@media (max-width: 640px) {
+  .inventory {
+    height: auto;
+  }
+
+  /* มือถือให้สูงตามเนื้อหา */
+}
+
+/* ===== SweetAlert2 Theming ===== */
+.swalPopup {
+  border-radius: 12px !important;
+  padding: 18px 20px !important;
+  /* เผื่อขอบซ้ายขวาให้พอดี */
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .12) !important;
+}
+
+.swalTitle {
+  font-weight: 800 !important;
+  font-size: 1.1rem !important;
+  color: #1f2937 !important;
+  margin-bottom: 8px !important;
+}
+
+.swalHtml {
+  max-height: 420px !important;
+  overflow: auto !important;
+  width: 100%;
+  padding: 0 !important;
+  /* กันขอบใน container ดันความกว้าง */
+}
+
+/* input ของ SweetAlert (number) */
+.swalInput {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  height: 44px !important;
+  margin: 0 !important;
+  padding: 0 12px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+  outline: none !important;
+}
+
+.swalInput:focus {
+  border-color: var(--primary-600) !important;
+  box-shadow: 0 0 0 3px rgba(0, 141, 218, .15) !important;
+}
+
+/* ปุ่มใน popup */
+.swalActions {
+  display: flex !important;
+  gap: 10px !important;
+  justify-content: flex-end !important;
+  margin-top: 12px !important;
+}
+
+.swalConfirm,
+.swalCancel {
+  border: 1px solid transparent !important;
+  border-radius: 8px !important;
+  padding: 8px 14px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  font-size: .9rem !important;
+}
+
+.swalConfirm {
+  background: var(--primary) !important;
+  color: #fff !important;
+}
+
+.swalConfirm:hover {
+  background: var(--primary-600) !important;
+}
+
+.swalCancel {
+  background: #fff !important;
+  color: #374151 !important;
+  border-color: var(--border) !important;
+}
+
+.swalCancel:hover {
+  background: var(--tint-100) !important;
+}
+
+/* ตารางในป๊อปอัปประวัติ */
+:global(.swal-history) {
+  max-height: 320px;
+  overflow: auto;
+  border: 1px solid var(--tint-200);
+  border-radius: 10px;
+}
+
+:global(.swal-history table) {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+}
+
+:global(.swal-history thead tr) {
+  background: #eef9fc;
+}
+
+:global(.swal-history th),
+:global(.swal-history td) {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e9eef3;
+  text-align: left;
+  white-space: nowrap;
+}
+
+:global(.swal-history tbody tr:nth-child(even)) {
+  background: #f8fbfd;
+}
+
+:global(.swal-history td.qty) {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+/* ==== SweetAlert2 – ปรับ label ของ inputLabel ==== */
+/* วางใน page.module.css ของหน้านี้ หรือใน app/globals.css ถ้าต้องการใช้ทุกหน้า */
+
+:global(div:where(.swal2-container) label:where(.swal2-input-label)) {
+  display: flex;
+  justify-content: center;
+  margin: 6px auto 12px !important;
+  /* ขยับขึ้นและลดช่องว่างลง */
+  line-height: 1.3;
+  font-weight: 600;
+  color: #475569;
+  /* เทาอ่านง่าย */
+}
+
+/* ทำให้ช่องกรอกแคบลงและอยู่กึ่งกลาง */
+:global(.swal2-popup .swal2-input){
+  width: var(--swal-input-w) !important;  /* << ปรับความกว้างตรงนี้ */
+  max-width: 100% !important;             /* กันหลุดจอ */
+  height: var(--swal-input-h) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box;
+}
+
+/* ถ้าหน้าจอเล็ก ให้แคบลงอีกนิด */
+@media (max-width: 480px){
+  :global(.swal2-popup .swal2-input){
+    width: 240px !important;
   }
 }

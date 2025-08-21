@@ -1,132 +1,196 @@
+/* =============================
+   Detail Page Styles (refined)
+   ============================= */
+:root{
+  --bg: #f7fafc;
+  --panel: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e5e7eb;
+
+  --primary: #0ea5e9;    /* ฟ้าอ่อน */
+  --primary-600: #0284c7;/* ฟ้าเข้ม */
+
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --danger:  #ef4444;
+}
+
 /* Container หลักของหน้ารายละเอียดพัสดุ */
 .container {
-  max-width: 900px;
-  margin: 1.5rem auto;
-  padding: 1rem 2rem;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgb(0 0 0 / 0.1);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #333;
+  max-width: 1000px;
+  margin: 24px auto 56px;
+  padding: 20px 22px;
+  background: var(--panel);
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 28px rgba(2, 8, 23, 0.06);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  color: var(--text);
 }
 
 /* หัวเรื่อง */
 .title {
-  font-size: 1.8rem;
-  margin-bottom: 1rem;
-  font-weight: 600;
-  color: #004a99;
+  font-size: 1.9rem;
+  margin: 0 0 14px;
+  font-weight: 800;
   text-align: center;
+  letter-spacing: .2px;
+
+  /* ไล่สีตัวอักษร */
+  background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 40%, #0ea5e9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
-/* ข้อความโหลดข้อมูล */
+/* ข้อความสถานะ */
 .loading,
 .error,
 .noData {
   text-align: center;
-  font-size: 1.2rem;
-  padding: 2rem;
-  color: #666;
+  font-size: 1rem;
+  padding: 18px 14px;
+  color: var(--muted);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: #f8fafc;
+  margin: 12px 0;
 }
 
 /* ข้อความ error เน้นสีแดง */
 .error {
-  color: #d9534f;
-  font-weight: 600;
+  color: #b91c1c;
+  border-color: #fecaca;
+  background: #fef2f2;
+  font-weight: 700;
 }
 
 /* กล่องปุ่มกลับ */
 .buttonContainer {
-  margin-top: 2rem;
+  margin-top: 22px;
   text-align: center;
 }
 
 /* ปุ่มกลับ */
 .backButton {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 0.6rem 1.4rem;
-  font-size: 1rem;
-  border-radius: 5px;
+  appearance: none;
+  background: var(--primary);
+  color: #fff;
+  border: 1px solid var(--primary-600);
+  padding: 10px 16px;
+  font-size: 0.98rem;
+  border-radius: 12px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  font-weight: 700;
+  box-shadow: 0 10px 22px rgba(2, 132, 199, 0.18);
+  transition: transform .05s ease, box-shadow .18s ease, background .18s ease;
 }
-.backButton:hover {
-  background-color: #0056b3;
-}
+.backButton:hover { background: var(--primary-600); }
+.backButton:active { transform: translateY(1px); }
 
 /* ----- สำหรับ BasicDetail ----- */
 
 /* แต่ละส่วน fieldset */
 .section {
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  padding: 1rem 1.2rem 1.5rem;
-  margin-bottom: 1.6rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 16px 18px;
+  margin-bottom: 18px;
   background-color: #fff;
+  box-shadow: 0 8px 18px rgba(2, 8, 23, 0.04);
+  position: relative;
 }
 
-/* legend ของ fieldset */
+/* legend ของ fieldset (สไตล์เป็น pill) */
 .section legend {
-  padding: 0 0.6rem;
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: #007bff;
+  padding: 6px 12px;
+  font-weight: 800;
+  font-size: 1rem;
+  color: #0f172a;
+  background: #eef2ff;
+  border: 1px solid #e0e7ff;
+  border-radius: 999px;
+  display: inline-block;
 }
 
 /* Grid layout ของกล่องข้อมูล */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.2rem 1.6rem;
-  margin-top: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px 18px;
+  margin-top: 12px;
 }
 
 /* แต่ละ field แสดง label กับ input */
 .field {
   display: flex;
   flex-direction: column;
+  gap: 6px;
 }
 
 /* Label */
 .field label {
-  font-weight: 600;
-  margin-bottom: 0.4rem;
-  color: #555;
-  font-size: 0.95rem;
+  font-weight: 700;
+  color: #334155;
+  font-size: 0.92rem;
+  letter-spacing: .2px;
 }
 
-/* Input แบบ disabled */
+/* Input แบบ disabled / read-only look */
 .field input {
-  padding: 0.45rem 0.6rem;
-  font-size: 1rem;
-  border: 1px solid #bbb;
-  border-radius: 4px;
-  background-color: #eee;
-  color: #444;
+  padding: 10px 12px;
+  font-size: 0.98rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background-color: #f8fafc;
+  color: #0f172a;
   cursor: not-allowed;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.75);
 }
 
 /* รูปภาพตัวอย่างพัสดุ */
 .imagePreview {
   text-align: center;
-  margin-top: 0.8rem;
+  margin-top: 10px;
 }
 
 .imagePreview img {
-  max-width: 200px;
-  max-height: 200px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  object-fit: contain;
-  box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+  max-width: 220px;
+  max-height: 220px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  object-fit: cover;
+  box-shadow: 0 10px 24px rgba(2, 8, 23, 0.10);
 }
 
 /* ข้อความไม่มีรูป */
 .section p {
-  color: #888;
+  color: var(--muted);
   font-style: italic;
   text-align: center;
-  margin-top: 0.6rem;
+  margin-top: 8px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px){
+  .container { padding: 16px 14px; }
+  .title { font-size: 1.6rem; }
+  .grid { grid-template-columns: 1fr; }
+}
+
+/* ให้ textarea หน้าตาเหมือน input เดิม */
+.field textarea {
+  padding: 10px 12px;
+  font-size: 0.98rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background-color: #f8fafc;
+  color: #0f172a;
+  min-height: 96px;
+  /* เลือกอย่างใดอย่างหนึ่ง */
+  /* resize: vertical;  // อนุญาตยืดเฉพาะแนวตั้ง */
+  /* resize: horizontal;// อนุญาตยืดเฉพาะแนวนอน */
+  /* ↓ ใช้อันนี้ถ้าจะล็อคเลย */
+  resize: none; 
 }

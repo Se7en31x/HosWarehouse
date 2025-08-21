@@ -1,30 +1,54 @@
-/* page.module.css - New, Improved Design */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #f0fbfe;
+  --panel: #fff;
+  --muted: #6b7280;
+  --text: #111827;
+  --border: #e5e7eb;
+  --primary: #008dda;
+  --primary-500: #41c9e2;
+  --primary-600: #1685bb;
+  --success: #16a34a;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --tint-100: #e9f6fb;
+  --tint-200: #ace2e1;
+  --radius: 10px;
+  --row-h: 56px;
+  --rows-per-page: 12;
+  --th-font: 1.0rem;
+  --th-min-h: 56px;
+  --th-pad-y: 12px;
+  --th-pad-x: 12px;
+  --th-letter: .01em;
+  --th-line: 1.25;
+  --z-header: 10;
+  --z-toolbar: 100;
+}
 
 .pageBackground {
-  background-color: #f4f7f9;
+  background: var(--bg);
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: 'Inter', system-ui;
 }
 
 .container {
-  padding: 20px;
-  background-color: #fff;
-  display: flex; /* กำหนดให้เป็น Flex container */
-  flex-direction: column; /* จัดเรียง item ในแนวตั้ง */
-  min-height: 100vh; /* กำหนดความสูงขั้นต่ำให้เต็ม viewport height */
-}
-
-.content {
-  flex-grow: 1; /* ทำให้เนื้อหาหลักขยายเพื่อเติมเต็มพื้นที่ที่เหลือ */
+  min-height: 100vh;
+  background: var(--panel);
+  color: var(--text);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .title {
-  font-size: 2rem;
-  color: #2c3e50;
-  margin-bottom: 2rem;
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  font-weight: 700;
+  color: #34495e;
   text-align: center;
-  font-weight: 600;
-  position: relative;
+  margin: 0 0 4px;
 }
 
 .title::after {
@@ -32,150 +56,391 @@
   display: block;
   width: 60px;
   height: 4px;
-  background-color: #3498db;
-  margin: 0.5rem auto 0;
+  background: var(--primary);
+  margin: .5rem auto 0;
   border-radius: 2px;
 }
 
-.infoMessage, .errorMessage {
+.infoMessage,
+.errorMessage {
   text-align: center;
-  padding: 1rem;
-  margin: 1.5rem 0;
+  padding: 12px;
+  margin: 8px 0;
   border-radius: 8px;
   font-weight: 500;
 }
 
 .infoMessage {
-  background-color: #eaf6ff;
-  color: #3498db;
+  background: #eaf6ff;
+  color: #0e86fd;
   border: 1px solid #cce7ff;
 }
 
 .errorMessage {
-  background-color: #ffeaea;
+  background: #ffeaea;
   color: #c0392b;
   border: 1px solid #f5c6cb;
+}
+
+/* ===== Toolbar (ฟิลเตอร์) ===== */
+.toolbar {
+  position: relative;
+  z-index: var(--z-toolbar);
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  border: 1px solid var(--tint-200);
+  border-radius: 12px;
+  padding: 12px;
+  background: #f6fbfd;
+}
+
+.filterGrid {
+  display: grid;
+  gap: 12px;
+  flex: 1;
+}
+
+/* ↓ ปรับให้ "ประเภท" เล็กลง และ "สถานะ" กว้างคงที่ */
+.filterGrid3 {
+  grid-template-columns: 180px 230px;
+}
+
+.filterGrid3>.filterGroup:first-child {
+  width: 180px;
+  min-width: 160px;
+}
+
+/* ประเภท */
+.statusGroup {
+  width: 230px;
+  min-width: 200px;
+}
+
+/* สถานะ */
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: .85rem;
+  color: #374151;
+  font-weight: 600;
+}
+
+.input {
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: .95rem;
+  background: #fff;
+}
+
+.input:focus {
+  outline: 2px solid var(--primary-500);
+  outline-offset: 1px;
+}
+
+.searchCluster {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.ghostBtn {
+  background: #fff;
+  color: #374151;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  height: 40px;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.ghostBtn:hover {
+  background: #e9f6fb;
+}
+
+.clearButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary-600);
+}
+
+/* ===== Table ===== */
+.tableFrame {
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
+  background: #fff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  /* ให้ pagination อยู่ชิดล่างกรอบ */
+}
+
+.tableWrapper {
+  width: 100%;
+  overflow: auto;
+  height: calc(var(--row-h) * var(--rows-per-page) + var(--th-min-h));
+  max-height: calc(var(--row-h) * var(--rows-per-page) + var(--th-min-h));
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1.5rem;
-  text-align: left;
+  font-size: .95rem;
 }
 
-.table th,
-.table td {
-  padding: 16px 20px;
-  border-bottom: 1px solid #e9ecef;
-  transition: background-color 0.2s ease-in-out;
-}
-
-.table th {
-  background-color: #ecf0f1;
-  color: #7f8c8d;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.85rem;
-  letter-spacing: 0.5px;
-}
-
-.table tbody tr:hover {
-  background-color: #f8f9fa;
-}
-
-.table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.statusBadge {
-  display: inline-block;
-  padding: 0.4em 0.8em;
-  border-radius: 20px;
-  font-size: 0.8em;
+.table thead th {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  background: #eef9fc;
+  border-bottom: 1px solid var(--tint-200);
+  padding: var(--th-pad-y) var(--th-pad-x);
   font-weight: 700;
-  color: #fff;
-  text-transform: capitalize;
-  min-width: 80px;
+  color: #374151;
+  font-size: var(--th-font);
+  line-height: var(--th-line);
+  min-height: var(--th-min-h);
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* หัวคอลัมน์ที่ต้องการกึ่งกลาง */
+.table th:nth-child(1),
+.table th:nth-child(4),
+.table th:nth-child(5),
+.table th:nth-child(8),
+.table th:nth-child(9),
+.table th:nth-child(10) {
   text-align: center;
 }
 
-.statusApproved {
-  background-color: #2ecc71;
+.table td {
+  padding: 10px 12px;
+  border-top: 1px solid #deedf1;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
-.statusPartial {
-  background-color: #f39c12;
+.table tbody tr {
+  height: var(--row-h);
+  box-sizing: border-box;
 }
 
-.statusDeducted {
-  background-color: #3498db;
+.table tbody tr:hover {
+  background: #e9f6fb;
 }
 
-.statusCompleted {
-  background-color: #95a5a6;
+/* ✅ ให้ td จัดตำแหน่ง “ขนาน” กับ th */
+.table td:nth-child(1),
+.table td:nth-child(4),
+.table td:nth-child(5),
+.table td:nth-child(8),
+.table td:nth-child(9),
+.table td:nth-child(10) {
+  text-align: center;
 }
 
+.table td:nth-child(2),
+/* รหัสคำขอ */
+.table td:nth-child(3),
+/* วันที่ขอ */
+.table td:nth-child(6),
+/* ผู้ขอ */
+.table td:nth-child(7) {
+  /* แผนก */
+  text-align: left;
+}
+
+/* เลขให้กว้างเท่ากัน */
+.table td:nth-child(1),
+.table td:nth-child(2),
+.table td:nth-child(3),
+.table td:nth-child(4),
+.table td:nth-child(5) {
+  font-variant-numeric: tabular-nums;
+}
+
+.emptyRow {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+/* Count badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.badgeInfo {
+  background: #e0f2fe;
+  color: #075985;
+  border-color: #bae6fd;
+}
+
+.badgeNeutral {
+  background: #ede9fe;
+  color: #4c1d95;
+  border-color: #ddd6fe;
+}
+
+.badgeSoft {
+  background: #f1f5f9;
+  color: #334155;
+  border-color: #e2e8f0;
+}
+
+/* Status badge */
+/* Status badge — simple, flat, accessible (same palette across pages) */
+.statusBadge{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:.35rem .7rem;border-radius:999px;font-weight:700;font-size:.86rem;
+  min-width:108px;white-space:nowrap;line-height:1;border:1px solid transparent;
+}
+
+/* อนุมัติทั้งหมด */
+.statusApproved{            /* emerald */
+  color:#166534;background:#DCFCE7;border-color:#86EFAC;
+}
+
+/* อนุมัติ/ปฏิเสธบางส่วน */
+.statusPartial{             /* blue */
+  color:#1E3A8A;background:#DBEAFE;border-color:#93C5FD;
+}
+
+/* เบิก-จ่ายแล้ว (ตัดสต็อกแล้วบางส่วน/ทั้งหมด) */
+.statusDeducted{            /* violet */
+  color:#5B21B6;background:#EDE9FE;border-color:#C4B5FD;
+}
+
+/* เสร็จสิ้น */
+.statusCompleted{           /* gray neutral */
+  color:#374151;background:#F3F4F6;border-color:#E5E7EB;
+}
+
+/* รอเบิก-จ่าย */
+.statusPendingDeduction{    /* amber */
+  color:#92400E;background:#FEF3C7;border-color:#FDE68A;
+}
+
+/* ปฏิเสธทั้งหมด (เผื่อ) */
+.statusRejected{            /* rose */
+  color:#9F1239;background:#FFE4E6;border-color:#FECDD3;
+}
+
+/* ยกเลิก (เผื่อ) */
+.statusCanceled{            /* slate */
+  color:#334155;background:#E2E8F0;border-color:#CBD5E1;
+}
+
+/* ดีฟอลต์ */
+.statusDefault{
+  color:#374151;background:#F3F4F6;border-color:#E5E7EB;
+}
+
+/* Primary button */
 .button {
   border: none;
-  border-radius: 25px;
-  padding: 10px 20px;
-  font-weight: 600;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 0.9rem;
-  display: flex;
+  font-size: .9rem;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
 }
 
 .primaryButton {
-  background-color: #0e86fd;
-  color: #ffffff;
+  background: #0e86fd;
+  color: #fff;
 }
 
 .primaryButton:hover {
-  background-color: #2368ad;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background: #1685bb;
 }
 
-.pagination {
-  margin-top: auto; /* ดัน pagination ไปอยู่ด้านล่างสุด */
-  padding: 20px; /* เพิ่ม padding เล็กน้อยเพื่อความสวยงาม */
-  background-color: #ffffff; /* ตัวอย่างสีพื้นหลัง */
-  width: 100%; /* ทำให้ pagination กว้างเต็มพื้นที่ */
-  display: flex; /* เพื่อจัดเรียงปุ่มและข้อความภายใน */
-  justify-content: center; /* จัดให้อยู่กึ่งกลาง */
+/* ===== Pagination ===== */
+.paginationControls {
+  display: flex;
+  list-style: none;
+  padding: 10px;
+  margin: 0;
+  gap: 6px;
+  justify-content: center;
   align-items: center;
+  background: #fff;
+  /* border-top: 1px solid var(--tint-200); */
 }
 
 .pageButton {
-  background-color: #e9ecef;
-  color: #495057;
-  border: 1px solid #ced4da;
-  padding: 8px 16px;
+  background: #fff;
+  border: 1px solid var(--border);
   border-radius: 8px;
+  padding: 6px 10px;
+  min-width: 34px;
   cursor: pointer;
-  transition: background-color 0.2s, color 0.2s;
+}
+
+.pageButton:hover:not(:disabled) {
+  background: #e9f6fb;
 }
 
 .pageButton:disabled {
+  opacity: .5;
   cursor: not-allowed;
-  opacity: 0.6;
 }
 
-.pageButton:not(:disabled):hover {
-  background-color: #dee2e6;
+.activePage {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
 }
 
-.pagination span {
-  font-weight: 500;
-  color: #495057;
+.ellipsis {
+  color: var(--muted);
 }
 
-.placeholderRow td {
-  height: 50px;
-  border-bottom: none;
-  background-color: #fcfcfc;
+/* Responsive */
+@media (max-width:1024px) {
+  .filterGrid3 {
+    grid-template-columns: 1fr;
+  }
+
+  .filterGrid3>.filterGroup:first-child,
+  .statusGroup {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .tableWrapper {
+    height: auto;
+    max-height: none;
+  }
+
+  .emptyRow {
+    height: auto;
+    padding: 18px;
+  }
 }

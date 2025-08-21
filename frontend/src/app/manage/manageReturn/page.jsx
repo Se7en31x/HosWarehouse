@@ -1,15 +1,43 @@
-// app/manageReturn/page.jsx
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
 import axiosInstance from '@/app/utils/axiosInstance';
+import dynamic from 'next/dynamic';
+import { Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+
+const Select = dynamic(() => import('react-select'), { ssr: false });
 
 const STATUS_OPTS = [
   { value: 'due_soon', label: 'ใกล้ครบกำหนด' },
   { value: 'overdue', label: 'เกินกำหนด' },
   { value: 'all', label: 'ทั้งหมดที่ค้างคืน' },
 ];
+
+const customSelectStyles = {
+  control: (base, state) => ({
+    ...base,
+    borderRadius: '0.5rem',
+    minHeight: '2.5rem',
+    borderColor: state.isFocused ? '#2563eb' : '#e5e7eb',
+    boxShadow: 'none',
+    '&:hover': { borderColor: '#2563eb' },
+  }),
+  menu: (base) => ({
+    ...base,
+    borderRadius: '0.5rem',
+    marginTop: 6,
+    border: '1px solid #e5e7eb',
+    zIndex: 9000,
+  }),
+  menuPortal: (base) => ({ ...base, zIndex: 9000 }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isFocused ? '#f1f5ff' : '#fff',
+    color: '#111827',
+    padding: '8px 12px',
+  }),
+};
 
 // helper: format date TH
 const fdate = (d) => {
@@ -31,7 +59,12 @@ export default function ManageReturnPage() {
   const limit = 12;
   const abortRef = useRef(null);
 
-  // debounce ค้นหา 400ms
+  const menuPortalTarget = useMemo(
+    () => (typeof window !== 'undefined' ? document.body : null),
+    []
+  );
+
+  // debounce 400ms
   const dq = useMemo(() => q.trim().toLowerCase(), [q]);
   const [debouncedQ, setDebouncedQ] = useState(dq);
   useEffect(() => {
@@ -51,8 +84,6 @@ export default function ManageReturnPage() {
         params: { q: debouncedQ, status, page, limit },
         signal: controller.signal,
       });
-
-      // โครงสร้างใหม่จาก API
       setRows(Array.isArray(res?.data?.rows) ? res.data.rows : []);
       setTotalPages(Number(res?.data?.totalPages) || 1);
     } catch (e) {
@@ -69,103 +100,166 @@ export default function ManageReturnPage() {
     fetchData();
   }, [debouncedQ, status, page]);
 
-  const onSubmitSearch = (e) => {
-    e.preventDefault();
+  const clearFilters = () => {
+    setQ('');
+    setStatus('all');
     setPage(1);
-    setDebouncedQ(dq);
+    setDebouncedQ('');
+  };
+
+  const getPageNumbers = () => {
+    const total = totalPages;
+    const currentPage = page;
+    const pages = [];
+    if (total <= 7) for (let i = 1; i <= total; i++) pages.push(i);
+    else if (currentPage <= 4) pages.push(1, 2, 3, 4, 5, '...', total);
+    else if (currentPage >= total - 3) pages.push(1, '...', total - 4, total - 3, total - 2, total - 1, total);
+    else pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', total);
+    return pages;
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.card}>
-        <div className={styles.header}>
-          <h1 className={styles.heading}>คำขอที่มีการยืม (สำหรับตรวจรับคืน)</h1>
-          <form className={styles.controls} onSubmit={onSubmitSearch}>
-            <input
-              className={styles.input}
-              placeholder="ค้นหา: รหัสคำขอ / ผู้ขอ / รายการพัสดุ"
-              value={q}
-              onChange={(e) => { setQ(e.target.value); setPage(1); }}
-            />
-            <select
-              className={styles.select}
-              value={status}
-              onChange={(e) => { setStatus(e.target.value); setPage(1); }}
-            >
-              {STATUS_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-            <button type="button" className={styles.refreshBtn} onClick={fetchData}>รีเฟรช</button>
-          </form>
+    <div className={styles.mainHome}>
+      <div className={styles.infoContainer}>
+        {/* Header */}
+        <div className={styles.pageBar}>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.pageTitle}>คำขอที่มีการยืม (สำหรับตรวจรับคืน)</h1>
+          </div>
         </div>
 
-        {loading ? (
-          <div className={styles.loading}>กำลังโหลด...</div>
-        ) : err ? (
-          <div className={styles.error}>
-            <span>{err}</span>
-            <button className={styles.refreshBtn} onClick={fetchData}>ลองใหม่</button>
+        {/* Toolbar */}
+        <div className={styles.toolbar}>
+          <div className={`${styles.filterGrid} ${styles.filterGridCompact}`}>
+            <div className={styles.filterGroup}>
+              <label className={styles.label} htmlFor="status">สถานะ</label>
+              <Select
+                inputId="status"
+                isClearable
+                isSearchable={false}
+                placeholder="ทั้งหมดที่ค้างคืน"
+                options={STATUS_OPTS.filter(o => o.value !== 'all')}
+                value={STATUS_OPTS.find(o => o.value === status && status !== 'all') || null}
+                onChange={(opt) => { setStatus(opt?.value || 'all'); setPage(1); }}
+                styles={customSelectStyles}
+                menuPlacement="auto"
+                menuPosition="fixed"
+                menuPortalTarget={menuPortalTarget || undefined}
+              />
+            </div>
           </div>
+
+          <div className={styles.searchCluster}>
+            <div className={styles.filterGroup}>
+              <label className={styles.label} htmlFor="q">ค้นหา</label>
+              <input
+                id="q"
+                className={styles.input}
+                type="text"
+                value={q}
+                onChange={(e) => { setQ(e.target.value); setPage(1); }}
+                placeholder="รหัสคำขอ, ชื่อผู้ขอ, แผนก, รายการพัสดุ…"
+              />
+            </div>
+
+            <button
+              className={`${styles.ghostBtn} ${styles.clearButton}`}
+              onClick={clearFilters}
+              title="ล้างตัวกรอง"
+              aria-label="ล้างตัวกรอง"
+            >
+              <Trash2 size={18} /> ล้างตัวกรอง
+            </button>
+          </div>
+        </div>
+
+        {/* Table */}
+        {loading ? (
+          <div className={styles.loadingContainer}>กำลังโหลด...</div>
+        ) : err ? (
+          <div className={styles.errorBox}>{err}</div>
         ) : (
-          <>
-            <div className={styles.tableWrapper}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>รหัสคำขอ</th>
-                    <th>ผู้ขอ</th>
-                    <th>แผนก</th>
-                    <th>ครบกำหนดเร็วสุด</th>
-                    <th>ใกล้ครบกำหนด</th>
-                    <th>เกินกำหนด</th>
-                    <th>สถานะรวม</th>
-                    <th>จัดการ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.length ? rows.map(r => {
-                    const over = Number(r.items_overdue || 0) > 0;
-                    const soon = !over && Number(r.items_due_soon || 0) > 0;
-                    return (
-                      <tr key={r.request_id} className={over ? styles.rowOverdue : (soon ? styles.rowDueSoon : '')}>
-                        <td>{r.request_code}</td>
-                        <td>{r.requester_name}</td>
-                        <td>{r.department}</td>
-                        <td>{fdate(r.earliest_due_date)}</td>
-                        <td><span className={`${styles.badge} ${styles.badgeWarn}`}>{r.items_due_soon ?? 0}</span></td>
-                        <td><span className={`${styles.badge} ${styles.badgeDanger}`}>{r.items_overdue ?? 0}</span></td>
-                        <td>{r.overall_status || '-'}</td>
-                        <td>
-                          <Link href={`/manage/manageReturn/${r.request_id}`} className={styles.actionBtn}>
-                            ตรวจสอบ/อนุมัติการคืน
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  }) : (
-                    <tr>
-                      <td colSpan={8} className={styles.noData}>ไม่พบรายการ</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+          <div className={styles.tableFrame}>
+            <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+              <div className={styles.headerItem}>รหัสคำขอ</div>
+              <div className={styles.headerItem}>ผู้ขอ</div>
+              <div className={styles.headerItem}>แผนก</div>
+              <div className={styles.headerItem}>ครบกำหนดเร็วสุด</div>
+              <div className={styles.headerItem}>ใกล้ครบกำหนด</div>
+              <div className={styles.headerItem}>เกินกำหนด</div>
+              <div className={styles.headerItem}>สถานะรวม</div>
+              <div className={styles.headerItem}>จัดการ</div>
+            </div>
+
+            <div className={styles.inventory} style={{ '--rows-per-page': 12 }}>
+              {rows.length ? rows.map((r) => {
+                const over = Number(r.items_overdue || 0) > 0;
+                const soon = !over && Number(r.items_due_soon || 0) > 0;
+                const rowClass = over ? styles.rowOverdue : (soon ? styles.rowDueSoon : '');
+                return (
+                  <div key={r.request_id} className={`${styles.tableGrid} ${styles.tableRow} ${rowClass}`}>
+                    <div className={styles.tableCell}>{r.request_code}</div>
+                    <div className={styles.tableCell}>{r.requester_name}</div>
+                    <div className={styles.tableCell}>{r.department}</div>
+                    <div className={styles.tableCell}>{fdate(r.earliest_due_date)}</div>
+                    <div className={styles.tableCell}>
+                      <span className={`${styles.badge} ${styles.badgeWarn}`}>{r.items_due_soon ?? 0}</span>
+                    </div>
+                    <div className={styles.tableCell}>
+                      <span className={`${styles.badge} ${styles.badgeDanger}`}>{r.items_overdue ?? 0}</span>
+                    </div>
+                    <div className={styles.tableCell}>{r.overall_status || '-'}</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      <Link href={`/manage/manageReturn/${r.request_id}`} className={styles.actionBtnLink}>
+                        ตรวจสอบ/อนุมัติการคืน
+                      </Link>
+                    </div>
+                  </div>
+                );
+              }) : (
+                <div className={styles.noDataMessage}>ไม่พบรายการ</div>
+              )}
             </div>
 
             {totalPages > 1 && (
-              <div className={styles.pagination}>
-                <button
-                  className={styles.pageBtn}
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >ก่อนหน้า</button>
-                <span>หน้า {page} / {totalPages}</span>
-                <button
-                  className={styles.pageBtn}
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                >ถัดไป</button>
-              </div>
+              <ul className={styles.paginationControls}>
+                <li>
+                  <button
+                    className={styles.pageButton}
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    aria-label="หน้าก่อนหน้า"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                </li>
+                {getPageNumbers().map((p, idx) =>
+                  p === '...' ? (
+                    <li key={idx} className={styles.ellipsis}>…</li>
+                  ) : (
+                    <li key={idx}>
+                      <button
+                        className={`${styles.pageButton} ${p === page ? styles.activePage : ''}`}
+                        onClick={() => setPage(p)}
+                      >
+                        {p}
+                      </button>
+                    </li>
+                  )
+                )}
+                <li>
+                  <button
+                    className={styles.pageButton}
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page >= totalPages}
+                    aria-label="หน้าถัดไป"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </li>
+              </ul>
             )}
-          </>
+          </div>
         )}
       </div>
     </div>

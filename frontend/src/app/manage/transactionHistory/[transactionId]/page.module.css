@@ -1,13 +1,27 @@
 /* Layout */
 .container {
-  /* padding: 16px; */
+  background: #f3f6fb;
+  min-height: 100vh;
+  padding: clamp(14px, 2vw, 28px);
+
+  /* สำคัญ: จัดให้เนื้อหากลางจอ */
+  display: flex;
+  justify-content: center;
+  /* กลางแนวนอน */
+  align-items: flex-start;
+  /* ถ้าอยากให้กลางแนวตั้งด้วย เปลี่ยนเป็น center */
 }
 
 .card {
+  width: 100%;
+  max-width: 1200px;
+  /* ปรับขนาดตามต้องการ */
+  margin: 24px auto 0;
+  /* เผื่อ fallback การจัดกลาง */
+  border-radius: 14px;
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,.06);
-  padding: 16px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, .05);
+  padding: clamp(16px, 1.6vw, 28px);
 }
 
 .header {
@@ -78,43 +92,126 @@
   min-width: 120px;
 }
 
-/* Table */
+/* ===== Table (match style หน้าอื่น ๆ) ===== */
+:root {
+  --row-h: 56px;
+  /* ความสูงแถว */
+  --th-pad-x: 12px;
+  --th-pad-y: 12px;
+  --tint-100: #e9f6fb;
+  /* hover */
+  --tint-200: #ace2e1;
+  /* เส้นขอบกรอบ */
+  --border: #e5e7eb;
+}
+
+/* กรอบตาราง */
 .tableWrapper {
   width: 100%;
   overflow: auto;
   border: 1px solid #e9ecef;
   border-radius: 8px;
+  background: #fff;
 }
 
+/* table */
 .table {
   width: 100%;
+  max-width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+  /* สำคัญ: ให้ colgroup ทำงานและคอลัมน์นิ่ง */
   font-size: 0.94rem;
 }
 
+/* หัว/ตัวข้อมูลต้องคิด width เดียวกัน และไม่ห่อ */
+.table thead th,
+.table tbody td {
+  box-sizing: border-box;
+  /* กัน padding ดันกว้างเกิน */
+  padding: 10px 12px;
+  white-space: nowrap;
+  /* ไม่ขึ้นบรรทัดใหม่ */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* ย่อด้วย … เมื่อยาว */
+  vertical-align: middle;
+}
+
+/* หัวตาราง sticky */
 .table thead th {
-  background: #f8fafc;
+  position: sticky;
+  background: #eef9fc;
+  border-bottom: 1px solid var(--tint-200);
+  position: sticky;
+  top: 0;
+  z-index: 1;
   font-weight: 700;
   text-align: left;
-  padding: 10px;
-  border-bottom: 1px solid #e9ecef;
-  white-space: nowrap;
 }
 
+/* แถว/ช่องตาราง */
 .table tbody td {
-  padding: 10px;
+  height: var(--row-h);
+  vertical-align: middle;
   border-bottom: 1px solid #f1f3f5;
-  vertical-align: top;
 }
 
+/* hover */
+.table tbody tr:hover {
+  background: var(--tint-100);
+}
+
+/* แถวไม่มีข้อมูล */
 .noDataRow td {
+  white-space: normal;
+  height: auto;
+}
+
+.num {
+  text-align: right;
+}
+
+/* ===== Alignment ต่อชนิดตาราง ===== */
+/* STOCK: #, จำนวน */
+.tStock tbody td:nth-child(1),
+.tStock tbody td:nth-child(4) {
   text-align: center;
-  color: #6b7280;
-  padding: 16px;
+}
+
+/* CREATE: จำนวนขอ, อนุมัติ, สถานะอนุมัติ, สถานะดำเนินการ */
+.tCreate tbody td:nth-child(4),
+.tCreate tbody td:nth-child(5),
+.tCreate tbody td:nth-child(6),
+.tCreate tbody td:nth-child(7) {
+  text-align: center;
+}
+
+/* APPROVAL: จำนวนขอ, อนุมัติ, สถานะ */
+.tApproval tbody td:nth-child(4),
+.tApproval tbody td:nth-child(5),
+.tApproval tbody td:nth-child(6) {
+  text-align: center;
+}
+
+/* PROCESSING: สถานะเดิม, สถานะใหม่ */
+.tProcessing tbody td:nth-child(4),
+.tProcessing tbody td:nth-child(5) {
+  text-align: center;
+}
+
+/* RETURN: อนุมัติ, คืนครั้งนี้, คืนสะสม, คงเหลือ, สถานะ */
+.tReturn tbody td:nth-child(6),
+.tReturn tbody td:nth-child(7),
+.tReturn tbody td:nth-child(8),
+.tReturn tbody td:nth-child(9),
+.tReturn tbody td:nth-child(10) {
+  text-align: center;
 }
 
 /* Loading / Error */
-.loadingContainer, .errorContainer {
+.loadingContainer,
+.errorContainer {
   display: grid;
   place-items: center;
   min-height: 200px;
@@ -136,11 +233,25 @@
   white-space: nowrap;
 }
 
-.badgeGreen  { background: #16a34a; }
-.badgeYellow { background: #f59e0b; }
-.badgeBlue   { background: #2563eb; }
-.badgeRed    { background: #ef4444; }
-.badgeGray   { background: #6b7280; }
+.badgeGreen {
+  background: #16a34a;
+}
+
+.badgeYellow {
+  background: #f59e0b;
+}
+
+.badgeBlue {
+  background: #2563eb;
+}
+
+.badgeRed {
+  background: #ef4444;
+}
+
+.badgeGray {
+  background: #6b7280;
+}
 
 /* Buttons */
 .retryBtn {
@@ -150,4 +261,10 @@
   border-radius: 8px;
   padding: 8px 14px;
   cursor: pointer;
+}
+
+/* (ถ้ามีใช้) เน้นแถวที่โฟกัส */
+.focusRow {
+  outline: 2px solid #0ea5e9;
+  background: #e6f6ff !important;
 }

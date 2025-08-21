@@ -5,6 +5,7 @@ import { connectSocket, disconnectSocket } from "../../utils/socket";
 import axiosInstance from "../../utils/axiosInstance";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Trash2, Search } from "lucide-react";
+import { toast } from "react-toastify";
 
 import dynamic from "next/dynamic";
 const Select = dynamic(() => import("react-select"), { ssr: false });
@@ -24,11 +25,6 @@ const unitOptions = [
   { value: "ชิ้น", label: "ชิ้น" },
   { value: "กล่อง", label: "กล่อง" },
   { value: "ห่อ", label: "ห่อ" },
-];
-const storageOptions = [
-  { value: "ห้องเก็บยา", label: "ห้องเก็บยา" },
-  { value: "คลังสินค้า", label: "คลังสินค้า" },
-  { value: "ห้องเวชภัณฑ์", label: "ห้องเวชภัณฑ์" },
 ];
 
 // ── react-select styles ─────────────────────────────
@@ -61,11 +57,29 @@ const customSelectStyles = {
   dropdownIndicator: (base) => ({ ...base, padding: 6 }),
 };
 
+// คำนวณสถานะสต็อกแบบยืดหยุ่นจากฟิลด์ที่มี (รองรับชื่อที่พบบ่อย)
+const getStockStatus = (item) => {
+  const qty = Number(item?.total_on_hand_qty ?? 0);
+  const reorder = Number(item?.reorder_point ?? item?.min_qty ?? item?.reorder_level ?? 0);
+  const safety = Number(item?.safety_stock ?? item?.safety_qty ?? 0);
+  const stText = (item?.item_status || '').toLowerCase();
+
+  // หากมีสถานะจากระบบ (เช่น inactive/hold) ให้แสดงเป็น "พักใช้งาน"
+  if (stText === 'inactive' || stText === 'hold' || stText === 'พักใช้งาน') {
+    return { text: 'พักใช้งาน', class: 'stHold' };
+  }
+
+  if (qty <= 0) return { text: 'หมดสต็อก', class: 'stOut' };
+  if (reorder > 0 && qty <= reorder) return { text: 'ใกล้หมด', class: 'stLow' };
+  if (safety > 0 && qty <= safety) return { text: 'ควรเติม', class: 'stLow' };
+
+  return { text: 'พร้อมใช้งาน', class: 'stAvailable' };
+};
+
 export default function InventoryCheck() {
   const [searchText, setSearchText] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedUnit, setSelectedUnit] = useState("");
-  const [selectedStorage, setSelectedStorage] = useState("");
   const [allItems, setAllItems] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -124,12 +138,10 @@ export default function InventoryCheck() {
     fetchInitialData();
 
     // ── 2. เปิด socket realtime ─────────────────────
-    const socket = connectSocket();
+    const socket = connectSocket?.();
 
     // อัปเดตเฉพาะ record
-    socket.on("itemUpdated", (updatedItem) => {
-      console.log("📦 itemUpdated ได้รับ:", updatedItem);
-
+    socket?.on?.("itemUpdated", (updatedItem) => {
       setAllItems((prevItems) => {
         const index = prevItems.findIndex((i) => i.item_id === updatedItem.item_id);
         if (index !== -1) {
@@ -137,8 +149,8 @@ export default function InventoryCheck() {
           newItems[index] = {
             ...newItems[index],
             ...updatedItem,
-            total_on_hand_qty: updatedItem.current_stock, // ✅ map ให้ตรง
-            item_img: updatedItem.item_img || updatedItem.item_img_url // กันกรณีชื่อไม่ตรง
+            total_on_hand_qty: updatedItem.current_stock,
+            item_img: updatedItem.item_img || updatedItem.item_img_url,
           };
           return newItems;
         } else {
@@ -146,9 +158,9 @@ export default function InventoryCheck() {
             ...prevItems,
             {
               ...updatedItem,
-              total_on_hand_qty: updatedItem.current_stock, // ✅ ให้ค่าเริ่มต้นตรง
-              item_img: updatedItem.item_img || updatedItem.item_img_url
-            }
+              total_on_hand_qty: updatedItem.current_stock,
+              item_img: updatedItem.item_img || updatedItem.item_img_url,
+            },
           ];
         }
       });
@@ -157,9 +169,8 @@ export default function InventoryCheck() {
     // ── 3. cleanup ─────────────────────
     return () => {
       isMounted = false;
-      socket.off("itemUpdated");
-
-      disconnectSocket();
+      socket?.off?.("itemUpdated");
+      disconnectSocket?.();
     };
   }, []);
 
@@ -171,14 +182,13 @@ export default function InventoryCheck() {
         categoryThaiMap[item.item_category?.toLowerCase()] || item.item_category;
       const matchCategory = selectedCategory ? itemThaiCategory === selectedCategory : true;
       const matchUnit = selectedUnit ? item.item_unit === selectedUnit : true;
-      const matchStorage = selectedStorage ? item.item_location === selectedStorage : true;
       const matchSearchText = searchText
         ? (item.item_name || "").toLowerCase().includes(f) ||
         (getItemCode(item) || "").toLowerCase().includes(f)
         : true;
-      return matchCategory && matchUnit && matchStorage && matchSearchText;
+      return matchCategory && matchUnit && matchSearchText;
     });
-  }, [allItems, selectedCategory, selectedUnit, selectedStorage, searchText]);
+  }, [allItems, selectedCategory, selectedUnit, searchText]);
 
   const totalPages = Math.max(1, Math.ceil(filteredInventory.length / ITEMS_PER_PAGE));
   const paginatedItems = useMemo(() => {
@@ -188,7 +198,7 @@ export default function InventoryCheck() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchText, selectedCategory, selectedUnit, selectedStorage]);
+  }, [searchText, selectedCategory, selectedUnit]);
 
   // Pagination
   const goToPreviousPage = () => currentPage > 1 && setCurrentPage((c) => c - 1);
@@ -220,7 +230,6 @@ export default function InventoryCheck() {
     setSearchText("");
     setSelectedCategory("");
     setSelectedUnit("");
-    setSelectedStorage("");
     setCurrentPage(1);
   };
 
@@ -251,7 +260,7 @@ export default function InventoryCheck() {
           </div>
         </div>
 
-        {/* Filters */}
+        {/* Filters (ไม่มีฟิลเตอร์สถานที่จัดเก็บแล้ว) */}
         <div className={styles.toolbar}>
           <div className={styles.filterGrid}>
             {/* หมวดหมู่ */}
@@ -263,7 +272,11 @@ export default function InventoryCheck() {
                 isSearchable={false}
                 placeholder="เลือกหมวดหมู่..."
                 styles={customSelectStyles}
-                value={categoryOptions.find((o) => o.value === selectedCategory) || null}
+                value={
+                  selectedCategory
+                    ? categoryOptions.find((o) => o.value === selectedCategory)
+                    : null
+                }
                 onChange={(opt) => setSelectedCategory(opt?.value || "")}
                 menuPortalTarget={menuPortalTarget}
               />
@@ -277,22 +290,8 @@ export default function InventoryCheck() {
                 isSearchable={false}
                 placeholder="เลือกหน่วย..."
                 styles={customSelectStyles}
-                value={unitOptions.find((o) => o.value === selectedUnit) || null}
+                value={selectedUnit ? unitOptions.find((o) => o.value === selectedUnit) : null}
                 onChange={(opt) => setSelectedUnit(opt?.value || "")}
-                menuPortalTarget={menuPortalTarget}
-              />
-            </div>
-            {/* ที่เก็บ */}
-            <div className={styles.filterGroup}>
-              <label className={styles.label}>สถานที่จัดเก็บ</label>
-              <Select
-                options={storageOptions}
-                isClearable
-                isSearchable={false}
-                placeholder="เลือกสถานที่..."
-                styles={customSelectStyles}
-                value={storageOptions.find((o) => o.value === selectedStorage) || null}
-                onChange={(opt) => setSelectedStorage(opt?.value || "")}
                 menuPortalTarget={menuPortalTarget}
               />
             </div>
@@ -309,20 +308,15 @@ export default function InventoryCheck() {
             </div>
           </div>
           <div className={styles.searchCluster}>
-            <button
-              onClick={clearFilters}
-              className={`${styles.ghostBtn} ${styles.clearButton}`}
-            >
+            <button onClick={clearFilters} className={`${styles.ghostBtn} ${styles.clearButton}`}>
               <Trash2 size={18} /> ล้างตัวกรอง
             </button>
           </div>
         </div>
 
-        {/* แสดงสถานะ Loading ก่อนแสดงตาราง */}
+        {/* Table */}
         {isLoading ? (
-          <div className={styles.loadingContainer}>
-            {/* อาจเพิ่ม animation loading ที่นี่ */}
-          </div>
+          <div className={styles.loadingContainer} />
         ) : (
           <div className={styles.tableSection}>
             <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
@@ -334,7 +328,6 @@ export default function InventoryCheck() {
               <div className={styles.headerItem}>คงเหลือ</div>
               <div className={styles.headerItem}>หน่วย</div>
               <div className={styles.headerItem}>สถานะ</div>
-              <div className={styles.headerItem}>ที่เก็บ</div>
               <div className={styles.headerItem}>อัปเดตล่าสุด</div>
               <div className={styles.headerItem}>ดำเนินการ</div>
             </div>
@@ -351,20 +344,32 @@ export default function InventoryCheck() {
                       <img
                         src={
                           item.item_img
-                            ? `http://localhost:5000/uploads/${item.item_img}`
+                            ? (String(item.item_img).startsWith("http")
+                              ? item.item_img
+                              : `http://localhost:5000/uploads/${item.item_img}`)
                             : "http://localhost:5000/public/defaults/landscape.png"
                         }
-                        alt={item.item_name}
+                        alt={item.item_name || "ไม่มีคำอธิบายภาพ"}
                       />
                     </div>
-                    <div className={styles.tableCell} title={item.item_name}>{item.item_name}</div>
+                    <div className={styles.tableCell} title={item.item_name}>
+                      {item.item_name}
+                    </div>
                     <div className={styles.tableCell}>
                       {categoryThaiMap[item.item_category?.toLowerCase()] || item.item_category}
                     </div>
                     <div className={styles.tableCell}>{item.total_on_hand_qty}</div>
                     <div className={styles.tableCell}>{item.item_unit}</div>
-                    <div className={styles.tableCell}>พร้อมใช้งาน</div>
-                    <div className={styles.tableCell}>{item.item_location}</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      {(() => {
+                        const st = getStockStatus(item);
+                        return (
+                          <span className={`${styles.stBadge} ${styles[st.class]}`}>
+                            {st.text}
+                          </span>
+                        );
+                      })()}
+                    </div>
                     <div className={styles.tableCell}>{formatDateTime(item.created_at)}</div>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>
                       <Link
@@ -395,11 +400,14 @@ export default function InventoryCheck() {
               </li>
               {getPageNumbers().map((p, idx) =>
                 p === "..." ? (
-                  <li key={`ellipsis-${idx}`} className={styles.ellipsis}>…</li>
+                  <li key={`ellipsis-${idx}`} className={styles.ellipsis}>
+                    …
+                  </li>
                 ) : (
                   <li key={`page-${p}`}>
                     <button
-                      className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
+                      className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""
+                        }`}
                       onClick={() => setCurrentPage(p)}
                     >
                       {p}

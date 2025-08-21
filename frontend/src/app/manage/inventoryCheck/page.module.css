@@ -1,11 +1,13 @@
 /* =============================
-   InventoryCheck — page.module.css (prototype UI)
+   InventoryCheck — page.module.css
    Palette: #008dda #41c9e2 #ace2e1 #1685bb
    ============================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+/* ---- Variables (single source of truth) ---- */
 :root {
+  /* Colors */
   --bg: #f0fbfe;
   --panel: #ffffff;
   --muted: #6b7280;
@@ -16,19 +18,22 @@
   --primary-500: #41c9e2;
   --primary-600: #1685bb;
 
-  --tint-50:  #f0fbfe;
+  --tint-50: #f0fbfe;
   --tint-100: #e9f6fb;
   --tint-200: #ace2e1;
 
   --success: #16a34a;
-  --danger:  #ef4444;
+  --danger: #ef4444;
+  --warning: #f59e0b;
 
   --radius: 10px;
 
+  /* Table sizing */
   --row-h: 60px;
   --rows-per-page: 10;
   --table-gap: 12px;
 
+  /* Header sizing */
   --th-font: 1.05rem;
   --th-min-h: 60px;
   --th-pad-y: 14px;
@@ -36,6 +41,7 @@
   --th-letter: 0.01em;
   --th-line: 1.25;
 
+  /* Z-Index scale */
   --z-header: 10;
   --z-toolbar: 100;
   --z-select: 9000;
@@ -47,123 +53,428 @@
 .mainHome {
   min-height: 100vh;
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
-  /* padding: 24px; */
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--bg);
 }
 
 .infoContainer {
   width: 100%;
   max-width: none;
-  padding: 24px;
   min-height: 100vh;
   background: var(--panel);
   color: var(--text);
   border-radius: 0;
-  display: flex; flex-direction: column; gap: 14px;
-  flex: 1 1 auto; align-self: stretch;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1 1 auto;
+  align-self: stretch;
 }
 
 /* ---- Header ---- */
-.pageBar { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
-.pageTitle { font-weight: 700; font-size: clamp(1.4rem, 2.2vw, 2rem); margin: 0; }
-.titleGroup { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-
-/* ---- Toolbar (filters) ---- */
-.toolbar {
-  position: relative; z-index: var(--z-toolbar);
-  display: flex; gap: 12px; align-items: flex-end; justify-content: space-between; flex-wrap: wrap;
-  border: 1px solid var(--tint-200); border-radius: 12px; padding: 12px; background: #f6fbfd;
-}
-
-.filterGrid { position: relative; z-index: var(--z-toolbar); display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 12px; flex: 1; }
-.filterGroup { position: relative; z-index: var(--z-toolbar); display: flex; flex-direction: column; gap: 6px; }
-.label { font-size: 0.85rem; color: #374151; font-weight: 600; }
-.input { height: 40px; border: 1px solid var(--tint-200); border-radius: 8px; padding: 0 12px; font-size: 0.95rem; }
-.input:focus { outline: 2px solid var(--primary-500); outline-offset: 1px; }
-
-.searchCluster { display: flex; align-items: flex-end; gap: 10px; margin-left: auto; }
-.ghostBtn { background: #fff; color: #374151; border: 1px solid var(--tint-200); border-radius: 8px; height: 40px; padding: 0 12px; cursor: pointer; }
-.ghostBtn:hover { background: #e9f6fb; }
-.clearButton { display: inline-flex; align-items: center; gap: 8px; color: var(--primary-600); }
-
-/* ---- Table ---- */
-.tableSection { display: flex; flex-direction: column; gap: 8px; }
-
-.tableGrid {
-  display: grid;
-  grid-template-columns:
-    minmax(44px, .5fr)   /* ลำดับ */
-    minmax(100px, 1fr)   /* รหัส */
-    minmax(70px, .8fr)   /* รูปภาพ */
-    minmax(180px, 2fr)   /* รายการ */
-    minmax(120px, 1.2fr) /* หมวดหมู่ */
-    minmax(90px, .9fr)   /* คงเหลือ */
-    minmax(90px, .9fr)   /* หน่วย */
-    minmax(120px, 1.2fr) /* สถานะ */
-    minmax(130px, 1.2fr) /* สถานที่จัดเก็บ */
-    minmax(130px, 1.2fr) /* อัปเดตล่าสุด */
-    minmax(110px, 1fr);  /* ดำเนินการ */
+.pageBar {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
 }
 
-.tableHeader {
-  margin-bottom: var(--table-gap);
-  position: sticky; top: 0; z-index: var(--z-header);
-  background: #eef9fc; border: 1px solid var(--tint-200); border-radius: 10px;
-  padding: 10px; font-weight: 700; color: #374151;
-  font-size: var(--th-font); line-height: var(--th-line); min-height: var(--th-min-h);
-  padding-block: var(--th-pad-y); padding-inline: var(--th-pad-x);
+.pageTitle {
+  font-weight: 700;
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  margin: 0;
 }
-.tableHeader .headerItem, .tableHeader > div { font-weight: 700; letter-spacing: var(--th-letter); display: flex; align-items: center; white-space: nowrap; }
-.tableHeader > div:last-child, .tableHeader .headerItem:last-child { justify-content: center; text-align: center; }
 
-.inventory { border: 1px solid var(--tint-200); border-radius: 10px; background: #fff; height: calc(var(--row-h) * var(--rows-per-page)); overflow: hidden; }
-.tableRow { box-sizing: border-box; border-top: 1px solid #deedf1; height: var(--row-h); padding: 0 10px; }
-.tableRow:hover { background: var(--tint-100); }
-.tableRow:first-child { border-top: 0; }
-.inventory .tableRow:last-child { border-bottom: 0; }
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
 
-.tableCell { display: flex; align-items: center; padding: 4px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.centerCell { display: flex; justify-content: center; }
-.imageCell img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); display: block; margin: 0 auto; }
+/* ---- Toolbar (filters) ---- */
+.toolbar {
+  position: relative;
+  z-index: var(--z-toolbar);
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  border: 1px solid var(--tint-200);
+  border-radius: 12px;
+  padding: 12px;
+  background: #f6fbfd;
+}
 
-.noDataMessage { height: calc(var(--row-h) * var(--rows-per-page)); display: flex; align-items: center; justify-content: center; color: var(--muted); }
+/* ใช้โครงเดียวกับ InventoryWithdraw */
+.filterGrid {
+  position: relative;
+  z-index: var(--z-toolbar);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  /* category, unit, search */
+  gap: 12px;
+  flex: 1;
+}
 
-/* Action button */
-.actionButton { display: inline-flex; align-items: center; justify-content: center; background: #3b82f6; color: #fff; border-radius: 8px; padding: 6px; transition: background-color .2s ease, transform .15s ease; }
-.actionButton:hover { background: #2563eb; transform: scale(1.05); }
-.actionButton:active { transform: scale(.95); }
-.damagedButton {
-  background-color: #ffa114;
-  color: white;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 6px;
+.filterGroup {
+  position: relative;
+  z-index: var(--z-toolbar);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 0.85rem;
+  color: #374151;
+  font-weight: 600;
+}
+
+.input {
+  height: 40px;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 0.95rem;
+}
+
+.input:focus {
+  outline: 2px solid var(--primary-500);
+  outline-offset: 1px;
+}
+
+/* ให้ช่องค้นหา (กลุ่มสุดท้าย) ชิดขวาแบบดีไซน์ใหม่ */
+.filterGrid>.filterGroup:last-child {
+  justify-self: end;
+  width: 100%;
+  max-width: 360px;
+}
+
+/* cluster ขวา: ปุ่มล้าง */
+.searchCluster {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.ghostBtn {
+  background: #fff;
+  color: #374151;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  height: 40px;
+  padding: 0 12px;
   cursor: pointer;
-  margin-left: 6px;
-  transition: background 0.2s;
 }
 
-.damagedButton:hover {
-  background-color: #d17016;
+.ghostBtn:hover {
+  background: #e9f6fb;
 }
+
+.clearButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary-600);
+}
+
+/* ---- Table ---- */
+/* ใช้กรอบเดียวครอบ header+body ตาม InventoryWithdraw */
+.tableSection {
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
+  background: #fff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  /* รวมกรอบเดียว ไม่ต้องเว้น */
+}
+
+/* grid เดียวกันทั้ง header และ body */
+.tableGrid {
+  display: grid;
+  grid-template-columns:
+    minmax(44px, .5fr)
+    /* ลำดับ */
+    minmax(100px, 1fr)
+    /* รหัส */
+    minmax(70px, .8fr)
+    /* รูปภาพ */
+    minmax(180px, 2fr)
+    /* รายการ */
+    minmax(120px, 1.2fr)
+    /* หมวดหมู่ */
+    minmax(90px, .8fr)
+    /* คงเหลือ */
+    minmax(90px, .1fr)
+    /* หน่วย */
+    minmax(100px, 1.5fr)
+    /* สถานะ */
+    minmax(130px, 1.2fr)
+    /* อัปเดตล่าสุด */
+    minmax(110px, 1fr);
+  /* ดำเนินการ */
+  align-items: center;
+}
+
+/* Header เป็นส่วนหนึ่งของกรอบ */
+.tableHeader {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  background: #eef9fc;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  border-bottom: 1px solid var(--tint-200);
+  padding-block: var(--th-pad-y);
+  padding-inline: var(--th-pad-x);
+  font-weight: 700;
+  color: #374151;
+  font-size: var(--th-font);
+  line-height: var(--th-line);
+  min-height: var(--th-min-h);
+}
+
+.tableHeader .headerItem,
+.tableHeader>div {
+  font-weight: 700;
+  letter-spacing: var(--th-letter);
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 0;
+}
+
+.tableHeader>div:last-child,
+.tableHeader .headerItem:last-child {
+  justify-content: center;
+  text-align: center;
+}
+
+/* จัดหัวตารางบางคอลัมน์ให้อยู่กลาง */
+.tableHeader .headerItem:nth-child(1),  /* ลำดับ */
+.tableHeader .headerItem:nth-child(3),  /* รูปภาพ */
+.tableHeader .headerItem:nth-child(6),  /* คงเหลือ */
+.tableHeader .headerItem:nth-child(7),  /* หน่วย */
+.tableHeader .headerItem:nth-child(8),  /* สถานะ */
+.tableHeader .headerItem:nth-child(10)  /* ดำเนินการ */
+{
+  justify-content: center;
+  text-align: center;
+}
+
+/* Body */
+.inventory {
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  height: calc(var(--row-h) * var(--rows-per-page));
+  overflow: hidden;
+}
+
+/* (แนะนำ) จัดเซลล์บอดี้คอลัมน์เดียวกันให้กลางด้วย เพื่อให้ alignment ตรงกับหัวตาราง */
+.inventory .tableRow > .tableCell:nth-child(1),
+.inventory .tableRow > .tableCell:nth-child(3),
+.inventory .tableRow > .tableCell:nth-child(6),
+.inventory .tableRow > .tableCell:nth-child(7),
+.inventory .tableRow > .tableCell:nth-child(8),
+.inventory .tableRow > .tableCell:nth-child(10) {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+}
+
+.tableRow {
+  box-sizing: border-box;
+  height: var(--row-h);
+  padding: 0 var(--th-pad-x);
+  border-top: 1px solid #deedf1;
+}
+
+.tableRow:hover {
+  background: var(--tint-100);
+}
+
+.tableRow:first-child {
+  border-top: 0;
+}
+
+.inventory .tableRow:last-child {
+  border-bottom: 0;
+}
+
+/* map class เดิมให้ใช้งานได้เหมือน InventoryWithdraw */
+.tableCell,
+.cell {
+  display: flex;
+  align-items: center;
+  padding: 4px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cellName {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.centerCell {
+  display: flex;
+  justify-content: center;
+}
+
+.imageCell img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  display: block;
+  margin: 0 auto;
+}
+
+/* No data */
+.noDataMessage,
+.noData {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+/* Action button (ปุ่มไปหน้ารายละเอียด) */
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #3b82f6;
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px;
+  transition: background-color .2s ease, transform .15s ease;
+}
+
+.actionButton:hover {
+  background: #2563eb;
+  transform: scale(1.05);
+}
+
+.actionButton:active {
+  transform: scale(.95);
+}
+
 /* Pagination */
-.paginationControls { display: flex; list-style: none; padding: 10px; margin: 6px 0 0; gap: 6px; justify-content: center; align-items: center; background: #fff; border-top: 0; }
-.pageButton { background: #fff; border: 1px solid var(--tint-200); border-radius: 8px; padding: 6px 10px; min-width: 34px; cursor: pointer; }
-.pageButton:hover:not(:disabled) { background: #e9f6fb; }
-.pageButton:disabled { opacity: .5; cursor: not-allowed; }
-.activePage { background: var(--primary); color: #fff; border-color: var(--primary); }
-.ellipsis { color: var(--muted); }
+.paginationControls {
+  display: flex;
+  list-style: none;
+  padding: 10px;
+  margin: 0;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  background: #fff;
+  border-top: 0;
+}
+
+.pageButton {
+  background: #fff;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  padding: 6px 10px;
+  min-width: 34px;
+  cursor: pointer;
+}
+
+.pageButton:hover:not(:disabled) {
+  background: #e9f6fb;
+}
+
+.pageButton:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.activePage {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.ellipsis {
+  color: var(--muted);
+}
 
 /* ---- Responsive ---- */
-@media (max-width: 1024px) { .filterGrid { grid-template-columns: repeat(2, minmax(180px, 1fr)); } }
-@media (max-width: 768px) {
-  .searchCluster { width: 100%; margin-left: 0; justify-content: flex-end; flex-wrap: wrap; row-gap: 6px; }
-  .filterGrid { grid-template-columns: 1fr; }
+@media (max-width: 1024px) {
+  .filterGrid {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+
+  .filterGrid>.filterGroup:last-child {
+    justify-self: stretch;
+    max-width: none;
+  }
 }
+
+@media (max-width: 768px) {
+  .searchCluster {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .filterGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .filterGrid>.filterGroup:last-child {
+    justify-self: stretch;
+  }
+}
+
 @media (max-width: 640px) {
-  :root { --th-font: 1rem; --th-min-h: 54px; --th-pad-y: 10px; --table-gap: 10px; }
-  .mainHome { padding: 12px; }
-  .tableGrid { grid-template-columns: 40px 100px 60px 180px 120px 90px 90px 120px 120px 120px 90px; }
+  :root {
+    --th-font: 1rem;
+    --th-min-h: 54px;
+    --th-pad-y: 10px;
+    --table-gap: 10px;
+  }
+
+  .mainHome {
+    padding: 12px;
+  }
+
+  .tableGrid {
+    grid-template-columns:
+      40px 100px 60px 180px 120px 90px 90px 120px 120px 90px;
+  }
+}
+
+/* ---- Stock status badge ---- */
+.stBadge{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:6px 10px;border-radius:999px;font-weight:700;font-size:.85rem;
+  border:1px solid transparent;min-width:92px;line-height:1;
+}
+.stAvailable{ color:#166534; background:#DCFCE7; border-color:#86EFAC; }  /* เขียว */
+.stLow{       color:#92400e; background:#FEF3C7; border-color:#FDE68A; }  /* เหลือง */
+.stOut{       color:#9F1239; background:#FFE4E6; border-color:#FECDD3; }  /* แดง */
+.stHold{      color:#334155; background:#E2E8F0; border-color:#CBD5E1; }  /* เทา */
+
+/* จัดคอลัมน์ “สถานะ” ให้อยู่กลาง (คอลัมน์ที่ 8) */
+.tableHeader .headerItem:nth-child(8),
+.inventory .tableRow > .tableCell:nth-child(8){
+  display:flex;justify-content:center;
 }

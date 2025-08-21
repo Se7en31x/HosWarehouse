@@ -1,27 +1,51 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import axios from '@/app/utils/axiosInstance';
 import Swal from 'sweetalert2';
 import styles from './page.module.css';
+import { ChevronLeft, ChevronRight, Trash2, Clock, CheckCircle } from 'lucide-react';
 
-// This component manages expired items.
 export default function ExpiredItemsPage() {
   const [expiredList, setExpiredList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dataError, setDataError] = useState(null);
 
-  // Fetches the list of expired lots from the backend.
+  // pagination unified
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
+
+  const totalPages = Math.max(1, Math.ceil(expiredList.length / itemsPerPage));
+  const start = (currentPage - 1) * itemsPerPage;
+  const currentItems = expiredList.slice(start, start + itemsPerPage);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [totalPages, currentPage]);
+
+  // ✅ ตั้งค่า SweetAlert ให้เข้าธีมเดียวกัน
+  const swal = useMemo(
+    () =>
+      Swal.mixin({
+        customClass: {
+          popup: styles.swalPopup,
+          title: styles.swalTitle,
+          confirmButton: styles.swalConfirm,
+          cancelButton: styles.swalCancel,
+          actions: styles.swalActions,
+          htmlContainer: styles.swalHtml
+        },
+        buttonsStyling: false
+      }),
+    []
+  );
+
   const fetchExpired = async () => {
     try {
       const res = await axios.get('/expired');
-      const data = res.data;
+      const data = Array.isArray(res.data) ? res.data : [];
 
       const hasInvalidItem = data.some(e => !e.item_id);
-      if (hasInvalidItem) {
-        setDataError('ข้อมูลบางรายการไม่สมบูรณ์: ไม่มี Item ID');
-      } else {
-        setDataError(null);
-      }
+      setDataError(hasInvalidItem ? 'ข้อมูลบางรายการไม่สมบูรณ์: ไม่มี Item ID' : null);
 
       setExpiredList(data);
     } catch (err) {
@@ -32,178 +56,261 @@ export default function ExpiredItemsPage() {
     }
   };
 
-  // Handles the disposal action for a specific lot.
   const handleDispose = async (lotId, itemId, remainingQty) => {
-    const { value: qty } = await Swal.fire({
+    const { value: qty } = await swal.fire({
       title: 'ระบุจำนวนที่จะทำลาย',
       input: 'number',
       inputLabel: `สามารถทำลายได้สูงสุด ${remainingQty} ชิ้น`,
-      inputAttributes: { min: 1, max: remainingQty },
+      inputAttributes: { min: 1, max: remainingQty, step: 1 },
       inputValue: remainingQty,
       showCancelButton: true,
       confirmButtonText: 'บันทึก',
       cancelButtonText: 'ยกเลิก',
+      focusConfirm: false,
+      didOpen: () => {
+        const input = Swal.getInput();
+        if (input) input.classList.add(styles.swalInput);
+      },
       preConfirm: (value) => {
-        if (!value || value <= 0) {
+        const v = parseInt(value, 10);
+        if (!v || v <= 0) {
           Swal.showValidationMessage('กรุณาระบุจำนวนที่ถูกต้อง');
-        } else if (value > remainingQty) {
+        } else if (v > remainingQty) {
           Swal.showValidationMessage('จำนวนเกินจากที่เหลืออยู่');
         }
       }
     });
 
-    if (qty) {
-      try {
-        await axios.post(`/expired/action`, {
-          lot_id: lotId,
-          item_id: itemId,
-          action_qty: parseInt(qty, 10),
-          action_by: 1, // TODO: Replace with real user_id from auth
-          note: ''
-        });
+    if (!qty) return;
 
-        Swal.fire({
-          icon: 'success',
-          title: 'บันทึกสำเร็จ',
-          text: `ทำลาย ${qty} ชิ้นแล้ว`,
-          timer: 2000
-        });
-
-        fetchExpired();
-      } catch (err) {
-        console.error('Error during disposal action:', err);
-        Swal.fire({
-          icon: 'error',
-          title: 'เกิดข้อผิดพลาด',
-          text: 'ไม่สามารถบันทึกข้อมูลได้',
-        });
-      }
+    try {
+      await axios.post(`/expired/action`, {
+        lot_id: lotId,
+        item_id: itemId,
+        action_qty: parseInt(qty, 10),
+        action_by: 1, // TODO: แทนด้วย user_id จริงจาก auth
+        note: ''
+      });
+      swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: `ทำลาย ${qty} ชิ้นแล้ว`, confirmButtonText: 'ตกลง' });
+      fetchExpired();
+    } catch (err) {
+      console.error('Error during disposal action:', err);
+      swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่สามารถบันทึกข้อมูลได้' });
     }
   };
 
-  // Fetch disposal history by lot_id
   const handleViewHistory = async (lotId) => {
-  try {
-    const res = await axios.get(`/expired/actions/${lotId}`);
-    const history = res.data;
+    try {
+      const res = await axios.get(`/expired/actions/${lotId}`);
+      const history = Array.isArray(res.data) ? res.data : [];
 
-    if (history.length === 0) {
-      Swal.fire('ยังไม่มีประวัติการทำลาย');
-      return;
-    }
+      if (history.length === 0) {
+        await swal.fire({
+          title: '🕒 ยังไม่มีประวัติการทำลาย',
+          icon: 'info',
+          confirmButtonText: 'ปิด',
+        });
+        return;
+      }
 
-    const htmlList = `
-      <div style="max-height:300px; overflow-y:auto; padding:10px;">
-        <table style="width:100%; border-collapse: collapse;">
-          <thead>
-            <tr style="background:#f1f5f9; text-align:left;">
-              <th style="padding:8px; border-bottom:1px solid #ddd;">วันที่</th>
-              <th style="padding:8px; border-bottom:1px solid #ddd;">จำนวน</th>
-              <th style="padding:8px; border-bottom:1px solid #ddd;">ผู้ทำลาย</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${history.map(h => `
+      const htmlList = `
+        <div class="swal-history">
+          <table>
+            <thead>
               <tr>
-                <td style="padding:6px; border-bottom:1px solid #eee;">
-                  ${new Date(h.action_date).toLocaleString('th-TH')}
-                </td>
-                <td style="padding:6px; border-bottom:1px solid #eee; color:#dc2626; font-weight:bold;">
-                  ${h.action_qty} ชิ้น
-                </td>
-                <td style="padding:6px; border-bottom:1px solid #eee;">
-                  ${h.action_by_name || 'ไม่ทราบ'}
-                </td>
+                <th>วันที่</th>
+                <th>จำนวน</th>
+                <th>ผู้ทำลาย</th>
               </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-    `;
+            </thead>
+            <tbody>
+              ${history
+          .map(
+            (h) => `
+                <tr>
+                  <td>${new Date(h.action_date).toLocaleString('th-TH')}</td>
+                  <td class="qty">${h.action_qty} ชิ้น</td>
+                  <td>${h.action_by_name || 'ไม่ทราบ'}</td>
+                </tr>`
+          )
+          .join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
 
-    Swal.fire({
-      title: '📜 ประวัติการทำลาย',
-      html: htmlList,
-      width: 700,
-      confirmButtonText: 'ปิด',
-      confirmButtonColor: '#6366f1',
-    });
-  } catch (err) {
-    console.error('Error fetching history:', err);
-    Swal.fire('เกิดข้อผิดพลาดในการโหลดประวัติ');
-  }
-};
+      await swal.fire({
+        title: '📜 ประวัติการทำลาย',
+        html: htmlList,
+        width: 720,
+        confirmButtonText: 'ปิด'
+      });
+    } catch (err) {
+      console.error('Error fetching history:', err);
+      swal.fire('เกิดข้อผิดพลาดในการโหลดประวัติ');
+    }
+  };
 
-  useEffect(() => {
-    fetchExpired();
-  }, []);
+  useEffect(() => { fetchExpired(); }, []);
 
-  if (loading) {
-    return <p>กำลังโหลดข้อมูล...</p>;
-  }
+  const handlePrev = () => currentPage > 1 && setCurrentPage(p => p - 1);
+  const handleNext = () => currentPage < totalPages && setCurrentPage(p => p + 1);
 
-  if (dataError) {
-    return <div className={styles.errorContainer}>{dataError}</div>;
-  }
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else if (currentPage <= 4) {
+      pages.push(1, 2, 3, 4, 5, '...', totalPages);
+    } else if (currentPage >= totalPages - 3) {
+      pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+    } else {
+      pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+    }
+    return pages;
+  };
 
   return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>จัดการพัสดุหมดอายุ</h1>
-      <div className={styles.tableWrapper}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Lot Number</th>
-              <th>ชื่อพัสดุ</th>
-              <th>จำนวนทั้งหมด</th>
-              <th>เหลือให้ทำลาย</th>
-              <th>ทำลายแล้ว</th>
-              <th>หน่วย</th>
-              <th>วันที่หมดอายุ</th>
-              <th>สถานะ</th>
-              <th>จัดการ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {expiredList.map(e => (
-              <tr key={e.lot_id}>
-                <td>{e.lot_no || '-'}</td>
-                <td>{e.item_name || '-'}</td>
-                <td>{Number(e.qty_imported) || 0}</td>
-                <td>{Number(e.qty_remaining) || 0}</td>
-                <td>{Number(e.disposed_qty) || 0}</td>
-                <td>{e.item_unit}</td>
-                <td>{e.exp_date ? new Date(e.exp_date).toLocaleDateString('th-TH') : '-'}</td>
-                <td>
-                  {e.qty_remaining === 0
+    <div className={styles.pageBackground}>
+      <div className={styles.container}>
+       <div className={styles.pageBar}>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.pageTitle}>จัดการพัสดุหมดอายุ</h1>
+          </div>
+        </div>
+
+        {loading && <p className={styles.infoMessage}>กำลังโหลดข้อมูล...</p>}
+        {dataError && !loading && <p className={styles.errorMessage}>{dataError}</p>}
+
+        {!loading && (
+          <div className={styles.tableFrame}>
+            <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+              <div className={styles.headerItem}>Lot Number</div>
+              <div className={styles.headerItem}>ชื่อพัสดุ</div>
+              <div className={`${styles.headerItem} ${styles.centerCell}`}>จำนวนทั้งหมด</div>
+              <div className={`${styles.headerItem} ${styles.centerCell}`}>เหลือให้ทำลาย</div>
+              <div className={`${styles.headerItem} ${styles.centerCell}`}>ทำลายแล้ว</div>
+              <div className={`${styles.headerItem} ${styles.centerCell}`}>หน่วย</div>
+              <div className={styles.headerItem}>วันที่หมดอายุ</div>
+              <div className={`${styles.headerItem} ${styles.centerCell}`}>สถานะ</div>
+              <div className={`${styles.headerItem} ${styles.centerCell}`}>จัดการ</div>
+            </div>
+
+            <div className={styles.inventory} style={{ '--rows-per-page': itemsPerPage }}>
+              {currentItems.length === 0 ? (
+                <div className={styles.noDataMessage}>ไม่พบรายการพัสดุหมดอายุ</div>
+              ) : currentItems.map(e => {
+                const statusText =
+                  (Number(e.qty_remaining) || 0) === 0
                     ? 'ทำลายครบแล้ว'
-                    : e.disposed_qty > 0
+                    : (Number(e.disposed_qty) || 0) > 0
                       ? 'ทำลายบางส่วนแล้ว'
-                      : 'รอดำเนินการ'}
-                </td>
-                <td>
-                  {e.qty_remaining > 0 && e.item_id ? (
+                      : 'รอดำเนินการ';
+
+                const statusClass =
+                  (Number(e.qty_remaining) || 0) === 0
+                    ? styles.statusComplete
+                    : (Number(e.disposed_qty) || 0) > 0
+                      ? styles.statusPartial
+                      : styles.statusPending;
+
+                return (
+                  <div key={e.lot_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                    <div className={styles.tableCell}>{e.lot_no || '-'}</div>
+                    <div className={styles.tableCell}>{e.item_name || '-'}</div>
+
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>{Number(e.qty_imported) || 0}</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>{Number(e.qty_remaining) || 0}</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>{Number(e.disposed_qty) || 0}</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>{e.item_unit || '-'}</div>
+
+                    <div className={styles.tableCell}>
+                      {e.exp_date ? new Date(e.exp_date).toLocaleDateString('th-TH') : '-'}
+                    </div>
+
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      <span className={`${styles.statusBadge} ${statusClass}`}>{statusText}</span>
+                    </div>
+
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      {(Number(e.qty_remaining) || 0) > 0 && e.item_id ? (
+                        <div className={styles.actions}>
+                          <button
+                            className={`${styles.actionBtn} ${styles.btnDispose}`}
+                            onClick={() => handleDispose(e.lot_id, e.item_id, Number(e.qty_remaining) || 0)}
+                            aria-label="ทำลาย"
+                          // title="ทำลาย"
+                          >
+                            <Trash2 size={16} />
+                            {/* <span>ทำลาย</span> */}
+                          </button>
+                          <button
+                            className={`${styles.actionBtn} ${styles.btnHistory}`}
+                            onClick={() => handleViewHistory(e.lot_id)}
+                            aria-label="ประวัติ"
+                            title="ประวัติ"
+                          >
+                            <Clock size={16} />
+                            <span>ประวัติ</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <div className={styles.actions}>
+                            <span className={styles.doneIcon} aria-label="ทำลายครบแล้ว" title="ทำลายครบแล้ว">
+                              <CheckCircle size={18} />
+                            </span>
+                            <button
+                              className={`${styles.actionBtn} ${styles.btnHistory}`}
+                              onClick={() => handleViewHistory(e.lot_id)}
+                              aria-label="ประวัติ"
+                              title="ประวัติ"
+                            >
+                              <Clock size={16} />
+                              <span>ประวัติ</span>
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Pagination แบบเดียวกับหน้าก่อน ๆ */}
+            <ul className={styles.paginationControls}>
+              <li>
+                <button className={styles.pageButton} onClick={handlePrev} disabled={currentPage === 1}>
+                  <ChevronLeft size={16} />
+                </button>
+              </li>
+              {getPageNumbers().map((p, idx) =>
+                p === '...' ? (
+                  <li key={idx} className={styles.ellipsis}>…</li>
+                ) : (
+                  <li key={idx}>
                     <button
-                      className={`${styles.actionBtn} ${styles.btnDispose}`}
-                      onClick={() => handleDispose(e.lot_id, e.item_id, e.qty_remaining)}
+                      className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ''}`}
+                      onClick={() => setCurrentPage(p)}
                     >
-                      ทำลาย
+                      {p}
                     </button>
-                  ) : (
-                    <span className={styles.doneLabel}>ครบแล้ว</span>
-                  )}
-                  {/* ปุ่มดูประวัติ */}
-                  <button
-                    className={`${styles.actionBtn} ${styles.btnHistory}`}
-                    onClick={() => handleViewHistory(e.lot_id)}
-                  >
-                    ประวัติ
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </li>
+                )
+              )}
+              <li>
+                <button
+                  className={styles.pageButton}
+                  onClick={handleNext}
+                  disabled={currentPage >= totalPages}
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </li>
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );

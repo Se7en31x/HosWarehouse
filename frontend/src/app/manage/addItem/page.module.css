@@ -1,212 +1,284 @@
-/* --- 1. Main Page Layout --- */
+/* =========================================
+   Palette & Base
+========================================= */
+:root{
+  --bg: #f8fafc;
+  --panel: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+
+  --primary: #1e40af;  /* navy */
+  --primary-500: #2563eb; /* blue */
+  --success: #16a34a;
+  --danger: #ef4444;
+}
+
 .pageLayout {
-    font-family: 'Sarabun', sans-serif;
-    background-color: #ffffff; /* Light, calm background color */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
+  font-family: 'Sarabun', sans-serif;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
 }
 
 .header {
-    background-color: #122c9c;
-    width: 100%;
-    padding: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  padding: 12px 0;
+  background: linear-gradient(90deg, #122c9c, #1e40af);
+  box-shadow: 0 6px 18px rgba(0,0,0,.06);
 }
 
 .title {
-    max-width: 1200px;
-    margin: 0 auto;
-    font-size: 2rem;
-    font-weight: 500;
-    color: #f3f3f3;
-    text-align: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-size: 2rem;
+  font-weight: 600;
+  color: #f3f3f3;
+  text-align: center;
+  letter-spacing: .2px;
 }
 
 .mainContent {
-    width: 100%;
-
+  width: 100%;
+  max-width: 1200px;
+  margin: 1.25rem auto;
+  padding: 0 10px;
 }
 
-/* --- 2. Form Card Container --- */
+/* =========================================
+   Card Container
+========================================= */
 .formCard {
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-    padding: 2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
+  background-color: var(--panel);
+  border: 1px solid #eef2f7;
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(2,6,23,.06);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
-/* --- 3. Form Layout (2 Columns) --- */
+/* =========================================
+   Main Grid (2 Columns)
+   - รองรับทั้งชื่อเก่า/ใหม่ กันพังจากโค้ดเดิม
+========================================= */
+.formGrid,
 .mainFormGrid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
 }
-
 @media (min-width: 992px) {
-    .mainFormGrid {
-        grid-template-columns: 1fr 1fr;
-    }
+  .formGrid,
+  .mainFormGrid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
+.col,
 .mainColumn {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
-.categoryFormSection {
-    margin-top: 2rem;
-}
+.categoryFormSection { margin-top: 2rem; }
 
-/* --- 4. Form Sections and Fields --- */
+/* =========================================
+   Section
+========================================= */
 .section {
-    border: none;
-    border-bottom: 1px solid #e9ecef;
-    padding: 0 0 1.5rem;
+  border: none;
+  border-bottom: 1px solid #eef2f7;
+  padding: 0 0 1.5rem;
 }
-
 .section:last-of-type {
-    border-bottom: none;
-    padding-bottom: 0;
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
+/* หัวข้อ section ให้คมชัดขึ้น */
 .legend {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #34495e;
-    margin-bottom: 1.5rem;
-    display: block;
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  padding-left: .75rem;
+  margin-bottom: 1.1rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1f2937;
+  position: relative;
+}
+.legend::before{
+  content:'';
+  position:absolute;
+  left:0;
+  top: 4px;
+  bottom: 4px;
+  width: 4px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--primary), var(--primary-500));
 }
 
+/* =========================================
+   Fields Grid
+========================================= */
 .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.1rem;
 }
 
 .field {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
 }
 
 .field label {
-    font-weight: 500;
-    color: #555;
-    margin-bottom: 0.5rem;
-    font-size: 0.95rem;
+  font-size: .95rem;
+  font-weight: 600;
+  color: #334155;
 }
 
 .field input,
 .field select,
 .field textarea {
-    width: 100%;
-    padding: 0.8rem;
-    border: 1px solid #ced4da;
-    border-radius: 8px;
-    font-size: 1rem;
-    color: #495057;
-    transition: all 0.3s ease-in-out;
-    background-color: #f8f9fa;
+  width: 100%;
+  padding: .8rem .9rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 1rem;
+  color: var(--text);
+  background-color: #f9fafb;
+  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
 }
+
+.field input::placeholder,
+.field textarea::placeholder{ color:#94a3b8; }
 
 .field input:focus,
 .field select:focus,
 .field textarea:focus {
-    outline: none;
-    border-color: #4a90e2;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.25);
-    background-color: #ffffff;
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .18);
+  background-color: #fff;
 }
 
+/* ปุ่มเลือกไฟล์ให้ดูสะอาด */
 .field input[type="file"] {
-    padding: 0.5rem;
-    background-color: #e9ecef;
-    border: 1px solid #ced4da;
-    cursor: pointer;
+  padding: .6rem .7rem;
+  background-color: #f3f4f6;
+  cursor: pointer;
 }
-
 .field input[type="file"]::-webkit-file-upload-button {
-    background-color: #e0e0e0;
-    color: #424242;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.2s;
+  background-color: #e5e7eb;
+  color: #374151;
+  border: none;
+  padding: .5rem .9rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: filter .2s;
+}
+.field input[type="file"]::-webkit-file-upload-button:hover {
+  filter: brightness(0.98);
 }
 
-/* --- 5. Image Preview Section --- */
+/* =========================================
+   Image Upload (input ซ้าย / preview ขวา)
+========================================= */
+.imageField{
+  display: grid;
+  grid-template-columns: 1fr 260px; /* ซ้ายยืด / ขวาคงที่ */
+  align-items: end;
+  gap: 16px;
+}
+
 .imagePreview {
-    margin-top: 1rem;
-    border: 2px solid #ced4da;
-    border-radius: 10px;
-    padding: 1rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #f8f9fa;
+  width: 260px;
+  height: 200px;
+  margin-top: 6px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: repeating-linear-gradient(
+    45deg,
+    #f8fafc,
+    #f8fafc 10px,
+    #f1f5f9 10px,
+    #f1f5f9 20px
+  );
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-
 .imagePreview img {
-    max-width: 100%;
-    max-height: 250px;
-    border-radius: 8px;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
 }
 
+/* Placeholder ตอนยังไม่มีรูป */
 .imagePreviewPlaceholder {
-    margin-top: 1rem;
-    border: 2px dashed #aeb4b9;
-    border-radius: 10px;
-    padding: 2rem;
-    min-height: 200px;
-    background-color: #f8f9fa;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
-    color: #888;
-    font-style: italic;
+  flex-direction: column;
+  color: #94a3b8;
+  font-size: .92rem;
+  gap: .4rem;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
+.fileInput { padding: .5rem; background: #e9ecef; border: 1px solid #ced4da; border-radius: 8px; }
+.fileNote { color:#6b7280; font-size: .9rem; }
 
-/* --- 6. Action Buttons --- */
+/* =========================================
+   Actions
+========================================= */
 .actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: .8rem;
+  margin-top: .75rem;
 }
 
 .actions button {
-    padding: 0.8rem 1.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
+  padding: .8rem 1.2rem;
+  font-size: .98rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform .05s ease, box-shadow .2s ease, background-color .2s ease;
 }
 
 .cancel {
-    background-color: #e9ecef;
-    color: #495057;
+  background-color: #eef2f7;
+  color: #374151;
 }
-
-.cancel:hover {
-    background-color: #ced4da;
-}
+.cancel:hover { background-color: #e5e9f0; }
+.cancel:active { transform: translateY(1px); }
 
 .save {
-    background-color: #2ecc71;
-    color: white;
+  background: linear-gradient(180deg, #22c55e, #16a34a);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(34,197,94,.22);
 }
+.save:hover { filter: brightness(1.02); }
+.save:active { transform: translateY(1px); }
 
-.save:hover {
-    background-color: #27ae60;
+/* =========================================
+   Responsive
+========================================= */
+@media (max-width: 768px) {
+  .title { font-size: 1.6rem; }
+  .formCard { padding: 1.25rem; }
+  .grid { grid-template-columns: 1fr; gap: .9rem; }
+  .imageField { grid-template-columns: 1fr; }
+  .imagePreview { width: 100%; height: 220px; }
 }

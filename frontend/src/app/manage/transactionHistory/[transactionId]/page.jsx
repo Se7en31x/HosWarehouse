@@ -68,7 +68,7 @@ const getStatusTone = (key) => {
     case 'waiting_approval':
     case 'waiting_approval_detail':
     case 'approved_in_queue':
-    case 'returned_partially':   // 🆕 ครอบไว้ในโทนเหลือง
+    case 'returned_partially':
       return 'Yellow';
     case 'completed':
     case 'imported':
@@ -138,13 +138,12 @@ export default function RequestDetailPage() {
   const isStockMode = Boolean(moveCode);
 
   // รองรับแท็บมุมมอง
-  // 🆕 เพิ่ม 'return' สำหรับโหมดคำขอแบบยืม
   const viewParam = (searchParams?.get('view') || '').toLowerCase();
   const validViews = new Set(['create', 'approval', 'processing', 'return']);
   const activeView = isStockMode ? 'stock' : (validViews.has(viewParam) ? viewParam : 'create');
 
-  // 🆕 รับโค้ดการคืนเพื่อตั้งโฟกัส
-  const retFocus = (searchParams?.get('ret') || '').trim(); // ตัวอย่าง: RET-123
+  // โค้ดการคืนเพื่อโฟกัส
+  const retFocus = (searchParams?.get('ret') || '').trim();
 
   // ========== State ==========
   const [requestData, setRequestData] = useState(null);
@@ -203,7 +202,7 @@ export default function RequestDetailPage() {
   const summary = requestData?.summary || {};
   const history = requestData?.history || { approvalHistory: [], processingHistory: [] };
   const lineItems = requestData?.lineItems || [];
-  const returnHistory = requestData?.returnHistory || []; // 🆕 จาก backend
+  const returnHistory = requestData?.returnHistory || [];
 
   const requestTypeThai = summary.request_type_thai || toThaiRequestMode(summary.request_type);
   const isBorrow = requestTypeThai === 'ยืม';
@@ -212,7 +211,6 @@ export default function RequestDetailPage() {
   useEffect(() => {
     if (!isBorrow || !Array.isArray(returnHistory) || returnHistory.length === 0) return;
     if (!retFocus) return;
-    // รอให้ DOM วาดตารางก่อนนิดนึง
     const t = setTimeout(() => {
       const el = returnRowRefs.current?.[retFocus];
       if (el?.scrollIntoView) {
@@ -266,9 +264,19 @@ export default function RequestDetailPage() {
         {isStockMode ? (
           <>
             <h2 className={styles.subHeading}>ภาพรวมการจัดการสต็อก</h2>
-            {/* ... (ส่วน stock เดิมของคุณ ไม่เปลี่ยน) ... */}
             <div className={styles.tableWrapper}>
               <table className={styles.table}>
+                {/* ⬇ กำหนดคอลัมน์คงที่ */}
+                <colgroup>
+                  <col style={{ width: 64 }} />
+                  <col style={{ width: 140 }} />
+                  <col />
+                  <col style={{ width: 120 }} />
+                  <col style={{ width: 180 }} />
+                  <col style={{ width: 180 }} />
+                  <col style={{ width: 220 }} />
+                </colgroup>
+
                 <thead>
                   <tr>
                     <th>#</th>
@@ -303,7 +311,6 @@ export default function RequestDetailPage() {
             </div>
           </>
         ) : (
-          /* ===== REQUEST MODE ===== */
           <>
             {/* Tabs */}
             <div className={styles.tabBar}>
@@ -368,6 +375,18 @@ export default function RequestDetailPage() {
                 <h2 className={styles.subHeading}>รายการที่ขอ</h2>
                 <div className={styles.tableWrapper}>
                   <table className={styles.table}>
+                    {/* ⬇ คอลัมน์คงที่ (มีคอลัมน์กำหนดคืนเมื่อเป็นยืม) */}
+                    <colgroup>
+                      <col style={{ width: 64 }} />
+                      <col />
+                      <col style={{ width: 100 }} />
+                      <col style={{ width: 140 }} />
+                      <col style={{ width: 160 }} />
+                      <col style={{ width: 160 }} />
+                      <col style={{ width: 180 }} />
+                      {isBorrow && <col style={{ width: 160 }} />}
+                    </colgroup>
+
                     <thead>
                       <tr>
                         <th>#</th>
@@ -411,6 +430,15 @@ export default function RequestDetailPage() {
                 <h2 className={styles.subHeading}>ประวัติการอนุมัติ</h2>
                 <div className={styles.tableWrapper}>
                   <table className={styles.table}>
+                    <colgroup>
+                      <col style={{ width: 200 }} />
+                      <col style={{ width: 200 }} />
+                      <col />
+                      <col style={{ width: 140 }} />
+                      <col style={{ width: 160 }} />
+                      <col style={{ width: 160 }} />
+                    </colgroup>
+
                     <thead>
                       <tr>
                         <th>เวลา/วันที่</th>
@@ -450,6 +478,14 @@ export default function RequestDetailPage() {
                 <h2 className={styles.subHeading}>ประวัติการดำเนินการ</h2>
                 <div className={styles.tableWrapper}>
                   <table className={styles.table}>
+                    <colgroup>
+                      <col style={{ width: 200 }} />
+                      <col style={{ width: 220 }} />
+                      <col />
+                      <col style={{ width: 180 }} />
+                      <col style={{ width: 180 }} />
+                    </colgroup>
+
                     <thead>
                       <tr>
                         <th>เวลา/วันที่</th>
@@ -481,12 +517,25 @@ export default function RequestDetailPage() {
               </>
             )}
 
-            {/* 🆕 RETURN */}
+            {/* RETURN */}
             {isBorrow && activeView === 'return' && (
               <>
                 <h2 className={styles.subHeading}>ประวัติการคืน</h2>
                 <div className={styles.tableWrapper}>
                   <table className={styles.table}>
+                    <colgroup>
+                      <col style={{ width: 120 }} />
+                      <col style={{ width: 200 }} />
+                      <col style={{ width: 200 }} />
+                      <col />
+                      <col style={{ width: 100 }} />
+                      <col style={{ width: 120 }} />
+                      <col style={{ width: 120 }} />
+                      <col style={{ width: 120 }} />
+                      <col style={{ width: 120 }} />
+                      <col style={{ width: 160 }} />
+                    </colgroup>
+                    
                     <thead>
                       <tr>
                         <th>รหัสคืน</th>
@@ -507,7 +556,6 @@ export default function RequestDetailPage() {
                           <tr
                             key={`ret-${idx}-${row.return_id}-${row.request_detail_id}`}
                             ref={(el) => {
-                              // เก็บ ref ตามรหัสคืน (RET-xxx) เพื่อเลื่อนไปหาเมื่อมี ?ret=
                               if (el && row.return_code) {
                                 returnRowRefs.current[row.return_code] = el;
                               }

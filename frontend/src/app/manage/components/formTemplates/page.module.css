@@ -2,17 +2,14 @@
 /* Layout & Global Styles (สำหรับหน้า additem หลัก) */
 /* ================================================================= */
 .pageLayout {
-  max-width: 900px;
+  max-width: 1200px;                /* ↑ ขยายความกว้างตามภาพ */
   margin: 40px auto;
   padding: 0;
   font-family: 'Prompt', sans-serif;
   color: #343a40;
 }
 
-.header {
-  text-align: center;
-  margin-bottom: 40px;
-}
+.header { text-align: center; margin-bottom: 40px; }
 
 .title {
   font-size: 2.5rem;
@@ -33,20 +30,25 @@
 /* Form Styles (สำหรับ BasicForm และฟอร์มย่อย) */
 /* ================================================================= */
 
+/* ► กริดหลัก 2 คอลัมน์ (ซ้าย/ขวา) */
 .formGrid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;          /* มือถือ: 1 คอลัมน์ */
   gap: 30px;
 }
-
-/* เอาขอบออกหมด */
-.section {
-  border: none;
-  padding: 0;
-  margin-bottom: 20px;
+@media (min-width: 992px) {
+  .formGrid { grid-template-columns: 1fr 1fr; } /* เดสก์ท็อป: 2 คอลัมน์ */
 }
 
-/* ออกแบบ legend ใหม่ให้ดูเป็นระเบียบแต่ไม่รก */
+.col { display: flex; flex-direction: column; gap: 30px; }
+
+/* ใช้กับบล็อกที่ต้องการกินเต็มความกว้าง (เช่น ฟอร์มเฉพาะหมวด) */
+.fullWidth { grid-column: 1 / -1; }
+
+/* เอาขอบออกหมด */
+.section { border: none; padding: 0; margin-bottom: 20px; }
+
+/* หัวข้อส่วน (legend) */
 .legend {
   font-size: 1.3rem;
   font-weight: 600;
@@ -55,7 +57,6 @@
   position: relative;
   display: block;
 }
-
 .legend::after {
   content: '';
   position: absolute;
@@ -66,16 +67,14 @@
   background-color: #ced4da;
 }
 
+/* กริดภายในแต่ละ section */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 20px;
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-}
+.field { display: flex; flex-direction: column; }
 
 .field label {
   font-size: 0.95rem;
@@ -84,7 +83,8 @@
   margin-bottom: 8px;
 }
 
-.field input, .field select {
+.field input,
+.field select {
   width: 100%;
   padding: 12px;
   border: 1px solid #e9ecef;
@@ -95,23 +95,33 @@
   background-color: #f8f9fa;
 }
 
-.field input:focus, .field select:focus {
+.field input:focus,
+.field select:focus {
   outline: none;
   border-color: #007bff;
   box-shadow: none;
 }
 
 /* ================================================================= */
-/* Image Upload Styles (แก้ไขให้เข้ากับ HTML ของคุณ) */
+/* Image Upload Styles */
 /* ================================================================= */
 
-.field input[type="file"] {
-  padding: 12px 0;
+.field input[type="file"] { padding: 12px 0; }
+
+/* อัปโหลด (ซ้าย) + พรีวิว (ขวา) */
+.imageField {
+  display: grid;
+  grid-template-columns: 1fr 250px;   /* ซ้ายยืด / ขวาคงที่ */
+  align-items: end;
+  gap: 16px;
+}
+@media (max-width: 768px) {
+  .imageField { grid-template-columns: 1fr; }
 }
 
 .imagePreview {
-  width: 250px; /* กำหนดขนาดที่แน่นอน */
-  height: 200px; /* กำหนดขนาดที่แน่นอน */
+  width: 250px;
+  height: 200px;
   margin-top: 15px;
   border: 1px solid #ced4da;
   border-radius: 8px;
@@ -121,11 +131,10 @@
   justify-content: center;
   align-items: center;
 }
-
 .imagePreview img {
   width: 100%;
   height: 100%;
-  object-fit: contain; /* รักษาสัดส่วนของรูปภาพ */
+  object-fit: contain; /* รักษาสัดส่วนรูป */
 }
 
 .imagePreviewPlaceholder {
@@ -137,15 +146,11 @@
   font-size: 0.9rem;
   text-align: center;
 }
-
-.imagePreviewPlaceholder svg {
-  margin-bottom: 10px;
-}
+.imagePreviewPlaceholder svg { margin-bottom: 10px; }
 
 /* ================================================================= */
 /* Action Buttons */
 /* ================================================================= */
-
 .actions {
   display: flex;
   justify-content: flex-end;
@@ -163,44 +168,20 @@
   transition: background-color 0.3s ease;
 }
 
-.cancel {
-  background-color: #e9ecef;
-  color: #495057;
-}
+.cancel { background-color: #e9ecef; color: #495057; }
+.cancel:hover { background-color: #ced4da; }
 
-.cancel:hover {
-  background-color: #ced4da;
-}
-
-.save {
-  background-color: #28a745;
-  color: #fff;
-}
-
-.save:hover {
-  background-color: #218838;
-}
+.save { background-color: #28a745; color: #fff; }
+.save:hover { background-color: #218838; }
 
 /* ================================================================= */
 /* Responsive Design */
 /* ================================================================= */
 @media (max-width: 768px) {
-  .pageLayout {
-    margin: 20px;
-  }
-  .mainContent {
-    padding: 20px;
-  }
-  .title {
-    font-size: 2rem;
-  }
-  .grid {
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-  .actions {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
+  .pageLayout { margin: 20px; }
+  .mainContent { padding: 20px; }
+  .title { font-size: 2rem; }
+  .grid { grid-template-columns: 1fr; gap: 15px; }
+  .actions { flex-direction: column; align-items: stretch; gap: 10px; }
+  .imagePreview { width: 100%; height: 220px; } /* ให้พอดีหน้าจอเล็ก */
 }
