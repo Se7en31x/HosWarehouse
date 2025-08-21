@@ -1,310 +1,365 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './page.module.css';
+import axiosInstance from '@/app/utils/axiosInstance';
+import { FaPlusCircle, FaTimes } from 'react-icons/fa';
+import Swal from 'sweetalert2';
 
-/** ข้อมูลจำลอง */
-const MOCK_ITEMS = [
-  { item_id: 1, code: 'MED001', name: 'ยาพาราเซตามอล 500mg', remain: 15, reorder_point: 20, unit: 'กล่อง' },
-  { item_id: 2, code: 'SUP002', name: 'ถุงมือยาง ไซส์ M',        remain: 200, reorder_point: 100, unit: 'กล่อง' },
-  { item_id: 3, code: 'MED010', name: 'แอลกอฮอล์ 70%',         remain: 8,  reorder_point: 30,  unit: 'ขวด' },
-  { item_id: 4, code: 'GEN005', name: 'กระดาษทิชชู่ 2 ชั้น',    remain: 0,  reorder_point: 10,  unit: 'แพ็ค' },
-];
-
-const StatusBadge = ({ remain, rop }) => {
-  if (remain <= 0) return <span className={`${styles.badge} ${styles.danger}`}>หมดสต็อก</span>;
-  if (remain < rop) return <span className={`${styles.badge} ${styles.warn}`}>ต่ำกว่าจุดสั่งซื้อ</span>;
-  return <span className={`${styles.badge} ${styles.ok}`}>ปกติ</span>;
+// Component สำหรับแสดง Badge สถานะ
+const StatusBadge = ({ status }) => {
+  let badgeStyle = styles.pending;
+  if (status === 'approved') {
+    badgeStyle = styles.approved;
+  } else if (status === 'completed') {
+    badgeStyle = styles.completed;
+  } else if (status === 'canceled') {
+    badgeStyle = styles.canceled;
+  }
+  return <span className={`${styles.badge} ${badgeStyle}`}>{status}</span>;
 };
 
-export default function InventoryCheckMockPage() {
-  // data
-  const [items, setItems] = useState([]);
-  // selection + qty
-  const [selectedIds, setSelectedIds] = useState(new Set());
-  const [qtyById, setQtyById] = useState({}); // { item_id: number }
-  // filters
-  const [search, setSearch] = useState('');
-  const [viewMode, setViewMode] = useState('below'); // all | below | oos
-  // paging
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+// Component Modal สำหรับสร้าง PO หรือ RFQ
+const DocumentModal = ({ items, docType, onClose }) => {
+  const [vendor, setVendor] = useState('');
+  const [remark, setRemark] = useState('');
+  const [paymentTerms, setPaymentTerms] = useState('');
+  const [shippingTerms, setShippingTerms] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [suppliers, setSuppliers] = useState([]);
+  const [suppliersLoading, setSuppliersLoading] = useState(true);
+  const [itemDetails, setItemDetails] = useState({});
 
-  useEffect(() => { setItems(MOCK_ITEMS); }, []);
+  const isPo = docType === 'po';
+  const isRfq = docType === 'rfq';
 
-  /** base = apply search เท่านั้น (ไว้เอาไปนับจำนวนแต่ละหมวดด้วย) */
-  const base = useMemo(() => {
-    const s = search.trim().toLowerCase();
-    return items.filter(x =>
-      !s ||
-      x.code.toLowerCase().includes(s) ||
-      x.name.toLowerCase().includes(s)
-    );
-  }, [items, search]);
+  const fmt = (n) => {
+    const num = parseFloat(n);
+    if (typeof num !== 'number' || isNaN(num) || num === null) return '0.00';
+    return num.toLocaleString('th-TH', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
 
-  /** นับจำนวนตามหมวด (นับหลังค้นหาแล้ว) */
-  const counts = useMemo(() => {
-    const all = base.length;
-    const below = base.filter(x => x.remain < x.reorder_point).length;
-    const oos = base.filter(x => x.remain <= 0).length;
-    return { all, below, oos };
-  }, [base]);
-
-  /** filtered ตาม viewMode */
-  const filtered = useMemo(() => {
-    if (viewMode === 'below') return base.filter(x => x.remain < x.reorder_point);
-    if (viewMode === 'oos')   return base.filter(x => x.remain <= 0);
-    return base;
-  }, [base, viewMode]);
-
-  /** แนะนำจำนวน */
-  const suggestQty = (row) => Math.max(1, (row.reorder_point - row.remain) || 0);
-
-  /** เลือก/ยกเลิกรายการ */
-  const toggleSelect = (row) => {
-    const next = new Set(selectedIds);
-    const nextQty = { ...qtyById };
-    if (next.has(row.item_id)) {
-      next.delete(row.item_id);
-      delete nextQty[row.item_id];
-    } else {
-      next.add(row.item_id);
-      if (nextQty[row.item_id] == null) nextQty[row.item_id] = suggestQty(row);
+  // โหลด suppliers มาใช้เฉพาะ PO
+  useEffect(() => {
+    if (!isPo) return;
+    async function fetchSuppliers() {
+      try {
+        setSuppliersLoading(true);
+        const res = await axiosInstance.get('/suppliers');
+        setSuppliers(res.data);
+      } catch (error) {
+        Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: 'โหลดข้อมูลผู้ขายไม่สำเร็จ' });
+      } finally {
+        setSuppliersLoading(false);
+      }
     }
-    setSelectedIds(next);
-    setQtyById(nextQty);
+    fetchSuppliers();
+  }, [isPo]);
+
+  useEffect(() => {
+    const initialDetails = items.reduce((acc, item) => {
+      acc[item.item_id] = {
+        qty: 1,
+        price: isPo ? 0 : 0,
+      };
+      return acc;
+    }, {});
+    setItemDetails(initialDetails);
+  }, [items, isPo]);
+
+  const handleDetailChange = (itemId, field, value) => {
+    setItemDetails((prev) => ({
+      ...prev,
+      [itemId]: { ...prev[itemId], [field]: parseFloat(value) || 0 },
+    }));
   };
 
-  /** เลือกทั้งหน้า / ยกเลิกทั้งหน้า */
-  const start = (page - 1) * pageSize;
-  const end   = start + pageSize;
-  const pageItems = filtered.slice(start, end);
-  const allSelectedPage = pageItems.length > 0 && pageItems.every(x => selectedIds.has(x.item_id));
-  const toggleSelectAllPage = () => {
-    const next = new Set(selectedIds);
-    const nextQty = { ...qtyById };
-    if (allSelectedPage) {
-      pageItems.forEach(x => { next.delete(x.item_id); delete nextQty[x.item_id]; });
-    } else {
-      pageItems.forEach(x => {
-        next.add(x.item_id);
-        if (nextQty[x.item_id] == null) nextQty[x.item_id] = suggestQty(x);
-      });
+  const handleCreateDocument = async () => {
+    if (isPo && !vendor) {
+      Swal.fire({ icon: 'warning', title: 'ข้อมูลไม่ครบ', text: 'กรุณาเลือกผู้ขาย' });
+      return;
     }
-    setSelectedIds(next);
-    setQtyById(nextQty);
+    if (items.length === 0) {
+      Swal.fire({ icon: 'warning', title: 'ยังไม่ได้เลือกรายการ', text: 'กรุณาเลือกสินค้าที่ต้องการ' });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      let payload, endpoint;
+
+      if (isPo) {
+        const totalAmount = items.reduce((sum, item) => {
+          const { qty, price } = itemDetails[item.item_id] || {};
+          return sum + (qty || 0) * (price || 0);
+        }, 0);
+        payload = {
+          docData: { docType: 'po', supplierId: vendor, remark, paymentTerms, shippingTerms, totalAmount },
+          items: items.map((i) => ({
+            itemId: i.item_id,
+            qty: itemDetails[i.item_id].qty,
+            price: itemDetails[i.item_id].price,
+            line_total: (itemDetails[i.item_id].qty * itemDetails[i.item_id].price).toFixed(2),
+          })),
+        };
+        endpoint = '/po/new';
+      }
+
+      if (isRfq) {
+        payload = {
+          docData: { docType: 'rfq', remark },
+          items: items.map((i) => ({
+            itemId: i.item_id,
+            qty: itemDetails[i.item_id].qty,
+          })),
+        };
+        endpoint = '/rfq/new';
+      }
+
+      const res = await axiosInstance.post(endpoint, payload);
+      Swal.fire({
+        icon: 'success',
+        title: `สร้าง ${docType.toUpperCase()} สำเร็จ`,
+        text: `เลขที่: ${res.data.doc_no}`,
+      }).then(() => onClose());
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: err.message });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const setQty = (id, raw) => {
-    const n = Number(raw);
-    const safe = Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
-    setQtyById(prev => ({ ...prev, [id]: safe }));
-  };
+  return (
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContent}>
+        <header className={styles.modalHeader}>
+          <h2>{isPo ? 'สร้างใบสั่งซื้อ (PO)' : 'สร้างใบขอราคา (RFQ)'}</h2>
+          <button className={styles.closeButton} onClick={onClose}><FaTimes /></button>
+        </header>
 
-  /** เติมจำนวนแนะนำ / ล้างจำนวน เฉพาะรายการที่ถูกเลือก (ทั่วทั้งผลลัพธ์ ไม่ใช่เฉพาะหน้านี้) */
-  const fillSuggestedForSelected = () => {
-    const next = { ...qtyById };
-    items.forEach(r => { if (selectedIds.has(r.item_id)) next[r.item_id] = suggestQty(r); });
-    setQtyById(next);
-  };
-  const clearQtyForSelected = () => {
-    const next = { ...qtyById };
-    items.forEach(r => { if (selectedIds.has(r.item_id)) next[r.item_id] = 0; });
-    setQtyById(next);
-  };
+        <section className={styles.modalBody}>
+          {/* แสดงผู้ขาย/เงื่อนไขเฉพาะ PO */}
+          {isPo && (
+            <>
+              <div className={styles.formGroup}>
+                <label>ผู้ขาย</label>
+                <select value={vendor} onChange={(e) => setVendor(e.target.value)} disabled={suppliersLoading}>
+                  <option value="">{suppliersLoading ? 'กำลังโหลด...' : 'เลือกผู้ขาย'}</option>
+                  {suppliers.map((s) => (
+                    <option key={s.supplier_id} value={s.supplier_id}>{s.supplier_name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles.formGroup}>
+                <label>เงื่อนไขการชำระเงิน</label>
+                <input type="text" value={paymentTerms} onChange={(e) => setPaymentTerms(e.target.value)} />
+              </div>
+              <div className={styles.formGroup}>
+                <label>เงื่อนไขการจัดส่ง</label>
+                <input type="text" value={shippingTerms} onChange={(e) => setShippingTerms(e.target.value)} />
+              </div>
+            </>
+          )}
 
-  /** รายการที่เลือกจริง ๆ (ข้ามหน้าก็ยังถูกเลือกอยู่) */
-  const selectedList = useMemo(
-    () => items.filter(x => selectedIds.has(x.item_id)).map(x => ({ ...x, qty: Number(qtyById[x.item_id] || 0) })),
-    [items, selectedIds, qtyById]
+          <h3>รายการสินค้า</h3>
+          <table className={styles.itemTable}>
+            <thead>
+              <tr>
+                <th>รหัสสินค้า</th>
+                <th>ชื่อสินค้า</th>
+                <th>จำนวน</th>
+                {isPo && <><th>ราคา/หน่วย</th><th>รวม</th></>}
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((i) => (
+                <tr key={i.item_id}>
+                  <td>{i.item_code}</td>
+                  <td>{i.item_name}</td>
+                  <td>
+                    <input type="number" min="1"
+                      value={itemDetails[i.item_id]?.qty || 1}
+                      onChange={(e) => handleDetailChange(i.item_id, 'qty', e.target.value)} />
+                  </td>
+                  {isPo && (
+                    <>
+                      <td>
+                        <input type="number" min="0"
+                          value={itemDetails[i.item_id]?.price || 0}
+                          onChange={(e) => handleDetailChange(i.item_id, 'price', e.target.value)} />
+                      </td>
+                      <td>{fmt((itemDetails[i.item_id]?.qty || 0) * (itemDetails[i.item_id]?.price || 0))}</td>
+                    </>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+            {isPo && (
+              <tfoot>
+                <tr>
+                  <td colSpan="4">ยอดรวมทั้งหมด:</td>
+                  <td>
+                    {fmt(items.reduce((sum, i) => {
+                      const q = itemDetails[i.item_id]?.qty || 0;
+                      const p = itemDetails[i.item_id]?.price || 0;
+                      return sum + q * p;
+                    }, 0))}
+                  </td>
+                </tr>
+              </tfoot>
+            )}
+          </table>
+
+          <div className={styles.formGroup}>
+            <label>หมายเหตุ</label>
+            <textarea value={remark} onChange={(e) => setRemark(e.target.value)} rows="2" />
+          </div>
+        </section>
+
+        <footer className={styles.modalFooter}>
+          <button onClick={onClose} className={styles.secondaryButton}>ยกเลิก</button>
+          <button onClick={handleCreateDocument} className={styles.primaryButton} disabled={isSubmitting}>
+            {isSubmitting ? 'กำลังสร้าง...' : 'ยืนยัน'}
+          </button>
+        </footer>
+      </div>
+    </div>
   );
-  const validLines = selectedList.filter(x => x.qty > 0);
-  const totalQty = validLines.reduce((a, r) => a + r.qty, 0);
+};
 
-  /** สร้าง RFQ / PO (mock) */
-  const createRFQ = () => {
-    if (validLines.length === 0) return alert('กรุณาเลือกสินค้าและระบุจำนวน (> 0) อย่างน้อย 1 รายการ');
-    const payload = validLines.map(({ item_id, code, name, unit, qty }) => ({ item_id, code, name, unit, qty }));
-    alert('(Mock) สร้าง RFQ:\n' + JSON.stringify(payload, null, 2));
+// ───────────────────────────────────────────────
+// หน้า InventoryCheckPage
+export default function InventoryCheckPage() {
+  const [stockItems, setStockItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState(null);
+
+  useEffect(() => {
+    async function fetchStockItems() {
+      try {
+        setIsLoading(true);
+        const res = await axiosInstance.get('/stock-check');
+        setStockItems(res.data);
+      } catch (err) {
+        setError('ไม่สามารถดึงข้อมูลสินค้าคงคลังได้');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchStockItems();
+  }, []);
+
+  const handleCheckboxChange = (item) => {
+    setSelectedItems((prev) => {
+      if (prev.find((i) => i.item_id === item.item_id)) {
+        return prev.filter((i) => i.item_id !== item.item_id);
+      } else {
+        return [...prev, item];
+      }
+    });
   };
-  const createPOQuick = () => {
-    if (validLines.length === 0) return alert('กรุณาเลือกสินค้าและระบุจำนวน (> 0) อย่างน้อย 1 รายการ');
-    const payload = validLines.map(({ item_id, code, name, unit, qty }) => ({ item_id, code, name, unit, qty }));
-    alert('(Mock) สร้าง PO:\n' + JSON.stringify(payload, null, 2));
+
+  const handleOpenModal = (type) => {
+    if (selectedItems.length === 0) {
+      Swal.fire({ icon: 'warning', title: 'ยังไม่ได้เลือกสินค้า', text: 'กรุณาเลือกรายการสินค้าที่ต้องการสร้างเอกสาร' });
+      return;
+    }
+    setModalType(type);
+    setIsModalOpen(true);
   };
 
-  /** เปลี่ยนมุมมองแล้วรีเซ็ตหน้าไปหน้า 1 */
-  const switchView = (mode) => { setViewMode(mode); setPage(1); };
-
-  /** เปลี่ยนหน้า */
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const gotoPrev = () => setPage(p => Math.max(1, p - 1));
-  const gotoNext = () => setPage(p => Math.min(totalPages, p + 1));
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setModalType(null);
+    setSelectedItems([]);
+  };
 
   return (
     <main className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.title}>ตรวจสอบสต็อก (Inventory Check)</h1>
-        <p className={styles.subtitle}>
-          เลือกสินค้าที่ “ต่ำกว่า ROP” และกำหนดจำนวนที่ต้องการ (แก้ไขได้อีกใน RFQ/PO)
-        </p>
+        <h1 className={styles.title}>ตรวจสอบสต็อก</h1>
+        <p className={styles.subtitle}>ดูรายการสินค้าที่มีสต็อกต่ำกว่าจุดสั่งซื้อซ้ำ</p>
       </header>
 
       <section className={styles.toolbar}>
-        <input
-          className={styles.input}
-          placeholder="ค้นหา: รหัส/ชื่อสินค้า"
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-        />
-
-        {/* ตัวเลือกมุมมอง */}
-        <div style={{ display:'flex', gap:6 }}>
-          <button
-            onClick={() => switchView('all')}
-            className={styles.secondary}
-            aria-pressed={viewMode==='all'}
-            style={viewMode==='all' ? { borderColor:'#2563eb', color:'#2563eb' } : undefined}
-          >
-            ทั้งหมด ({counts.all})
-          </button>
-          <button
-            onClick={() => switchView('below')}
-            className={styles.secondary}
-            aria-pressed={viewMode==='below'}
-            style={viewMode==='below' ? { borderColor:'#2563eb', color:'#2563eb' } : undefined}
-          >
-            ต่ำกว่า ROP ({counts.below})
-          </button>
-          <button
-            onClick={() => switchView('oos')}
-            className={styles.secondary}
-            aria-pressed={viewMode==='oos'}
-            style={viewMode==='oos' ? { borderColor:'#2563eb', color:'#2563eb' } : undefined}
-          >
-            หมดสต็อก ({counts.oos})
-          </button>
+        <div className={styles.searchBar}>
+          <input className={styles.input} placeholder="ค้นหา: รหัส, ชื่อสินค้า..." />
         </div>
-
         <div className={styles.spacer} />
-
-        {/* actions จำนวน */}
-        <button className={styles.secondary} onClick={fillSuggestedForSelected} disabled={selectedIds.size===0}>
-          เติมจำนวนแนะนำ
-        </button>
-        <button className={styles.secondary} onClick={clearQtyForSelected} disabled={selectedIds.size===0}>
-          ล้างจำนวน
-        </button>
-
-        <button className={styles.primary}  disabled={validLines.length===0} onClick={createRFQ}>สร้าง RFQ</button>
-        <button className={styles.secondary} disabled={validLines.length===0} onClick={createPOQuick}>สร้าง PO ทันที</button>
+        {selectedItems.length > 0 && (
+          <div className={styles.actionButtons}>
+            <button onClick={() => handleOpenModal('po')} className={styles.primaryButton}>
+              <FaPlusCircle className={styles.buttonIcon} /> สร้าง PO
+            </button>
+            <button onClick={() => handleOpenModal('rfq')} className={styles.secondaryButton}>
+              <FaPlusCircle className={styles.buttonIcon} /> สร้าง RFQ
+            </button>
+          </div>
+        )}
       </section>
 
-      <section className={styles.card}>
-        <div className={styles.tableWrap} role="region" aria-label="ตารางรายการสต็อก">
+      <div className={styles.tableCard}>
+        <div className={styles.tableWrap} role="region" aria-label="ตารางสินค้าคงคลัง">
           <table className={styles.table}>
             <thead>
               <tr>
-                <th style={{ width: 44 }}>
-                  <input
-                    type="checkbox"
-                    aria-label="เลือกทั้งหมดในหน้านี้"
-                    checked={allSelectedPage}
-                    onChange={toggleSelectAllPage}
-                  />
-                </th>
-                <th>รหัส</th>
-                <th>ชื่อรายการ</th>
-                <th>คงเหลือ</th>
-                <th>จุดสั่งซื้อ</th>
+                <th style={{ width: '50px' }}></th>
+                <th>รหัสสินค้า</th>
+                <th>ชื่อสินค้า</th>
+                <th>สต็อกคงเหลือ</th>
                 <th>หน่วย</th>
-                <th>สถานะ</th>
-                <th style={{ width: 140, textAlign: 'right' }}>สั่งซื้อ (จำนวน)</th>
+                <th>จุดสั่งซื้อซ้ำ</th>
               </tr>
             </thead>
             <tbody>
-              {pageItems.length === 0 ? (
+              {isLoading && (
                 <tr>
-                  <td colSpan={8} className={styles.empty}>ไม่พบรายการ</td>
+                  <td colSpan={6} className={styles.empty}>กำลังโหลดข้อมูล...</td>
+                </tr>
+              )}
+              {error && (
+                <tr>
+                  <td colSpan={6} className={styles.empty} style={{ color: 'red' }}>{error}</td>
+                </tr>
+              )}
+              {!isLoading && !error && stockItems.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className={styles.empty}>ไม่พบรายการสินค้า</td>
                 </tr>
               ) : (
-                pageItems.map((row) => {
-                  const checked = selectedIds.has(row.item_id);
-                  const qty = qtyById[row.item_id] ?? '';
-                  return (
-                    <tr key={row.item_id} className={checked ? styles.rowSelected : undefined}>
-                      <td>
-                        <input
-                          type="checkbox"
-                          aria-label={`เลือกรายการ ${row.code}`}
-                          checked={checked}
-                          onChange={() => toggleSelect(row)}
-                        />
-                      </td>
-                      <td className={styles.mono}>{row.code}</td>
-                      <td>{row.name}</td>
-                      <td className={row.remain <= 0 ? styles.dangerText : undefined}>{row.remain}</td>
-                      <td>{row.reorder_point}</td>
-                      <td>{row.unit}</td>
-                      <td><StatusBadge remain={row.remain} rop={row.reorder_point} /></td>
-                      <td style={{ textAlign: 'right' }}>
-                        <input
-                          type="number"
-                          min={0}
-                          step={1}
-                          value={qty}
-                          onChange={(e) => setQty(row.item_id, e.target.value)}
-                          disabled={!checked}
-                          aria-label={`จำนวนสั่งซื้อของ ${row.code}`}
-                          style={{
-                            width: 110,
-                            padding: '6px 8px',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: 6,
-                            background: checked ? '#fff' : '#f3f4f6',
-                            color: checked ? '#111827' : '#6b7280',
-                            textAlign: 'right',
-                          }}
-                        />
-                      </td>
-                    </tr>
-                  );
-                })
+                stockItems.map((item) => (
+                  <tr key={item.item_id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.some((i) => i.item_id === item.item_id)}
+                        onChange={() => handleCheckboxChange(item)}
+                      />
+                    </td>
+                    <td className={styles.mono}>{item.item_code}</td>
+                    <td>{item.item_name}</td>
+                    <td>{item.remain}</td>
+                    <td>{item.item_unit}</td>
+                    <td style={{ color: item.remain <= item.reorder_point ? 'red' : 'inherit' }}>
+                      {item.reorder_point}
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
+      </div>
 
-        {/* pagination */}
-        <div style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 12px' }}>
-          <div>แสดงหน้า <b>{page}</b> / {totalPages}</div>
-          <button className={styles.secondary} onClick={gotoPrev} disabled={page<=1}>ก่อนหน้า</button>
-          <button className={styles.secondary} onClick={gotoNext} disabled={page>=totalPages}>ถัดไป</button>
-          <div style={{ marginLeft:'auto' }}>
-            <label style={{ marginRight:6 }}>ต่อหน้า</label>
-            <select
-              className={styles.input}
-              value={pageSize}
-              onChange={(e)=>{ setPageSize(Number(e.target.value)||20); setPage(1); }}
-              style={{ width: 90 }}
-            >
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-          </div>
-        </div>
-
-        <footer className={styles.footer}>
-          <div>
-            เลือกแล้ว <strong>{selectedIds.size}</strong> รายการ • รวมจำนวนที่จะสั่ง <strong>{totalQty}</strong>
-          </div>
-          <div className={styles.hint}>
-            * จำนวนแนะนำ = max(1, จุดสั่งซื้อ − คงเหลือ). กำหนดจำนวนได้ตั้งแต่ตรงนี้ และยังแก้ไขได้อีกในหน้า RFQ/PO
-          </div>
-        </footer>
-      </section>
+      {isModalOpen && (
+        <DocumentModal items={selectedItems} docType={modalType} onClose={handleCloseModal} />
+      )}
     </main>
   );
 }

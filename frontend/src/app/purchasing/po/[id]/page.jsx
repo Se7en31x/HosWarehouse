@@ -1,333 +1,327 @@
 'use client';
-
-import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import axiosInstance from '@/app/utils/axiosInstance';
+import Swal from 'sweetalert2';
+import styles from './page.module.css';
+import { FaChevronLeft, FaPrint, FaSync, FaUpload, FaTrash, FaBan } from 'react-icons/fa';
+import '@/app/utils/fonts/sarabun-normal';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
-/** ───────── Mock อยู่ในไฟล์นี้ ───────── */
-const PO_DETAIL = {
-  'PO-2025-001': {
-    po_no: 'PO-2025-001',
-    date: '2025-08-21',
-    supplier: { id: 102, name: 'บจก.เมดิคอลพลัส', phone: '02-123-4567', address: 'กทม.' },
-    status: 'waiting_approval',
-    terms: { credit_days: 30, delivery_days: 7, warranty_months: 6, note: 'ส่งภายใน 7 วัน' },
-    rfq_ref: 'RFQ-2025-003',
-    quote_ref: 'QT-12345',
-    items: [
-      { code: 'MED001', name: 'ยาพาราเซตามอล 500mg', qty: 50, unit: 'กล่อง', unit_price: 196, discount: 2 },
-    ],
-  },
-  'PO-2025-002': {
-    po_no: 'PO-2025-002',
-    date: '2025-08-22',
-    supplier: { id: 101, name: 'หจก.สุขภาพดี', phone: '02-987-6543', address: 'เชียงใหม่' },
-    status: 'approved',
-    terms: { credit_days: 15, delivery_days: 5, warranty_months: 3, note: '' },
-    rfq_ref: 'RFQ-2025-002',
-    quote_ref: 'QT-22222',
-    items: [
-      { code: 'MED010', name: 'แอลกอฮอล์ 70%', qty: 30, unit: 'ขวด', unit_price: 120, discount: 0 },
-      { code: 'GEN005', name: 'กระดาษทิชชู่ 2 ชั้น', qty: 20, unit: 'แพ็ค', unit_price: 580, discount: 5 },
-    ],
-  },
+const thb = (v) => (Number(v) || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const statusMap = {
+  issued:  { text: 'บันทึกแล้ว', cls: 'badgeBlue' },
+  canceled:{ text: 'ยกเลิก',  cls: 'badgeRed'  },
 };
 
-const STATUS_TEXT = {
-  waiting_approval: 'รออนุมัติ',
-  approved: 'อนุมัติแล้ว',
-  completed: 'เสร็จสิ้น',
-};
+function StatusBadge({ status }) {
+  const map = statusMap[status] || { text: status || '-', cls: 'badgeGray' };
+  return <span className={`${styles.badge} ${styles[map.cls]}`}>{map.text}</span>;
+}
 
-const badgeStyle = (s) => ({
-  display: 'inline-block',
-  padding: '3px 8px',
-  borderRadius: 999,
-  fontSize: 12,
-  fontWeight: 700,
-  background:
-    s === 'waiting_approval' ? '#fffbeb' :
-    s === 'approved' ? '#dcfce7' :
-    '#e5e7eb',
-  color:
-    s === 'waiting_approval' ? '#92400e' :
-    s === 'approved' ? '#14532d' :
-    '#374151',
-});
-/** ───────────────────────────────────── */
-
-export default function PoDetailPage() {
-  const { id } = useParams(); // "PO-2025-001"
+export default function PODetailPage() {
   const router = useRouter();
-  const [po, setPo] = useState(null);
+  const { id } = useParams();
+
   const [loading, setLoading] = useState(true);
+  const [po, setPo] = useState(null);
+  const [files, setFiles] = useState([]);     // รายการไฟล์แนบ
+  const [uploading, setUploading] = useState(false);
 
-  // จำลองโหลด
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setPo(PO_DETAIL[id] || null);
+  const fetchDetail = async () => {
+    setLoading(true);
+    try {
+      const res = await axiosInstance.get(`/po/${id}`);
+      setPo(res.data);
+
+      // ไฟล์แนบ
+      try {
+        const f = await axiosInstance.get(`/po/${id}/files`);
+        setFiles(f.data || []);
+      } catch { setFiles([]); }
+
+    } catch (e) {
+      console.error(e);
+      Swal.fire('ผิดพลาด', 'โหลดรายละเอียด PO ไม่สำเร็จ', 'error');
+    } finally {
       setLoading(false);
-    }, 250);
-    return () => clearTimeout(t);
-  }, [id]);
+    }
+  };
 
-  const itemsWithNet = useMemo(() => {
-    if (!po?.items) return [];
-    return po.items.map((r) => {
-      const net = (r.unit_price * r.qty) * (1 - (r.discount || 0) / 100);
-      return { ...r, net };
-    });
+  useEffect(() => { if (id) fetchDetail(); /* eslint-disable-next-line */ }, [id]);
+
+  const computed = useMemo(() => {
+    if (!po?.items?.length) return { sub: 0, vat: 0, grand: 0 };
+    const sub = po.items.reduce((a, r) => a + ((+r.qty||0)*(+r.unit_price||0) - (+r.discount||0)), 0);
+    const vatRate = Number(po?.terms?.vat_rate) || 0;
+    const vat = sub * vatRate / 100;
+    return { sub, vat, grand: sub + vat };
   }, [po]);
 
-  const totals = useMemo(() => {
-    const sub = itemsWithNet.reduce((a, r) => a + r.net, 0);
-    const vat = sub * 0.07;
-    const grand = sub + vat;
-    return { sub, vat, grand };
-  }, [itemsWithNet]);
+  const onBack = () => router.push('/purchasing/po');
 
-  const fmt = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // ⬇️ ยกเลิกเอกสาร
+  const onCancel = async () => {
+    if (po?.status === 'canceled') return;
+    const { value: reason, isConfirmed } = await Swal.fire({
+      title: 'ยกเลิกเอกสาร?',
+      input: 'text',
+      inputLabel: 'เหตุผลการยกเลิก (ระบุสั้นๆ)',
+      showCancelButton: true,
+      confirmButtonText: 'ยืนยันยกเลิก',
+      cancelButtonText: 'ยกเลิก',
+    });
+    if (!isConfirmed) return;
 
-  const approve = () => {
-    if (!po) return;
-    if (po.status !== 'waiting_approval') return alert('สถานะปัจจุบันไม่อยู่ในขั้นรออนุมัติ');
-    alert('(Mock) อนุมัติสำเร็จ');
-    setPo({ ...po, status: 'approved' });
-  };
-
-  const gotoGR = () => {
-    // ถ้ายังไม่มีหน้ารับของ ให้เปลี่ยนเป็น alert ก่อน
-    // router.push(`/purchasing/gr/${id}`);
-    alert('(Mock) ไปหน้ารับของ (GR) จากใบสั่งซื้อ ' + po.po_no);
-  };
-
-  /** 🔸 ส่งออก PDF แบบ client-side (เปิดหน้าต่างใหม่แล้วสั่งพิมพ์) */
-  const exportPdf = () => {
-    if (!po) return;
-    const win = window.open('', '_blank', 'noopener,noreferrer');
-    if (!win) {
-      alert('โปรดอนุญาต popup เพื่อส่งออก PDF');
-      return;
+    try {
+      await axiosInstance.put(`/po/${id}/cancel`, { reason: reason || '' });
+      await fetchDetail();
+      Swal.fire('สำเร็จ', 'ยกเลิกเอกสารแล้ว', 'success');
+    } catch (e) {
+      console.error(e);
+      Swal.fire('ผิดพลาด', 'ไม่สามารถยกเลิกเอกสารได้', 'error');
     }
-
-    const rowsHtml = itemsWithNet.map((r) => `
-      <tr>
-        <td class="mono">${r.code}</td>
-        <td>${r.name}</td>
-        <td class="num">${r.qty}</td>
-        <td>${r.unit}</td>
-        <td class="num">${fmt(r.unit_price)}</td>
-        <td class="num">${r.discount || 0}</td>
-        <td class="num">${fmt(r.net)}</td>
-      </tr>
-    `).join('');
-
-    const html = `
-<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>${po.po_no}.pdf</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif; margin: 24px; color:#111827; }
-    h1 { margin: 0 0 4px 0; font-size: 20px; }
-    .muted { color:#6b7280; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-    .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
-    .card { border:1px solid #e5e7eb; padding:12px; border-radius:8px; margin: 10px 0; }
-    table { width:100%; border-collapse: collapse; }
-    th, td { border:1px solid #e5e7eb; padding:8px; font-size: 12px; }
-    th { background:#f3f4f6; text-align:left; }
-    .num { text-align:right; }
-    .totals { margin-top: 10px; display:grid; justify-content: end; gap:4px; }
-    .totals .grand { font-weight:700; }
-    .footer { margin-top: 20px; display:flex; justify-content: space-between; font-size: 12px; color:#6b7280; }
-    @media print {
-      @page { size: A4; margin: 16mm; }
-      .no-print { display: none; }
-    }
-  </style>
-</head>
-<body>
-  <div class="no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px;">
-    <button onclick="window.print()" style="padding:6px 10px; border:1px solid #d1d5db; border-radius:8px; cursor:pointer;">พิมพ์ / บันทึกเป็น PDF</button>
-  </div>
-
-  <h1>Purchase Order (PO)</h1>
-  <div class="muted">เลขที่: ${po.po_no} • วันที่: ${po.date}</div>
-  <div class="muted">อ้างอิง: RFQ ${po.rfq_ref || '-'} • Quotation ${po.quote_ref || '-'}</div>
-
-  <div class="grid">
-    <div class="card">
-      <strong>ผู้ขาย</strong><br/>
-      ชื่อ: ${po.supplier.name}<br/>
-      เบอร์: ${po.supplier.phone || '-'}<br/>
-      ที่อยู่: ${po.supplier.address || '-'}
-    </div>
-    <div class="card">
-      <strong>เงื่อนไข</strong><br/>
-      เครดิต: ${po.terms.credit_days} วัน<br/>
-      ส่งของใน: ${po.terms.delivery_days} วัน<br/>
-      รับประกัน: ${po.terms.warranty_months} เดือน<br/>
-      หมายเหตุ: ${po.terms.note || '-'}
-    </div>
-  </div>
-
-  <div class="card">
-    <table>
-      <thead>
-        <tr>
-          <th>รหัส</th>
-          <th>ชื่อสินค้า</th>
-          <th class="num">จำนวน</th>
-          <th>หน่วย</th>
-          <th class="num">ราคา/หน่วย</th>
-          <th class="num">ส่วนลด (%)</th>
-          <th class="num">รวมสุทธิ</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${rowsHtml}
-      </tbody>
-    </table>
-
-    <div class="totals">
-      <div>Subtotal: ${fmt(totals.sub)}</div>
-      <div>VAT 7%: ${fmt(totals.vat)}</div>
-      <div class="grand">Grand Total: ${fmt(totals.grand)}</div>
-    </div>
-  </div>
-
-  <div class="footer">
-    <div>ผู้จัดทำ: ระบบจัดซื้อ (Mock)</div>
-    <div>สถานะ: ${STATUS_TEXT[po.status] || po.status}</div>
-  </div>
-</body>
-</html>
-    `;
-
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
-    // บางครั้ง Chrome ต้องรอให้ render เสร็จก่อนค่อยสั่ง print อัตโนมัติ
-    setTimeout(() => {
-      try { win.print(); } catch(e) {}
-    }, 300);
   };
 
-  if (loading) {
-    return <main style={pageWrap}><div style={emptyBox}>Loading...</div></main>;
-  }
+  // ⬇️ อัปโหลดไฟล์แนบ
+  const onUpload = async (evt) => {
+    const file = evt.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      await axiosInstance.post(`/po/${id}/files`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const f = await axiosInstance.get(`/po/${id}/files`);
+      setFiles(f.data || []);
+      Swal.fire('อัปโหลดแล้ว', 'บันทึกไฟล์แนบเรียบร้อย', 'success');
+    } catch (e) {
+      console.error(e);
+      Swal.fire('ผิดพลาด', 'อัปโหลดไฟล์ไม่สำเร็จ', 'error');
+    } finally {
+      setUploading(false);
+      evt.target.value = ''; // reset input
+    }
+  };
 
-  if (!po) {
-    return (
-      <main style={pageWrap}>
-        <div style={card}>
-          <h1 style={title}>ไม่พบ PO</h1>
-          <p style={{ color: '#6b7280' }}>รหัส: {id}</p>
-          <button onClick={() => router.push('/purchasing/po')} style={primaryBtn}>← กลับรายการ PO</button>
-        </div>
-      </main>
-    );
-  }
+  // ⬇️ ลบไฟล์แนบ
+  const onRemoveFile = async (file_id) => {
+    const ok = await Swal.fire({ title: 'ลบไฟล์?', icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบ' });
+    if (!ok.isConfirmed) return;
+    try {
+      await axiosInstance.delete(`/po/${id}/files/${file_id}`);
+      setFiles((prev) => prev.filter((f) => f.file_id !== file_id));
+      Swal.fire('ลบแล้ว', '', 'success');
+    } catch (e) {
+      console.error(e);
+      Swal.fire('ผิดพลาด', 'ลบไฟล์ไม่สำเร็จ', 'error');
+    }
+  };
+
+  // ⬇️ พิมพ์ PDF (readonly อยู่แล้ว)
+  const exportPDF = () => {
+    if (!po) return;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    try { doc.setFont('Sarabun', 'normal'); } catch {}
+    const marginX = 36; let y = 48;
+    doc.setFontSize(16); doc.text('ใบสั่งซื้อ (PO)', marginX, y); y+=20;
+    doc.setFontSize(11);
+    doc.text(`เลขที่: ${po.po_no || '-'}`, marginX, y); y+=16;
+    doc.text(`วันที่: ${po.po_date ? new Date(po.po_date).toLocaleDateString('th-TH') : '-'}`, marginX, y); y+=24;
+
+    const v = po.vendor || {};
+    doc.setFontSize(12); doc.text('ข้อมูลผู้ขาย', marginX, y); y+=16;
+    doc.setFontSize(10);
+    doc.text([`ชื่อ: ${v.name||'-'}`, `ที่อยู่: ${v.address||'-'}`, `ผู้ติดต่อ: ${v.contact||'-'}`, `โทร: ${v.phone||'-'}   อีเมล: ${v.email||'-'}`], marginX, y);
+    const rightX = 330;
+    doc.setFontSize(12); doc.text('ข้อมูลอ้างอิง', rightX, y-16);
+    doc.setFontSize(10);
+    doc.text([
+      `สถานะ: ${statusMap[po.status]?.text || po.status || '-'}`,
+      `PR No.: ${po?.reference?.pr_no || '-'}`,
+      `เครดิต: ${po?.terms?.credit_days ?? '-'} วัน`,
+      `ส่งของภายใน: ${po?.terms?.delivery_days ?? '-'} วัน`,
+    ], rightX, y);
+    y+=72;
+
+    const rows = (po.items||[]).map((r,i)=>[
+      i+1, r.code||'-', r.name||'-', r.unit||'-',
+      String(r.qty||0), thb(r.unit_price||0), thb(r.discount||0),
+      thb((+r.qty||0)*(+r.unit_price||0)-(+r.discount||0))
+    ]);
+    autoTable(doc, {
+      startY: y,
+      head: [['#','รหัส','ชื่อพัสดุ','หน่วย','จำนวน','ราคาต่อหน่วย','ส่วนลด','รวม/รายการ']],
+      body: rows, styles:{ font:'Sarabun', fontSize:10 }, headStyles:{ fillColor:[230,230,230] },
+      theme:'grid', margin:{ left: marginX, right: marginX },
+    });
+    const endY = doc.lastAutoTable.finalY + 12;
+    doc.setFontSize(11);
+    doc.text(`ยอดก่อนภาษี: ${thb(po?.summary?.sub_total ?? computed.sub)} บาท`, 360, endY);
+    doc.text(`VAT ${po?.terms?.vat_rate ?? 0}%: ${thb(po?.summary?.vat ?? computed.vat)} บาท`, 360, endY + 16);
+    doc.setFontSize(12);
+    doc.text(`รวมทั้งสิ้น: ${thb(po?.summary?.grand_total ?? computed.grand)} บาท`, 360, endY + 34);
+    doc.save(`${po.po_no || 'PO'}.pdf`);
+  };
+
+  if (loading) return <div className={styles.page}>กำลังโหลด...</div>;
+  if (!po) return <div className={styles.page}>ไม่พบข้อมูล PO</div>;
+
+  const canCancel = po.status === 'issued'; // ยกเลิกได้เฉพาะเอกสารที่ยังไม่ถูกยกเลิก
 
   return (
-    <main style={pageWrap}>
-      {/* Header */}
-      <section style={card}>
-        <div style={headRow}>
-          <h1 style={title}>{po.po_no}</h1>
-          <span style={badgeStyle(po.status)}>{STATUS_TEXT[po.status] || po.status}</span>
+    <div className={styles.page}>
+      <div className={styles.header}>
+        <div className={styles.leftGroup}>
+          <button className={styles.btnGhost} onClick={onBack}><FaChevronLeft/> กลับ</button>
+          <h1>รายละเอียดใบสั่งซื้อ</h1>
+          <StatusBadge status={po.status}/>
         </div>
-        <div style={twoCols}>
+        <div className={styles.headerActions}>
+          {canCancel && (
+            <button className={styles.btnDanger} onClick={onCancel} title="ยกเลิกเอกสาร">
+              <FaBan/> ยกเลิกเอกสาร
+            </button>
+          )}
+          <button className={styles.btnGhost} onClick={fetchDetail}><FaSync/> รีเฟรช</button>
+          <button className={styles.btnPrimary} onClick={exportPDF}><FaPrint/> พิมพ์/บันทึก PDF</button>
+        </div>
+      </div>
+
+      <div className={styles.card}>
+        <div className={styles.grid3}>
           <div>
-            <p><b>วันที่:</b> {po.date}</p>
-            <p><b>อ้างอิง:</b> RFQ {po.rfq_ref || '-'} • Quotation {po.quote_ref || '-'}</p>
+            <b>เลขที่ PO:</b> {po.po_no || '-'}
           </div>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center' }}>
-            <button onClick={exportPdf} style={outlineBtn}>ส่งออก PDF</button>
-            {po.status === 'waiting_approval' && (
-              <button onClick={approve} style={primaryBtn}>อนุมัติ</button>
-            )}
-            <button onClick={gotoGR} style={darkBtn}>รับของ (GR)</button>
+          <div>
+            <b>วันที่:</b> {po.po_date ? new Date(po.po_date).toLocaleDateString('th-TH') : '-'}
+          </div>
+          <div>
+            <b>สถานะ:</b> <StatusBadge status={po.status}/>
           </div>
         </div>
-      </section>
-
-      {/* Supplier & Terms */}
-      <section style={{ ...card, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <div>
-          <h3 style={h3}>ผู้ขาย</h3>
-          <p><b>ชื่อ:</b> {po.supplier.name}</p>
-          <p><b>เบอร์:</b> {po.supplier.phone || '-'}</p>
-          <p><b>ที่อยู่:</b> {po.supplier.address || '-'}</p>
+      </div>
+      
+      <div className={styles.card}>
+        <h2>ข้อมูลผู้ขาย</h2>
+        <div className={styles.grid2}>
+          <div>
+            <b>ชื่อผู้ขาย:</b> {po.vendor?.name || '-'}
+          </div>
+          <div>
+            <b>ที่อยู่:</b> {po.vendor?.address || '-'}
+          </div>
+          <div>
+            <b>ผู้ติดต่อ:</b> {po.vendor?.contact || '-'}
+          </div>
+          <div>
+            <b>เบอร์โทรศัพท์:</b> {po.vendor?.phone || '-'}
+          </div>
+          <div>
+            <b>อีเมล:</b> {po.vendor?.email || '-'}
+          </div>
         </div>
-        <div>
-          <h3 style={h3}>เงื่อนไข</h3>
-          <p><b>เครดิต:</b> {po.terms.credit_days} วัน</p>
-          <p><b>ส่งของใน:</b> {po.terms.delivery_days} วัน</p>
-          <p><b>รับประกัน:</b> {po.terms.warranty_months} เดือน</p>
-          <p><b>หมายเหตุ:</b> {po.terms.note || '-'}</p>
-        </div>
-      </section>
+      </div>
 
-      {/* Items */}
-      <section style={card}>
-        <h3 style={h3}>รายการสินค้า</h3>
-        <div style={{ overflow: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720 }}>
+      <div className={styles.card}>
+        <h2>รายการสินค้า</h2>
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
             <thead>
-              <tr style={{ background: '#f3f4f6' }}>
-                <th style={th}>รหัส</th>
-                <th style={th}>ชื่อสินค้า</th>
-                <th style={{ ...th, textAlign: 'right' }}>จำนวน</th>
-                <th style={th}>หน่วย</th>
-                <th style={{ ...th, textAlign: 'right' }}>ราคา/หน่วย</th>
-                <th style={{ ...th, textAlign: 'right' }}>ส่วนลด (%)</th>
-                <th style={{ ...th, textAlign: 'right' }}>รวมสุทธิ</th>
+              <tr>
+                <th>#</th>
+                <th>รหัส</th>
+                <th>ชื่อพัสดุ</th>
+                <th>หน่วย</th>
+                <th>จำนวน</th>
+                <th>ราคา/หน่วย</th>
+                <th>ส่วนลด</th>
+                <th>รวม/รายการ</th>
               </tr>
             </thead>
             <tbody>
-              {itemsWithNet.map((r) => (
-                <tr key={r.code}>
-                  <td style={tdMono}>{r.code}</td>
-                  <td style={td}>{r.name}</td>
-                  <td style={{ ...td, textAlign: 'right' }}>{r.qty}</td>
-                  <td style={td}>{r.unit}</td>
-                  <td style={{ ...td, textAlign: 'right' }}>{fmt(r.unit_price)}</td>
-                  <td style={{ ...td, textAlign: 'right' }}>{fmt(r.discount || 0)}</td>
-                  <td style={{ ...td, textAlign: 'right' }}>{fmt(r.net)}</td>
+              {(po.items || []).map((item, index) => (
+                <tr key={index}>
+                  <td className={styles.center}>{index + 1}</td>
+                  <td>{item.code || '-'}</td>
+                  <td>{item.name || '-'}</td>
+                  <td className={styles.center}>{item.unit || '-'}</td>
+                  <td className={styles.center}>{thb(item.qty)}</td>
+                  <td className={styles.right}>{thb(item.unit_price)}</td>
+                  <td className={styles.right}>{thb(item.discount)}</td>
+                  <td className={styles.right}>{thb(item.line_total)}</td>
                 </tr>
               ))}
-              {itemsWithNet.length === 0 && (
-                <tr><td colSpan={7} style={{ ...td, textAlign: 'center', color: '#6b7280' }}>ไม่มีรายการ</td></tr>
-              )}
             </tbody>
           </table>
         </div>
+      </div>
 
-        {/* Totals */}
-        <div style={{ display: 'grid', justifyContent: 'end', gap: 4, marginTop: 12 }}>
-          <div><b>Subtotal:</b> {fmt(totals.sub)}</div>
-          <div><b>VAT 7%:</b> {fmt(totals.vat)}</div>
-          <div style={{ fontSize: '1.05rem' }}><b>Grand Total:</b> {fmt(totals.grand)}</div>
+      <div className={styles.card}>
+        <h2>สรุปยอด</h2>
+        <div className={styles.summaryWrap}>
+          <div className={styles.summaryRow}>
+            <span>ยอดก่อนภาษี:</span>
+            <span>{thb(po.summary?.sub_total)} บาท</span>
+          </div>
+          <div className={styles.summaryRow}>
+            <span>ภาษีมูลค่าเพิ่ม ({po.terms?.vat_rate || 0}%):</span>
+            <span>{thb(po.summary?.vat)} บาท</span>
+          </div>
+          <div className={`${styles.summaryRow} ${styles.grand}`}>
+            <span>ยอดรวมทั้งสิ้น:</span>
+            <span>{thb(po.summary?.grand_total)} บาท</span>
+          </div>
         </div>
-      </section>
-    </main>
+      </div>
+
+      {/* ไฟล์แนบ */}
+      <div className={styles.card}>
+        <div className={styles.cardHead}>
+          <h2>ไฟล์แนบ</h2>
+          <label className={styles.btnPrimary} style={{opacity: uploading || po.status === 'canceled' ? 0.5 : 1}}>
+            <FaUpload/> แนบไฟล์
+            <input
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={onUpload}
+              disabled={uploading || po.status === 'canceled'}
+              style={{ display: 'none' }}
+            />
+          </label>
+        </div>
+
+        {files.length === 0 ? (
+          <div className={styles.muted}>ยังไม่มีไฟล์แนบ</div>
+        ) : (
+          <div className={styles.fileGrid}>
+            {files.map((f) => (
+              <div key={f.file_id} className={styles.fileItem}>
+                <a 
+                  href={`http://localhost:5000${f.file_url}`} 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className={styles.fileLink}>
+                  {f.file_name}
+                </a>
+                <div className={styles.fileMeta}>
+                  <span>อัปโหลด: {new Date(f.uploaded_at).toLocaleString('th-TH')}</span>
+                </div>
+                {po.status !== 'canceled' && (
+                  <button className={styles.btnSmallDanger} onClick={() => onRemoveFile(f.file_id)}>
+                    <FaTrash/> ลบ
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+    </div>
   );
 }
-
-/** ───────── styles ───────── */
-const pageWrap = { padding: 20, background: '#f9fafb', minHeight: '100vh' };
-const card = { background: '#fff', padding: 16, borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', marginBottom: 16 };
-const title = { fontSize: '1.4rem', fontWeight: 700, margin: 0 };
-const headRow = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 8 };
-const twoCols = { display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'center' };
-const h3 = { margin: '0 0 8px 0' };
-const primaryBtn = { background: '#2563eb', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: 8, cursor: 'pointer' };
-const darkBtn = { background: '#111827', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: 8, cursor: 'pointer' };
-const outlineBtn = { background: '#fff', color: '#111827', border: '1px solid #d1d5db', padding: '8px 12px', borderRadius: 8, cursor: 'pointer' };
-const emptyBox = { padding: 16, textAlign: 'center', color: '#6b7280', background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' };
-const th = { textAlign: 'left', padding: 10, borderBottom: '1px solid #e5e7eb' };
-const td = { padding: 10, borderBottom: '1px solid #f1f5f9', verticalAlign: 'middle' };
-const tdMono = { ...td, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' };

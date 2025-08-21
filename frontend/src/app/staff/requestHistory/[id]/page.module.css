@@ -1,0 +1,177 @@
+:root {
+  --bg: #f3f4f6;
+  --panel: #fff;
+  --text: #111827;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+
+  --primary: #3b82f6;
+  --primary-500: #2563eb;
+
+  --tbl-header-bg: #e9f6fb;
+  --tbl-header-text: #0f3a54;
+  --tbl-border: #cfeaf6;
+  --tbl-row-hover: #f0fbfe;
+  --tbl-row-alt: #f7fdff;
+}
+
+.mainHome {
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background: var(--bg);
+  padding: 24px;
+}
+
+.infoContainer {
+  width: 100%;
+  max-width: 1200px;
+  background: var(--panel);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── ปุ่ม Back */
+.backBtn {
+  align-self: flex-start;
+  background: #fff;
+  color: var(--primary);
+  border: 1px solid var(--tbl-border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.backBtn:hover {
+  background: var(--tbl-header-bg);
+}
+
+/* ── Header ของคำขอ */
+.detailHeader {
+  border: 1px solid var(--tbl-border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  background: #f9fbfc;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.detailHeader h2 {
+  margin: 0 0 8px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--tbl-header-text);
+}
+.detailHeader p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+.detailHeader strong {
+  color: #374151;
+}
+
+/* ── ตารางรายละเอียด */
+.tableGrid {
+  display: grid;
+  grid-template-columns:
+    minmax(90px, 1fr)       /* รหัส */
+    minmax(80px, 1fr)       /* รูป */
+    minmax(180px, 2.5fr)    /* ชื่อรายการ */
+    minmax(120px, 1fr)      /* ประเภท */
+    minmax(140px, 1.2fr)    /* จำนวน */
+    minmax(100px, 0.8fr)    /* หน่วย */
+    minmax(140px, 1fr)      /* สถานะอนุมัติ */
+    minmax(140px, 1fr)      /* สถานะดำเนินการ */
+    minmax(140px, 1fr);     /* กำหนดคืน */
+  align-items: center;
+  column-gap: 8px;          /* ระยะห่างระหว่างคอลัมน์ */
+}
+/* จัดการ cell ข้างในไม่ให้ตกบรรทัด */
+.tableGrid > div {
+  padding: 8px 6px;
+  white-space: nowrap;       /* ไม่ตัดบรรทัด */
+  overflow: hidden;          /* ซ่อนข้อความล้น */
+  text-overflow: ellipsis;   /* … */
+}
+
+.tableHeader {
+  background: var(--tbl-header-bg);
+  color: var(--tbl-header-text);
+  font-weight: 700;
+  border-bottom: 1px solid var(--tbl-border);
+  padding: 12px;
+  font-size: 0.95rem;
+}
+.tableRow {
+  border-bottom: 1px solid var(--tbl-border);
+  padding: 12px;
+  font-size: 0.9rem;
+  background: #fff;
+  transition: background 0.15s ease;
+}
+.tableRow:hover {
+  background: var(--tbl-row-hover);
+}
+
+/* ── Badge สถานะ */
+.statusBadge {
+  display: inline-block;
+  padding: 3px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+}
+.statusSuccess {
+  background: #ecfdf5;
+  color: #065f46;
+  border-color: #bbf7d0;
+}
+.statusCancelled {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+.statusPending {
+  background: #fffbeb;
+  color: #92400e;
+  border-color: #fde68a;
+}
+.statusMixed {
+  background: #eff6ff;
+  color: #1e40af;
+  border-color: #bfdbfe;
+}
+
+/* ── Badge ความเร่งด่วน */
+.urgentBadge {
+  display: inline-block;
+  padding: 3px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 6px;
+}
+.urgentTrue {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.urgentFalse {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+/* ── No Data */
+.noDataCell {
+  padding: 40px;
+  text-align: center;
+  color: var(--muted);
+  background: linear-gradient(180deg,#fff 0%,#f9fdff 100%);
+  border-radius: 10px;
+}

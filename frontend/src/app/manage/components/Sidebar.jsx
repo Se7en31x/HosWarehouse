@@ -17,9 +17,11 @@ import {
   FaBell,
   FaCog,
   FaTruck,
-  FaBars, // ✅ ปุ่มเมนู 3 ขีด
-  FaSearch, // ✅ ปุ่มค้นหา
-
+  FaBars,
+  FaSearch,
+  FaShoppingCart, // 🛒 สำหรับการจัดซื้อ
+  FaFileInvoice, // 📝 สำหรับใบขอราคา/ใบสั่งซื้อ
+  FaHandshake, // 🤝 สำหรับการจัดการคู่ค้า
 } from 'react-icons/fa';
 
 export default function Sidebar() {
@@ -36,7 +38,7 @@ export default function Sidebar() {
 
   return (
     <aside className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ''}`}>
-      {/* ✅ HEADER ของ Sidebar: ปุ่มเมนูและปุ่มค้นหา */}
+      {/* ... ส่วน HEADER และรายการเดิมทั้งหมด ... */}
       <div className={styles.sidebarHeader}>
         <button className={styles.collapseButton} onClick={toggleCollapse} aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
           <FaBars className={styles.headerIcon} />
@@ -61,6 +63,7 @@ export default function Sidebar() {
               <span className={styles.sidebarText}>ตรวจสอบยอดคงคลัง</span>
             </Link>
           </li>
+          {/* ... (รายการเมนูเดิมทั้งหมด) ... */}
           <li className={`${styles.sidebarItem} ${isActive('/manage/requestList') ? styles.active : ''}`}>
             <Link href="/manage/requestList" className={styles.noStyleLink}>
               <FaListAlt className={styles.sidebarIcon} />
@@ -122,8 +125,24 @@ export default function Sidebar() {
             </Link>
           </li>
 
+          {/* ✅ แก้ไขส่วนนี้ให้เหลือแค่เมนูสำหรับผู้ดูแลคลัง */}
           <hr className={styles.divider} style={{ marginTop: '20px', marginBottom: '10px' }} />
+          <li className={styles.sidebarSectionTitle}>การจัดซื้อ</li>
+          <li className={`${styles.sidebarItem} ${isActive('/manage/request-purchase') ? styles.active : ''}`}>
+            <Link href="/manage/request-purchase" className={styles.noStyleLink}>
+              <FaShoppingCart className={styles.sidebarIcon} />
+              <span className={styles.sidebarText}>รายการสั่งซื้อใหม่</span>
+            </Link>
+          </li>
+          <li className={`${styles.sidebarItem} ${isActive('/manage/purchase-status') ? styles.active : ''}`}>
+            <Link href="/manage/purchase-status" className={styles.noStyleLink}>
+              <FaHistory className={styles.sidebarIcon} />
+              <span className={styles.sidebarText}>ตรวจสอบสถานะการสั่งซื้อ</span>
+            </Link>
+          </li>
 
+          {/* ... ส่วนแจ้งเตือนและตั้งค่า ... */}
+          <hr className={styles.divider} style={{ marginTop: '20px', marginBottom: '10px' }} />
           <li className={`${styles.sidebarItem} ${isActive('/manage/notifications') ? styles.active : ''}`}>
             <Link href="/manage/notifications" className={styles.noStyleLink}>
               <FaBell className={styles.sidebarIcon} />

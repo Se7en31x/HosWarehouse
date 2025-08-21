@@ -43,12 +43,12 @@ export default function Sidebar() {
       </div>
       <nav>
         <ul className={styles.navLinks}>
-          <li className={`${styles.sidebarItem} ${isActive('/staff') ? styles.active : ''}`}>
+          {/* <li className={`${styles.sidebarItem} ${isActive('/staff') ? styles.active : ''}`}>
             <Link href="/staff" className={styles.noStyleLink}>
               <FaHome className={styles.sidebarIcon} />
               <span className={styles.sidebarText}>หน้าแรก</span>
             </Link>
-          </li>
+          </li> */}
           <li className={`${styles.sidebarItem} ${isActive('/staff/inventoryWithdraw') ? styles.active : ''}`}>
             <Link href="/staff/inventoryWithdraw" className={styles.noStyleLink}>
               <FaBoxOpen className={styles.sidebarIcon} /> {/* ✅ ใช้ไอคอนใหม่ */}
@@ -67,24 +67,18 @@ export default function Sidebar() {
               <span className={styles.sidebarText}>รายการคำขอของฉัน</span>
             </Link>
           </li>
-          <li className={`${styles.sidebarItem} ${isActive('/staff/status') ? styles.active : ''}`}>
-            <Link href={`/staff/status`} className={styles.noStyleLink}>
-              <FaClipboardCheck className={styles.sidebarIcon} />
-              <span className={styles.sidebarText}>ติดตามสถานะคำขอ</span>
-            </Link>
-          </li>
-          <li className={`${styles.sidebarItem} ${isActive('/staff/history') ? styles.active : ''}`}>
-            <Link href="/staff/history" className={styles.noStyleLink}>
+          <li className={`${styles.sidebarItem} ${isActive('/staff/requestHistory') ? styles.active : ''}`}>
+            <Link href="/staff/requestHistory" className={styles.noStyleLink}>
               <FaHistory className={styles.sidebarIcon} />
-              <span className={styles.sidebarText}>ประวัติรายการเบิก</span>
+              <span className={styles.sidebarText}>ประวัติรายการเบิก/ยืม</span>
             </Link>
           </li>
-          <li className={`${styles.sidebarItem} ${isActive('/staff/reports') ? styles.active : ''}`}>
-            <Link href="/staff/reports" className={styles.noStyleLink}>
+          {/* <li className={`${styles.sidebarItem} ${isActive('/staff/userReport') ? styles.active : ''}`}>
+            <Link href="/staff/userReport" className={styles.noStyleLink}>
               <FaChartBar className={styles.sidebarIcon} />
               <span className={styles.sidebarText}>ออกรายงาน</span>
             </Link>
-          </li>
+          </li> */}
 
           <hr className={styles.divider} style={{ marginTop: '20px', marginBottom: '10px' }} />
           

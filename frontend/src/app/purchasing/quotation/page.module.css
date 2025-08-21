@@ -1,0 +1,89 @@
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid #cfd4dc;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #111;
+}
+
+.empty {
+  padding: 12px;
+  color: #666;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #e6e8eb;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.table thead tr {
+  background: #f3f4f6;
+}
+
+.table th,
+.table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+  vertical-align: top;
+  font-size: 14px;
+}
+
+.table th:last-child,
+.table td:last-child {
+  white-space: nowrap;
+}
+
+.right {
+  text-align: right;
+}
+
+.viewBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid #d0d7de;
+  background: #fff;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #0f172a;
+}
+
+.icon {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+}
+
+.btnText {
+  display: inline-block;
+}

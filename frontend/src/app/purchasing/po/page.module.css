@@ -1,0 +1,253 @@
+/* ---------------------------------------------------- */
+/*                   General Styles                   */
+/* ---------------------------------------------------- */
+.page {
+  padding: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: #f0f2f5;
+  color: #333;
+}
+
+/* แก้ไข: เพิ่มคลาสสำหรับ h1 และ h2 */
+.h1, .h2 {
+  color: #004d40;
+}
+
+.h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #555;
+}
+
+/* ---------------------------------------------------- */
+/*                     Layout                         */
+/* ---------------------------------------------------- */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.cardHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+/* ---------------------------------------------------- */
+/*               Input & Buttons                   */
+/* ---------------------------------------------------- */
+.input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+.input:focus {
+  border-color: #00796b;
+  box-shadow: 0 0 0 2px rgba(0, 121, 107, 0.2);
+  outline: none;
+}
+.inputWithIcon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.inputWithIcon input {
+  padding-left: 2.5rem;
+}
+.inputWithIcon svg {
+  position: absolute;
+  left: 1rem;
+  color: #999;
+}
+
+.btnPrimary, .btnSecondary, .btnGhost, .btnSmall {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.btnPrimary {
+  background-color: #00796b;
+  color: #fff;
+}
+.btnPrimary:hover:not(:disabled) {
+  background-color: #004d40;
+}
+.btnPrimary:disabled {
+  background-color: #b2dfdb;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  background-color: #e0e0e0;
+  color: #333;
+}
+.btnSecondary:hover:not(:disabled) {
+  background-color: #bdbdbd;
+}
+
+.btnGhost {
+  background-color: transparent;
+  color: #00796b;
+  border: 1px solid transparent;
+}
+.btnGhost:hover:not(:disabled) {
+  background-color: #e0f2f1;
+  border-color: #b2dfdb;
+}
+.btnGhost:disabled {
+  color: #999;
+  cursor: not-allowed;
+}
+
+.btnSmall {
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #e0f2f1;
+  color: #00796b;
+}
+.btnSmall:hover {
+  background-color: #b2dfdb;
+}
+
+/* ---------------------------------------------------- */
+/*                     Filters                       */
+/* ---------------------------------------------------- */
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.filterRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+.filterActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* ---------------------------------------------------- */
+/*                   Table & Rows                     */
+/* ---------------------------------------------------- */
+.resultInfo {
+  font-size: 1rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+/* แก้ไข: เปลี่ยน selector เป็นคลาส */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th, .table td {
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+}
+
+.table th {
+  background-color: #f5f5f5;
+  text-align: left;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.center {
+  text-align: center;
+}
+
+.right {
+  text-align: right;
+}
+
+/* ---------------------------------------------------- */
+/*                     Badges                       */
+/* ---------------------------------------------------- */
+.badge {
+  display: inline-block;
+  padding: 0.25em 0.75em;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.badgeGray {
+  background-color: #e0e0e0;
+  color: #555;
+}
+.badgeYellow {
+  background-color: #fff8e1;
+  color: #ffb300;
+}
+.badgeGreen {
+  background-color: #e8f5e9;
+  color: #388e3c;
+}
+.badgeRed {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+/* ---------------------------------------------------- */
+/*                 Pagination                     */
+/* ---------------------------------------------------- */
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.pageInfo {
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: 500;
+}

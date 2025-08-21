@@ -29,6 +29,12 @@ export default function HomePage() {
           >
             หมอ / พยาบาล
           </button>
+          <button
+            onClick={() => handleNavigate('purchasing')}
+            className={`${styles.button} ${styles.purchasing}`}
+          >
+            จัดซื้อ
+          </button>
         </div>
       </div>
     </main>

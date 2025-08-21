@@ -1,139 +1,284 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import axiosInstance from '@/app/utils/axiosInstance';
+import Swal from 'sweetalert2';
+import styles from './page.module.css';
+import {
+  FaSearch, FaSync, FaChevronLeft, FaChevronRight,
+  FaPlus, FaEye
+} from 'react-icons/fa';
 
-/** ───────── Mock อยู่ในไฟล์นี้ ───────── */
-const PO_LIST = [
-  { id: 'PO-2025-001', po_no: 'PO-2025-001', date: '2025-08-21', supplier: 'บจก.เมดิคอลพลัส', total: 9800.00,  status: 'waiting_approval' },
-  { id: 'PO-2025-002', po_no: 'PO-2025-002', date: '2025-08-22', supplier: 'หจก.สุขภาพดี',     total: 15200.00, status: 'approved' },
-  { id: 'PO-2025-003', po_no: 'PO-2025-003', date: '2025-08-23', supplier: 'บจก.ฟาร์มาพลัส',   total: 2200.00,  status: 'completed' },
-];
+// ─────────────────────────────────────────────────────────────
+// Config
+const PAGE_SIZE = 12;
 
-const STATUS_TEXT = {
-  waiting_approval: 'รออนุมัติ',
-  approved: 'อนุมัติแล้ว',
-  completed: 'เสร็จสิ้น',
+const statusMap = {
+  issued: { text: 'บันทึกแล้ว', cls: 'badgeBlue' },
+  draft: { text: 'ฉบับร่าง', cls: 'badgeGray' },
+  waiting_approval: { text: 'รออนุมัติ', cls: 'badgeYellow' },
+  approved: { text: 'อนุมัติแล้ว', cls: 'badgeGreen' },
+  rejected: { text: 'ไม่อนุมัติ', cls: 'badgeRed' },
+  canceled: { text: 'ยกเลิก', cls: 'badgeRed' },
 };
 
-const badgeStyle = (s) => ({
-  display: 'inline-block',
-  padding: '3px 8px',
-  borderRadius: 999,
-  fontSize: 12,
-  fontWeight: 700,
-  background:
-    s === 'waiting_approval' ? '#fffbeb' :
-    s === 'approved' ? '#dcfce7' :
-    '#e5e7eb',
-  color:
-    s === 'waiting_approval' ? '#92400e' :
-    s === 'approved' ? '#14532d' :
-    '#374151',
-});
-/** ───────────────────────────────────── */
+const thb = (v) =>
+  (Number(v) || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-export default function PoListPage() {
-  const [rows, setRows] = useState([]);
+// ─────────────────────────────────────────────────────────────
+function StatusBadge({ status }) {
+  const map = statusMap[status] || { text: status || '-', cls: 'badgeGray' };
+  return <span className={`${styles.badge} ${styles[map.cls]}`}>{map.text}</span>;
+}
+
+export default function POListPage() {
+  const router = useRouter();
+  const sp = useSearchParams();
+
+  // ── filters/state
   const [loading, setLoading] = useState(true);
-  const [q, setQ] = useState('');
-  const [status, setStatus] = useState('All');
+  const [refreshing, setRefreshing] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [total, setTotal] = useState(0);
+
+  const [q, setQ] = useState(sp.get('q') || '');           // ค้นหาเลขที่ PO / ผู้ขาย
+  const [status, setStatus] = useState(sp.get('status') || 'all');         // all | draft | waiting_approval | approved | rejected | canceled
+  const [startDate, setStartDate] = useState(sp.get('start') || '');      // YYYY-MM-DD
+  const [endDate, setEndDate] = useState(sp.get('end') || '');           // YYYY-MM-DD
+  const [page, setPage] = useState(Number(sp.get('page') || 1));          // 1-based
+
+  // ── fetch list
+  const fetchList = async (silent = false) => {
+    !silent ? setLoading(true) : setRefreshing(true);
+    try {
+      const params = new URLSearchParams();
+      if (q) params.set('q', q);
+      if (status && status !== 'all') params.set('status', status);
+      if (startDate) params.set('start', startDate);
+      if (endDate) params.set('end', endDate);
+      params.set('page', String(page));
+      params.set('page_size', String(PAGE_SIZE));
+
+      const res = await axiosInstance.get(`/po?${params.toString()}`);
+
+      setRows(res.data?.data || []);
+      setTotal(res.data?.total || 0);
+    } catch (err) {
+      console.error(err);
+      Swal.fire('ผิดพลาด', 'โหลดรายการ PO ไม่สำเร็จ', 'error');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    // จำลองโหลด
-    const t = setTimeout(() => {
-      setRows(PO_LIST);
-      setLoading(false);
-    }, 250);
-    return () => clearTimeout(t);
+    fetchList(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const filtered = useMemo(() => {
-    let data = [...rows];
-    if (status !== 'All') data = data.filter(r => r.status === status);
-    if (q.trim()) {
-      const s = q.toLowerCase();
-      data = data.filter(r =>
-        r.po_no.toLowerCase().includes(s) ||
-        r.supplier.toLowerCase().includes(s)
-      );
-    }
-    return data;
-  }, [rows, q, status]);
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (status && status !== 'all') params.set('status', status);
+    if (startDate) params.set('start', startDate);
+    if (endDate) params.set('end', endDate);
+    params.set('page', String(page));
+    router.replace(`/purchasing/po?${params.toString()}`);
 
+    fetchList(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, status, startDate, endDate, page]);
+
+  // ── derived
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(total / PAGE_SIZE)), [total]);
+
+  // ── handlers
+  const onResetFilters = () => {
+    setQ('');
+    setStatus('all');
+    setStartDate('');
+    setEndDate('');
+    setPage(1);
+  };
+
+  const onCreatePO = () => router.push('/purchasing/po/create');
+
+  const onView = (row) => {
+    router.push(`/purchasing/po/${row.po_id}`);
+  };
+
+  // ── UI
   return (
-    <main style={{ padding: 20, background: '#f9fafb', minHeight: '100vh' }}>
-      <h1 style={{ fontSize: '1.4rem', fontWeight: 700 }}>PO List</h1>
-      <p style={{ color: '#6b7280', marginBottom: 12 }}>รายการใบสั่งซื้อ</p>
+    <div className={styles.page}>
+      <div className={styles.header}>
+        <h1>รายการใบสั่งซื้อ (PO)</h1>
+        <div className={styles.headerActions}>
+          <button className={styles.btnPrimary} onClick={onCreatePO}>
+            <FaPlus /> สร้าง PO ใหม่
+          </button>
+        </div>
+      </div>
 
-      {/* Toolbar */}
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
-        <input
-          placeholder="ค้นหา PO/ผู้ขาย"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          style={{ padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 8, flex: '1 1 260px' }}
-        />
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          style={{ padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 8 }}
-        >
-          <option>All</option>
-          <option value="waiting_approval">waiting_approval</option>
-          <option value="approved">approved</option>
-          <option value="completed">completed</option>
-        </select>
-        <div style={{ flex: 1 }} />
-        <button
-          onClick={() => alert('(Mock) สร้าง PO ใหม่')}
-          style={{ background: '#fff', border: '1px solid #d1d5db', padding: '8px 12px', borderRadius: 8, cursor: 'pointer' }}
-        >
-          + สร้าง PO
-        </button>
+      {/* Filters */}
+      <div className={styles.card}>
+        <h2>ตัวกรอง</h2>
+        <div className={styles.filters}>
+          <div className={styles.filterRow}>
+            <div className={styles.filterItem}>
+              <label>ค้นหา</label>
+              <div className={styles.inputWithIcon}>
+                <FaSearch />
+                <input
+                  className={styles.input}
+                  value={q}
+                  onChange={(e) => {
+                    setPage(1);
+                    setQ(e.target.value);
+                  }}
+                  placeholder="เลขที่ PO / ชื่อผู้ขาย"
+                />
+              </div>
+            </div>
+
+            <div className={styles.filterItem}>
+              <label>สถานะ</label>
+              <select
+                className={styles.input}
+                value={status}
+                onChange={(e) => {
+                  setPage(1);
+                  setStatus(e.target.value);
+                }}
+              >
+                <option value="all">ทั้งหมด</option>
+                <option value="issued">บันทึกแล้ว</option>
+                <option value="draft">ฉบับร่าง</option>
+                <option value="waiting_approval">รออนุมัติ</option>
+                <option value="approved">อนุมัติแล้ว</option>
+                <option value="rejected">ไม่อนุมัติ</option>
+                <option value="canceled">ยกเลิก</option>
+              </select>
+            </div>
+
+            <div className={styles.filterItem}>
+              <label>ตั้งแต่วันที่</label>
+              <input
+                type="date"
+                className={styles.input}
+                value={startDate}
+                onChange={(e) => {
+                  setPage(1);
+                  setStartDate(e.target.value);
+                }}
+              />
+            </div>
+
+            <div className={styles.filterItem}>
+              <label>ถึงวันที่</label>
+              <input
+                type="date"
+                className={styles.input}
+                value={endDate}
+                onChange={(e) => {
+                  setPage(1);
+                  setEndDate(e.target.value);
+                }}
+              />
+            </div>
+          </div>
+
+          <div className={styles.filterActions}>
+            <button className={styles.btnGhost} onClick={() => fetchList(true)} disabled={refreshing}>
+              <FaSync /> รีเฟรช
+            </button>
+            <button className={styles.btnSecondary} onClick={onResetFilters}>
+              ล้างตัวกรอง
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Table */}
-      <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-        {loading ? (
-          <div style={{ padding: 16, textAlign: 'center', color: '#6b7280' }}>Loading...</div>
-        ) : filtered.length === 0 ? (
-          <div style={{ padding: 16, textAlign: 'center', color: '#6b7280' }}>ไม่พบรายการ</div>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <div className={styles.card}>
+        <div className={styles.cardHead}>
+          <h2>ผลการค้นหา</h2>
+          <div className={styles.resultInfo}>
+            {loading ? 'กำลังโหลด...' : `ทั้งหมด ${total.toLocaleString('th-TH')} รายการ`}
+          </div>
+        </div>
+
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
             <thead>
-              <tr style={{ background: '#f3f4f6' }}>
-                <th style={th}>เลขที่ PO</th>
-                <th style={th}>วันที่</th>
-                <th style={th}>ผู้ขาย</th>
-                <th style={{ ...th, textAlign: 'right' }}>ยอดรวม</th>
-                <th style={th}>สถานะ</th>
-                <th style={th}>Action</th>
+              <tr>
+                <th>เลขที่ PO</th>
+                <th>วันที่</th>
+                <th>ผู้ขาย</th>
+                <th>PR No.</th>
+                <th className={styles.center}>สถานะ</th>
+                <th className={styles.right}>ยอดรวม (฿)</th>
+                <th className={styles.center}>การทำงาน</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((r) => (
-                <tr key={r.id}>
-                  <td style={tdMono}>{r.po_no}</td>
-                  <td style={td}>{r.date}</td>
-                  <td style={td}>{r.supplier}</td>
-                  <td style={{ ...td, textAlign: 'right' }}>{r.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                  <td style={td}>
-                    <span style={badgeStyle(r.status)}>{STATUS_TEXT[r.status] || r.status}</span>
+              {!loading && rows.length === 0 && (
+                <tr>
+                  <td colSpan={7} className={styles.center}>ไม่พบรายการ</td>
+                </tr>
+              )}
+
+              {rows.map((r) => (
+                <tr key={r.po_id}>
+                  <td>{r.po_no || '-'}</td>
+                  <td>{r.po_date ? new Date(r.po_date).toLocaleDateString('th-TH') : '-'}</td>
+                  <td>{r.vendor_name || '-'}</td>
+                  <td>{r.pr_no || '-'}</td>
+                  <td className={styles.center}>
+                    <StatusBadge status={r.status} />
                   </td>
-                  <td style={td}>
-                    <Link href={`/purchasing/po/${r.id}`}>ดูรายละเอียด</Link>
+                  <td className={styles.right}>{thb(r.total_amount)}</td>
+                  <td className={styles.center}>
+                    <button className={styles.btnSmall} onClick={() => onView(r)} title="เปิดดู">
+                      <FaEye /> ดูรายละเอียด
+                    </button>
                   </td>
                 </tr>
               ))}
+
+              {loading && (
+                <tr>
+                  <td colSpan={7} className={styles.center}>กำลังโหลด...</td>
+                </tr>
+              )}
             </tbody>
           </table>
-        )}
+        </div>
+
+        {/* Pagination */}
+        <div className={styles.pagination}>
+          <button
+            className={styles.btnGhost}
+            disabled={page <= 1 || loading}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
+            <FaChevronLeft /> ก่อนหน้า
+          </button>
+
+          <span className={styles.pageInfo}>
+            หน้า {page} / {totalPages}
+          </span>
+
+          <button
+            className={styles.btnGhost}
+            disabled={page >= totalPages || loading}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          >
+            ถัดไป <FaChevronRight />
+          </button>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
-
-const th = { textAlign: 'left', padding: 10, borderBottom: '1px solid #e5e7eb' };
-const td = { padding: 10, borderBottom: '1px solid #f1f5f9', verticalAlign: 'middle' };
-const tdMono = { ...td, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' };

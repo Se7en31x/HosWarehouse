@@ -1,0 +1,260 @@
+.page {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+  font-family: Arial, sans-serif;
+  color: #333;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.header h1 {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.leftGroup {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: white;
+  display: inline-block;
+}
+
+.badgeBlue { background-color: #007bff; }
+.badgeRed { background-color: #dc3545; }
+.badgeGray { background-color: #6c757d; }
+
+.headerActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* --- Table --- */
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  table-layout: fixed;
+}
+
+.table th,
+.table td {
+  padding: 0.75rem;
+  border: 1px solid #eee;
+  text-align: left;
+}
+
+.table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.table td {
+  vertical-align: top;
+}
+
+.table .center {
+  text-align: center;
+}
+
+.table .right {
+  text-align: right;
+}
+
+/* --- Buttons --- */
+.btnGhost {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: color 0.2s;
+}
+
+.btnGhost:hover {
+  color: #0056b3;
+}
+
+.btnPrimary,
+.btnDanger {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+  border: 1px solid;
+}
+
+.btnPrimary {
+  background-color: #007bff;
+  color: #fff;
+  border-color: #007bff;
+}
+
+.btnPrimary:hover {
+  background-color: #0056b3;
+}
+
+.btnDanger {
+  background: none;
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.btnDanger:hover {
+  background-color: #f8d7da;
+}
+
+.btnSecondary {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+  background-color: #6c757d;
+  color: #fff;
+  border: 1px solid #6c757d;
+}
+
+.btnSecondary:hover {
+  background-color: #5a6268;
+}
+
+.btnSmallDanger {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+/* --- Summary --- */
+.summaryWrap {
+  width: 50%;
+  margin-left: auto;
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+  font-size: 1rem;
+}
+
+.grand {
+  font-size: 1.25rem;
+  font-weight: bold;
+  border-bottom: none;
+  padding-top: 1rem;
+}
+
+/* --- File Attachments --- */
+.fileGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.fileItem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 1rem;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  width: 250px;
+  position: relative;
+}
+
+.fileLink {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: bold;
+  word-break: break-all;
+}
+
+.fileMeta {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .page {
+    padding: 1rem;
+  }
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .headerActions {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .grid2, .grid3 {
+    grid-template-columns: 1fr;
+  }
+  .summaryWrap {
+    width: 100%;
+  }
+}
