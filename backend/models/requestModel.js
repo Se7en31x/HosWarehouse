@@ -127,7 +127,6 @@ await client.query(
  * @returns {Promise<object[]>} Array ของ object คำขอ.
  */
 exports.getRequestsByStatus = async (statuses = ['waiting_approval']) => {
-  // สร้างพารามิเตอร์แบบ dynamic สำหรับเงื่อนไข IN
   const params = statuses.map((_, i) => `$${i + 1}`).join(', ');
 
   const query = `
@@ -152,7 +151,9 @@ exports.getRequestsByStatus = async (statuses = ['waiting_approval']) => {
     LEFT JOIN request_details rd ON r.request_id = rd.request_id
     WHERE r.request_status IN (${params})
     GROUP BY r.request_id, r.request_date, r.request_status, u.user_name, u.department
-    ORDER BY r.request_date DESC;
+    ORDER BY
+      CASE WHEN r.request_status = 'waiting_approval' THEN 0 ELSE 1 END,
+      r.request_date DESC;
   `;
 
   const result = await pool.query(query, statuses);

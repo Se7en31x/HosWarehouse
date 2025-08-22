@@ -4,7 +4,7 @@ const { pool } = require('../config/db');
 // ===== Helpers =====
 const toNullOrValue = (v) => (v === '' ? null : v);
 const toNullOrFloat = (v) => (v === '' ? null : parseFloat(v));
-const toNullOrInt   = (v) => (v === '' ? null : parseInt(v));
+const toNullOrInt = (v) => (v === '' ? null : parseInt(v));
 
 async function generateAutoCode(client, { prefix, tableName, orderBy }) {
   const { rows } = await client.query(
@@ -21,8 +21,10 @@ async function addBaseItem(client, data) {
       item_name, item_category, item_unit,
       item_location, item_min, item_max,
       item_img, item_zone, item_barcode, item_sub_category,
-      item_status, is_deleted
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+      item_status, is_deleted,
+      item_purchase_unit, item_conversion_rate,
+      is_borrowable  -- เพิ่มคอลัมน์ใหม่
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
     RETURNING item_id;
   `;
   const vals = [
@@ -37,7 +39,10 @@ async function addBaseItem(client, data) {
     toNullOrValue(data.item_barcode),
     toNullOrValue(data.item_sub_category),
     'active',
-    false
+    false,
+    toNullOrValue(data.item_purchase_unit),
+    toNullOrFloat(data.item_conversion_rate),
+    data.is_borrowable // เพิ่มค่าใหม่
   ];
   const { rows } = await client.query(sql, vals);
   return rows[0].item_id;
@@ -94,21 +99,19 @@ async function insertMedsup(client, item_id, d) {
 
   await client.query(`
     INSERT INTO medsup_detail (
-      item_id, medsup_code, medsup_brand,
-      medsup_model, medsup_spec, medsup_serial_no, medsup_status,
-      medsup_price
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+      item_id, medsup_code, medsup_category, medsup_brand, 
+      medsup_serial_no, medsup_status, medsup_price
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7)
   `, [
     item_id,
     code,
     toNullOrValue(d.medsup_category),
     toNullOrValue(d.medsup_brand),
-    toNullOrValue(d.medsup_model),
-    toNullOrValue(d.medsup_spec),
     toNullOrValue(d.medsup_serial_no),
     toNullOrValue(d.medsup_status),
     toNullOrFloat(d.medsup_price),
   ]);
+
   return { success: true, code };
 }
 
@@ -123,7 +126,7 @@ async function insertEquipment(client, item_id, d) {
   await client.query(`
     INSERT INTO equipment_detail (
       item_id, equip_code, equip_brand, equip_model, 
-      equip_maintenance_cycle,equip_note
+      equip_maintenance_cycle, equip_note
     ) VALUES ($1,$2,$3,$4,$5,$6)
   `, [
     item_id,
@@ -219,7 +222,7 @@ exports.createItemWithDetail = async function createItemWithDetail(data) {
     await client.query('COMMIT');
     return { success: true, item_id, detail_code: detail.code };
   } catch (err) {
-    try { await client.query('ROLLBACK'); } catch (_) {}
+    try { await client.query('ROLLBACK'); } catch (_) { }
     throw err;
   } finally {
     client.release();

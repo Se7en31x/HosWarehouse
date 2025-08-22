@@ -38,4 +38,6 @@ router.get('/po/:id/files', poController.listFiles);
 router.post('/po/:id/files', upload.single('file'), poController.uploadFile);
 router.delete('/po/:id/files/:file_id', poController.deleteFile);
 
+router.get('/po/by-pr/:pr_no', poController.getByPrNo);
+
 module.exports = router;

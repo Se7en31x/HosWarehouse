@@ -7,6 +7,7 @@ exports.getAllItems = async () => {
             i.item_id,
             i.item_name,
             i.item_unit,
+            i.item_purchase_unit,
             i.item_category, 
             i.item_sub_category,
             i.item_barcode,
@@ -55,61 +56,72 @@ exports.findItemByBarcode = async (barcode) => {
 };
 
 // Model Function: บันทึกการรับเข้าสินค้า
-exports.recordReceiving = async ({ user_id, supplier_id, receiving_note, receivingItems }) => {
+exports.recordReceiving = async ({ user_id, receiving_note, receivingItems }) => {
     const client = await pool.connect();
     try {
-        await client.query('BEGIN'); // เริ่มต้น Transaction
+        await client.query('BEGIN');
 
-        // 1. สร้างรายการรับเข้าหลักในตาราง `imports`
-        const receivingResult = await client.query(
-            `INSERT INTO imports (import_date, supplier_id, user_id, import_status, import_note)
-             VALUES (NOW(), $1, $2, 'Completed', $3)
-             RETURNING import_id`,
-            [supplier_id, user_id, receiving_note]
+        // ───────────── INSERT HEADER ─────────────
+        const insertReceiving = await client.query(
+            `INSERT INTO imports (import_date, user_id, import_status, import_note)
+       VALUES (NOW(), $1, 'posted', $2)
+       RETURNING import_id`,
+            [user_id, receiving_note || null]
         );
-        const newReceivingId = receivingResult.rows[0].import_id;
+        const newReceivingId = insertReceiving.rows[0].import_id;
 
-        // 2. สร้างรายการในตาราง `import_details` และ `item_lots`
+        // ───────────── INSERT DETAILS ─────────────
         for (const item of receivingItems) {
-            // สร้างรายการใน import_details
+            // ✅ กำหนดจำนวนที่รับเข้ามา (ไม่ให้ null แน่นอน)
+            const qtyImported = item.itemQuantity ?? item.quantity ?? 0;
+
+            console.log("DEBUG item:", item);
+            console.log("DEBUG qtyImported:", qtyImported);
+
+            // insert เข้า import_details
             await client.query(
-                `INSERT INTO import_details (import_id, item_id, import_price, exp_date, import_note, vendor_item_code)
-                 VALUES ($1, $2, $3, $4, $5, $6)`,
+                `INSERT INTO import_details 
+        (import_id, item_id, import_price, exp_date, import_note, vendor_item_code, quantity, purchase_quantity, purchase_unit, conversion_rate)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
                 [
                     newReceivingId,
                     item.item_id,
                     item.pricePerUnit,
                     item.expiryDate,
                     item.notes,
-                    item.vendor_item_code
+                    item.vendor_item_code,
+                    item.quantity,             // ✅ ใช้ column 'quantity'
+                    item.purchaseQuantity,
+                    item.purchaseUnit,
+                    item.conversionRate
                 ]
             );
 
-            // สร้าง lot ใหม่ในตาราง item_lots พร้อมข้อมูลที่ครบถ้วน
             await client.query(
-                `INSERT INTO item_lots (item_id, import_id, lot_no, qty_imported, qty_remaining, mfg_date, exp_date, import_date, created_by, document_no, unit_cost, unit_price)
-                 VALUES ($1, $2, $3, $4, $4, $5, $6, NOW(), $7, $8, $9, $10)`,
+                `INSERT INTO item_lots 
+        (item_id, import_id, lot_no, qty_imported, qty_remaining, mfg_date, exp_date, import_date, created_by, document_no, unit_cost, unit_price)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,NOW(),$8,$9,$10,$11)`,
                 [
                     item.item_id,
                     newReceivingId,
                     item.lotNo,
-                    item.quantity,
-                    item.mfgDate || null, 
+                    item.quantity,             // ✅ qty_imported = item.quantity
+                    item.quantity,             // ✅ qty_remaining = item.quantity
+                    item.mfgDate || null,
                     item.expiryDate,
-                    user_id, // ใช้ user_id จาก request
+                    user_id,
                     item.documentNo || null,
-                    item.pricePerUnit, // unit_cost
+                    item.pricePerUnit,
                     item.sellingPrice || 0
                 ]
             );
         }
 
-        await client.query('COMMIT'); // Commit Transaction
-
-        return { import_id: newReceivingId };
+        await client.query('COMMIT');
+        return { success: true, import_id: newReceivingId };
     } catch (err) {
-        await client.query('ROLLBACK'); // Rollback หากเกิดข้อผิดพลาด
-        console.error("Error in recordReceiving:", err);
+        await client.query('ROLLBACK');
+        console.error("❌ Error in recordReceiving:", err);
         throw err;
     } finally {
         client.release();

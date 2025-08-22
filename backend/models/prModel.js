@@ -1,4 +1,3 @@
-// models/prModel.js
 const { pool } = require('../config/db');
 
 // ฟังก์ชันสำหรับสร้างเลขที่ PR
@@ -46,9 +45,30 @@ const createPurchaseRequest = async (requester_id, items_to_purchase) => {
     }
 };
 
-// ฟังก์ชันสำหรับดึงรายการสินค้าจากตาราง items
+// ✅ ปรับปรุง: เพิ่มคอลัมน์ 'item_max' และแก้ไข ORDER BY เพื่อให้แสดงรายการที่ควรซื้อก่อน
 const getAllItems = async () => {
-    const query = `SELECT item_id, item_name, item_unit FROM "items" WHERE is_deleted = false ORDER BY item_name;`;
+    const query = `
+        SELECT 
+            i.item_id, 
+            i.item_name, 
+            i.item_unit, 
+            i.item_purchase_unit,
+            i.item_conversion_rate,
+            i.item_min,
+            i.item_max,
+            COALESCE(SUM(il.qty_remaining), 0) as current_stock
+        FROM "items" AS i
+        LEFT JOIN "item_lots" AS il ON i.item_id = il.item_id
+        WHERE i.is_deleted = false
+        GROUP BY i.item_id
+        ORDER BY 
+            CASE 
+                WHEN COALESCE(SUM(il.qty_remaining), 0) <= i.item_min THEN 0
+                ELSE 1
+            END,
+            (COALESCE(SUM(il.qty_remaining), 0) - i.item_min) ASC,
+            i.item_name ASC;
+    `;
     const result = await pool.query(query);
     return result.rows;
 };
@@ -71,7 +91,7 @@ const getAllPurchaseRequests = async () => {
     return result.rows;
 };
 
-// ฟังก์ชันสำหรับดึงรายละเอียดคำขอซื้อตาม ID
+// ✅ ปรับปรุง: แก้ไขคำสั่ง SQL เพื่อไม่ให้เรียกใช้ Aggregate Function ซ้อนกัน
 const getPurchaseRequestById = async (prId) => {
     const query = `
         SELECT 
@@ -80,28 +100,39 @@ const getPurchaseRequestById = async (prId) => {
             CONCAT(u.user_fname, ' ', u.user_lname) AS requester_name,
             ph.status,
             ph.created_at,
-            (SELECT json_agg(
-                jsonb_build_object(
-                    'item_id', pd.item_id,
-                    'item_name', i.item_name,
-                    'item_unit', i.item_unit,
-                    'requested_qty', pd.qty,
-                    'purchase_unit', pd.unit,
-                    'note', pd.note
+            (
+                SELECT json_agg(
+                    jsonb_build_object(
+                        'pr_detail_id', pd.pr_detail_id,
+                        'item_id', pd.item_id,
+                        'item_name', i.item_name,
+                        'item_unit', i.item_unit,
+                        'item_purchase_unit', i.item_purchase_unit,
+                        'requested_qty', pd.qty,
+                        'purchase_unit', pd.unit,
+                        'note', pd.note,
+                        'current_stock', stock.current_stock
+                    )
                 )
-            )
-            FROM "pr_detail" AS pd
-            JOIN "items" AS i ON pd.item_id = i.item_id
-            WHERE pd.pr_id = ph.pr_id) AS items
+                FROM "pr_detail" AS pd
+                JOIN "items" AS i ON pd.item_id = i.item_id
+                LEFT JOIN (
+                    -- Subquery เพื่อคำนวณ stock คงเหลือของแต่ละ item_id
+                    SELECT item_id, COALESCE(SUM(qty_remaining), 0) AS current_stock
+                    FROM "item_lots"
+                    GROUP BY item_id
+                ) AS stock ON i.item_id = stock.item_id
+                WHERE pd.pr_id = ph.pr_id
+            ) AS items
         FROM "pr_header" AS ph
         JOIN "users" AS u ON ph.requester_id = u.user_id
-        WHERE ph.pr_id = $1;
+        WHERE ph.pr_id = $1
+        GROUP BY ph.pr_id, u.user_fname, u.user_lname;
     `;
     const result = await pool.query(query, [prId]);
     return result.rows[0] || null;
 };
 
-// ✅ ฟังก์ชันใหม่: อัปเดตสถานะ PR
 const updatePrStatus = async (prId, newStatus) => {
     const query = `
         UPDATE "pr_header"
@@ -118,5 +149,5 @@ module.exports = {
     getAllItems,
     getAllPurchaseRequests,
     getPurchaseRequestById,
-    updatePrStatus // ✅ Export ฟังก์ชันใหม่
+    updatePrStatus
 };

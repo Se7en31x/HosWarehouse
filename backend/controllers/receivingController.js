@@ -21,17 +21,17 @@ exports.handleGetAllItems = async (req, res) => {
 exports.handleFindItemByBarcode = async (req, res) => {
     try {
         const { barcode } = req.query; // ดึงค่า barcode จาก query string
-        
+
         if (!barcode) {
             return res.status(400).json({ message: 'Barcode is required' });
         }
-        
+
         const item = await receivingModel.findItemByBarcode(barcode);
-        
+
         if (!item) {
             return res.status(404).json({ message: 'Item not found' });
         }
-        
+
         res.status(200).json(item);
     } catch (error) {
         console.error("Error in handleFindItemByBarcode:", error);
@@ -46,10 +46,10 @@ exports.handleFindItemByBarcode = async (req, res) => {
 exports.handleRecordReceiving = async (req, res) => {
     try {
         const { user_id, supplier_id, receiving_note, receivingItems } = req.body;
-        
+
         // Validation หลักสำหรับข้อมูลที่จำเป็น
-        if (!user_id || !supplier_id || !receivingItems || receivingItems.length === 0) {
-            return res.status(400).json({ message: 'User ID, Supplier ID, and at least one item are required' });
+        if (!user_id || !receivingItems || receivingItems.length === 0) {
+            return res.status(400).json({ message: 'User ID and at least one item are required' });
         }
 
         // Validation รายการสินค้าแต่ละตัว
@@ -58,12 +58,12 @@ exports.handleRecordReceiving = async (req, res) => {
                 return res.status(400).json({ message: 'Each item must have an item_id, quantity, pricePerUnit, and a lot number.' });
             }
         }
-        
+
         const result = await receivingModel.recordReceiving({ user_id, supplier_id, receiving_note, receivingItems });
-        
-        res.status(201).json({ 
-            message: 'Items received successfully', 
-            receivingId: result.import_id 
+
+        res.status(201).json({
+            message: 'Items received successfully',
+            receivingId: result.import_id
         });
     } catch (error) {
         console.error("Error in handleRecordReceiving:", error);
