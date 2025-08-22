@@ -1,6 +1,3 @@
-// =============================
-// InventoryWithdraw — page.jsx
-// =============================
 'use client';
 
 import { useEffect, useState, useContext, useMemo } from 'react';
@@ -11,9 +8,9 @@ import { toast } from 'react-toastify';
 import Image from 'next/image';
 import Swal from 'sweetalert2';
 import { Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
-import dynamic from "next/dynamic";
+import dynamic from 'next/dynamic';
 
-const Select = dynamic(() => import("react-select"), { ssr: false });
+const Select = dynamic(() => import('react-select'), { ssr: false });
 
 import axiosInstance from '@/app/utils/axiosInstance';
 import { connectSocket, disconnectSocket } from '@/app/utils/socket';
@@ -35,7 +32,7 @@ const unitOptions = [
   { value: 'ห่อ', label: 'ห่อ' },
 ];
 
-// ► custom styles for react-select
+// ► Custom styles for react-select
 const customSelectStyles = {
   control: (base, state) => ({
     ...base,
@@ -61,12 +58,22 @@ const customSelectStyles = {
   }),
 };
 
-export default function InventoryWithdraw() {
-  const menuPortalTarget = useMemo(
-    () => (typeof window !== 'undefined' ? document.body : null),
-    []
-  );
 
+// ► แปลสถานะและจำนวนแบบง่าย
+const translateStatus = (item) => {
+  const quantity = Number(item.total_on_hand_qty ?? 0);
+
+  // ถ้าจำนวนคงเหลือ (quantity) น้อยกว่าหรือเท่ากับ 0
+  if (quantity <= 0) {
+    return { text: 'หมดสต็อก', class: 'stOut' };
+  }
+
+  // ถ้ามีจำนวนคงเหลือ ก็ให้ถือว่า "พร้อมใช้งาน"
+  return { text: 'พร้อมใช้งาน', class: 'stAvailable' };
+};
+
+export default function InventoryWithdraw() {
+  const menuPortalTarget = useMemo(() => (typeof window !== 'undefined' ? document.body : null), []);
   const router = useRouter();
   const { addToCart, cartItems, clearCart } = useContext(CartContext);
 
@@ -111,22 +118,23 @@ export default function InventoryWithdraw() {
       const t = new Date();
       t.setDate(t.getDate() + 1);
       setReturnDate(t.toISOString().split('T')[0]);
-    } else setReturnDate('');
+    } else {
+      setReturnDate('');
+    }
   }, [actionType]);
 
-  // ✅ ฟังก์ชันโหลดข้อมูล
   useEffect(() => {
     let isMounted = true;
 
     const fetchInitialData = async () => {
       try {
-        const res = await axiosInstance.get("/inventoryCheck/all");
+        const res = await axiosInstance.get('/for-withdrawal');
         if (isMounted) {
-          setAllItems(Array.isArray(res.data) ? res.data.filter(Boolean) : []);
+          setAllItems(Array.isArray(res.data) ? res.data.filter(item => item && item.item_id) : []);
         }
       } catch (err) {
-        console.error("❌ โหลด REST ไม่สำเร็จ:", err);
-        toast.error("ไม่สามารถโหลดข้อมูลจากเซิร์ฟเวอร์ได้");
+        console.error('❌ โหลด REST ไม่สำเร็จ:', err);
+        toast.error('ไม่สามารถโหลดข้อมูลจากเซิร์ฟเวอร์ได้');
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -134,48 +142,48 @@ export default function InventoryWithdraw() {
 
     fetchInitialData();
 
-    // ── 2. เปิด socket realtime ─────────────────────
     const socket = connectSocket();
 
-    // อัปเดตเฉพาะ record
-    socket.on("itemUpdated", (updatedItem) => {
-      console.log("📦 itemUpdated ได้รับ:", updatedItem);
+    socket.on('itemsDataForWithdrawal', (data) => {
+      console.log('📦 itemsDataForWithdrawal ได้รับ:', data);
+      if (isMounted) {
+        setAllItems(Array.isArray(data) ? data.filter(item => item && item.item_id) : []);
+      }
+    });
 
+    socket.on('itemUpdated', (updatedItem) => {
+      console.log('📦 itemUpdated ได้รับ:', updatedItem);
+      if (!updatedItem || !updatedItem.item_id) return;
       setAllItems((prevItems) => {
         const index = prevItems.findIndex((i) => i.item_id === updatedItem.item_id);
+        const updatedData = {
+          ...updatedItem,
+          total_on_hand_qty: updatedItem.current_stock ?? updatedItem.total_on_hand_qty ?? 0,
+          item_img: updatedItem.item_img || updatedItem.item_img_url || null,
+          is_borrowable: updatedItem.is_borrowable ?? false,
+          item_status: updatedItem.item_status || 'active'
+        };
         if (index !== -1) {
           const newItems = [...prevItems];
-          newItems[index] = {
-            ...newItems[index],
-            ...updatedItem,
-            total_on_hand_qty: updatedItem.current_stock, // ✅ map ให้ตรง
-            item_img: updatedItem.item_img || updatedItem.item_img_url // กันกรณีชื่อไม่ตรง
-          };
+          newItems[index] = { ...newItems[index], ...updatedData };
           return newItems;
         } else {
-          return [
-            ...prevItems,
-            {
-              ...updatedItem,
-              total_on_hand_qty: updatedItem.current_stock, // ✅ ให้ค่าเริ่มต้นตรง
-              item_img: updatedItem.item_img || updatedItem.item_img_url
-            }
-          ];
+          return [...prevItems, updatedData];
         }
       });
     });
 
-    // ── 3. cleanup ─────────────────────
     return () => {
       isMounted = false;
-      socket.off("itemUpdated");
-
+      socket.off('itemsDataForWithdrawal');
+      socket.off('itemUpdated');
       disconnectSocket();
     };
   }, []);
 
-
-  useEffect(() => { setCurrentPage(1); }, [filter, category, unit, storage]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, category, unit, storage]);
 
   // ── Helpers ─────────────────────────────
   function ItemImage({ item_img, alt }) {
@@ -184,7 +192,7 @@ export default function InventoryWithdraw() {
     return (
       <Image
         src={img}
-        alt={alt}
+        alt={alt || 'ไม่มีชื่อ'}
         width={45}
         height={45}
         style={{ objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }}
@@ -195,17 +203,18 @@ export default function InventoryWithdraw() {
     );
   }
 
-  const translateCategory = cat => {
+  const translateCategory = (cat) => {
     switch (cat) {
       case 'medicine': return 'ยา';
       case 'medsup': return 'เวชภัณฑ์';
       case 'equipment': return 'ครุภัณฑ์';
       case 'meddevice': return 'อุปกรณ์ทางการแพทย์';
       case 'general': return 'ของใช้ทั่วไป';
-      default: return cat;
+      default: return cat || 'ไม่ระบุ';
     }
   };
-  const getItemCode = item => {
+
+  const getItemCode = (item) => {
     if (!item) return '-';
     switch (item.item_category) {
       case 'medicine': return item.med_code || '-';
@@ -218,82 +227,165 @@ export default function InventoryWithdraw() {
   };
 
   const filteredItems = useMemo(() => {
-    const f = filter.toLowerCase();
-    const norm = v => (v != null ? String(v).toLowerCase().includes(f) : false);
-    return allItems.filter(item => {
-      if (!item) return false;
+    const f = filter.toLowerCase().trim();
+    const norm = (v) => (v != null ? String(v).toLowerCase().includes(f) : false);
+
+    return allItems.filter((item) => {
+      if (!item || !item.item_id || item.is_deleted) return false;
+      if (item.item_status !== 'active') return false;
+
+      const isBorrowableCheck = actionType === 'borrow' ? item.is_borrowable : true;
+      if (!isBorrowableCheck) return false;
+
       const mc = category ? translateCategory(item.item_category) === category : true;
       const mu = unit ? item.item_unit === unit : true;
       const ms = storage ? item.item_location === storage : true;
       const mt = filter
-        ? norm(item.item_name) || norm(item.item_id)
-        || norm(item.item_number) || norm(getItemCode(item))
-        || norm(translateCategory(item.item_category))
-        || norm(item.item_unit) || norm(item.item_status)
-        || norm(item.item_location)
+        ? norm(item.item_name) ||
+        norm(item.item_id) ||
+        norm(item.item_number) ||
+        norm(getItemCode(item)) ||
+        norm(translateCategory(item.item_category)) ||
+        norm(item.item_unit) ||
+        norm(translateStatus(item.item_status, item.total_on_hand_qty)) ||
+        norm(item.item_location)
         : true;
       return mc && mu && ms && mt;
     });
-  }, [allItems, category, unit, storage, filter]);
+  }, [allItems, category, unit, storage, filter, actionType]);
 
   const totalPages = Math.max(1, Math.ceil(filteredItems.length / itemsPerPage));
   const currentItems = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredItems.slice(start, start + itemsPerPage);
-  }, [filteredItems, currentPage, itemsPerPage]);
+  }, [filteredItems, currentPage]);
 
   // ── Handlers ─────────────────────────────
-  const handleChangeActionType = t => {
+  const handleChangeActionType = (t) => {
     if (t === actionType) return;
     if (cartItems.length > 0) {
       Swal.fire({
         title: 'รายการในตะกร้าจะหาย',
         text: 'คุณต้องการเปลี่ยนประเภทหรือไม่?',
         icon: 'warning',
-        showCancelButton: true, confirmButtonText: 'ใช่', cancelButtonText: 'ไม่'
-      }).then(r => {
-        if (r.isConfirmed) { clearCart(); setActionType(t); toast.info('ล้างตะกร้าแล้ว'); }
+        showCancelButton: true,
+        confirmButtonText: 'ใช่',
+        cancelButtonText: 'ไม่',
+      }).then((r) => {
+        if (r.isConfirmed) {
+          clearCart();
+          setActionType(t);
+          toast.info('ล้างตะกร้าแล้ว');
+        }
       });
-    } else setActionType(t);
+    } else {
+      setActionType(t);
+    }
   };
 
-  const handlePrev = () => currentPage > 1 && setCurrentPage(c => c - 1);
-  const handleNext = () => currentPage * itemsPerPage < filteredItems.length && setCurrentPage(c => c + 1);
-  const clearFilters = () => { setFilter(''); setCategory(''); setUnit(''); setStorage(''); setCurrentPage(1); };
-  const handleWithdraw = item => { setSelectedItem(item); setInputQuantity(1); setShowModal(true); };
-  const handleBorrow = item => { setSelectedItem(item); setInputQuantity(1); setShowModal(true); };
-  const closeModal = () => { setShowModal(false); setSelectedItem(null); setReturnDate(''); };
+  const handlePrev = () => {
+    if (currentPage > 1) setCurrentPage((c) => c - 1);
+  };
 
-  const handleConfirm = () => {
-    if (!inputQuantity || inputQuantity <= 0) { toast.error('กรุณากรอกจำนวนให้ถูกต้อง'); return; }
-    if (!selectedItem) { toast.error('ไม่พบสินค้า'); return; }
-    if (inputQuantity > selectedItem.total_on_hand_qty) { toast.error('จำนวนไม่เพียงพอ'); return; }
-    if (actionType === 'borrow' && !returnDate) { toast.error('กรุณาเลือกวันที่คืน'); return; }
+  const handleNext = () => {
+    if (currentPage < totalPages) setCurrentPage((c) => c + 1);
+  };
 
-    addToCart({
-      id: selectedItem.item_id,
-      item_img: selectedItem.item_img ? `http://localhost:5000/uploads/${selectedItem.item_img}` : '/defaults/landscape.png',
-      number: selectedItem.item_number,
-      code: getItemCode(selectedItem),
-      name: selectedItem.item_name,
-      quantity: inputQuantity,
-      unit: selectedItem.item_unit,
-      type: selectedItem.item_category,
-      location: selectedItem.item_location,
-      action: actionType,
-      returnDate: actionType === 'borrow' ? returnDate : null,
-      item_qty: selectedItem.total_on_hand_qty,
-    });
-    toast.success('เพิ่มเข้าตะกร้าแล้ว');
-    closeModal();
+  const clearFilters = () => {
+    setFilter('');
+    setCategory('');
+    setUnit('');
+    setStorage('');
+    setCurrentPage(1);
+  };
+
+  const handleWithdraw = (item) => {
+    setSelectedItem(item);
+    setInputQuantity(1);
+    setShowModal(true);
+  };
+
+  const handleBorrow = async (item) => {
+    try {
+      const response = await axiosInstance.get(`/api/check-pending-borrow/${item.item_id}`);
+      if (response.data.pending) {
+        Swal.fire({
+          title: 'ไม่สามารถยืมได้',
+          text: 'สินค้านี้มีคำขอยืมที่ค้างอยู่ กรุณาคืนสินค้าก่อน',
+          icon: 'error',
+          confirmButtonText: 'ตกลง',
+        });
+        return;
+      }
+      setSelectedItem(item);
+      setInputQuantity(1);
+      setShowModal(true);
+    } catch (error) {
+      console.error('❌ ตรวจสอบการยืมล้มเหลว:', error);
+      toast.error('ไม่สามารถตรวจสอบสถานะการยืมได้');
+    }
+  };
+
+  const handleConfirm = async () => {
+    if (!inputQuantity || inputQuantity <= 0) {
+      toast.error('กรุณากรอกจำนวนให้ถูกต้อง');
+      return;
+    }
+    if (!selectedItem) {
+      toast.error('ไม่พบสินค้า');
+      return;
+    }
+    if (inputQuantity > (selectedItem.total_on_hand_qty ?? 0)) {
+      toast.error('จำนวนไม่เพียงพอ');
+      return;
+    }
+    if (actionType === 'borrow' && !returnDate) {
+      toast.error('กรุณาเลือกวันที่คืน');
+      return;
+    }
+
+    try {
+      addToCart({
+        id: selectedItem.item_id,
+        item_img: selectedItem.item_img ? `http://localhost:5000/uploads/${selectedItem.item_img}` : '/defaults/landscape.png',
+        number: selectedItem.item_number || '-',
+        code: getItemCode(selectedItem),
+        name: selectedItem.item_name || 'ไม่ระบุ',
+        quantity: inputQuantity,
+        unit: selectedItem.item_unit || '-',
+        type: selectedItem.item_category || '-',
+        location: selectedItem.item_location || '-',
+        action: actionType,
+        returnDate: actionType === 'borrow' ? returnDate : null,
+        item_qty: selectedItem.total_on_hand_qty ?? 0,
+        is_borrowable: selectedItem.is_borrowable ?? false,
+      });
+      toast.success('เพิ่มเข้าตะกร้าแล้ว');
+      closeModal();
+    } catch (error) {
+      console.error('❌ เพิ่มเข้าตะกร้าล้มเหลว:', error);
+      toast.error('ไม่สามารถเพิ่มสินค้าเข้าตะกร้าได้');
+    }
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedItem(null);
+    setInputQuantity(1);
+    setReturnDate(actionType === 'borrow' ? new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0] : '');
   };
 
   const getPageNumbers = () => {
     const pages = [];
-    if (totalPages <= 7) for (let i = 1; i <= totalPages; i++) pages.push(i);
-    else if (currentPage <= 4) pages.push(1, 2, 3, 4, 5, '...', totalPages);
-    else if (currentPage >= totalPages - 3) pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-    else pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else if (currentPage <= 4) {
+      pages.push(1, 2, 3, 4, 5, '...', totalPages);
+    } else if (currentPage >= totalPages - 3) {
+      pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+    } else {
+      pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+    }
     return pages;
   };
 
@@ -333,8 +425,8 @@ export default function InventoryWithdraw() {
                 isSearchable={false}
                 placeholder="เลือกหมวดหมู่..."
                 styles={customSelectStyles}
-                value={categoryOptions.find(o => o.value === category) || null}
-                onChange={opt => setCategory(opt?.value || '')}
+                value={categoryOptions.find((o) => o.value === category) || null}
+                onChange={(opt) => setCategory(opt?.value || '')}
                 menuPlacement="auto"
                 menuPosition="fixed"
                 menuPortalTarget={menuPortalTarget}
@@ -349,23 +441,34 @@ export default function InventoryWithdraw() {
                 isSearchable={false}
                 placeholder="เลือกหน่วย..."
                 styles={customSelectStyles}
-                value={unitOptions.find(o => o.value === unit) || null}
-                onChange={opt => setUnit(opt?.value || '')}
+                value={unitOptions.find((o) => o.value === unit) || null}
+                onChange={(opt) => setUnit(opt?.value || '')}
                 menuPlacement="auto"
                 menuPosition="fixed"
                 menuPortalTarget={menuPortalTarget}
               />
             </div>
+            <div className={styles.filterGroup}>
+              <label className={styles.label}>สถานที่จัดเก็บ</label>
+              <input
+                id="storage"
+                className={styles.input}
+                type="text"
+                value={storage}
+                onChange={(e) => setStorage(e.target.value)}
+                placeholder="สถานที่จัดเก็บ..."
+              />
+            </div>
           </div>
           <div className={styles.searchCluster}>
             <div className={styles.filterGroup}>
-              <label className={styles.label} htmlFor="filter">ค้นหา</label>
+              <label htmlFor="filter" className={styles.label}>ค้นหา</label>
               <input
                 id="filter"
                 className={styles.input}
                 type="text"
                 value={filter}
-                onChange={e => setFilter(e.target.value)}
+                onChange={(e) => setFilter(e.target.value)}
                 placeholder="ชื่อ, รหัส, หน่วย, สถานะ..."
               />
             </div>
@@ -380,7 +483,7 @@ export default function InventoryWithdraw() {
           </div>
         </div>
 
-        {/* ✅ Loading */}
+        {/* Loading */}
         {isLoading ? (
           <div className={styles.loadingContainer}>
             <p>กำลังโหลดข้อมูลสินค้า...</p>
@@ -396,80 +499,102 @@ export default function InventoryWithdraw() {
               <div className={styles.headerItem}>จำนวน</div>
               <div className={styles.headerItem}>หน่วย</div>
               <div className={styles.headerItem}>สถานะ</div>
-              <div className={styles.headerItem}>แก้ไขล่าสุด</div>
               <div className={styles.headerItem}>จัดการ</div>
             </div>
             <div className={styles.inventory} style={{ '--rows-per-page': itemsPerPage }}>
-              {currentItems.length > 0 ? currentItems.map((item, i) => (
-                item && (
-                  <div key={item.item_id || i} className={`${styles.tableGrid} ${styles.tableRow}`}>
-                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                      {i + 1 + (currentPage - 1) * itemsPerPage}
+              {currentItems.length > 0 ? (
+                currentItems.map((item, i) => (
+                  item && (
+                    <div key={item.item_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        {i + 1 + (currentPage - 1) * itemsPerPage}
+                      </div>
+                      <div className={styles.tableCell}>{getItemCode(item)}</div>
+                      <div className={`${styles.tableCell} ${styles.imageCell}`}>
+                        <ItemImage item_img={item.item_img} alt={item.item_name} />
+                      </div>
+                      <div className={styles.tableCell}>{item.item_name || 'ไม่ระบุ'}</div>
+                      <div className={styles.tableCell}>{translateCategory(item.item_category)}</div>
+                      <div className={styles.tableCell}>{item.total_on_hand_qty ?? 0}</div>
+                      <div className={styles.tableCell}>{item.item_unit || '-'}</div>
+                      <div className={styles.tableCell}>
+                        {(() => {
+                          const status = translateStatus(item);
+                          return (
+                            <span className={`${styles.stBadge} ${styles[status.class]}`}>
+                              {status.text}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        {actionType === 'withdraw' ? (
+                          <button
+                            className={`${styles.actionButton} ${styles.withdrawButton}`}
+                            onClick={() => handleWithdraw(item)}
+                            disabled={item.total_on_hand_qty == null || item.total_on_hand_qty <= 0}
+                            title={item.total_on_hand_qty == null || item.total_on_hand_qty <= 0 ? 'สต็อกหมด' : 'เบิก'}
+                          >
+                            เบิก
+                          </button>
+                        ) : (
+                          <button
+                            className={`${styles.actionButton} ${styles.borrowButton}`}
+                            onClick={() => handleBorrow(item)}
+                            disabled={!item.is_borrowable || item.total_on_hand_qty == null || item.total_on_hand_qty <= 0}
+                            title={
+                              item.total_on_hand_qty == null || item.total_on_hand_qty <= 0
+                                ? 'สต็อกหมด'
+                                : !item.is_borrowable
+                                  ? 'ไม่สามารถยืมได้'
+                                  : 'ยืม'
+                            }
+                          >
+                            ยืม
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <div className={styles.tableCell}>{getItemCode(item)}</div>
-                    <div className={`${styles.tableCell} ${styles.imageCell}`}>
-                      <ItemImage item_img={item.item_img} alt={item.item_name} />
-                    </div>
-                    <div className={styles.tableCell}>{item.item_name}</div>
-                    <div className={styles.tableCell}>{translateCategory(item.item_category)}</div>
-                    <div className={styles.tableCell}>{item.total_on_hand_qty}</div>
-                    <div className={styles.tableCell}>{item.item_unit}</div>
-                    <div className={styles.tableCell}>{item.item_status}</div>
-                    <div className={styles.tableCell}>
-                      {item.updated_at ? new Date(item.updated_at).toLocaleDateString() : ''}
-                    </div>
-                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                      {actionType === 'withdraw' ? (
-                        <button
-                          className={`${styles.actionButton} ${styles.withdrawButton}`}
-                          onClick={() => handleWithdraw(item)}
-                          disabled={!item.total_on_hand_qty || item.total_on_hand_qty <= 0}
-                          title={!item.total_on_hand_qty || item.total_on_hand_qty <= 0 ? 'สต็อกหมด' : 'เบิก'}
-                        >
-                          เบิก
-                        </button>
-                      ) : (
-                        <button
-                          className={`${styles.actionButton} ${styles.borrowButton}`}
-                          onClick={() => handleBorrow(item)}
-                          disabled={!item.total_on_hand_qty || item.total_on_hand_qty <= 0}
-                          title={!item.total_on_hand_qty || item.total_on_hand_qty <= 0 ? 'สต็อกหมด' : 'ยืม'}
-                        >
-                          ยืม
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )
-              )) : (
+                  )
+                ))
+              ) : (
                 <div className={styles.noDataMessage}>ไม่พบข้อมูลตามเงื่อนไข</div>
               )}
             </div>
             <ul className={styles.paginationControls}>
               <li>
-                <button className={styles.pageButton} onClick={handlePrev} disabled={currentPage === 1}>
+                <button
+                  className={styles.pageButton}
+                  onClick={handlePrev}
+                  disabled={currentPage === 1}
+                  aria-label="หน้าก่อนหน้า"
+                >
                   <ChevronLeft size={16} />
                 </button>
               </li>
-              {getPageNumbers().map((p, idx) =>
+              {getPageNumbers().map((p, idx) => (
                 p === '...' ? (
-                  <li key={idx} className={styles.ellipsis}>…</li>
+                  <li key={idx} className={styles.ellipsis}>
+                    …
+                  </li>
                 ) : (
                   <li key={idx}>
                     <button
                       className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ''}`}
                       onClick={() => setCurrentPage(p)}
+                      aria-current={p === currentPage ? 'page' : undefined}
                     >
                       {p}
                     </button>
                   </li>
                 )
-              )}
+              ))}
               <li>
                 <button
                   className={styles.pageButton}
                   onClick={handleNext}
                   disabled={currentPage >= totalPages}
+                  aria-label="หน้าถัดไป"
                 >
                   <ChevronRight size={16} />
                 </button>
@@ -488,41 +613,67 @@ export default function InventoryWithdraw() {
               <div className={styles.modalContentRow}>
                 <ItemImage item_img={selectedItem.item_img} alt={selectedItem.item_name} />
                 <div className={styles.modalDetails}>
-                  <div><strong>ชื่อ:</strong> {selectedItem.item_name}</div>
-                  <div><strong>รหัส:</strong> {selectedItem.item_id}</div>
-                  <div><strong>หมวดหมู่:</strong> {translateCategory(selectedItem.item_category)}</div>
-                  <div><strong>คงเหลือ:</strong> {selectedItem.total_on_hand_qty} {selectedItem.item_unit}</div>
+                  <div>
+                    <strong>ชื่อ:</strong> {selectedItem.item_name || 'ไม่ระบุ'}
+                  </div>
+                  <div>
+                    <strong>รหัส:</strong> {getItemCode(selectedItem)}
+                  </div>
+                  <div>
+                    <strong>หมวดหมู่:</strong> {translateCategory(selectedItem.item_category)}
+                  </div>
+                  <div>
+                    <strong>คงเหลือ:</strong> {selectedItem.total_on_hand_qty ?? 0} {selectedItem.item_unit || '-'}
+                  </div>
                 </div>
               </div>
               <div className={styles.modalForm}>
-                <label htmlFor="quantity">จำนวนที่ต้องการ</label>
+                <label htmlFor="quantity" className={styles.label}>
+                  จำนวนที่ต้องการ
+                </label>
                 <input
                   id="quantity"
                   type="number"
                   className={styles.input}
                   value={inputQuantity}
                   min={1}
-                  max={selectedItem.total_on_hand_qty}
-                  onChange={e => setInputQuantity(Number(e.target.value))}
+                  max={selectedItem.total_on_hand_qty ?? 0}
+                  onChange={(e) => setInputQuantity(Number(e.target.value) || 1)}
+                  aria-describedby="quantity-error"
                 />
                 {actionType === 'borrow' && (
                   <>
-                    <label htmlFor="returnDate">วันที่คืน</label>
+                    <label htmlFor="returnDate" className={styles.label}>
+                      วันที่คืน
+                    </label>
                     <input
                       id="returnDate"
                       type="date"
                       className={styles.input}
                       value={returnDate}
-                      onChange={e => setReturnDate(e.target.value)}
+                      onChange={(e) => setReturnDate(e.target.value)}
                       min={minReturnDate}
                       max={maxReturnDate}
+                      aria-describedby="returnDate-error"
                     />
                   </>
                 )}
               </div>
               <div className={styles.modalActions}>
-                <button className={`${styles.actionButton} ${styles.successBtn}`} onClick={handleConfirm}>บันทึก</button>
-                <button className={`${styles.actionButton} ${styles.dangerBtnOutline}`} onClick={closeModal}>ยกเลิก</button>
+                <button
+                  className={`${styles.actionButton} ${styles.successBtn}`}
+                  onClick={handleConfirm}
+                  aria-label="บันทึกรายการ"
+                >
+                  บันทึก
+                </button>
+                <button
+                  className={`${styles.actionButton} ${styles.dangerBtnOutline}`}
+                  onClick={closeModal}
+                  aria-label="ยกเลิกรายการ"
+                >
+                  ยกเลิก
+                </button>
               </div>
             </div>
           </div>

@@ -14,9 +14,12 @@ export default function AddItem() {
         item_location: '',
         item_zone: '',
         item_unit: '',
+        item_purchase_unit: '',
+        item_conversion_rate: 1,
         item_min: 0,
         item_max: 0,
         item_barcode: '',
+        is_borrowable: false, // เพิ่มสถานะใหม่
         image: null,
         imagePreview: null,
 
@@ -77,11 +80,12 @@ export default function AddItem() {
         };
     }, [form.imagePreview]);
 
+    // แก้ไขฟังก์ชัน handleChange ที่นี่
     const handleChange = (e) => {
-        const { name, value, type } = e.target;
+        const { name, value, type, checked } = e.target;
         setForm((prev) => ({
             ...prev,
-            [name]: type === "number" ? Number(value) : value
+            [name]: type === "checkbox" ? checked : (type === "number" ? Number(value) : value)
         }));
     };
 
@@ -162,6 +166,7 @@ export default function AddItem() {
             if (key === 'image') {
                 if (value) formData.append(key, value);
             } else if (key !== 'imagePreview') {
+                // สำหรับ boolean, FormData จะแปลงเป็น 'true' หรือ 'false' ให้โดยอัตโนมัติ
                 formData.append(key, value ?? '');
             }
         });

@@ -14,7 +14,6 @@ export default function RfqDetailPage() {
   const params = useParams();
   const pathname = usePathname();
 
-  // ใช้ id ตามชื่อโฟลเดอร์ [id] + กัน array + fallback จาก pathname
   const rfqId = useMemo(() => {
     let v = params?.id;
     if (Array.isArray(v)) v = v[0];
@@ -81,7 +80,24 @@ export default function RfqDetailPage() {
     }
   };
 
-  // ออก PDF จาก "ข้อมูลใบนี้"
+  // ✅ ปรับปรุง: เพิ่มสถานะ 'created'
+  const getThaiRfqStatus = (status) => {
+    switch (status) {
+      case 'created':
+        return 'สร้างแล้ว';
+      case 'open':
+        return 'เปิด';
+      case 'closed':
+        return 'ปิด';
+      case 'awarded':
+        return 'อนุมัติผู้ขายแล้ว';
+      case 'cancelled':
+        return 'ยกเลิก';
+      default:
+        return status;
+    }
+  };
+
   const handleExportPDF = async () => {
     if (!rfqDetails) return;
     const { title, meta, columns, rows, filename } = rfqTemplate(
@@ -98,7 +114,6 @@ export default function RfqDetailPage() {
     });
   };
 
-  // ── Render ──
   if (loading) return <div className={styles.container}>กำลังโหลดข้อมูล...</div>;
 
   if (error) {
@@ -156,7 +171,7 @@ export default function RfqDetailPage() {
         </div>
         <div className={styles.summaryItem}>
           <p>สถานะ:</p>
-          <span className={styles.statusBadge}>{rfqDetails.status}</span>
+          <span className={styles.statusBadge}>{getThaiRfqStatus(rfqDetails.status)}</span>
         </div>
       </div>
 

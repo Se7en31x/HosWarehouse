@@ -328,7 +328,6 @@ export default function InventoryCheck() {
               <div className={styles.headerItem}>คงเหลือ</div>
               <div className={styles.headerItem}>หน่วย</div>
               <div className={styles.headerItem}>สถานะ</div>
-              <div className={styles.headerItem}>อัปเดตล่าสุด</div>
               <div className={styles.headerItem}>ดำเนินการ</div>
             </div>
 
@@ -370,7 +369,6 @@ export default function InventoryCheck() {
                         );
                       })()}
                     </div>
-                    <div className={styles.tableCell}>{formatDateTime(item.created_at)}</div>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>
                       <Link
                         href={`/manage/inventoryCheck/${item.item_id}/inventoryDetail`}

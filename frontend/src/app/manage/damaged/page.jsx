@@ -138,7 +138,7 @@ export default function DamagedItemsPage() {
             {/* Header (grid เหมือน body) */}
             <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
               <div className={styles.headerItem}>ชื่อพัสดุ</div>
-              <div className={styles.headerItem}>ประเภทความเสียหาย</div>
+              <div className={styles.headerItem}>ประเภท</div>
               <div className={`${styles.headerItem} ${styles.centerCell}`}>จำนวนที่ชำรุด</div>
               <div className={`${styles.headerItem} ${styles.centerCell}`}>เหลือให้ดำเนินการ</div>
               <div className={styles.headerItem}>วันที่ชำรุด</div>

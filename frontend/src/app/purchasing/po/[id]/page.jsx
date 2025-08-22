@@ -9,11 +9,12 @@ import '@/app/utils/fonts/sarabun-normal';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+// Helper function to format numbers to Thai baht
 const thb = (v) => (Number(v) || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const statusMap = {
-  issued:  { text: 'บันทึกแล้ว', cls: 'badgeBlue' },
-  canceled:{ text: 'ยกเลิก',  cls: 'badgeRed'  },
+  issued: { text: 'บันทึกแล้ว', cls: 'badgeBlue' },
+  canceled: { text: 'ยกเลิก', cls: 'badgeRed' },
 };
 
 function StatusBadge({ status }) {
@@ -30,39 +31,61 @@ export default function PODetailPage() {
   const [files, setFiles] = useState([]);     // รายการไฟล์แนบ
   const [uploading, setUploading] = useState(false);
 
-  const fetchDetail = async () => {
+  // Memoize computed values to prevent unnecessary recalculations
+  const computed = useMemo(() => {
+    if (!po?.items?.length) return { sub: 0, vat: 0, grand: 0 };
+    const sub = po.items.reduce((a, r) => a + ((+r.qty || 0) * (+r.unit_price || 0) - (+r.discount || 0)), 0);
+    const vatRate = Number(po?.terms?.vat_rate) || 0;
+    const vat = sub * vatRate / 100;
+    return { sub, vat, grand: sub + vat };
+  }, [po]);
+
+  // Fetch PO detail data from the backend
+  const fetchDetail = async (poId) => {
     setLoading(true);
     try {
-      const res = await axiosInstance.get(`/po/${id}`);
+      const res = await axiosInstance.get(`/po/${poId}`);
       setPo(res.data);
 
-      // ไฟล์แนบ
+      // Fetch attached files
       try {
-        const f = await axiosInstance.get(`/po/${id}/files`);
+        const f = await axiosInstance.get(`/po/${poId}/files`);
         setFiles(f.data || []);
       } catch { setFiles([]); }
 
     } catch (e) {
       console.error(e);
       Swal.fire('ผิดพลาด', 'โหลดรายละเอียด PO ไม่สำเร็จ', 'error');
+      // If fetching fails, clear the PO data
+      setPo(null);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { if (id) fetchDetail(); /* eslint-disable-next-line */ }, [id]);
-
-  const computed = useMemo(() => {
-    if (!po?.items?.length) return { sub: 0, vat: 0, grand: 0 };
-    const sub = po.items.reduce((a, r) => a + ((+r.qty||0)*(+r.unit_price||0) - (+r.discount||0)), 0);
-    const vatRate = Number(po?.terms?.vat_rate) || 0;
-    const vat = sub * vatRate / 100;
-    return { sub, vat, grand: sub + vat };
-  }, [po]);
+  // Main effect to handle ID validation and data fetching
+  useEffect(() => {
+    // ✅ Add validation for the ID parameter
+    const parsedId = parseInt(id, 10);
+    if (isNaN(parsedId)) {
+      console.error('Invalid PO ID:', id);
+      Swal.fire({
+        icon: 'error',
+        title: 'เกิดข้อผิดพลาด',
+        text: 'ไม่พบเลขที่ใบสั่งซื้อที่ถูกต้อง กรุณาตรวจสอบ URL',
+        confirmButtonText: 'กลับหน้าหลัก'
+      }).then(() => {
+        router.push('/purchasing/po');
+      });
+      setLoading(false);
+    } else {
+      fetchDetail(parsedId);
+    }
+  }, [id, router]);
 
   const onBack = () => router.push('/purchasing/po');
 
-  // ⬇️ ยกเลิกเอกสาร
+  // Cancel the document
   const onCancel = async () => {
     if (po?.status === 'canceled') return;
     const { value: reason, isConfirmed } = await Swal.fire({
@@ -76,8 +99,8 @@ export default function PODetailPage() {
     if (!isConfirmed) return;
 
     try {
-      await axiosInstance.put(`/po/${id}/cancel`, { reason: reason || '' });
-      await fetchDetail();
+      await axiosInstance.put(`/po/${po.po_id}/cancel`, { reason: reason || '' });
+      await fetchDetail(po.po_id);
       Swal.fire('สำเร็จ', 'ยกเลิกเอกสารแล้ว', 'success');
     } catch (e) {
       console.error(e);
@@ -85,7 +108,7 @@ export default function PODetailPage() {
     }
   };
 
-  // ⬇️ อัปโหลดไฟล์แนบ
+  // Upload attachment file
   const onUpload = async (evt) => {
     const file = evt.target.files?.[0];
     if (!file) return;
@@ -93,10 +116,10 @@ export default function PODetailPage() {
     try {
       const form = new FormData();
       form.append('file', file);
-      await axiosInstance.post(`/po/${id}/files`, form, {
+      await axiosInstance.post(`/po/${po.po_id}/files`, form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      const f = await axiosInstance.get(`/po/${id}/files`);
+      const f = await axiosInstance.get(`/po/${po.po_id}/files`);
       setFiles(f.data || []);
       Swal.fire('อัปโหลดแล้ว', 'บันทึกไฟล์แนบเรียบร้อย', 'success');
     } catch (e) {
@@ -108,12 +131,12 @@ export default function PODetailPage() {
     }
   };
 
-  // ⬇️ ลบไฟล์แนบ
+  // Remove attachment file
   const onRemoveFile = async (file_id) => {
     const ok = await Swal.fire({ title: 'ลบไฟล์?', icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบ' });
     if (!ok.isConfirmed) return;
     try {
-      await axiosInstance.delete(`/po/${id}/files/${file_id}`);
+      await axiosInstance.delete(`/po/${po.po_id}/files/${file_id}`);
       setFiles((prev) => prev.filter((f) => f.file_id !== file_id));
       Swal.fire('ลบแล้ว', '', 'success');
     } catch (e) {
@@ -122,23 +145,23 @@ export default function PODetailPage() {
     }
   };
 
-  // ⬇️ พิมพ์ PDF (readonly อยู่แล้ว)
+  // Export PDF
   const exportPDF = () => {
     if (!po) return;
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-    try { doc.setFont('Sarabun', 'normal'); } catch {}
+    try { doc.setFont('Sarabun', 'normal'); } catch { }
     const marginX = 36; let y = 48;
-    doc.setFontSize(16); doc.text('ใบสั่งซื้อ (PO)', marginX, y); y+=20;
+    doc.setFontSize(16); doc.text('ใบสั่งซื้อ (PO)', marginX, y); y += 20;
     doc.setFontSize(11);
-    doc.text(`เลขที่: ${po.po_no || '-'}`, marginX, y); y+=16;
-    doc.text(`วันที่: ${po.po_date ? new Date(po.po_date).toLocaleDateString('th-TH') : '-'}`, marginX, y); y+=24;
+    doc.text(`เลขที่: ${po.po_no || '-'}`, marginX, y); y += 16;
+    doc.text(`วันที่: ${po.po_date ? new Date(po.po_date).toLocaleDateString('th-TH') : '-'}`, marginX, y); y += 24;
 
     const v = po.vendor || {};
-    doc.setFontSize(12); doc.text('ข้อมูลผู้ขาย', marginX, y); y+=16;
+    doc.setFontSize(12); doc.text('ข้อมูลผู้ขาย', marginX, y); y += 16;
     doc.setFontSize(10);
-    doc.text([`ชื่อ: ${v.name||'-'}`, `ที่อยู่: ${v.address||'-'}`, `ผู้ติดต่อ: ${v.contact||'-'}`, `โทร: ${v.phone||'-'}   อีเมล: ${v.email||'-'}`], marginX, y);
+    doc.text([`ชื่อ: ${v.name || '-'}`, `ที่อยู่: ${v.address || '-'}`, `ผู้ติดต่อ: ${v.contact || '-'}`, `โทร: ${v.phone || '-'}   อีเมล: ${v.email || '-'}`], marginX, y);
     const rightX = 330;
-    doc.setFontSize(12); doc.text('ข้อมูลอ้างอิง', rightX, y-16);
+    doc.setFontSize(12); doc.text('ข้อมูลอ้างอิง', rightX, y - 16);
     doc.setFontSize(10);
     doc.text([
       `สถานะ: ${statusMap[po.status]?.text || po.status || '-'}`,
@@ -146,18 +169,18 @@ export default function PODetailPage() {
       `เครดิต: ${po?.terms?.credit_days ?? '-'} วัน`,
       `ส่งของภายใน: ${po?.terms?.delivery_days ?? '-'} วัน`,
     ], rightX, y);
-    y+=72;
+    y += 72;
 
-    const rows = (po.items||[]).map((r,i)=>[
-      i+1, r.code||'-', r.name||'-', r.unit||'-',
-      String(r.qty||0), thb(r.unit_price||0), thb(r.discount||0),
-      thb((+r.qty||0)*(+r.unit_price||0)-(+r.discount||0))
+    const rows = (po.items || []).map((r, i) => [
+      i + 1, r.code || '-', r.name || '-', r.unit || '-',
+      String(r.qty || 0), thb(r.unit_price || 0), thb(r.discount || 0),
+      thb((+r.qty || 0) * (+r.unit_price || 0) - (+r.discount || 0))
     ]);
     autoTable(doc, {
       startY: y,
-      head: [['#','รหัส','ชื่อพัสดุ','หน่วย','จำนวน','ราคาต่อหน่วย','ส่วนลด','รวม/รายการ']],
-      body: rows, styles:{ font:'Sarabun', fontSize:10 }, headStyles:{ fillColor:[230,230,230] },
-      theme:'grid', margin:{ left: marginX, right: marginX },
+      head: [['#', 'รหัส', 'ชื่อพัสดุ', 'หน่วย', 'จำนวน', 'ราคาต่อหน่วย', 'ส่วนลด', 'รวม/รายการ']],
+      body: rows, styles: { font: 'Sarabun', fontSize: 10 }, headStyles: { fillColor: [230, 230, 230] },
+      theme: 'grid', margin: { left: marginX, right: marginX },
     });
     const endY = doc.lastAutoTable.finalY + 12;
     doc.setFontSize(11);
@@ -177,18 +200,18 @@ export default function PODetailPage() {
     <div className={styles.page}>
       <div className={styles.header}>
         <div className={styles.leftGroup}>
-          <button className={styles.btnGhost} onClick={onBack}><FaChevronLeft/> กลับ</button>
+          <button className={styles.btnGhost} onClick={onBack}><FaChevronLeft /> กลับ</button>
           <h1>รายละเอียดใบสั่งซื้อ</h1>
-          <StatusBadge status={po.status}/>
+          <StatusBadge status={po.status} />
         </div>
         <div className={styles.headerActions}>
           {canCancel && (
             <button className={styles.btnDanger} onClick={onCancel} title="ยกเลิกเอกสาร">
-              <FaBan/> ยกเลิกเอกสาร
+              <FaBan /> ยกเลิกเอกสาร
             </button>
           )}
-          <button className={styles.btnGhost} onClick={fetchDetail}><FaSync/> รีเฟรช</button>
-          <button className={styles.btnPrimary} onClick={exportPDF}><FaPrint/> พิมพ์/บันทึก PDF</button>
+          <button className={styles.btnGhost} onClick={() => fetchDetail(po.po_id)}><FaSync /> รีเฟรช</button>
+          <button className={styles.btnPrimary} onClick={exportPDF}><FaPrint /> พิมพ์/บันทึก PDF</button>
         </div>
       </div>
 
@@ -201,11 +224,11 @@ export default function PODetailPage() {
             <b>วันที่:</b> {po.po_date ? new Date(po.po_date).toLocaleDateString('th-TH') : '-'}
           </div>
           <div>
-            <b>สถานะ:</b> <StatusBadge status={po.status}/>
+            <b>สถานะ:</b> <StatusBadge status={po.status} />
           </div>
         </div>
       </div>
-      
+
       <div className={styles.card}>
         <h2>ข้อมูลผู้ขาย</h2>
         <div className={styles.grid2}>
@@ -283,8 +306,8 @@ export default function PODetailPage() {
       <div className={styles.card}>
         <div className={styles.cardHead}>
           <h2>ไฟล์แนบ</h2>
-          <label className={styles.btnPrimary} style={{opacity: uploading || po.status === 'canceled' ? 0.5 : 1}}>
-            <FaUpload/> แนบไฟล์
+          <label className={styles.btnPrimary} style={{ opacity: uploading || po.status === 'canceled' ? 0.5 : 1 }}>
+            <FaUpload /> แนบไฟล์
             <input
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"
@@ -301,10 +324,10 @@ export default function PODetailPage() {
           <div className={styles.fileGrid}>
             {files.map((f) => (
               <div key={f.file_id} className={styles.fileItem}>
-                <a 
-                  href={`http://localhost:5000${f.file_url}`} 
-                  target="_blank" 
-                  rel="noreferrer" 
+                <a
+                  href={`http://localhost:5000${f.file_url}`}
+                  target="_blank"
+                  rel="noreferrer"
                   className={styles.fileLink}>
                   {f.file_name}
                 </a>
@@ -313,7 +336,7 @@ export default function PODetailPage() {
                 </div>
                 {po.status !== 'canceled' && (
                   <button className={styles.btnSmallDanger} onClick={() => onRemoveFile(f.file_id)}>
-                    <FaTrash/> ลบ
+                    <FaTrash /> ลบ
                   </button>
                 )}
               </div>
@@ -321,7 +344,6 @@ export default function PODetailPage() {
           </div>
         )}
       </div>
-
     </div>
   );
 }

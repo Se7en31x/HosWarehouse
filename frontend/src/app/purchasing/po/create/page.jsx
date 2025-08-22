@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import axiosInstance from '@/app/utils/axiosInstance';
 import Swal from 'sweetalert2';
 import styles from './page.module.css';
-import { FaPlusCircle, FaTrash, FaSave, FaExchangeAlt } from 'react-icons/fa';
+import { FaPlusCircle, FaTrash, FaSave, FaExchangeAlt, FaDownload } from 'react-icons/fa';
 
 // helpers
 const n = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
@@ -87,6 +87,7 @@ export default function CreatePOPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [fetchingPR, setFetchingPR] = useState(false); // สถานะใหม่
 
   const [vendorManual, setVendorManual] = useState({
     name: '',
@@ -117,7 +118,55 @@ export default function CreatePOPage() {
     return { sub, vat, grand: sub + vat };
   }, [items, terms.vat_rate]);
 
-  // New useEffect to handle data from URL
+  const fetchPRData = async () => {
+    if (!refDoc.pr_no) {
+      Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกเลขที่ PR ก่อน', 'warning');
+      return;
+    }
+
+    setFetchingPR(true);
+    try {
+      // สมมติว่ามี API สำหรับดึงข้อมูล PR ที่ /api/pr/:pr_no
+      const response = await axiosInstance.get(`/po/by-pr/${refDoc.pr_no}`);
+      const prData = response.data;
+
+      // นำข้อมูลมา map เพื่อให้สอดคล้องกับโครงสร้างของ items state
+      const newItems = prData.items.map(item => ({
+        item_id: item.item_id,
+        code: item.item_code || '',
+        name: item.item_name,
+        unit: item.unit || item.item_unit,  // กันไว้สองแบบ
+        qty: n(item.qty),
+        unit_price: 0,
+        discount: 0,
+      }));
+
+      setItems(newItems);
+
+      // ถ้ามีข้อมูลผู้ขายใน PR ก็ดึงมาแสดงด้วย
+      if (prData.vendor) {
+        setVendorManual({
+          name: prData.vendor.name,
+          address: prData.vendor.address || '',
+          contact: prData.vendor.contact || '',
+          phone: prData.vendor.phone || '',
+          email: prData.vendor.email || '',
+          note: prData.vendor.note || '',
+        });
+      }
+
+      Swal.fire('สำเร็จ', `ดึงข้อมูลจาก PR ${refDoc.pr_no} เรียบร้อย`, 'success');
+
+    } catch (error) {
+      console.error('Failed to fetch PR data:', error);
+      Swal.fire('ข้อผิดพลาด', 'ไม่พบข้อมูล PR หรือมีข้อผิดพลาดในการดึงข้อมูล', 'error');
+    } finally {
+      setFetchingPR(false);
+    }
+  };
+
+
+  // useEffect สำหรับการโหลดเริ่มต้นจาก URL เท่านั้น
   useEffect(() => {
     const itemsFromQuery = sp.get('items');
     const vendorNameFromQuery = sp.get('vendorName');
@@ -139,7 +188,7 @@ export default function CreatePOPage() {
     } else {
       setItems([{ qty: 1, unit_price: 0, discount: 0 }]);
     }
-    
+
     if (vendorNameFromQuery) {
       setVendorManual(prev => ({ ...prev, name: vendorNameFromQuery }));
     }
@@ -210,17 +259,21 @@ export default function CreatePOPage() {
   });
 
   const save = async () => {
-    const err = validate();
-    if (err) return Swal.fire('ตรวจสอบข้อมูล', err, 'warning');
+    const validationError = validate();
+    if (validationError) {
+      Swal.fire('ข้อมูลไม่ถูกต้อง', validationError, 'error');
+      return;
+    }
+
     setSaving(true);
     try {
       const res = await axiosInstance.post('/po', buildPayload());
-      const poId = res.data?.po_id || '';
-      Swal.fire('สำเร็จ', 'บันทึกใบสั่งซื้อแล้ว (แก้ไขไม่ได้)', 'success');
+      const poId = res.data.po_id;
+      Swal.fire('สำเร็จ', 'บันทึกใบสั่งซื้อแล้ว', 'success');
       router.push(`/purchasing/po/${poId}`);
-    } catch (e) {
-      console.error(e);
-      Swal.fire('ผิดพลาด', 'บันทึกไม่สำเร็จ', 'error');
+    } catch (error) {
+      console.error('Failed to save PO:', error);
+      Swal.fire('ข้อผิดพลาด', 'ไม่สามารถบันทึกใบสั่งซื้อได้', 'error');
     } finally {
       setSaving(false);
     }
@@ -237,14 +290,23 @@ export default function CreatePOPage() {
       <div className={styles.card}>
         <h2>อ้างอิงเอกสาร</h2>
         <div className={styles.grid3}>
-          <div>
-            <label>PR No.</label>
-            <input
-              className={styles.input}
-              value={refDoc.pr_no}
-              onChange={(e) => setRefDoc({ ...refDoc, pr_no: e.target.value })}
-              placeholder="เช่น PR-2025-001"
-            />
+          <div className={styles.inputWithButton}>
+            <div>
+              <label>PR No.</label>
+              <input
+                className={styles.input}
+                value={refDoc.pr_no}
+                onChange={(e) => setRefDoc({ ...refDoc, pr_no: e.target.value })}
+                placeholder="เช่น PR-2025-001"
+              />
+            </div>
+            <button
+              className={styles.btnPrimary}
+              onClick={fetchPRData}
+              disabled={fetchingPR || !refDoc.pr_no}
+            >
+              {fetchingPR ? 'กำลังดึง...' : <><FaDownload /> ดึงข้อมูล</>}
+            </button>
           </div>
           <div>
             <label>RFQ No.</label>
