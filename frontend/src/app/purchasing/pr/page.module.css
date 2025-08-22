@@ -1,21 +1,194 @@
 /* src/app/purchasing/pr/page.module.css */
 
-.container {
-  padding: 2rem;
-  background-color: #f0f2f5;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #333;
+/* Theme vars */
+:root {
+  --bg: #f0f2f5;
+  --panel: #fff;
+  --text: #111827;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --primary: #0e86fd;
+  --tint-100: #f5fbff;
+  --tint-200: #deedf1;
+  --radius: 12px;
+  --row-h: 56px;
+  --rows-per-page: 10;
+  --pad-x: 12px;
+}
+
+/* Layout */
+.pageBackground {
+  min-height: 100vh;
+  background: var(--bg);
+  padding: 24px;
+  display: grid;
+  place-items: start center;
+}
+
+.card {
+  width: min(1200px, 100%);
+  background: var(--panel);
+  color: var(--text);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .06);
+  padding: 20px;
 }
 
 .title {
   text-align: center;
   color: #0056b3;
-  margin-bottom: 2rem;
-  font-size: 2.2rem;
+  margin: 4px 0 16px;
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  font-weight: 700;
 }
 
+/* Loading */
+.loadingContainer {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(0,0,0,.1);
+  border-left-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+.loadingText { margin-top: 10px; color: #555; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== Table (Grid style เหมือนโค้ดหลัก) ===== */
+.tableFrame {
+  background: #fff;
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* คุมคอลัมน์ที่เดียว ใช้ได้ทั้ง header/body */
+.tableGrid {
+  display: grid;
+  grid-template-columns:
+    minmax(160px, 1.2fr) /* เลขที่ PR */
+    minmax(180px, 1.2fr) /* ผู้ร้องขอ */
+    minmax(190px, 1.2fr) /* วันที่สร้าง */
+    minmax(160px, 1fr)   /* สถานะ */
+    minmax(150px, .9fr); /* ดูรายละเอียด */
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tableHeader {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #eef9fc;
+  border-bottom: 1px solid var(--tint-200);
+  padding: 12px var(--pad-x);
+  font-weight: 700;
+  color: #374151;
+}
+
+.headerItem {
+  padding: 0 var(--pad-x);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Body */
+.inventory {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  overflow: hidden;
+  background: #fff;
+}
+
+.tableRow {
+  height: var(--row-h);
+  border-top: 1px solid var(--tint-200);
+  padding: 0 var(--pad-x);
+}
+.tableRow:hover { background: var(--tint-100); }
+
+.tableCell {
+  padding: 0 var(--pad-x);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.centerCell { display: flex; justify-content: center; }
+
+.noData {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ซ่อนเส้นคั่นของแถวว่างให้ดูเนียน */
+.placeholderRow { border-top-color: transparent !important; background: transparent !important; pointer-events: none; }
+.placeholderRow + .placeholderRow { border-top-color: transparent !important; }
+
+/* Status badge */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 110px;
+  padding: .38rem .7rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .82rem;
+  color: #fff;
+}
+.submitted { background: #ffc107; }
+.approved  { background: #28a745; }
+.rejected  { background: #dc3545; }
+.defaultStatus { background: #6b7280; }
+
+/* Detail button */
+.detailButton {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: .9rem;
+  transition: background-color .2s;
+}
+.detailButton:hover { background-color: #0056b3; }
+
+/* Pagination */
+.paginationControls {
+  display: flex;
+  list-style: none;
+  padding: 10px;
+  margin: 0;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  background: #fff;
+  border-top: 1px solid var(--tint-200);
+}
+.pageButton {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  min-width: 36px;
+  cursor: pointer;
+}
+.pageButton:hover:not(:disabled) { background: #e9f6fb; }
+.pageButton:disabled { opacity: .5; cursor: not-allowed; }
+.activePage { background: var(--primary); color: #fff; border-color: var(--primary); }
+.ellipsis { color: var(--muted); }
+
+/* เดิมคงไว้ใช้กับข้อความว่าง/แจ้งเตือน */
+.container { padding: 0; }
 .emptyList {
   color: #888;
   text-align: center;
@@ -23,66 +196,20 @@
   padding: 2rem;
   background-color: #fff;
   border-radius: 8px;
+  margin-top: 1rem;
 }
 
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 2rem;
-  background-color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border-radius: 8px;
-  overflow: hidden;
+/* Responsive */
+@media (max-width: 1024px) {
+  .tableGrid {
+    grid-template-columns:
+      minmax(140px, 1.1fr)
+      minmax(160px, 1.1fr)
+      minmax(170px, 1.1fr)
+      minmax(140px, .9fr)
+      minmax(130px, .9fr);
+  }
 }
-
-.table th,
-.table td {
-  padding: 1rem;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}
-
-.table th {
-  background-color: #007bff;
-  color: white;
-  font-weight: bold;
-}
-
-.table tbody tr:hover {
-  background-color: #f5f5f5;
-}
-
-.statusBadge {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-weight: bold;
-  color: white;
-  text-transform: capitalize;
-}
-
-.submitted {
-  background-color: #ffc107;
-}
-
-.approved {
-  background-color: #28a745;
-}
-
-.rejected {
-  background-color: #dc3545;
-}
-
-.viewButton {
-  background-color: #17a2b8;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.viewButton:hover {
-  background-color: #138496;
+@media (max-width: 640px) {
+  .inventory { height: auto; } /* มือถือให้สูงตามเนื้อหา */
 }

@@ -9,6 +9,7 @@ import {
   FaSearch, FaSync, FaChevronLeft, FaChevronRight,
   FaPlus, FaEye
 } from 'react-icons/fa';
+import Link from 'next/link';
 
 // ─────────────────────────────────────────────────────────────
 // Config
@@ -29,7 +30,7 @@ const thb = (v) =>
 // ─────────────────────────────────────────────────────────────
 function StatusBadge({ status }) {
   const map = statusMap[status] || { text: status || '-', cls: 'badgeGray' };
-  return <span className={`${styles.badge} ${styles[map.cls]}`}>{map.text}</span>;
+  return <span className={`${styles.statusBadge} ${styles[map.cls]}`}>{map.text}</span>;
 }
 
 export default function POListPage() {
@@ -42,11 +43,11 @@ export default function POListPage() {
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
 
-  const [q, setQ] = useState(sp.get('q') || '');           // ค้นหาเลขที่ PO / ผู้ขาย
-  const [status, setStatus] = useState(sp.get('status') || 'all');         // all | draft | waiting_approval | approved | rejected | canceled
-  const [startDate, setStartDate] = useState(sp.get('start') || '');      // YYYY-MM-DD
-  const [endDate, setEndDate] = useState(sp.get('end') || '');           // YYYY-MM-DD
-  const [page, setPage] = useState(Number(sp.get('page') || 1));          // 1-based
+  const [q, setQ] = useState(sp.get('q') || '');
+  const [status, setStatus] = useState(sp.get('status') || 'all');
+  const [startDate, setStartDate] = useState(sp.get('start') || '');
+  const [endDate, setEndDate] = useState(sp.get('end') || '');
+  const [page, setPage] = useState(Number(sp.get('page') || 1));
 
   // ── fetch list
   const fetchList = async (silent = false) => {
@@ -94,6 +95,25 @@ export default function POListPage() {
   // ── derived
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / PAGE_SIZE)), [total]);
 
+  // เติมแถวว่างให้ครบ 12
+  const displayRows = [...rows];
+  while (displayRows.length < PAGE_SIZE) displayRows.push({ _placeholder: true });
+
+  // หมายเลขหน้าแบบมี …
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else if (page <= 4) {
+      pages.push(1, 2, 3, 4, 5, '...', totalPages);
+    } else if (page >= totalPages - 3) {
+      pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+    } else {
+      pages.push(1, '...', page - 1, page, page + 1, '...', totalPages);
+    }
+    return pages;
+  };
+
   // ── handlers
   const onResetFilters = () => {
     setQ('');
@@ -105,178 +125,205 @@ export default function POListPage() {
 
   const onCreatePO = () => router.push('/purchasing/po/create');
 
-  const onView = (row) => {
-    router.push(`/purchasing/po/${row.po_id}`);
-  };
-
   // ── UI
   return (
-    <div className={styles.page}>
-      <div className={styles.header}>
-        <h1>รายการใบสั่งซื้อ (PO)</h1>
-        <div className={styles.headerActions}>
-          <button className={styles.btnPrimary} onClick={onCreatePO}>
-            <FaPlus /> สร้าง PO ใหม่
-          </button>
-        </div>
-      </div>
+    <div className={styles.pageBackground}>
+      <div className={styles.frame}>
+        <div className={styles.card}>
+          {/* Header */}
+          <div className={styles.header}>
+            <h1 className={styles.title}>รายการใบสั่งซื้อ (PO)</h1>
+            <div className={styles.headerActions}>
+              <button className={styles.btnPrimary} onClick={onCreatePO}>
+                <FaPlus /> สร้าง PO ใหม่
+              </button>
+            </div>
+          </div>
 
-      {/* Filters */}
-      <div className={styles.card}>
-        <h2>ตัวกรอง</h2>
-        <div className={styles.filters}>
-          <div className={styles.filterRow}>
-            <div className={styles.filterItem}>
-              <label>ค้นหา</label>
-              <div className={styles.inputWithIcon}>
-                <FaSearch />
-                <input
-                  className={styles.input}
-                  value={q}
-                  onChange={(e) => {
-                    setPage(1);
-                    setQ(e.target.value);
-                  }}
-                  placeholder="เลขที่ PO / ชื่อผู้ขาย"
-                />
+          {/* Filters */}
+          <div className={styles.filterCard}>
+            <h2 className={styles.subTitle}>ตัวกรอง</h2>
+            <div className={styles.filters}>
+              <div className={styles.filterRow}>
+                <div className={styles.filterItem}>
+                  <label className={styles.label}>ค้นหา</label>
+                  <div className={styles.inputWithIcon}>
+                    <FaSearch />
+                    <input
+                      className={styles.input}
+                      value={q}
+                      onChange={(e) => {
+                        setPage(1);
+                        setQ(e.target.value);
+                      }}
+                      placeholder="เลขที่ PO / ชื่อผู้ขาย"
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.filterItem}>
+                  <label className={styles.label}>สถานะ</label>
+                  <select
+                    className={styles.input}
+                    value={status}
+                    onChange={(e) => {
+                      setPage(1);
+                      setStatus(e.target.value);
+                    }}
+                  >
+                    <option value="all">ทั้งหมด</option>
+                    <option value="issued">บันทึกแล้ว</option>
+                    <option value="draft">ฉบับร่าง</option>
+                    <option value="waiting_approval">รออนุมัติ</option>
+                    <option value="approved">อนุมัติแล้ว</option>
+                    <option value="rejected">ไม่อนุมัติ</option>
+                    <option value="canceled">ยกเลิก</option>
+                  </select>
+                </div>
+
+                <div className={styles.filterItem}>
+                  <label className={styles.label}>ตั้งแต่วันที่</label>
+                  <input
+                    type="date"
+                    className={styles.input}
+                    value={startDate}
+                    onChange={(e) => {
+                      setPage(1);
+                      setStartDate(e.target.value);
+                    }}
+                  />
+                </div>
+
+                <div className={styles.filterItem}>
+                  <label className={styles.label}>ถึงวันที่</label>
+                  <input
+                    type="date"
+                    className={styles.input}
+                    value={endDate}
+                    onChange={(e) => {
+                      setPage(1);
+                      setEndDate(e.target.value);
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.filterActions}>
+                <button className={styles.btnGhost} onClick={() => fetchList(true)} disabled={refreshing}>
+                  <FaSync /> รีเฟรช
+                </button>
+                <button className={styles.btnSecondary} onClick={onResetFilters}>
+                  ล้างตัวกรอง
+                </button>
               </div>
             </div>
+          </div>
 
-            <div className={styles.filterItem}>
-              <label>สถานะ</label>
-              <select
-                className={styles.input}
-                value={status}
-                onChange={(e) => {
-                  setPage(1);
-                  setStatus(e.target.value);
-                }}
-              >
-                <option value="all">ทั้งหมด</option>
-                <option value="issued">บันทึกแล้ว</option>
-                <option value="draft">ฉบับร่าง</option>
-                <option value="waiting_approval">รออนุมัติ</option>
-                <option value="approved">อนุมัติแล้ว</option>
-                <option value="rejected">ไม่อนุมัติ</option>
-                <option value="canceled">ยกเลิก</option>
-              </select>
-            </div>
-
-            <div className={styles.filterItem}>
-              <label>ตั้งแต่วันที่</label>
-              <input
-                type="date"
-                className={styles.input}
-                value={startDate}
-                onChange={(e) => {
-                  setPage(1);
-                  setStartDate(e.target.value);
-                }}
-              />
-            </div>
-
-            <div className={styles.filterItem}>
-              <label>ถึงวันที่</label>
-              <input
-                type="date"
-                className={styles.input}
-                value={endDate}
-                onChange={(e) => {
-                  setPage(1);
-                  setEndDate(e.target.value);
-                }}
-              />
+          {/* Result Head */}
+          <div className={styles.cardHead}>
+            <h2 className={styles.subTitle}>ผลการค้นหา</h2>
+            <div className={styles.resultInfo}>
+              {loading ? 'กำลังโหลด...' : `ทั้งหมด ${total.toLocaleString('th-TH')} รายการ`}
             </div>
           </div>
 
-          <div className={styles.filterActions}>
-            <button className={styles.btnGhost} onClick={() => fetchList(true)} disabled={refreshing}>
-              <FaSync /> รีเฟรช
-            </button>
-            <button className={styles.btnSecondary} onClick={onResetFilters}>
-              ล้างตัวกรอง
-            </button>
-          </div>
-        </div>
-      </div>
+          {/* Table (Grid style) */}
+          <div className={styles.tableFrame}>
+            {(refreshing || loading) && (
+              <div className={styles.tableLoadingOverlay}>
+                <div className={styles.spinner} />
+              </div>
+            )}
 
-      {/* Table */}
-      <div className={styles.card}>
-        <div className={styles.cardHead}>
-          <h2>ผลการค้นหา</h2>
-          <div className={styles.resultInfo}>
-            {loading ? 'กำลังโหลด...' : `ทั้งหมด ${total.toLocaleString('th-TH')} รายการ`}
-          </div>
-        </div>
+            {/* Header */}
+            <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+              <div className={styles.headerItem}>เลขที่ PO</div>
+              <div className={styles.headerItem}>วันที่</div>
+              <div className={styles.headerItem}>ผู้ขาย</div>
+              <div className={styles.headerItem}>PR No.</div>
+              <div className={`${styles.headerItem} ${styles.centerCell}`}>สถานะ</div>
+              <div className={`${styles.headerItem} ${styles.right}`}>ยอดรวม (฿)</div>
+              <div className={`${styles.headerItem} ${styles.centerCell}`}>การทำงาน</div>
+            </div>
 
-        <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>เลขที่ PO</th>
-                <th>วันที่</th>
-                <th>ผู้ขาย</th>
-                <th>PR No.</th>
-                <th className={styles.center}>สถานะ</th>
-                <th className={styles.right}>ยอดรวม (฿)</th>
-                <th className={styles.center}>การทำงาน</th>
-              </tr>
-            </thead>
-            <tbody>
-              {!loading && rows.length === 0 && (
-                <tr>
-                  <td colSpan={7} className={styles.center}>ไม่พบรายการ</td>
-                </tr>
+            {/* Body */}
+            <div className={styles.inventory} style={{ '--rows-per-page': PAGE_SIZE }}>
+              {(!loading && rows.length === 0) ? (
+                <div className={`${styles.tableGrid} ${styles.tableRow}`}>
+                  <div className={styles.tableCell} style={{ gridColumn: '1 / -1', textAlign: 'center' }}>
+                    ไม่พบรายการ
+                  </div>
+                </div>
+              ) : (
+                displayRows.map((r, idx) => {
+                  const placeholder = !!r._placeholder;
+                  return (
+                    <div
+                      key={placeholder ? `p-${page}-${idx}` : r.po_id}
+                      className={`${styles.tableGrid} ${styles.tableRow} ${placeholder ? styles.placeholderRow : ''}`}
+                    >
+                      <div className={styles.tableCell}>{placeholder ? '' : (r.po_no || '-')}</div>
+                      <div className={styles.tableCell}>
+                        {placeholder ? '' : (r.po_date ? new Date(r.po_date).toLocaleDateString('th-TH') : '-')}
+                      </div>
+                      <div className={styles.tableCell}>{placeholder ? '' : (r.vendor_name || '-')}</div>
+                      <div className={styles.tableCell}>{placeholder ? '' : (r.pr_no || '-')}</div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        {placeholder ? '' : <StatusBadge status={r.status} />}
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.right}`}>
+                        {placeholder ? '' : thb(r.total_amount)}
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        {!placeholder && (
+                          <Link href={`/purchasing/po/${r.po_id}`} className={styles.detailButton} title="ดูรายละเอียด">
+                            <FaEye /> <span>ดูรายละเอียด</span>
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
               )}
+            </div>
 
-              {rows.map((r) => (
-                <tr key={r.po_id}>
-                  <td>{r.po_no || '-'}</td>
-                  <td>{r.po_date ? new Date(r.po_date).toLocaleDateString('th-TH') : '-'}</td>
-                  <td>{r.vendor_name || '-'}</td>
-                  <td>{r.pr_no || '-'}</td>
-                  <td className={styles.center}>
-                    <StatusBadge status={r.status} />
-                  </td>
-                  <td className={styles.right}>{thb(r.total_amount)}</td>
-                  <td className={styles.center}>
-                    <button className={styles.btnSmall} onClick={() => onView(r)} title="เปิดดู">
-                      <FaEye /> ดูรายละเอียด
+            {/* Pagination */}
+            <ul className={styles.paginationControls}>
+              <li>
+                <button
+                  className={styles.pageButton}
+                  disabled={page <= 1 || loading}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  <FaChevronLeft />
+                </button>
+              </li>
+              {getPageNumbers().map((p, i) =>
+                p === '...' ? (
+                  <li key={`e-${i}`} className={styles.ellipsis}>…</li>
+                ) : (
+                  <li key={`p-${p}`}>
+                    <button
+                      className={`${styles.pageButton} ${p === page ? styles.activePage : ''}`}
+                      onClick={() => setPage(p)}
+                      disabled={loading}
+                    >
+                      {p}
                     </button>
-                  </td>
-                </tr>
-              ))}
-
-              {loading && (
-                <tr>
-                  <td colSpan={7} className={styles.center}>กำลังโหลด...</td>
-                </tr>
+                  </li>
+                )
               )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <div className={styles.pagination}>
-          <button
-            className={styles.btnGhost}
-            disabled={page <= 1 || loading}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-          >
-            <FaChevronLeft /> ก่อนหน้า
-          </button>
-
-          <span className={styles.pageInfo}>
-            หน้า {page} / {totalPages}
-          </span>
-
-          <button
-            className={styles.btnGhost}
-            disabled={page >= totalPages || loading}
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-          >
-            ถัดไป <FaChevronRight />
-          </button>
+              <li>
+                <button
+                  className={styles.pageButton}
+                  disabled={page >= totalPages || loading}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                >
+                  <FaChevronRight />
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
