@@ -191,6 +191,14 @@ async function deductStock(requestId, updates, userId) {
             [item_id, deductQty, userId, note, moveBatchCode, lot.lot_id]
           );
 
+         // ✅ ใหม่ (เก็บว่า detail_id นี้ยืมออกจาก lot ไหน และกี่ยูนิต)
+          await client.query(
+            `INSERT INTO borrow_detail_lots
+              (request_detail_id, lot_id, qty)
+            VALUES ($1, $2, $3)`,
+            [request_detail_id, lot.lot_id, deductQty]
+          );
+
           remainingToDeduct -= deductQty;
         }
 
@@ -255,33 +263,33 @@ async function deductStock(requestId, updates, userId) {
 
       // ✅ ดึงยอดรวมจาก lot
       const { rows: stockRows } = await pool.query(`
-    SELECT COALESCE(SUM(qty_remaining), 0) AS current_stock
-    FROM item_lots
-    WHERE item_id = $1
-  `, [item_id]);
+        SELECT COALESCE(SUM(qty_remaining), 0) AS current_stock
+        FROM item_lots
+        WHERE item_id = $1
+      `, [item_id]);
 
       const currentStock = stockRows[0].current_stock;
 
       // ✅ ดึงข้อมูล item ล่าสุดจาก DB
       const { rows } = await pool.query(`
-    SELECT i.*,
-           CASE 
-             WHEN i.item_img IS NOT NULL 
-             THEN CONCAT('http://localhost:5000/uploads/', i.item_img) 
-             ELSE NULL 
-           END AS item_img_url
-    FROM items i
-    WHERE i.item_id = $1
-  `, [item_id]);
+        SELECT i.*,
+               CASE 
+                 WHEN i.item_img IS NOT NULL 
+                 THEN CONCAT('http://localhost:5000/uploads/', i.item_img) 
+                 ELSE NULL 
+               END AS item_img_url
+        FROM items i
+        WHERE i.item_id = $1
+      `, [item_id]);
 
       if (rows.length > 0 && io) {
         io.emit("itemUpdated", {
           item_id: rows[0].item_id,
           item_name: rows[0].item_name,
           item_unit: rows[0].item_unit,
-          item_img: rows[0].item_img, 
+          item_img: rows[0].item_img,
           deducted: requested_qty,
-          current_stock: currentStock   // ✅ ใช้ค่าจาก lot ที่รวมแล้ว
+          current_stock: currentStock
         });
       }
     }

@@ -45,21 +45,29 @@ exports.handleFindItemByBarcode = async (req, res) => {
  */
 exports.handleRecordReceiving = async (req, res) => {
     try {
-        const { user_id, supplier_id, receiving_note, receivingItems } = req.body;
+        const { user_id, receiving_note, import_type, source_name, receivingItems } = req.body;
 
-        // Validation หลักสำหรับข้อมูลที่จำเป็น
+        // Validation หลัก
         if (!user_id || !receivingItems || receivingItems.length === 0) {
             return res.status(400).json({ message: 'User ID and at least one item are required' });
         }
 
         // Validation รายการสินค้าแต่ละตัว
         for (const item of receivingItems) {
-            if (!item.item_id || !item.quantity || !item.pricePerUnit || !item.lotNo) {
-                return res.status(400).json({ message: 'Each item must have an item_id, quantity, pricePerUnit, and a lot number.' });
+            if (!item.item_id || !item.quantity || !item.lotNo) {
+                return res.status(400).json({
+                    message: 'Each item must have an item_id, quantity, and a lot number.'
+                });
             }
         }
 
-        const result = await receivingModel.recordReceiving({ user_id, supplier_id, receiving_note, receivingItems });
+        const result = await receivingModel.recordReceiving({
+            user_id,
+            receiving_note,
+            import_type,
+            source_name,
+            receivingItems
+        });
 
         res.status(201).json({
             message: 'Items received successfully',

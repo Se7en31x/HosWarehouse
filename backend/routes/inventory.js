@@ -17,8 +17,6 @@ router.get('/inventoryCheck/:id', inventoryController.getItemById);
 // --------------------------------------------------------
 // ดึงข้อมูลสินค้าทั้งหมดแบบย่อ (ใช้สำหรับหน้าเบิก-ยืม)
 router.get('/for-withdrawal', inventoryController.getAllItemsForWithdrawal);
-
-
 // --------------------------------------------------------
 // ✅ ROUTES ที่ใช้ร่วมกัน
 // --------------------------------------------------------

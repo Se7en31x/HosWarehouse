@@ -122,15 +122,21 @@ class RequestStatusModel {
                     [request_detail_id]
                 );
                 const oldProcessingStatus = oldDetailResult.rows[0]?.processing_status || null;
-                
+
                 // ตรวจสอบว่า approval status ต้องเป็น 'approved' ก่อน
                 if (current_approval_status === 'approved') {
-                    // อัปเดตสถานะการดำเนินการใน request_details
+                    // ⬇️ ตรงนี้คือจุดที่ต้องแก้
                     const updateDetailQuery = `
-                        UPDATE request_details
-                        SET processing_status = $1, updated_at = $2
-                        WHERE request_detail_id = $3 AND approval_status = 'approved';
-                    `;
+                    UPDATE request_details
+                    SET processing_status = $1, 
+                        updated_at = $2,
+                        borrow_status = CASE 
+                            WHEN request_detail_type = 'borrow' AND $1 = 'completed' THEN 'borrowed'
+                            ELSE borrow_status
+                        END
+                    WHERE request_detail_id = $3 
+                      AND approval_status = 'approved';
+                `;
                     const updateResult = await client.query(updateDetailQuery, [newStatus, now, request_detail_id]);
 
                     if (updateResult.rowCount > 0 && oldProcessingStatus !== newStatus) {

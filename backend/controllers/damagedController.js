@@ -16,7 +16,7 @@ exports.addDamagedAction = async (req, res) => {
   try {
     const { damaged_id } = req.params;
     const { action_type, action_qty, note } = req.body;
-    const action_by = req.user?.user_id || 1; // mock หรือเอาจาก JWT
+    const action_by = req.user?.user_id || 999; // mock หรือเอาจาก JWT
 
     if (!['repaired', 'disposed'].includes(action_type)) {
       return res.status(400).json({ error: 'Invalid action type' });

@@ -74,9 +74,12 @@ exports.updateRequestDetailApprovalStatus = async (request_detail_id, newApprova
     try {
         await client.query('BEGIN');
 
-        // 1. ดึงสถานะ approval_status, approved_qty, และ request_id เดิม
+        // 1. ดึงข้อมูลเดิม (รวม request_type ด้วย)
         const oldStatusResult = await client.query(
-            `SELECT approval_status, approved_qty, request_id, processing_status FROM request_details WHERE request_detail_id = $1 FOR UPDATE`,
+            `SELECT rd.approval_status, rd.approved_qty, rd.request_id, rd.processing_status, r.request_type
+             FROM request_details rd
+             JOIN requests r ON rd.request_id = r.request_id
+             WHERE rd.request_detail_id = $1 FOR UPDATE`,
             [request_detail_id]
         );
         if (oldStatusResult.rows.length === 0) {
@@ -87,6 +90,7 @@ exports.updateRequestDetailApprovalStatus = async (request_detail_id, newApprova
         const oldApprovedQty = oldRow.approved_qty;
         const oldProcessingStatus = oldRow.processing_status;
         const request_id_from_detail = oldRow.request_id;
+        const request_type = oldRow.request_type;
 
         // 2. กำหนดค่า processing_status ใหม่ตามเงื่อนไข
         let newProcessingStatusForUpdate = oldProcessingStatus;
@@ -96,17 +100,31 @@ exports.updateRequestDetailApprovalStatus = async (request_detail_id, newApprova
             newProcessingStatusForUpdate = null;
         }
 
-        // 3. อัปเดต approval_status, approved_qty, request_detail_note และ processing_status
+        // 3. อัปเดต approval_status, approved_qty, note, processing_status
         const query = `
             UPDATE request_details
-            SET approval_status = $1, approved_qty = $2, request_detail_note = $3, processing_status = $4, updated_at = NOW()
+            SET approval_status = $1, 
+                approved_qty = $2, 
+                request_detail_note = $3, 
+                processing_status = $4, 
+                updated_at = NOW()
             WHERE request_detail_id = $5
             RETURNING *
         `;
         const params = [newApprovalStatus, newApprovedQty, note, newProcessingStatusForUpdate, request_detail_id];
         const result = await client.query(query, params);
 
-        // 4. บันทึกประวัติสถานะการอนุมัติของรายการย่อย
+        // 3.1 ถ้าเป็น borrow และอนุมัติ → อัปเดต borrow_status = waiting_borrow
+        if (newApprovalStatus === 'approved' && request_type === 'borrow') {
+            await client.query(
+                `UPDATE request_details
+                 SET borrow_status = 'waiting_borrow'
+                 WHERE request_detail_id = $1`,
+                [request_detail_id]
+            );
+        }
+
+        // 4. Log ประวัติ approval_status
         const hasApprovalStatusOrQtyChanged = (oldApprovalStatus !== newApprovalStatus) || (oldApprovedQty !== newApprovedQty);
         if (result.rowCount > 0 && hasApprovalStatusOrQtyChanged) {
             await client.query(
@@ -117,7 +135,7 @@ exports.updateRequestDetailApprovalStatus = async (request_detail_id, newApprova
             );
         }
 
-        // 5. บันทึกประวัติ processing_status ถ้ามีการเปลี่ยนแปลง
+        // 5. Log ประวัติ processing_status
         const hasProcessingStatusChanged = (oldProcessingStatus !== newProcessingStatusForUpdate);
         if (result.rowCount > 0 && hasProcessingStatusChanged) {
             await client.query(
@@ -205,11 +223,16 @@ exports.updateRequestOverallStatusByDetails = async (request_id, changed_by) => 
         if (oldRequestStatus !== finalOverallStatus) {
             // อัปเดตสถานะคำขอหลัก
             const updateResult = await client.query(
-                `UPDATE requests SET request_status = $1, updated_at = NOW() WHERE request_id = $2`,
-                [finalOverallStatus, request_id]
-            );
-            updateSuccess = updateResult.rowCount > 0;
-            
+                `UPDATE requests 
+                    SET request_status = $1, 
+                    updated_at = NOW(), 
+                    updated_by = $2, 
+                    approved_by = $2,
+                    approved_at = NOW()
+                WHERE request_id = $3`,
+                [finalOverallStatus, changed_by, request_id]
+            ); uccess = updateSuccess = updateResult.rowCount > 0;
+
             // 4. บันทึกประวัติสถานะของคำขอหลักทันที
             if (updateSuccess) {
                 await client.query(
