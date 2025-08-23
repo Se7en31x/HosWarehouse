@@ -476,7 +476,7 @@ export default function InventoryWithdraw() {
                 type="text"
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                placeholder=""
+                placeholder="..."
               />
             </div>
             <button

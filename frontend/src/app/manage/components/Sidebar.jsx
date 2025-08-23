@@ -7,21 +7,11 @@ import { usePathname } from "next/navigation";
 import styles from "./Sidebar.module.css";
 import { FaUndo, FaTools, FaCalendarTimes, FaCaretUp, FaCaretDown } from "react-icons/fa";
 import {
-    FaHome,
-    FaBox,
-    FaListAlt,
-    FaClipboardCheck,
-    FaCogs,
-    FaWarehouse,
-    FaHistory,
-    FaChartBar,
-    FaBell,
-    FaCog,
-    FaTruck,
-    FaBars,
-    FaSearch,
-    FaShoppingCart,
+    FaHome, FaBox, FaListAlt, FaClipboardCheck, FaCogs, FaWarehouse, FaHistory,
+    FaChartBar, FaBell, FaCog, FaTruck, FaBars, FaSearch, FaShoppingCart,
+    FaClipboardList, FaTasks // ✅ เพิ่มตัวนี้
 } from "react-icons/fa";
+
 
 export default function Sidebar() {
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -78,6 +68,12 @@ export default function Sidebar() {
                         <Link href="/manage/inventoryCheck" className={styles.noStyleLink}>
                             <FaBox className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>ตรวจสอบยอดคงคลัง</span>
+                        </Link>
+                    </li>
+                    <li className={`${styles.sidebarItem} ${isActive("/manage/requestList") ? styles.active : ""}`}>
+                        <Link href="/manage/requestList" className={styles.noStyleLink}>
+                            <FaClipboardList className={styles.sidebarIcon} />
+                            <span className={styles.sidebarText}>ตรวจสอบรายการเบิก ยืม</span>
                         </Link>
                     </li>
                     <li className={`${styles.sidebarItem} ${isActive("/manage/stockDeduction") ? styles.active : ""}`}>
@@ -138,6 +134,18 @@ export default function Sidebar() {
 
                     {/* ===== รายงาน & การตั้งค่า ===== */}
                     <li className={styles.sidebarSectionTitle}>รายงาน & การตั้งค่า</li>
+                    <li className={`${styles.sidebarItem} ${isActive("/manage/request-status-manager") ? styles.active : ""}`}>
+                        <Link href="/manage/request-status-manager" className={styles.noStyleLink}>
+                            <FaTasks className={styles.sidebarIcon} />
+                            <span className={styles.sidebarText}>จัดการสถานะคำขอทั้งหมด</span>
+                        </Link>
+                    </li>
+                    <li className={`${styles.sidebarItem} ${isActive("/manage/manageData") ? styles.active : ""}`}>
+                        <Link href="/manage/manageData" className={styles.noStyleLink}>
+                            <FaCogs className={styles.sidebarIcon} />
+                            <span className={styles.sidebarText}>จัดการข้อมูล</span>
+                        </Link>
+                    </li>
                     <li className={`${styles.sidebarItem} ${isActive("/manage/report") ? styles.active : ""}`}>
                         <Link href="/manage/report" className={styles.noStyleLink}>
                             <FaChartBar className={styles.sidebarIcon} />
@@ -154,12 +162,6 @@ export default function Sidebar() {
                         <Link href="/manage/settings" className={styles.noStyleLink}>
                             <FaCog className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>ตั้งค่า</span>
-                        </Link>
-                    </li>
-                    <li className={`${styles.sidebarItem} ${isActive("/manage/manageData") ? styles.active : ""}`}>
-                        <Link href="/manage/manageData" className={styles.noStyleLink}>
-                            <FaCogs className={styles.sidebarIcon} />
-                            <span className={styles.sidebarText}>จัดการข้อมูล</span>
                         </Link>
                     </li>
 
