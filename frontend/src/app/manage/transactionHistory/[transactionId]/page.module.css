@@ -14,7 +14,7 @@
 
 .card {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1600px;
   /* ปรับขนาดตามต้องการ */
   margin: 24px auto 0;
   /* เผื่อ fallback การจัดกลาง */

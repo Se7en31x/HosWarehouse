@@ -127,22 +127,50 @@ export default function ManageReturnDetailPage() {
   }, [isBorrow, combinedItems]);
 
   const openReceive = (row) => {
+    if (!row || typeof row.remaining_qty !== 'number' || row.remaining_qty <= 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'ข้อผิดพลาด',
+        text: 'ไม่สามารถรับคืนได้: จำนวนคงเหลือไม่ถูกต้อง',
+      });
+      return;
+    }
     setActiveRow(row);
-    setQty(row.remaining_qty > 0 ? row.remaining_qty : '');
+    setQty(String(row.remaining_qty)); // ตั้งเป็น string ของจำนวนเต็ม
     setCondition('normal');
     setNote('');
   };
 
   const submitReceive = async () => {
-    const n = Number(qty);
-    const remaining = Number(activeRow?.remaining_qty || 0);
+    console.log('qty state:', qty, typeof qty, 'activeRow:', activeRow); // ดีบัก state
+    if (!activeRow || typeof activeRow.remaining_qty !== 'number') {
+      await Swal.fire({
+        icon: 'error',
+        title: 'ข้อผิดพลาด',
+        text: 'ไม่มีรายการที่เลือกหรือข้อมูลไม่ถูกต้อง',
+      });
+      setActiveRow(null);
+      return;
+    }
 
-    if (!n || n <= 0) {
-      await Swal.fire({ icon: 'warning', title: 'จำนวนไม่ถูกต้อง', text: 'กรุณาใส่จำนวนที่ถูกต้อง (> 0)' });
+    const n = Number(qty);
+    const remaining = Number(activeRow.remaining_qty || 0);
+
+    // ตรวจสอบว่า qty เป็นจำนวนเต็มบวก
+    if (isNaN(n) || !Number.isInteger(n) || n <= 0) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'จำนวนไม่ถูกต้อง',
+        text: 'กรุณาใส่จำนวนเต็มที่มากกว่า 0',
+      });
       return;
     }
     if (n > remaining) {
-      await Swal.fire({ icon: 'warning', title: 'จำนวนเกินคงเหลือ', text: `จำนวนที่รับคืนไม่ควรเกิน ${remaining} หน่วย` });
+      await Swal.fire({
+        icon: 'warning',
+        title: 'จำนวนเกินคงเหลือ',
+        text: `จำนวนที่รับคืนไม่ควรเกิน ${remaining} หน่วย`,
+      });
       return;
     }
 
@@ -150,13 +178,13 @@ export default function ManageReturnDetailPage() {
       icon: 'question',
       title: 'ยืนยันการรับคืน?',
       html: `
-        <div style="text-align:left">
-          <div><b>พัสดุ:</b> ${activeRow?.item_name || '-'}</div>
-          <div><b>จำนวน:</b> ${n}</div>
-          <div><b>สภาพ:</b> ${translateCondition(condition)}</div>
-          <div><b>หมายเหตุ:</b> ${note ? note : '-'}</div>
-        </div>
-      `,
+      <div style="text-align:left">
+        <div><b>พัสดุ:</b> ${activeRow?.item_name || '-'}</div>
+        <div><b>จำนวน:</b> ${n}</div>
+        <div><b>สภาพ:</b> ${translateCondition(condition)}</div>
+        <div><b>หมายเหตุ:</b> ${note ? note : '-'}</div>
+      </div>
+    `,
       showCancelButton: true,
       confirmButtonText: 'บันทึก',
       cancelButtonText: 'ยกเลิก',
@@ -174,11 +202,14 @@ export default function ManageReturnDetailPage() {
     try {
       const payload = {
         request_detail_id: activeRow.request_detail_id,
-        qty_return: n,
+        qty_return: parseInt(n, 10),
         condition,
         note,
-        inspected_by: 999,
+        inspected_by: 1,
+        lots: [], // กันพลาด
       };
+
+      console.log('Sending payload:', payload); // ดีบัก payload
 
       const res = await axiosInstance.post('/manage/returns/receive', payload);
 
@@ -192,6 +223,7 @@ export default function ManageReturnDetailPage() {
       });
 
       setActiveRow(null);
+      setQty(''); // รีเซ็ต qty
       await fetchDetail();
     } catch (e) {
       console.error('receive error:', e?.response?.data || e);
@@ -336,7 +368,15 @@ export default function ManageReturnDetailPage() {
                   min={1}
                   max={activeRow.remaining_qty}
                   value={qty}
-                  onChange={(e) => setQty(e.target.value)}
+                  required
+                  step="1"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // อนุญาตเฉพาะตัวเลขเต็มบวกหรือว่าง (ขณะพิมพ์)
+                    if (value === '' || (Number(value) > 0 && Number.isInteger(Number(value)))) {
+                      setQty(value);
+                    }
+                  }}
                 />
                 <small className={styles.helpText}>คงเหลือ: {activeRow.remaining_qty}</small>
               </div>

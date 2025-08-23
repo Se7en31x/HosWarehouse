@@ -290,25 +290,6 @@ export default function TransactionHistoryLogPage() {
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'returned': return '#28a745';
-      case 'damaged': return '#ff5722';
-      case 'lost': return '#9e9e9e';
-      case 'approved_all': case 'approved_partial':
-      case 'อนุมัติทั้งหมด': case 'อนุมัติบางส่วน': case 'อนุมัติ/ปฏิเสธบางส่วน':
-        return '#4CAF50';
-      case 'waiting_approval': case 'approved_in_queue':
-      case 'รอดำเนินการ': case 'รอการอนุมัติ': return '#FFC107';
-      case 'returned_partially': return '#FF9800';
-      case 'completed': case 'imported': case 'returned_complete': case 'moved':
-      case 'เสร็จสิ้น': case 'โอนย้ายสำเร็จ': return '#2196F3';
-      case 'rejected_all': case 'canceled': case 'scrapped':
-      case 'ปฏิเสธทั้งหมด': case 'ยกเลิกคำขอ': case 'ยกเลิก/ชำรุด': return '#F44336';
-      default: return '#757575';
-    }
-  };
-
   const buildDetailLink = (log) => {
     if (!log || !log.reference_code) return '';
     const isReq = ['CREATE_REQUEST', 'APPROVAL', 'PROCESSING'].includes(log.group_type);
@@ -465,7 +446,7 @@ export default function TransactionHistoryLogPage() {
               className={`${styles.headerItem} ${styles.sortable}`}
               onClick={() => handleSort('latest_user_name')}
             >
-              ผู้ทำรายการล่าสุด
+              ผู้ทำรายการ
               {sortColumn === 'user_name' && (
                 <FontAwesomeIcon icon={sortOrder === 'asc' ? faSortUp : faSortDown} className={styles.sortIcon} />
               )}

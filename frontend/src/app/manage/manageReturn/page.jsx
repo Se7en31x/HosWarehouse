@@ -47,6 +47,16 @@ const fdate = (d) => {
   return dt.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
+const statusMap = {
+  due_soon: 'ใกล้ครบกำหนด',
+  overdue: 'เกินกำหนด',
+  returned_all: 'คืนครบแล้ว',
+  returned_partial: 'คืนบางส่วน',
+  waiting_return: 'รอการคืน',
+  canceled: 'ยกเลิก',
+  all: 'ทั้งหมดที่ค้างคืน',
+};
+
 export default function ManageReturnPage() {
   const [rows, setRows] = useState([]);
   const [q, setQ] = useState('');
@@ -187,7 +197,7 @@ export default function ManageReturnPage() {
               <div className={styles.headerItem}>ครบกำหนดเร็วสุด</div>
               <div className={styles.headerItem}>ใกล้ครบกำหนด</div>
               <div className={styles.headerItem}>เกินกำหนด</div>
-              <div className={styles.headerItem}>สถานะรวม</div>
+              <div className={styles.headerItem}>สถานะ</div>
               <div className={styles.headerItem}>จัดการ</div>
             </div>
 
@@ -208,7 +218,9 @@ export default function ManageReturnPage() {
                     <div className={styles.tableCell}>
                       <span className={`${styles.badge} ${styles.badgeDanger}`}>{r.items_overdue ?? 0}</span>
                     </div>
-                    <div className={styles.tableCell}>{r.overall_status || '-'}</div>
+                    <div className={styles.tableCell}>
+                      {statusMap[r.overall_status] || '-'}
+                    </div>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>
                       <Link href={`/manage/manageReturn/${r.request_id}`} className={styles.actionBtnLink}>
                         ตรวจสอบ/อนุมัติการคืน

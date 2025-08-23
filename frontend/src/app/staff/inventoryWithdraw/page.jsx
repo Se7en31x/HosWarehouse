@@ -305,26 +305,44 @@ export default function InventoryWithdraw() {
     setShowModal(true);
   };
 
+  // const handleBorrow = (item) => {
+  //   setSelectedItem(item);
+  //   setInputQuantity(1);
+  //   setShowModal(true);
+  // };
+
   const handleBorrow = async (item) => {
-    try {
-      const response = await axiosInstance.get(`/api/check-pending-borrow/${item.item_id}`);
-      if (response.data.pending) {
-        Swal.fire({
-          title: 'ไม่สามารถยืมได้',
-          text: 'สินค้านี้มีคำขอยืมที่ค้างอยู่ กรุณาคืนสินค้าก่อน',
-          icon: 'error',
-          confirmButtonText: 'ตกลง',
-        });
-        return;
-      }
-      setSelectedItem(item);
-      setInputQuantity(1);
-      setShowModal(true);
-    } catch (error) {
-      console.error('❌ ตรวจสอบการยืมล้มเหลว:', error);
-      toast.error('ไม่สามารถตรวจสอบสถานะการยืมได้');
+  try {
+    // ✅ เรียก API ไป backend เพื่อตรวจสอบว่ายืมค้างหรือไม่
+    const response = await axiosInstance.get(`/check-pending-borrow/${item.item_id}`);
+
+    if (response.data.pending) {
+      // 🚫 มีการยืมค้าง → แจ้งเตือนผู้ใช้
+      Swal.fire({
+        title: "ไม่สามารถยืมได้",
+        text: "คุณมีการยืมค้างอยู่ กรุณาคืนสินค้าก่อนทำรายการใหม่",
+        icon: "error",
+        confirmButtonText: "ตกลง",
+      });
+      return; // หยุดการทำงาน
     }
-  };
+
+    // ✅ ไม่มีการยืมค้าง → เปิด modal กรอกจำนวน
+    setSelectedItem(item);
+    setInputQuantity(1);
+    setShowModal(true);
+
+  } catch (error) {
+    console.error("❌ ตรวจสอบการยืมล้มเหลว:", error);
+    Swal.fire({
+      title: "เกิดข้อผิดพลาด",
+      text: "ไม่สามารถตรวจสอบสถานะการยืมได้",
+      icon: "error",
+      confirmButtonText: "ตกลง",
+    });
+  }
+};
+
 
   const handleConfirm = async () => {
     if (!inputQuantity || inputQuantity <= 0) {

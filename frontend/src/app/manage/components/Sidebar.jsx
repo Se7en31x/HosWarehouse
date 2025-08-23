@@ -125,7 +125,7 @@ export default function Sidebar() {
                         </Link>
                     </li>
                     <li className={`${styles.sidebarItem} ${isActive('/manage/transactionHistory') ? styles.active : ''}`}>
-                        <Link href="/manage/transactionHistory" className={styles.noStyleLink}>
+                        <Link href="/manage/history" className={styles.noStyleLink}>
                             <FaHistory className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>ประวัติการทำรายการ</span>
                         </Link>

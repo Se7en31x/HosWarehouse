@@ -182,3 +182,118 @@
 @media (max-width:640px){
   .statusBadge,.typeBadge{ padding:.28rem .55rem; font-size:.8rem; }
 }
+
+/* ===== ปุ่มดูประวัติ ===== */
+.historyBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #3b82f6; /* ฟ้า */
+  color: #fff;
+  border: 1px solid transparent;
+  transition: background-color .2s, transform .1s;
+  min-height: 32px;
+}
+.historyBtn:hover {
+  background: #2563eb; /* ฟ้าเข้ม */
+}
+.historyBtn:active {
+  transform: translateY(1px);
+}
+
+/* ===== Modal Overlay ===== */
+.modalOverlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(2px);   /* เพิ่ม blur ให้ดู modern */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+/* ===== Modal Box ===== */
+.modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px 24px;
+  width: 460px;
+  max-width: 100%;
+  box-shadow: 0 10px 35px rgba(0,0,0,0.2);
+  animation: fadeIn .25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Header */
+.modal h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: #111827;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 8px;
+}
+
+/* รายการประวัติ */
+.historyList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+}
+.historyList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 260px;       /* สูงสุดไม่เกิน */
+  overflow-y: auto;        /* ถ้ายาวให้ scroll */
+}
+.historyDate {
+  font-size: .8rem;
+  color: var(--muted);
+  margin-left: 6px;
+}
+.historyNote {
+  font-size: .85rem;
+  color: #374151;
+  margin-top: 4px;
+  padding-left: 12px;
+  border-left: 3px solid var(--tint-200);
+}
+/* Footer */
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 10px;
+}
+/* ปุ่มปิด Modal */
+.closeBtn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: .9rem;
+  cursor: pointer;
+  transition: background-color .2s;
+}
+.closeBtn:hover {
+  background: var(--primary-600);
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

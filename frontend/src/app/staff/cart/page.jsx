@@ -104,7 +104,7 @@ export default function Cart() {
         quantity: item.quantity,
         action: item.action,
         returnDate: item.action === 'borrow' ? item.returnDate : null,
-        borrowedFromLocation: item.action === 'return' ? item.borrowedFromLocation : null,
+        borrowstatus: item.action === 'borrow' ? 'waiting_borrow' : null, // ✅ เพิ่มตรงนี้
       })),
       note,
       urgent,

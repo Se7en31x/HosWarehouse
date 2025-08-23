@@ -20,17 +20,15 @@ export default function ItemReceivingPage() {
     // States สำหรับฟอร์มรับเข้า
     const [selectedItem, setSelectedItem] = useState(null);
     const [purchaseQuantity, setPurchaseQuantity] = useState('');
-    // ✅ เพิ่ม state สำหรับหน่วยสั่งซื้อและอัตราส่วน
     const [itemPurchaseUnit, setItemPurchaseUnit] = useState('');
     const [conversionRate, setConversionRate] = useState('');
     const [itemQuantity, setItemQuantity] = useState('');
-    const [pricePerUnit, setPricePerUnit] = useState('');
     const [expiryDate, setExpiryDate] = useState('');
     const [notes, setNotes] = useState('');
     const [lotNo, setLotNo] = useState('');
     const [mfgDate, setMfgDate] = useState('');
     const [documentNo, setDocumentNo] = useState('');
-    const [importType, setImportType] = useState('อื่นๆ');
+    const [importType, setImportType] = useState('');
     const [sourceName, setSourceName] = useState('');
     const [formErrors, setFormErrors] = useState({});
 
@@ -52,7 +50,6 @@ export default function ItemReceivingPage() {
     // Effect สำหรับการอัปเดตค่าฟอร์มเมื่อเลือกสินค้า
     useEffect(() => {
         if (selectedItem) {
-            // ✅ ดึงค่าจาก selectedItem มาตั้งค่าใน state
             setItemPurchaseUnit(selectedItem.item_purchase_unit || '');
             setConversionRate(selectedItem.item_conversion_rate || '');
             setPurchaseQuantity('');
@@ -60,7 +57,6 @@ export default function ItemReceivingPage() {
             setLotNo('');
             setMfgDate('');
             setExpiryDate('');
-            setPricePerUnit('');
             setNotes('');
             setDocumentNo('');
         }
@@ -71,7 +67,6 @@ export default function ItemReceivingPage() {
         const parsedPurchaseQuantity = parseFloat(purchaseQuantity);
         const parsedConversionRate = parseFloat(conversionRate);
 
-        // ✅ ตรวจสอบว่าเป็นตัวเลขที่ถูกต้องก่อนคำนวณ
         if (!isNaN(parsedPurchaseQuantity) && !isNaN(parsedConversionRate) && parsedPurchaseQuantity > 0 && parsedConversionRate > 0) {
             const calculatedQuantity = parsedPurchaseQuantity * parsedConversionRate;
             setItemQuantity(calculatedQuantity);
@@ -104,16 +99,13 @@ export default function ItemReceivingPage() {
     const handleSearch = (term) => {
         if (term.length > 0) {
             setIsLoadingSearch(true);
-
             let filtered = [];
-            // ถ้าเป็นตัวเลขและยาวกว่า 5 ตัวอักษร ให้ค้นหาจาก Barcode เป็นหลัก
             if (!isNaN(term) && term.length > 5) {
                 const item = allItems.find(i => i.item_barcode === term);
                 if (item) {
                     filtered.push(item);
                 }
             } else {
-                // ค้นหาจากชื่อหรือ Barcode
                 filtered = allItems.filter(item =>
                     item.item_name.toLowerCase().includes(term.toLowerCase()) ||
                     (item.item_barcode && item.item_barcode.includes(term))
@@ -144,9 +136,6 @@ export default function ItemReceivingPage() {
         if (!conversionRate || parseFloat(conversionRate) <= 0) {
             errors.conversionRate = "กรุณาใส่อัตราส่วนการแปลงที่ถูกต้อง";
         }
-        if (!pricePerUnit || parseFloat(pricePerUnit) < 0) {
-            errors.pricePerUnit = "กรุณาใส่ราคาต้นทุน";
-        }
         if (!lotNo) {
             errors.lotNo = "กรุณาใส่เลข Lot";
         }
@@ -173,13 +162,12 @@ export default function ItemReceivingPage() {
 
         const newItem = {
             ...selectedItem,
-            id: selectedItem.item_id,
+            item_id: selectedItem.item_id,
             name: selectedItem.item_name,
             purchaseQuantity: parseFloat(purchaseQuantity),
             purchaseUnit: itemPurchaseUnit,
             conversionRate: parseFloat(conversionRate),
             quantity: parseFloat(itemQuantity),
-            pricePerUnit: parseFloat(pricePerUnit),
             expiryDate: expiryDate,
             notes: notes,
             tempId: Date.now(),
@@ -204,14 +192,11 @@ export default function ItemReceivingPage() {
         setPurchaseQuantity('');
         setConversionRate('');
         setItemQuantity('');
-        setPricePerUnit('');
         setExpiryDate('');
         setNotes('');
         setLotNo('');
         setMfgDate('');
         setDocumentNo('');
-        setImportType('อื่นๆ');
-        setSourceName('');
         if (searchFieldRef.current) {
             searchFieldRef.current.focus();
         }
@@ -228,7 +213,16 @@ export default function ItemReceivingPage() {
             });
             return;
         }
-
+        // if (!importType) {
+        //     MySwal.fire({
+        //         title: 'ข้อมูลไม่ครบถ้วน!',
+        //         text: 'กรุณาเลือกประเภทการนำเข้า',
+        //         icon: 'warning',
+        //         confirmButtonColor: '#ff9800',
+        //         confirmButtonText: 'ตกลง',
+        //     });
+        //     return;
+        // }
         MySwal.fire({
             title: 'ยืนยันการบันทึก',
             html: `คุณต้องการบันทึกการรับเข้าสินค้า <b>${receivingItems.length}</b> รายการใช่หรือไม่?`,
@@ -247,24 +241,24 @@ export default function ItemReceivingPage() {
 
     const handleConfirmSave = async () => {
         const payload = {
-            user_id: 999, // ควรดึง user_id จาก session จริง
-            import_type: importType,
+            user_id: 999,
+            import_type: "general",
             source_name: sourceName,
             receiving_note: notes,
             receivingItems: receivingItems.map(item => ({
-                item_id: item.id,
-                quantity: item.quantity,           // ✅ ส่งไปเป็น quantity
-                purchase_quantity: item.purchaseQuantity,
-                conversion_rate: item.conversionRate,
-                pricePerUnit: item.pricePerUnit,
-                expiryDate: item.expiryDate,
-                notes: item.notes,
-                lotNo: item.lotNo,
-                mfgDate: item.mfgDate,
-                documentNo: item.documentNo
+                item_id: item.item_id,
+                quantity: item.quantity,
+                purchaseQuantity: item.purchaseQuantity || null,
+                purchaseUnit: item.purchaseUnit || null,
+                conversionRate: item.conversionRate || null,
+                expiryDate: item.expiryDate || null,
+                notes: item.notes || null,
+                lotNo: item.lotNo,            // ✅ เปลี่ยนเป็น camelCase
+                mfgDate: item.mfgDate || null,
+                documentNo: item.documentNo || null,
             })),
         };
-
+        console.log("📦 Payload ที่จะส่งไป backend:", payload);
         try {
             await axiosInstance.post('/receiving', payload);
 
@@ -429,18 +423,6 @@ export default function ItemReceivingPage() {
                             </h2>
                             <div className={styles.inputGrid}>
                                 <div className={styles.formField}>
-                                    <label>ประเภทการนำเข้า</label>
-                                    <select
-                                        value={importType}
-                                        onChange={(e) => setImportType(e.target.value)}
-                                        disabled={!selectedItem}
-                                    >
-                                        <option value="อื่นๆ">อื่นๆ</option>
-                                        <option value="รับคืน">รับคืนจากแผนก</option>
-                                        <option value="รับบริจาค">รับบริจาค</option>
-                                    </select>
-                                </div>
-                                <div className={styles.formField}>
                                     <label>ผู้ส่งมอบ / ผู้บริจาค</label>
                                     <input
                                         type="text"
@@ -517,18 +499,6 @@ export default function ItemReceivingPage() {
                                     />
                                 </div>
                                 <div className={styles.formField}>
-                                    <label>ราคาต้นทุนต่อหน่วย</label>
-                                    <input
-                                        type="number"
-                                        placeholder="กรอกราคาต้นทุน"
-                                        value={pricePerUnit}
-                                        onChange={(e) => setPricePerUnit(e.target.value)}
-                                        min="0"
-                                        disabled={!selectedItem}
-                                    />
-                                    {formErrors.pricePerUnit && <p className={styles.errorText}>{formErrors.pricePerUnit}</p>}
-                                </div>
-                                <div className={styles.formField}>
                                     <label>เลขที่เอกสาร</label>
                                     <input
                                         type="text"
@@ -577,7 +547,6 @@ export default function ItemReceivingPage() {
                                         <tr>
                                             <th>ชื่อสินค้า</th>
                                             <th>จำนวน (หน่วยเบิกใช้)</th>
-                                            <th>ราคาต้นทุน</th>
                                             <th>วันหมดอายุ</th>
                                             <th>Lot No.</th>
                                             <th>เลขที่เอกสาร</th>
@@ -590,7 +559,6 @@ export default function ItemReceivingPage() {
                                                 <tr key={item.tempId}>
                                                     <td className={styles.itemName}>{item.name}</td>
                                                     <td>{item.quantity} {item.item_unit}</td>
-                                                    <td>{item.pricePerUnit?.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '-'}</td>
                                                     <td>{item.expiryDate || '-'}</td>
                                                     <td>{item.lotNo || '-'}</td>
                                                     <td>{item.documentNo || '-'}</td>
@@ -603,7 +571,7 @@ export default function ItemReceivingPage() {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="7" className={styles.emptyMessage}>
+                                                <td colSpan="6" className={styles.emptyMessage}>
                                                     ไม่มีรายการสินค้าที่รอการบันทึก
                                                 </td>
                                             </tr>

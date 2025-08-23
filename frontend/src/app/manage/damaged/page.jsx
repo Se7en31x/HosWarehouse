@@ -7,8 +7,6 @@ import styles from './page.module.css';
 import { connectSocket, disconnectSocket } from '@/app/utils/socket';
 import { ChevronLeft, ChevronRight, Wrench, Trash2 } from 'lucide-react';
 
-
-
 /* คำนวณสถานะจาก damaged_qty และ remaining_qty */
 const getRowStatus = (damaged_qty, remaining_qty) => {
   const d = Number(damaged_qty) || 0;
@@ -31,21 +29,17 @@ export default function DamagedItemsPage() {
   const [damagedList, setDamagedList] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Pagination (สอดคล้องทุกหน้า, ล็อก 12 แถว)
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
-  const totalPages = Math.max(1, Math.ceil(damagedList.length / itemsPerPage));
-  const start = (currentPage - 1) * itemsPerPage;
-  const currentItems = damagedList.slice(start, start + itemsPerPage);
-
-  useEffect(() => {
-    if (currentPage > totalPages) setCurrentPage(totalPages);
-  }, [totalPages, currentPage]);
+  // modal state
+  const [showHistory, setShowHistory] = useState(false);
+  const [selectedHistory, setSelectedHistory] = useState([]);
 
   const fetchDamaged = async () => {
     try {
-      const res = await axiosInstance.get('/damaged');
+      const res = await axiosInstance.get('/damaged'); // ⚠ backend ต้องส่ง actions มาด้วย
       setDamagedList(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error(err);
@@ -88,7 +82,6 @@ export default function DamagedItemsPage() {
         action_qty: parseInt(qty, 10),
       });
       Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: `${actionText} ${qty} ชิ้นแล้ว`, timer: 1800 });
-      // ให้ socket แจ้งเตือนแล้วค่อยโหลดใหม่
     } catch (err) {
       console.error(err);
       Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่สามารถบันทึกข้อมูลได้' });
@@ -97,17 +90,34 @@ export default function DamagedItemsPage() {
 
   useEffect(() => {
     const socket = connectSocket(() => {
-      // ได้สัญญาณอัปเดต → โหลดใหม่
       fetchDamaged();
     });
     fetchDamaged();
     return () => { disconnectSocket(); };
   }, []);
 
+  // เรียง: เหลือ > 0 อยู่บน, ครบแล้วอยู่ล่าง
+  const sortedDamagedList = [...damagedList].sort((a, b) => {
+    const ra = Number(a.remaining_qty) || 0;
+    const rb = Number(b.remaining_qty) || 0;
+
+    if (ra > 0 && rb === 0) return -1;
+    if (ra === 0 && rb > 0) return 1;
+    return new Date(b.damaged_date) - new Date(a.damaged_date);
+  });
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(sortedDamagedList.length / itemsPerPage));
+  const start = (currentPage - 1) * itemsPerPage;
+  const currentItems = sortedDamagedList.slice(start, start + itemsPerPage);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [totalPages, currentPage]);
+
   const handlePrev = () => currentPage > 1 && setCurrentPage(p => p - 1);
   const handleNext = () => currentPage < totalPages && setCurrentPage(p => p + 1);
 
-  // เลขหน้า + "..." (เหมือนทุกหน้า)
   const getPageNumbers = () => {
     const pages = [];
     if (totalPages <= 7) {
@@ -135,7 +145,7 @@ export default function DamagedItemsPage() {
           <p className={styles.infoMessage}>กำลังโหลดข้อมูล...</p>
         ) : (
           <div className={styles.tableFrame}>
-            {/* Header (grid เหมือน body) */}
+            {/* Header */}
             <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
               <div className={styles.headerItem}>ชื่อพัสดุ</div>
               <div className={styles.headerItem}>ประเภท</div>
@@ -173,12 +183,14 @@ export default function DamagedItemsPage() {
                   <div className={styles.tableCell}>
                     <span className={styles.ellipsisText}>{d.note ?? '-'}</span>
                   </div>
+                  {/* สถานะ */}
                   <div className={`${styles.tableCell} ${styles.centerCell}`}>
                     {(() => {
                       const s = getRowStatus(d.damaged_qty, d.remaining_qty);
                       return <span className={`${styles.statusBadge} ${styles[s.cls]}`}>{s.text}</span>;
                     })()}
                   </div>
+                  {/* จัดการ */}
                   <div className={`${styles.tableCell} ${styles.centerCell}`}>
                     {(d.remaining_qty ?? 0) > 0 ? (
                       <div className={styles.actions}>
@@ -189,7 +201,6 @@ export default function DamagedItemsPage() {
                           title="ซ่อม"
                         >
                           <Wrench size={16} />
-                          {/* <span>ซ่อม</span> */}
                         </button>
                         <button
                           className={`${styles.actionBtn} ${styles.btnDispose}`}
@@ -198,18 +209,25 @@ export default function DamagedItemsPage() {
                           title="ทิ้ง"
                         >
                           <Trash2 size={16} />
-                          {/* <span>ทิ้ง</span> */}
                         </button>
                       </div>
                     ) : (
-                      <span className={styles.doneLabel}>ครบแล้ว</span>
+                      <button
+                        className={styles.historyBtn}
+                        onClick={() => {
+                          setSelectedHistory(d.actions || []);
+                          setShowHistory(true);
+                        }}
+                      >
+                        ดูประวัติ
+                      </button>
                     )}
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Pagination (เหมือนทุกหน้า) */}
+            {/* Pagination */}
             <ul className={styles.paginationControls}>
               <li>
                 <button className={styles.pageButton} onClick={handlePrev} disabled={currentPage === 1}>
@@ -240,6 +258,36 @@ export default function DamagedItemsPage() {
                 </button>
               </li>
             </ul>
+          </div>
+        )}
+
+        {/* Modal History */}
+        {showHistory && (
+          <div className={styles.modalOverlay}>
+            <div className={styles.modal}>
+              <h2>ประวัติการดำเนินการ</h2>
+              {selectedHistory.length === 0 ? (
+                <p>ไม่มีข้อมูลประวัติ</p>
+              ) : (
+                <ul className={styles.historyList}>
+                  {selectedHistory.map((a, idx) => (
+                    <li key={idx}>
+                      {a.action_type === 'repaired' && 'ซ่อม'}
+                      {a.action_type === 'disposed' && 'ทำลาย'}
+                      {a.action_type !== 'repaired' && a.action_type !== 'disposed' && a.action_type}
+                      {' '} {a.action_qty} ชิ้น โดย {a.action_by_name}
+                      {a.action_date && (
+                        <span className={styles.historyDate}>
+                          {' '}({new Date(a.action_date).toLocaleDateString('th-TH')})
+                        </span>
+                      )}
+                      {a.note && <div className={styles.historyNote}>หมายเหตุ: {a.note}</div>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <button className={styles.closeBtn} onClick={() => setShowHistory(false)}>ปิด</button>
+            </div>
           </div>
         )}
       </div>
