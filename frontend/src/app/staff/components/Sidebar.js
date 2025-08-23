@@ -1,18 +1,17 @@
 // src/app/components/Sidebar.jsx
-import { useState } from 'react';
+"use client";
+
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import styles from './Sidebar.module.css';
-import { FaUndo } from 'react-icons/fa';
 
 import {
   FaHome,
-  FaBoxOpen, // ✅ เปลี่ยนไอคอนจาก FaHandHolding เป็น FaBoxOpen
+  FaBoxOpen,
   FaShoppingCart,
   FaListAlt,
-  FaClipboardCheck,
   FaHistory,
-  FaChartBar,
   FaBell,
   FaCog,
   FaBars,
@@ -21,37 +20,93 @@ import {
 
 export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState('');
   const pathname = usePathname();
+  const headerRef = useRef(null);
+  const inputRef = useRef(null);
 
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
+  const toggleCollapse = () => setIsCollapsed((v) => !v);
+
+  const isActive = (path, { exact = false } = {}) => {
+    const p = (pathname || '').replace(/\/+$/, '');
+    const t = (path || '').replace(/\/+$/, '');
+    return exact ? p === t : (p === t || p.startsWith(t + '/'));
   };
 
-  const isActive = (path) => {
-    return pathname === path;
+  // โฟกัสช่องค้นหาเมื่อเปิด
+  useEffect(() => {
+    if (searchOpen) inputRef.current?.focus();
+  }, [searchOpen]);
+
+  // ปิดเมื่อคลิกนอก/กด Esc
+  useEffect(() => {
+    const onDown = (e) => {
+      if (e.key === 'Escape') setSearchOpen(false);
+    };
+    const onClick = (e) => {
+      if (!headerRef.current) return;
+      if (!headerRef.current.contains(e.target)) setSearchOpen(false);
+    };
+    document.addEventListener('keydown', onDown);
+    document.addEventListener('mousedown', onClick);
+    return () => {
+      document.removeEventListener('keydown', onDown);
+      document.removeEventListener('mousedown', onClick);
+    };
+  }, []);
+
+  const submitSearch = (e) => {
+    e.preventDefault();
+    // TODO: เปลี่ยนเป็น route หรือ call API ได้ตามต้องการ
+    // ตัวอย่าง: router.push(`/search?q=${encodeURIComponent(query)}`)
+    setSearchOpen(false);
   };
 
   return (
     <aside className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ''}`}>
-      <div className={styles.sidebarHeader}>
-        <button className={styles.collapseButton} onClick={toggleCollapse} aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
+      <div className={styles.sidebarHeader} ref={headerRef}>
+        <button
+          className={styles.collapseButton}
+          onClick={toggleCollapse}
+          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
           <FaBars className={styles.headerIcon} />
         </button>
-        <button className={styles.searchButton}>
-          <FaSearch className={styles.headerIcon} />
-        </button>
+
+        <div className={styles.searchWrapper}>
+          <button
+            type="button"
+            className={styles.searchButton}
+            aria-label="Search"
+            onClick={() => setSearchOpen((v) => !v)}
+          >
+            <FaSearch className={styles.headerIcon} />
+          </button>
+
+          {searchOpen && (
+            <form className={styles.searchPopover} onSubmit={submitSearch}>
+              <input
+                ref={inputRef}
+                className={styles.searchInput}
+                placeholder="ค้นหา..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onBlur={() => setSearchOpen(false)}
+              />
+            </form>
+          )}
+        </div>
       </div>
-      <nav>
+
+      {/* โซนเมนูเลื่อน (ซ่อน scrollbar) */}
+      <nav className={styles.navContainer}>
         <ul className={styles.navLinks}>
-          {/* <li className={`${styles.sidebarItem} ${isActive('/staff') ? styles.active : ''}`}>
-            <Link href="/staff" className={styles.noStyleLink}>
-              <FaHome className={styles.sidebarIcon} />
-              <span className={styles.sidebarText}>หน้าแรก</span>
-            </Link>
-          </li> */}
+          {/* ===== ทำรายการ ===== */}
+          <li className={styles.sidebarSectionTitle}>ทำรายการ</li>
           <li className={`${styles.sidebarItem} ${isActive('/staff/inventoryWithdraw') ? styles.active : ''}`}>
             <Link href="/staff/inventoryWithdraw" className={styles.noStyleLink}>
-              <FaBoxOpen className={styles.sidebarIcon} /> {/* ✅ ใช้ไอคอนใหม่ */}
+              <FaBoxOpen className={styles.sidebarIcon} />
               <span className={styles.sidebarText}>เบิก ยืม</span>
             </Link>
           </li>
@@ -61,6 +116,11 @@ export default function Sidebar() {
               <span className={styles.sidebarText}>ตะกร้า</span>
             </Link>
           </li>
+
+          <hr className={styles.divider} />
+
+          {/* ===== คำขอของฉัน ===== */}
+          <li className={styles.sidebarSectionTitle}>คำขอของฉัน</li>
           <li className={`${styles.sidebarItem} ${isActive('/staff/my-requests') ? styles.active : ''}`}>
             <Link href="/staff/my-requests" className={styles.noStyleLink}>
               <FaListAlt className={styles.sidebarIcon} />
@@ -73,15 +133,11 @@ export default function Sidebar() {
               <span className={styles.sidebarText}>ประวัติรายการเบิก/ยืม</span>
             </Link>
           </li>
-          {/* <li className={`${styles.sidebarItem} ${isActive('/staff/userReport') ? styles.active : ''}`}>
-            <Link href="/staff/userReport" className={styles.noStyleLink}>
-              <FaChartBar className={styles.sidebarIcon} />
-              <span className={styles.sidebarText}>ออกรายงาน</span>
-            </Link>
-          </li> */}
 
-          <hr className={styles.divider} style={{ marginTop: '20px', marginBottom: '10px' }} />
-          
+          <hr className={styles.divider} />
+
+          {/* ===== การตั้งค่า ===== */}
+          <li className={styles.sidebarSectionTitle}>การตั้งค่า</li>
           <li className={`${styles.sidebarItem} ${isActive('/manage/notifications') ? styles.active : ''}`}>
             <Link href="/manage/notifications" className={styles.noStyleLink}>
               <FaBell className={styles.sidebarIcon} />
@@ -94,6 +150,8 @@ export default function Sidebar() {
               <span className={styles.sidebarText}>ตั้งค่า</span>
             </Link>
           </li>
+
+          <li aria-hidden="true" style={{ height: 8 }} />
         </ul>
       </nav>
     </aside>

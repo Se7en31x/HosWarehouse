@@ -10,8 +10,8 @@ export default function Header() {
       <Image
         src="/logos/logo.png"
         alt="Hospital Logo"
-        width={75}
-        height={75}
+        width={65}
+        height={65}
         className={styles.logo}
       />
       <h1 className={styles.headerTitle}>ระบบคลังโรงพยาบาล</h1>

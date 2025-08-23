@@ -466,17 +466,6 @@ export default function InventoryWithdraw() {
                 menuPortalTarget={menuPortalTarget}
               />
             </div>
-            <div className={styles.filterGroup}>
-              <label className={styles.label}>สถานที่จัดเก็บ</label>
-              <input
-                id="storage"
-                className={styles.input}
-                type="text"
-                value={storage}
-                onChange={(e) => setStorage(e.target.value)}
-                placeholder="สถานที่จัดเก็บ..."
-              />
-            </div>
           </div>
           <div className={styles.searchCluster}>
             <div className={styles.filterGroup}>
@@ -487,7 +476,7 @@ export default function InventoryWithdraw() {
                 type="text"
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                placeholder="ชื่อ, รหัส, หน่วย, สถานะ..."
+                placeholder=""
               />
             </div>
             <button

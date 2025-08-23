@@ -301,22 +301,99 @@ export default function MyRequestsPage() {
 
   const formatDate = (d) => {
     if (!d) return '-';
-    const dt = new Date(d);
-    if (isNaN(dt.getTime())) return '-';
-    return dt.toLocaleString('th-TH', {
-      timeZone: 'Asia/Bangkok',
-      year: 'numeric', month: 'short', day: 'numeric',
-      hour: '2-digit', minute: '2-digit', hour12: false,
-    });
+    try {
+      const dt = new Date(d);
+      if (isNaN(dt.getTime())) return '-';
+
+      // วันที่แบบตัวเลข: dd/mm/yyyy (พ.ศ.) + เวลา HH:mm
+      const datePart = new Intl.DateTimeFormat('th-TH-u-nu-latn', {
+        timeZone: 'Asia/Bangkok',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',   // จะได้ พ.ศ. อัตโนมัติ
+      }).format(dt);
+
+      const timePart = new Intl.DateTimeFormat('th-TH-u-nu-latn', {
+        timeZone: 'Asia/Bangkok',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }).format(dt);
+
+      return `${datePart} ${timePart}`; // ตัวอย่าง: 22/08/2568 22:04
+    } catch {
+      return '-';
+    }
   };
 
   const renderStatus = (status) => {
-    const s = `${status || ''}`.toLowerCase();
+    const s = String(status || '').toLowerCase();
     let cls = styles.badgeNeutral;
-    if (s.includes('รอ') || s.includes('pending')) cls = styles.badgeWarning;
-    else if (s.includes('อนุมัติ') || s.includes('เสร็จสิ้น') || s.includes('approved') || s.includes('complete') || s.includes('success') || s.includes('stock_deducted')) cls = styles.badgeSuccess;
-    else if (s.includes('ยกเลิก') || s.includes('ปฏิเสธ') || s.includes('cancel') || s.includes('reject')) cls = styles.badgeDanger;
+
+    // ✅ จับ "อนุมัติบางส่วน" ก่อนเสมอ (ทั้งไทยและอังกฤษ)
+    if (
+      s.includes('อนุมัติบางส่วน') ||
+      s.includes('approved_partial') ||
+      s.includes('approved_partial_and_rejected_partial')
+    ) {
+      cls = styles.badgePartial;
+
+      // ถัดมา: รอ/กำลังดำเนินการ
+    } else if (
+      s.includes('รอ') || s.includes('pending') || s.includes('waiting') || s.includes('in_progress')
+    ) {
+      cls = styles.badgeWaiting ?? styles.badgeWarning; // ถ้ามี badgeWaiting ใช้อันนั้น
+
+      // อนุมัติทั้งหมด / เสร็จสิ้น
+    } else if (
+      s.includes('อนุมัติทั้งหมด') ||
+      (s.includes('อนุมัติ') && !s.includes('บางส่วน')) ||
+      s.includes('approved_all') ||
+      s.includes('completed') || s.includes('complete') ||
+      s.includes('success') || s.includes('stock_deducted')
+    ) {
+      cls = styles.badgeSuccess;
+
+      // ยกเลิก/ปฏิเสธ
+    } else if (
+      s.includes('ยกเลิก') || s.includes('ปฏิเสธ') ||
+      s.includes('cancel') || s.includes('reject')
+    ) {
+      cls = styles.badgeDanger;
+    }
+
     return <span className={`${styles.badge} ${cls}`}>{translateStatus(status)}</span>;
+  };
+
+
+  // แปลงชนิดคำขอให้เป็นอาร์เรย์ไม่ซ้ำ: ['withdraw','borrow',...]
+  const parseTypes = (types) => {
+    if (!types) return [];
+    if (Array.isArray(types)) return [...new Set(types.map(t => String(t).toLowerCase().trim()))];
+    return [...new Set(String(types).split(',').map(t => t.trim().toLowerCase()))];
+  };
+
+  // เรนเดอร์ชิปสีตามประเภท
+  const renderTypeChips = (types) => {
+    const arr = parseTypes(types);
+    if (arr.length === 0) return '-';
+
+    const label = (t) =>
+      t === 'withdraw' ? 'เบิก' :
+        t === 'borrow' ? 'ยืม' :
+          t === 'return' ? 'คืน' : t;
+
+    return (
+      <div className={styles.typePills}>
+        {arr.map((t) => {
+          let cls = styles.typePill;
+          if (t === 'withdraw') cls += ` ${styles.typeWithdraw}`;
+          else if (t === 'borrow') cls += ` ${styles.typeBorrow}`;
+          else if (t === 'return') cls += ` ${styles.typeReturn}`; // เผื่อไว้ (ไม่บังคับ)
+          return <span key={t} className={cls}>{label(t)}</span>;
+        })}
+      </div>
+    );
   };
 
   // สถิติบนหัว
@@ -333,7 +410,7 @@ export default function MyRequestsPage() {
     const cancelled = total - pending - approved;
     return { total, pending, approved, cancelled };
   }, [requests]);
-// ✅ โค้ดที่เพิ่ม: สร้างตัวเลือกฟิลเตอร์แบบไดนามิก
+  // ✅ โค้ดที่เพิ่ม: สร้างตัวเลือกฟิลเตอร์แบบไดนามิก
   const filterOptions = useMemo(() => {
     const uniqueStatuses = new Set(requests.map(r => r.request_status));
     const options = [{ key: 'all', label: 'ทั้งหมด' }];
@@ -350,18 +427,18 @@ export default function MyRequestsPage() {
 
 
   // กรอง/ค้นหา + หน้า
- const filtered = useMemo(() => {
+  const filtered = useMemo(() => {
     let list = Array.isArray(requests) ? requests : [];
-    
+
     // ✅ จุดที่ 1: กรองรายการที่ 'completed' และ 'canceled' ออกไปก่อนเสมอ
-    list = list.filter(r => 
+    list = list.filter(r =>
       String(r.request_status || '').toLowerCase() !== 'completed' &&
       String(r.request_status || '').toLowerCase() !== 'canceled'
     );
 
     // ✅ จุดที่ 2: ใช้ statusFilter เพื่อกรองสถานะที่เหลือ
     if (statusFilter !== 'all') {
-        list = list.filter(r => String(r.request_status || '').toLowerCase() === statusFilter.toLowerCase());
+      list = list.filter(r => String(r.request_status || '').toLowerCase() === statusFilter.toLowerCase());
     }
 
     if (query.trim()) {
@@ -454,7 +531,7 @@ export default function MyRequestsPage() {
       <div className={styles.tableFrame}>
         {/* Header ติดบนในกรอบเดียวกัน */}
         <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
-          <div className={styles.headerItem}>#</div>
+          <div className={styles.headerItem}>ลำดับ</div>
           <div className={styles.headerItem}>รหัสคำขอ</div>
           <div className={styles.headerItem}>วันที่/เวลา</div>
           <div className={styles.headerItem}>ประเภท</div>
@@ -484,7 +561,7 @@ export default function MyRequestsPage() {
                     {req.request_date ? formatDate(req.request_date) : '-'}
                   </div>
                   <div className={`${styles.tableCell} ${styles.typeCell}`}>
-                    {translateRequestTypes(req.request_types)}
+                    {renderTypeChips(req.request_types)}
                   </div>
                   <div className={styles.tableCell}>{renderStatus(req.request_status)}</div>
                   <div className={styles.tableCell}>{req.item_count ?? '-'}</div>

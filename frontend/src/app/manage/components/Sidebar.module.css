@@ -7,7 +7,7 @@
   min-width: 180px;
   max-width: 280px;
   height: 100%;
-  background-color: #ffffff; /* ✅ ใช้สีขาว */
+  background-color: #ffffff;
   color: #333;
   border-radius: 12px;
   box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.1);
@@ -26,53 +26,82 @@
   padding-right: 0;
 }
 
-/* ✅ HEADER ของ Sidebar: ปุ่มเมนูและปุ่มค้นหา */
+/* Header */
 .sidebarHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 10px;
-  margin-bottom: 2px;
+  padding: 0 20px;
+  margin-bottom: 25px;
 }
 
 .headerIcon {
   font-size: 20px;
-  color: #555; /* ✅ สีไอคอนเริ่มต้น */
+  color: #555;
 }
 
-.searchButton {
+.searchButton,
+.collapseButton {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 5px;
-  transition: color 0.2s ease-in-out;
+  padding: 6px;
+  transition: color 0.2s ease-in-out, transform 0.15s ease-in-out;
 }
 
-.sidebar.collapsed .searchButton {
-  display: none;
+.searchButton:hover .headerIcon,
+.collapseButton:hover .headerIcon {
+  color: #008dda;
 }
-
-.searchButton:hover .headerIcon {
-  color: #008dda; /* ✅ สีไอคอนค้นหาเมื่อ Hover */
+.collapseButton:active,
+.searchButton:active {
+  transform: scale(0.96);
 }
-
-/* ✅ ลบสไตล์ logoContainer, logo, และ logoText ออก */
 
 .divider {
   border: none;
   border-bottom: 1px solid #eee;
-  margin: 10px 0;
+  margin: 8px 0;
   transition: all 0.3s ease-in-out;
 }
 
 .sidebar.collapsed .divider {
-  margin: 5px 0;
+  margin: 4px 0;
+}
+
+/* ✅ โซนเลื่อน: สูงคงที่ + ซ่อน scrollbar ทุกเบราว์เซอร์ */
+.navContainer {
+  padding: 0 12px 12px;      /* เพิ่ม padding ล่างนิดนึง */
+  overflow-y: auto;
+  max-height: calc(100% - 80px);  /* เดิม 130px → 80px */
+  scrollbar-width: none;          
+  -ms-overflow-style: none; 
+}
+.navContainer::-webkit-scrollbar { /* Chrome/Safari/Edge */
+  width: 0;
+  height: 0;
 }
 
 .navLinks {
   list-style-type: none;
   padding: 0;
-  margin-top: 10px;
+  margin-top: 6px;
+}
+
+/* หัวข้อหมวดหมู่ */
+.sidebarSectionTitle {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+  text-transform: uppercase;
+  padding: 10px 8px 4px;
+  margin: 4px 0 2px;
+  user-select: none;
+}
+
+.sidebar.collapsed .sidebarSectionTitle {
+  display: none;
 }
 
 .navLinks li {
@@ -82,7 +111,7 @@
 .sidebarItem {
   display: flex;
   align-items: center;
-  padding: 12px 20px;
+  padding: 12px 12px;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
@@ -96,26 +125,25 @@
 }
 
 .sidebarItem:hover {
-  background-color: #ace2e1; /* ✅ สีพื้นหลังเมื่อ Hover */
+  background-color: #ace2e1;
   color: #008dda;
   transform: translateX(3px);
   box-shadow: 2px 2px 5px rgba(0, 137, 218, 0.05);
 }
 
 .sidebarItem.active {
-  background: linear-gradient(to right, #008dda, #41c9e2); /* ✅ ใช้ Gradient สีน้ำเงิน */
+  background: linear-gradient(to right, #008dda, #41c9e2);
   color: #ffffff;
-  font-weight: bold;
+  font-weight: 700;
   box-shadow: 2px 2px 8px rgba(0, 137, 218, 0.2);
 }
-
 .sidebarItem.active .sidebarIcon {
   color: #ffffff;
 }
 
 .sidebarIcon {
   font-size: 20px;
-  margin-right: 15px;
+  margin-right: 14px;
   color: #555;
   transition: margin-right 0.3s ease-in-out, color 0.2s ease-in-out;
 }
@@ -129,11 +157,11 @@
 }
 
 .sidebarText {
-  font-size: 16px;
-  font-weight: 400;
+  font-size: 15px;
+  font-weight: 500;
   white-space: nowrap;
   opacity: 1;
-  transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.3s ease-in-out, width 0.3s ease-in-out;
 }
 
 .sidebar.collapsed .sidebarText {
@@ -152,28 +180,37 @@
   justify-content: flex-start;
   transition: justify-content 0.3s ease-in-out;
 }
-
 .sidebar.collapsed .noStyleLink {
   justify-content: center;
 }
 
-/* ✅ สไตล์ปุ่มยุบ/ขยายแบบ 3 ขีด */
-.collapseButton {
-  background: none;
+/* ✅ ปุ่มเลื่อนล่างขวา */
+.scrollButtons {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 5;
+}
+
+.scrollButton {
+  width: 34px;
+  height: 34px;
   border: none;
+  border-radius: 10px;
+  background: #f3f4f6;
+  box-shadow: 0 2px 6px rgba(17, 24, 39, 0.08);
   cursor: pointer;
-  padding: 5px;
-  transition: all 0.2s ease-in-out;
-  z-index: 10;
+  display: grid;
+  place-items: center;
+  transition: background 0.2s ease-in-out, transform 0.1s ease-in-out;
 }
+.scrollButton:hover { background: #e6f6fb; }
+.scrollButton:active { transform: translateY(1px); }
 
-.collapseButton:hover .headerIcon {
-  color: #008dda; /* ✅ สีไอคอนเมนูเมื่อ Hover */
-}
-
-/* ✅ ลบสไตล์ collapseButton ที่เป็นลูกศรออก */
-
-/* Responsive adjustments for smaller screens (Mobile) */
+/* Mobile */
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
@@ -184,14 +221,26 @@
     transform: translateX(-100%);
     box-shadow: 10px 0 20px rgba(0, 0, 0, 0.15);
   }
-
-  .sidebar.open {
-    transform: translateX(0);
-  }
-
+  .sidebar.open { transform: translateX(0); }
   .sidebar.collapsed {
     min-width: 60px;
     max-width: 60px;
     flex-basis: 60px;
   }
+  .navContainer {
+    max-height: calc(100vh - 110px);
+  }
+}
+
+
+/* ซ่อนปุ่ม/แผงค้นหาเมื่อ sidebar พับ */
+.sidebar.collapsed .searchButton,
+.sidebar.collapsed .searchWrapper,
+.sidebar.collapsed .searchPopover {
+  display: none !important;
+}
+
+/* เอาปุ่มลูกศรเลื่อนออก */
+.scrollButtons {
+  display: none !important;
 }

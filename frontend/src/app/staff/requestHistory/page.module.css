@@ -1,216 +1,197 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-:root {
-  --bg: #f3f4f6;
-  --panel: #fff;
-  --text: #111827;
-  --muted: #6b7280;
-  --border: #e5e7eb;
+/* ⛳️ ย้ายตัวแปรจาก :root มาไว้ที่ .mainHome เพื่อเลี่ยง error ของ CSS Modules */
+.mainHome{
+  --bg:#f3f4f6;
+  --panel:#fff;
+  --text:#111827;
+  --muted:#6b7280;
+  --border:#e5e7eb;
 
-  --primary: #3b82f6;
-  --primary-500: #3b82f6;
+  --primary:#3b82f6;
+  --primary-500:#3b82f6;
 
-  --row-h: 60px;
-  --rows-per-page: 10;
+  --row-h:60px;
+  --rows-per-page:12;   /* ✅ 12 แถวต่อหน้า */
 
   /* Table palette */
-  --tbl-header-bg: #e9f6fb;
-  --tbl-header-text: #0f3a54;
-  --tbl-border: #cfeaf6;
-  --tbl-row-hover: #f0fbfe;
-  --tbl-row-alt: #f7fdff;
+  --tbl-header-bg:#e9f6fb;
+  --tbl-header-text:#0f3a54;
+  --tbl-border:#cfeaf6;
+  --tbl-row-hover:#f0fbfe;
 
-  /* Z-index */
-  --z-toolbar: 100;
-  --z-header: 10;
-}
+  --z-toolbar:100;
+  --z-header:10;
 
-.mainHome {
-  min-height: 100vh;
-  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  min-height:100vh;
+  font-family:'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
+  display:flex; align-items:center; justify-content:center;
 }
 
-.infoContainer {
-  width: 100%;
-  min-height: 100vh;
-  background: var(--panel);
-  color: var(--text);
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+.infoContainer{
+  width:100%; min-height:100vh;
+  background:var(--panel); color:var(--text);
+  padding:24px; display:flex; flex-direction:column; gap:14px;
 }
 
-/* ── Header */
-.pageTitle {
-  font-weight: 700;
-  font-size: clamp(1.4rem, 2.2vw, 2rem);
-  margin: 0;
+.pageTitle{ font-weight:700; font-size:clamp(1.4rem,2.2vw,2rem); margin:0; }
+
+/* -------- Controls -------- */
+.controls{
+  display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-bottom:12px;
+}
+.filterInput{
+  height:40px; border:1px solid var(--tbl-border); border-radius:12px;
+  padding:0 12px; font-size:.95rem; background:#fff; color:var(--text);
+  transition:border-color .2s ease, box-shadow .2s ease;
+}
+.filterInput:focus{
+  outline:none; border-color:var(--primary-500);
+  box-shadow:0 0 0 3px rgba(59,130,246,.3);
 }
 
-/* ── Controls */
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 16px;
+/* react-select wrapper ให้กว้างเท่ากัน */
+.selectWrap{ min-width:200px; flex:0 0 200px; }
+@media (max-width:900px){ .selectWrap{ flex:1 1 240px; min-width:0; } }
+
+/* -------- Buttons -------- */
+.btn{
+  display:inline-grid; place-items:center;
+  padding:8px 14px; font-size:.95rem; font-weight:600;
+  border-radius:10px; cursor:pointer; transition:.2s; border:1px solid transparent;
+}
+.primaryBtn{ background:var(--primary); color:#fff; border-color:var(--primary); }
+.primaryBtn:hover{ background:#2563eb; }
+
+.iconBtn{ width:40px; height:40px; padding:0; border-radius:10px; }
+.pdfBtn{ background:#ef4444; border:1px solid #ef4444; color:#fff; }
+.pdfBtn:hover{ background:#dc2626; border-color:#dc2626; }
+.csvBtn{ background:#16a34a; border:1px solid #16a34a; color:#fff; }
+.csvBtn:hover{ background:#15803d; border-color:#15803d; }
+.btn:disabled{ opacity:.6; cursor:not-allowed; }
+
+.spin{ animation:spin .9s linear infinite; }
+@keyframes spin{ to{ transform:rotate(360deg);} }
+
+/* -------- Table -------- */
+.tableFrame{
+  border:1px solid var(--tbl-border);
+  border-radius:10px; background:#fff; overflow:hidden;
+  box-shadow:0 10px 30px rgba(2,132,199,.08);
+  display:flex; flex-direction:column;
 }
 
-.filterSelect,
-.filterInput {
-  height: 40px;
-  border: 1px solid var(--tbl-border);
-  border-radius: 8px;
-  padding: 0 12px;
-  font-size: 0.9rem;
-  background: #fff;
-  color: var(--text);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-.filterSelect:focus,
-.filterInput:focus {
-  outline: none;
-  border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
-}
-
-/* ── Buttons */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 14px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
-}
-
-.primaryBtn {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
-}
-.primaryBtn:hover {
-  background: #2563eb;
-}
-
-.exportBtn {
-  background: #10b981;
-  color: #fff;
-  border: 1px solid #10b981;
-}
-.exportBtn:hover {
-  background: #059669;
-  border-color: #059669;
-}
-
-.excelBtn {
-  background: #22c55e;
-  color: #fff;
-  border: 1px solid #22c55e;
-}
-.excelBtn:hover {
-  background: #16a34a;
-  border-color: #16a34a;
-}
-
-/* ── Table */
-.tableFrame {
-  border: 1px solid var(--tbl-border);
-  border-radius: 10px;
-  background: #fff;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(2, 132, 199, 0.08);
-}
-.tableGrid {
-  display: grid;
+.tableGrid{
+  display:grid;
   grid-template-columns:
-    minmax(100px, 1fr) minmax(180px, 2fr) minmax(90px, 1fr)
-    minmax(90px, 1fr) minmax(150px, 1.4fr) minmax(120px, 1fr) minmax(160px, 1.4fr);
-  align-items: center;
+    minmax(100px,1fr) minmax(180px,2fr) minmax(90px,1fr)
+    minmax(150px,1.4fr) minmax(120px,1fr) minmax(100px,1fr) minmax(140px,1fr);
+  align-items:center;
 }
-.tableHeader {
-  position: sticky;
-  top: 0;
-  z-index: var(--z-header);
-  background: var(--tbl-header-bg);
-  color: var(--tbl-header-text);
-  border-bottom: 1px solid var(--tbl-border);
-  padding-block: 14px;
-  padding-inline: 12px;
-  font-weight: 700;
-  font-size: 1.05rem;
-  min-height: 60px;
-}
-.tableRow {
-  height: var(--row-h);
-  padding: 0 12px;
-  border-top: 1px solid var(--tbl-border);
-  transition: background 0.18s ease;
-}
-.tableRow:hover {
-  background: var(--tbl-row-hover);
-}
-.noDataCell {
-  height: calc(var(--row-h) * var(--rows-per-page));
+
+/* จัดกึ่งกลางคอลัมน์สุดท้าย (จัดการ) ทั้งหัวตารางและบรรทัดข้อมูล */
+.tableHeader > div:last-child,
+.tableRow > div:last-child {
   display: flex;
-  align-items: center;
   justify-content: center;
-  color: var(--muted);
-  background: linear-gradient(180deg, #fff 0%, #f9fdff 100%);
+  align-items: center;
+  text-align: center;
 }
 
-/* ── Badges */
-.statusBadge {
-  display: inline-block;
-  padding: .25rem .7rem;
-  font-size: .75rem;
-  font-weight: 700;
-  border-radius: 9999px;
-  line-height: 1;
-  border: 1px solid transparent;
-}
-.statusSuccess {
-  background: #ecfdf5;
-  color: #065f46;
-  border-color: #bbf7d0;
-}
-.statusCancelled {
-  background: #fef2f2;
-  color: #991b1b;
-  border-color: #fecaca;
-}
-.statusPending {
-  background: #fffbeb;
-  color: #92400e;
-  border-color: #fde68a;
-}
-.statusMixed {
-  background: #eff6ff;
-  color: #1e40af;
-  border-color: #bfdbfe;
+/* ให้ปุ่มในคอลัมน์สุดท้ายชิดกลางพอดี */
+.tableRow > div:last-child .btn { margin: 0 auto; }
+
+.tableHeader{
+  position:sticky; top:0; z-index:var(--z-header);
+  background:var(--tbl-header-bg); color:var(--tbl-header-text);
+  border-bottom:1px solid var(--tbl-border);
+  padding-block:14px; padding-inline:12px;
+  font-weight:700; font-size:1.05rem; min-height:60px;
 }
 
-/* ── Responsive */
-@media (max-width: 1024px) {
-  .controls {
-    gap: 8px;
-  }
+.tableBody{
+  min-height: calc(var(--row-h) * var(--rows-per-page));  /* ✅ สูงเท่ากับ 12 แถว */
 }
-@media (max-width: 700px) {
-  .tableGrid {
-    min-width: 700px;
-  }
+
+.tableRow{
+  height:var(--row-h);
+  padding:0 12px;
+  border-top:1px solid var(--tbl-border);
+  transition:background .18s ease;
 }
-@media (max-width: 520px) {
-  .tableGrid {
-    min-width: 560px;
-  }
+.tableRow:hover{ background:var(--tbl-row-hover); }
+
+/* No data อยู่กลางพื้นที่ของ body */
+.noDataCell{
+  min-height: calc(var(--row-h) * var(--rows-per-page));
+  display:flex; align-items:center; justify-content:center;
+  color:var(--muted);
 }
+
+/* Footer / Pagination */
+.tableFooter{ background:#fff; padding:10px 12px; }
+.paginationControls{
+  display:flex; list-style:none; padding:0; margin:0; gap:6px; justify-content:center; align-items:center;
+}
+.pageButton{
+  background:#fff; border:1px solid var(--tbl-border); border-radius:8px;
+  padding:6px 10px; min-width:34px; cursor:pointer; transition:background .15s ease;
+}
+.pageButton:hover:not(:disabled){ background:#e9f6fb; }
+.pageButton:disabled{ opacity:.5; cursor:not-allowed; }
+.activePage{ background:var(--primary); color:#fff; border-color:var(--primary); }
+.ellipsis{ color:var(--muted); }
+
+/* -------- Badges -------- */
+.statusBadge{
+  display:inline-block; padding:.25rem .7rem; font-size:.95rem;
+  font-weight:700; border-radius:9999px; line-height:1; border:1px solid transparent;
+}
+.statusSuccess{ background:#ecfdf5; color:#065f46; border-color:#bbf7d0; }
+.statusCancelled{ background:#fef2f2; color:#991b1b; border-color:#fecaca; }
+.statusPending{ background:#fffbeb; color:#92400e; border-color:#fde68a; }
+.statusMixed{ background:#eff6ff; color:#1e40af; border-color:#bfdbfe; }
+
+/* Urgent badges */
+.urgentBadge{
+  display:inline-block; padding:.25rem .7rem; font-size:.9rem;
+  font-weight:700; border-radius:9999px; line-height:1; border:1px solid transparent;
+}
+.urgentTrue{ background:#fef3c7; color:#92400e; border-color:#fde68a; }
+.urgentFalse{ background:#ecfdf5; color:#065f46; border-color:#bbf7d0; }
+
+/* ===== ชิปประเภท (เหมือนหน้า MyRequests) ===== */
+.typeCell { color: #0b6ea4; }
+
+.typePills {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+
+.typePill {
+  display: inline-flex; align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-weight: 700; font-size: 0.95rem; line-height: 1.1;
+  border: 1.5px solid currentColor;
+  background: #fff;
+}
+
+.typeWithdraw {
+  color: #2196f3;
+  background: rgba(33,150,243,.06);
+  border-color: #2196f3;
+}
+.typeBorrow {
+  color: #f44336;
+  background: rgba(244,67,54,.06);
+  border-color: #f44336;
+}
+.typeReturn {
+  color: #10b981;
+  background: rgba(16,185,129,.06);
+  border-color: #10b981;
+}
+
+/* Responsive */
+@media (max-width:700px){ .tableGrid{ min-width:700px; } }
+@media (max-width:520px){ .tableGrid{ min-width:560px; } }

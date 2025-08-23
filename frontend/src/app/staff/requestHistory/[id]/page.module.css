@@ -1,177 +1,146 @@
-:root {
-  --bg: #f3f4f6;
-  --panel: #fff;
-  --text: #111827;
-  --muted: #6b7280;
-  --border: #e5e7eb;
+/* ===== Variables scoped ในหน้านี้ (เลี่ยง :root เพื่อกัน error CSS Modules) ===== */
+.mainHome{
+  --bg:#f3f4f6;
+  --panel:#fff;
+  --text:#111827;
+  --muted:#6b7280;
+  --border:#e5e7eb;
 
-  --primary: #3b82f6;
-  --primary-500: #2563eb;
+  --primary:#3b82f6;
+  --primary-500:#3b82f6;
 
-  --tbl-header-bg: #e9f6fb;
-  --tbl-header-text: #0f3a54;
-  --tbl-border: #cfeaf6;
-  --tbl-row-hover: #f0fbfe;
-  --tbl-row-alt: #f7fdff;
-}
+  --row-h:60px;
+  --rows-per-page:12;
 
-.mainHome {
-  min-height: 100vh;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  background: var(--bg);
-  padding: 24px;
-}
+  --tbl-header-bg:#e9f6fb;
+  --tbl-header-text:#0f3a54;
+  --tbl-border:#cfeaf6;
+  --tbl-row-hover:#f0fbfe;
 
-.infoContainer {
-  width: 100%;
-  max-width: 1200px;
-  background: var(--panel);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  --z-toolbar:100;
+  --z-header:10;
+
+  min-height:100vh;
+  display:flex; align-items:flex-start; justify-content:center;
+  background:var(--bg);
 }
 
-/* ── ปุ่ม Back */
-.backBtn {
-  align-self: flex-start;
-  background: #fff;
-  color: var(--primary);
-  border: 1px solid var(--tbl-border);
-  border-radius: 8px;
-  padding: 8px 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
+/* Container */
+.infoContainer{
+  width:100%; min-height:100vh;
+  background:var(--panel); color:var(--text);
+  padding:24px; display:flex; flex-direction:column; gap:14px;
 }
-.backBtn:hover {
-  background: var(--tbl-header-bg);
-}
+.pageTitle{ font-weight:700; font-size:clamp(1.4rem,2.2vw,2rem); margin:0; }
 
-/* ── Header ของคำขอ */
-.detailHeader {
-  border: 1px solid var(--tbl-border);
-  border-radius: 10px;
-  padding: 16px 20px;
-  background: #f9fbfc;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+/* Summary */
+.summaryCard{
+  border:1px solid var(--tbl-border);
+  border-radius:12px; padding:14px 16px; background:#fff;
+  display:grid; grid-template-columns: 1.2fr 1.5fr; gap:12px;
 }
-.detailHeader h2 {
-  margin: 0 0 8px;
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--tbl-header-text);
-}
-.detailHeader p {
-  margin: 0;
-  font-size: 0.95rem;
-  color: var(--text);
-}
-.detailHeader strong {
-  color: #374151;
-}
+.summaryLeft > div, .summaryRight > div{ margin:2px 0; }
 
-/* ── ตารางรายละเอียด */
-.tableGrid {
-  display: grid;
+/* ===== Table (โครงเดียวกับโค้ดตัวอย่าง) ===== */
+.tableFrame{
+  border:1px solid var(--tbl-border);
+  border-radius:10px; background:#fff; overflow:hidden;
+  box-shadow:0 10px 30px rgba(2,132,199,.08);
+  display:flex; flex-direction:column;
+}
+/* 9 คอลัมน์ของหน้ารายการย่อย */
+.tableGrid{
+  display:grid;
   grid-template-columns:
-    minmax(90px, 1fr)       /* รหัส */
-    minmax(80px, 1fr)       /* รูป */
-    minmax(180px, 2.5fr)    /* ชื่อรายการ */
-    minmax(120px, 1fr)      /* ประเภท */
-    minmax(140px, 1.2fr)    /* จำนวน */
-    minmax(100px, 0.8fr)    /* หน่วย */
-    minmax(140px, 1fr)      /* สถานะอนุมัติ */
-    minmax(140px, 1fr)      /* สถานะดำเนินการ */
-    minmax(140px, 1fr);     /* กำหนดคืน */
-  align-items: center;
-  column-gap: 8px;          /* ระยะห่างระหว่างคอลัมน์ */
+    minmax(100px,1fr)  /* รหัส */
+    72px               /* รูป (พอดี 45px + padding) */
+    minmax(220px,2fr)  /* ชื่อรายการ */
+    minmax(140px,1.2fr)/* ประเภท */
+    minmax(160px,1.2fr)/* จำนวนที่ขอ/อนุมัติ */
+    minmax(100px,0.9fr)/* หน่วย */
+    minmax(170px,1.2fr)/* สถานะอนุมัติ */
+    minmax(170px,1.2fr)/* สถานะดำเนินการ */
+    minmax(140px,1fr); /* กำหนดคืน */
+  align-items:center;
 }
-/* จัดการ cell ข้างในไม่ให้ตกบรรทัด */
-.tableGrid > div {
-  padding: 8px 6px;
-  white-space: nowrap;       /* ไม่ตัดบรรทัด */
-  overflow: hidden;          /* ซ่อนข้อความล้น */
-  text-overflow: ellipsis;   /* … */
+.tableHeader{
+  position:sticky; top:0; z-index:var(--z-header);
+  background:var(--tbl-header-bg); color:var(--tbl-header-text);
+  border-bottom:1px solid var(--tbl-border);
+  padding-block:14px; padding-inline:12px;
+  font-weight:700; font-size:1.05rem; min-height:60px;
+}
+.tableBody{ min-height: calc(var(--row-h) * var(--rows-per-page)); }
+
+.tableRow{
+  height:var(--row-h);
+  padding:0 12px;
+  border-top:1px solid var(--tbl-border);
+  transition:background .18s ease;
+}
+.tableRow:hover{ background:var(--tbl-row-hover); }
+
+/* Cells */
+.tableGrid > div{
+  padding:0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.noDataCell{
+  min-height: calc(var(--row-h) * var(--rows-per-page));
+  display:flex; align-items:center; justify-content:center;
+  color:var(--muted);
 }
 
-.tableHeader {
-  background: var(--tbl-header-bg);
-  color: var(--tbl-header-text);
-  font-weight: 700;
-  border-bottom: 1px solid var(--tbl-border);
-  padding: 12px;
-  font-size: 0.95rem;
-}
-.tableRow {
-  border-bottom: 1px solid var(--tbl-border);
-  padding: 12px;
-  font-size: 0.9rem;
-  background: #fff;
-  transition: background 0.15s ease;
-}
-.tableRow:hover {
-  background: var(--tbl-row-hover);
-}
+.tableFooter{ background:#fff; padding:10px 12px; display:flex; justify-content:flex-start; }
 
-/* ── Badge สถานะ */
-.statusBadge {
-  display: inline-block;
-  padding: 3px 8px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  border-radius: 9999px;
-  border: 1px solid transparent;
+/* รูป 45×45 */
+.imgThumb{
+  width:45px; height:45px; object-fit:cover;
+  border-radius:6px; border:1px solid var(--tbl-border);
+  background:#fff; display:block;
 }
-.statusSuccess {
-  background: #ecfdf5;
-  color: #065f46;
-  border-color: #bbf7d0;
-}
-.statusCancelled {
-  background: #fef2f2;
-  color: #991b1b;
-  border-color: #fecaca;
-}
-.statusPending {
-  background: #fffbeb;
-  color: #92400e;
-  border-color: #fde68a;
-}
-.statusMixed {
-  background: #eff6ff;
-  color: #1e40af;
-  border-color: #bfdbfe;
-}
+.mono{ font-variant-numeric: tabular-nums; }
 
-/* ── Badge ความเร่งด่วน */
-.urgentBadge {
-  display: inline-block;
-  padding: 3px 8px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  border-radius: 6px;
+/* ===== Badges (คงสไตล์เดิม) ===== */
+.statusBadge{
+  display:inline-block; padding:.25rem .7rem; font-size:.95rem;
+  font-weight:700; border-radius:9999px; line-height:1; border:1px solid transparent;
 }
-.urgentTrue {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-.urgentFalse {
-  background: #e0f2fe;
-  color: #0369a1;
-}
+.statusSuccess{ background:#ecfdf5; color:#065f46; border-color:#bbf7d0; }
+.statusCancelled{ background:#fef2f2; color:#991b1b; border-color:#fecaca; }
+.statusPending{ background:#fffbeb; color:#92400e; border-color:#fde68a; }
+.statusMixed{ background:#eff6ff; color:#1e40af; border-color:#bfdbfe; }
 
-/* ── No Data */
-.noDataCell {
-  padding: 40px;
-  text-align: center;
-  color: var(--muted);
-  background: linear-gradient(180deg,#fff 0%,#f9fdff 100%);
-  border-radius: 10px;
+.urgentBadge{
+  display:inline-block; padding:.25rem .7rem; font-size:.9rem;
+  font-weight:700; border-radius:9999px; line-height:1; border:1px solid transparent;
+}
+.urgentTrue{ background:#fef3c7; color:#92400e; border-color:#fde68a; }
+.urgentFalse{ background:#ecfdf5; color:#065f46; border-color:#bbf7d0; }
+
+.typeBadge{
+  display:inline-block; padding:.25rem .7rem; font-size:.95rem; font-weight:700;
+  border-radius:9999px; background:#fff; border:2px solid;
+}
+.typeWithdraw{ color:#2196f3; border-color:#2196f3; }
+.typeBorrow{ color:#f44336; border-color:#f44336; }
+
+.badge{
+  display:inline-block; padding:.35rem .7rem; font-size:.95rem; font-weight:700;
+  border-radius:10px; border:1px solid transparent;
+}
+.apprApproved{ background:#ecfdf5; color:#065f46; border-color:#bbf7d0; }
+.apprPartial{ background:#eef2ff; color:#3730a3; border-color:#c7d2fe; }
+.apprRejected{ background:#fef2f2; color:#b91c1c; border-color:#fecaca; }
+.apprWaiting{ background:#fffbeb; color:#92400e; border-color:#fde68a; }
+
+.procPreparing{ background:#f0f9ff; color:#075985; border-color:#bae6fd; }
+.procProcessing{ background:#f5f3ff; color:#5b21b6; border-color:#ddd6fe; }
+.procCompleted{ background:#f0fdf4; color:#166534; border-color:#bbf7d0; }
+.procReturned{ background:#f5fffa; color:#065f46; border-color:#a7f3d0; }
+.procWaiting{ background:#fffbeb; color:#92400e; border-color:#fde68a; }
+
+/* Responsive: ป้องกันตารางถูกบีบเล็กเกินไป */
+@media (max-width:900px){
+  .tableGrid{ min-width: 980px; }
+  .tableFrame{ overflow:auto; }
 }

@@ -1,50 +1,118 @@
-/* src/app/components/Header.module.css */
+/* src/app/components/Header.module.css — ใช้สีจากโค้ดเดิม */
+:root{
+  --primary-600: #008dda;
+  --primary-400: #41c9e2;
+  --hover: #007bff;
+  --text-on-primary: #ffffff;
+  --divider: #e0e0e0;
+  --shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
 
+/* Header */
 .header {
-  position: sticky; /* Keeps the header at the top when scrolling */
+  /* เดิม: margin: 0 2 0 2; (ไม่มีหน่วย) */
+  margin: 0;
+  position: sticky;
   top: 0;
-  z-index: 1000; /* Ensures the header stays on top of other elements */
-  background-color: #ffffff; /* White background to match the sidebar */
+  z-index: 1000;
+  width: 100%;
+  background: linear-gradient(to right, #008dda, #41c9e2);
+  transition: background 0.25s ease-in-out;
   display: flex;
-  justify-content: flex-start; /* Align content to the start (left) */
+  justify-content: flex-start;
   align-items: center;
-  height: 65px; /* Standard height for the header */
-  padding: 0 30px; /* Increased horizontal padding for a cleaner look */
-  border-bottom: 1px solid #e0e0e0; /* Lighter and softer bottom border */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow for a floating effect */
-  transition: all 0.3s ease-in-out; /* Smooth transitions for any changes */
-  /* border-radius: 12px; */
+  height: 90px;
+  padding: 0 30px;
+  border-bottom: 1px solid var(--divider);
+  box-shadow: var(--shadow);
 }
 
+/* โลโก้ (ถ้ามีใช้ class นี้) */
+.logo {
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.icon { color: #ffffff; }
+
+/* ชื่อระบบ */
 .headerTitle {
-  font-size: 24px; /* Larger font size for prominence */
-  font-weight: 600; /* Bolder font weight */
-  color: #333; /* Darker text color for better contrast */
-  margin: 0; /* Remove default margin */
-  padding: 0; /* Remove default padding */
-  line-height: 1; /* Ensures text is vertically centered within its line box */
+  font-size: 24px;
+  font-weight: 500; /* คงค่าตามเดิม */
+  color: var(--text-on-primary);
+  margin: 0;
+  padding: 0;
+  line-height: 1;
 }
 
+/* (ออปชัน) ไอคอนเดี่ยวที่ตั้งชื่อ userIcon ไว้ */
 .userIcon {
-  color: #555;
+  color: var(--text-on-primary);
   margin-right: 10px;
 }
 
+/* กลุ่มไอคอนขวาสุด */
 .iconGroup {
-  margin-left: auto; /* ดันไอคอนไปชิดขวาสุด */
+  margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 16px; /* ระยะห่างระหว่างไอคอน */
+  gap: 16px;
 }
 
+/* ไอคอน (react-icons) */
 .icon {
-  color: #555;
+  color: var(--text-on-primary);
   cursor: pointer;
-  transition: color 0.2s ease-in-out;
+  transition: color 0.2s ease-in-out, transform 0.08s ease;
 }
 
 .icon:hover {
-  color: #007bff; /* เปลี่ยนสีเมื่อ hover */
+  color: var(--hover); /* #007bff */
 }
 
-/* Since the icons are moved, .headerIcons and .iconButton styles are no longer needed here */
+.icon:active {
+  transform: scale(0.97);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .header { height: 64px; padding: 0 16px; }
+  .headerTitle { font-size: 18px; }
+}
+
+
+.iconBtn {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 9999px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+/* กันกรอบ/พื้นจาก pseudo state ด้วย */
+.iconBtn:hover,
+.iconBtn:active,
+.iconBtn:focus {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* คงวงแหวนโฟกัสแบบโปร่งใสอ่านง่าย (ถ้าไม่ต้องการลบได้) */
+.iconBtn:focus-visible {
+  outline: 2px solid rgba(255,255,255,.6);
+  outline-offset: 2px;
+  border-radius: 9999px;
+}
+
+/* ไอคอนเองให้โปร่งใสและสีขาวคมชัด */
+.icon {
+  background: transparent !important;
+  color: #ffffff;
+}

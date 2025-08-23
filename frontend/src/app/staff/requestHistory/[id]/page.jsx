@@ -1,136 +1,217 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import styles from "../page.module.css";
-import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, useMemo } from "react";
+import styles from "./page.module.css";
 import axiosInstance from "@/app/utils/axiosInstance";
+import { useParams } from "next/navigation";
 
 export default function RequestDetailPage() {
-    const { id } = useParams();
-    const router = useRouter();
+  const { id } = useParams();
 
-    const [header, setHeader] = useState(null);
-    const [details, setDetails] = useState([]);
-    const [loading, setLoading] = useState(true);
+  const [header, setHeader] = useState(null);
+  const [details, setDetails] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchRequestDetail = async () => {
-            try {
-                const res = await axiosInstance.get(`/my-requests/${id}`);
-                setHeader(res.data.header);
-                setDetails(res.data.details);
-            } catch (err) {
-                console.error("Error fetching request detail:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        if (id) fetchRequestDetail();
-    }, [id]);
+  // ===== Helpers =====
+  const API_BASE = useMemo(() => {
+    const fromAxios = axiosInstance?.defaults?.baseURL?.replace(/\/+$/, "");
+    return fromAxios || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  }, []);
 
-    const requestStatusMap = {
-        waiting_approval: "คำขอรอการอนุมัติ",
-        approved_all: "อนุมัติทั้งหมด",
-        rejected_all: "ปฏิเสธทั้งหมด",
-        approved_partial: "อนุมัติบางส่วน",
-        rejected_partial: "ปฏิเสธบางส่วน",
-        approved_partial_and_rejected_partial: "อนุมัติ/ปฏิเสธบางส่วน",
-    };
+  const fmtDate = (v) => {
+    if (!v) return "-";
+    const d = new Date(v);
+    if (Number.isNaN(d.getTime())) return String(v);
+    return d.toLocaleDateString("th-TH", { day: "2-digit", month: "2-digit", year: "numeric" });
+  };
 
-    const approvalStatusMap = {
-        approved: "✅ อนุมัติ",
-        partial: "⚠️ อนุมัติบางส่วน",
-        rejected: "❌ ปฏิเสธ",
-        waiting_approval_detail: "⌛ รออนุมัติ",
-    };
+  const imgUrl = (val) => {
+    if (!val) return `${API_BASE}/public/defaults/landscape.png`;
+    let s = String(val).trim().replace(/\\/g, "/");
+    if (/^https?:\/\//i.test(s)) return s;
+    s = s.replace(/^\/?public\//i, "");
+    if (/^\/?uploads\//i.test(s)) return `${API_BASE}/${s.replace(/^\/+/, "")}`;
+    if (s.startsWith("/")) return `${API_BASE}${s}`;
+    return `${API_BASE}/uploads/${s}`;
+  };
 
-    const processingStatusMap = {
-        waiting_approval_detail: "รออนุมัติ",
-        preparing: "กำลังเตรียมของ",   // ✅ เพิ่ม
-        processing: "กำลังดำเนินการ",
-        completed: "เสร็จสิ้น",
-        returned: "คืนแล้ว",
-    };
-    const getRequestStatusBadge = (status) => {
-        let statusClass = styles.statusBadge;
-        if (status === "approved_all") statusClass += ` ${styles.statusSuccess}`;
-        else if (status === "rejected_all") statusClass += ` ${styles.statusCancelled}`;
-        else if (
-            status === "approved_partial" ||
-            status === "rejected_partial" ||
-            status === "approved_partial_and_rejected_partial"
-        )
-            statusClass += ` ${styles.statusMixed}`;
-        else statusClass += ` ${styles.statusPending}`;
-        return <span className={statusClass}>{requestStatusMap[status] || status}</span>;
-    };
+  useEffect(() => {
+    if (!id) return;
+    const ctrl = new AbortController();
+    (async () => {
+      try {
+        const res = await axiosInstance.get(`/my-requests/${id}`, { signal: ctrl.signal });
+        setHeader(res.data?.header ?? null);
+        setDetails(res.data?.details ?? []);
+      } catch (err) {
+        if (err.name !== "CanceledError" && err.name !== "AbortError") {
+          console.error("Error fetching request detail:", err);
+        }
+      } finally {
+        setLoading(false);
+      }
+    })();
+    return () => ctrl.abort();
+  }, [id]);
 
-    const getUrgentBadge = (isUrgent) => {
-        let urgentClass = styles.urgentBadge;
-        return <span className={urgentClass + (isUrgent ? ` ${styles.urgentTrue}` : ` ${styles.urgentFalse}`)}>
-            {isUrgent ? "เร่งด่วน" : "ปกติ"}
-        </span>;
-    };
+  // ===== Maps =====
+  const requestStatusMap = {
+    waiting_approval: "คำขอรอการอนุมัติ",
+    approved_all: "อนุมัติทั้งหมด",
+    rejected_all: "ปฏิเสธทั้งหมด",
+    approved_partial: "อนุมัติบางส่วน",
+    rejected_partial: "ปฏิเสธบางส่วน",
+    approved_partial_and_rejected_partial: "อนุมัติ/ปฏิเสธบางส่วน",
+  };
+  const approvalStatusMap = {
+    approved: "อนุมัติ",
+    partial: "อนุมัติบางส่วน",
+    rejected: "ปฏิเสธ",
+    waiting_approval_detail: "รออนุมัติ",
+  };
+  const processingStatusMap = {
+    waiting_approval_detail: "รออนุมัติ",
+    preparing: "กำลังเตรียมของ",
+    processing: "กำลังดำเนินการ",
+    completed: "เสร็จสิ้น",
+    returned: "คืนแล้ว",
+  };
 
-    return (
-        <div className={styles.mainHome}>
-            <div className={styles.infoContainer}>
-                <button className={styles.backBtn} onClick={() => router.back()}>⬅ กลับ</button>
+  // ===== Badges =====
+  const getRequestStatusBadge = (status) => {
+    let cls = styles.statusBadge;
+    if (status === "approved_all") cls += ` ${styles.statusSuccess}`;
+    else if (status === "rejected_all") cls += ` ${styles.statusCancelled}`;
+    else if (
+      status === "approved_partial" ||
+      status === "rejected_partial" ||
+      status === "approved_partial_and_rejected_partial"
+    )
+      cls += ` ${styles.statusMixed}`;
+    else cls += ` ${styles.statusPending}`;
+    return <span className={cls}>{requestStatusMap[status] || status}</span>;
+  };
 
-                {loading ? (
-                    <div className={styles.noDataCell}>⏳ กำลังโหลดข้อมูล...</div>
-                ) : !header ? (
-                    <div className={styles.noDataCell}>❌ ไม่พบข้อมูลคำขอ</div>
-                ) : (
-                    <>
-                        <div className={styles.detailHeader}>
-                            <h2>รายละเอียดคำขอ {header.request_code}</h2>
-                            <p><strong>วันที่ขอ:</strong> {header.request_date}</p>
-                            <p><strong>ผู้ขอ:</strong> {header.user_name}</p>
-                            <p><strong>ประเภท:</strong> {header.request_type === "borrow" ? "ยืม" : "เบิก"}</p>
-                            <p><strong>ความเร่งด่วน:</strong> {getUrgentBadge(header.is_urgent)}</p>
-                            <p><strong>สถานะคำขอ:</strong> {getRequestStatusBadge(header.request_status)}</p>
-                            {header.request_note && (<p><strong>หมายเหตุ:</strong> {header.request_note}</p>)}
-                            <p><strong>รวมทั้งหมด:</strong> {header.total_requested} ที่ขอ / {header.total_approved} ที่อนุมัติ</p>
-                        </div>
+  const getUrgentBadge = (isUrgent) => (
+    <span className={`${styles.urgentBadge} ${isUrgent ? styles.urgentTrue : styles.urgentFalse}`}>
+      {isUrgent ? "เร่งด่วน" : "ปกติ"}
+    </span>
+  );
 
-                        <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
-                            <div>รหัส</div>
-                            <div>รูป</div>
-                            <div>ชื่อรายการ</div>
-                            <div>ประเภท</div>
-                            <div>จำนวนที่ขอ/อนุมัติ</div>
-                            <div>หน่วย</div>
-                            <div>สถานะอนุมัติ</div>
-                            <div>สถานะการดำเนินการ</div>
-                            <div>กำหนดคืน</div>
-                        </div>
+  const getTypeBadge = (type) => {
+    const isBorrow = type === "borrow";
+    const text = isBorrow ? "ยืม" : "เบิก";
+    const cls = `${styles.typeBadge} ${isBorrow ? styles.typeBorrow : styles.typeWithdraw}`;
+    return <span className={cls}>{text}</span>;
+  };
 
-                        {details.map((d) => (
-                            <div key={d.request_detail_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
-                                <div>{d.item_code || "-"}</div>
-                                <div>
-                                    <img
-                                        src={d.item_img ? `http://localhost:5000/uploads/${d.item_img}` : "http://localhost:5000/public/defaults/landscape.png"}
-                                        alt={d.item_name}
-                                        width={50}
-                                        height={50}
-                                        style={{ borderRadius: "6px", objectFit: "cover" }}
-                                        onError={(e) => (e.target.src = "http://localhost:5000/public/defaults/landscape.png")}
-                                    />
-                                </div>
-                                <div>{d.item_name}</div>
-                                <div>{d.item_category}</div>
-                                <div>{d.requested_qty} / {d.approved_qty ?? 0}</div>
-                                <div>{d.item_unit}</div>
-                                <div>{approvalStatusMap[d.approval_status] || "-"}</div>
-                                <div>{processingStatusMap[d.processing_status] || "-"}</div>
-                                <div>{d.expected_return_date || "-"}</div>
-                            </div>
-                        ))}
-                    </>
-                )}
+  const getApprovalBadge = (st) => {
+    let cls = `${styles.badge} `;
+    if (st === "approved") cls += styles.apprApproved;
+    else if (st === "partial") cls += styles.apprPartial;
+    else if (st === "rejected") cls += styles.apprRejected;
+    else cls += styles.apprWaiting;
+    return <span className={cls}>{approvalStatusMap[st] || "-"}</span>;
+  };
+
+  const getProcessingBadge = (st) => {
+    let cls = `${styles.badge} `;
+    if (st === "preparing") cls += styles.procPreparing;
+    else if (st === "processing") cls += styles.procProcessing;
+    else if (st === "completed") cls += styles.procCompleted;
+    else if (st === "returned") cls += styles.procReturned;
+    else cls += styles.procWaiting;
+    return <span className={cls}>{processingStatusMap[st] || "-"}</span>;
+  };
+
+  return (
+    <div className={styles.mainHome}>
+      <div className={styles.infoContainer}>
+        <h1 className={styles.pageTitle}>รายละเอียดคำขอ</h1>
+
+        {loading ? (
+          <div className={styles.noDataCell}>⏳ กำลังโหลดข้อมูล...</div>
+        ) : !header ? (
+          <div className={styles.noDataCell}>❌ ไม่พบข้อมูลคำขอ</div>
+        ) : (
+          <>
+            {/* Summary card */}
+            <div className={styles.summaryCard}>
+              <div className={styles.summaryLeft}>
+                <div><strong>เลขคำขอ:</strong> {header.request_code}</div>
+                <div><strong>วันที่ขอ:</strong> {fmtDate(header.request_date)}</div>
+                <div><strong>ผู้ขอ:</strong> {header.user_name || "-"}</div>
+              </div>
+              <div className={styles.summaryRight}>
+                <div><strong>ประเภท:</strong> {getTypeBadge(header.request_type)}</div>
+                <div><strong>ความเร่งด่วน:</strong> {getUrgentBadge(!!header.is_urgent)}</div>
+                <div><strong>สถานะคำขอ:</strong> {getRequestStatusBadge(header.request_status)}</div>
+                {header.request_note && <div><strong>หมายเหตุ:</strong> {header.request_note}</div>}
+                <div>
+                  <strong>รวมทั้งหมด:</strong> {(header.total_requested ?? 0)} ที่ขอ / {(header.total_approved ?? 0)} ที่อนุมัติ
+                </div>
+              </div>
             </div>
-        </div>
-    );
+
+            {/* ===== TABLE ===== */}
+            <div className={styles.tableFrame}>
+              {/* Header */}
+              <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+                <div>รหัส</div>
+                <div>รูปภาพ</div>
+                <div>ชื่อรายการ</div>
+                <div>ประเภท</div>
+                <div>จำนวนที่ขอ/อนุมัติ</div>
+                <div>หน่วย</div>
+                <div>สถานะการอนุมัติ</div>
+                <div>สถานะการดำเนินการ</div>
+                <div>กำหนดคืน</div>
+              </div>
+
+              {/* Body */}
+              <div className={styles.tableBody}>
+                {details.length > 0 ? (
+                  details.map((d) => {
+                    const due = header?.request_type === "borrow" ? fmtDate(d.expected_return_date) : "-";
+                    return (
+                      <div key={d.request_detail_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                        <div className={styles.mono}>{d.item_code || "-"}</div>
+                        <div>
+                          <img
+                            src={imgUrl(d.item_img)}
+                            alt={d.item_name || "item"}
+                            width={45}
+                            height={45}
+                            className={styles.imgThumb}
+                            onError={(e) => {
+                              const img = e.currentTarget;
+                              if (img.dataset.fallback !== "1") {
+                                img.src = `${API_BASE}/public/defaults/landscape.png`;
+                                img.dataset.fallback = "1";
+                              }
+                            }}
+                          />
+                        </div>
+                        <div title={d.item_name}>{d.item_name || "-"}</div>
+                        <div>{d.item_category || "-"}</div>
+                        <div className={styles.mono}>
+                          {(d.requested_qty ?? 0)} / {(d.approved_qty ?? 0)}
+                        </div>
+                        <div>{d.item_unit || "-"}</div>
+                        <div>{getApprovalBadge(d.approval_status)}</div>
+                        <div>{getProcessingBadge(d.processing_status)}</div>
+                        <div className={styles.mono}>{due}</div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className={styles.noDataCell}>ไม่พบรายการ</div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
 }
