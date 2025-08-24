@@ -1,60 +1,340 @@
-.container {
-  padding: 2rem;
-  font-family: Arial, sans-serif;
+/* =============================
+   GoodsReceiptListPage — page.module.css
+   ใช้ baseline จาก InventoryCheck
+   ============================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #f0fbfe;
+  --panel: #ffffff;
+  --muted: #6b7280;
+  --text: #111827;
+  --border: #e5e7eb;
+
+  --primary: #008dda;
+  --primary-500: #41c9e2;
+  --primary-600: #1685bb;
+
+  --tint-50: #f0fbfe;
+  --tint-100: #e9f6fb;
+  --tint-200: #ace2e1;
+
+  --success: #16a34a;
+  --warning: #f59e0b;
+
+  --radius: 10px;
+  --row-h: 60px;
+  --rows-per-page: 10;
+
+  --th-font: 1.05rem;
+  --th-min-h: 58px;
+  --th-pad-y: 14px;
+  --th-pad-x: 12px;
 }
 
-.header {
+/* ---- Layout ---- */
+.mainHome {
+  min-height: 100vh;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+  justify-content: center;
+  background: var(--bg);
+  font-family: 'Inter', sans-serif;
 }
 
-.title {
-  font-size: 2rem;
-  color: #333;
+.infoContainer {
+  width: 100%;
+  background: var(--panel);
+  color: var(--text);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---- Header ---- */
+.pageBar {
+  display: flex;
+  justify-content: space-between; /* ✅ ดันปุ่มไปขวาสุด */
+  align-items: center;
+}
+
+.pageTitle {
+  font-weight: 700;
+  font-size: clamp(1.3rem, 2vw, 1.8rem);
+  margin: 0;
+}
+
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .createButton {
-  background-color: #0070f3;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 5px;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 10px 16px;
   text-decoration: none;
-  font-weight: bold;
+  transition: background .2s ease, transform .15s ease;
+}
+.createButton:hover {
+  background: var(--primary-600);
+  transform: scale(1.05);
+}
+.createButton:active {
+  transform: scale(.95);
 }
 
-.controls {
+/* ---- Toolbar ---- */
+.toolbar {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid var(--tint-200);
+  border-radius: 12px;
+  padding: 12px;
+  background: #f6fbfd;
+  flex-wrap: wrap;
 }
 
-.searchInput,
-.filterSelect {
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+/* ฝั่งซ้าย (สถานะ) */
+.filterLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 160px;
+  max-width: 200px; /* ✅ จำกัดความกว้าง */
+  flex: 1;
 }
 
-.table {
-  width: 100%;
-  border-collapse: collapse;
+/* ฝั่งขวา (ค้นหา + ปุ่มล้าง) */
+.filterRight {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  max-width: 420px; /* ✅ จำกัดไม่ให้ยาวเกินไป */
 }
 
-.table th,
-.table td {
-  padding: 1rem;
-  border-bottom: 1px solid #ddd;
-  text-align: left;
+.label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
 }
 
-.table th {
-  background-color: #f4f4f4;
-  font-weight: bold;
+.searchRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
-.link {
-  color: #0070f3;
-  text-decoration: none;
+.input {
+  flex: 1;
+  height: 40px;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 0.95rem;
+}
+
+.input:focus {
+  outline: 2px solid var(--primary-500);
+  outline-offset: 1px;
+}
+
+/* ปุ่มล้าง */
+.ghostBtn {
+  background: #fff;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  height: 40px;
+  padding: 0 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ghostBtn:hover {
+  background: #e9f6fb;
+}
+.clearButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--primary-600);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filterLeft,
+  .filterRight {
+    max-width: 100%; /* ✅ ยืดเต็มจอเวลา mobile */
+  }
+
+  .searchRow {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+}
+
+/* ---- Table ---- */
+.tableSection {
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.tableGrid {
+  display: grid;
+  grid-template-columns:
+    minmax(120px, 1fr)   /* เลขที่ GR */
+    minmax(150px, 1fr)   /* วันที่ */
+    minmax(200px, 2fr)   /* ซัพพลายเออร์ */
+    minmax(110px, 1fr)   /* สถานะ */
+    minmax(160px, 1fr)   /* ผู้รับ */
+    minmax(120px, 1fr);  /* ดำเนินการ */
+  align-items: center;
+}
+
+.tableHeader {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #eef9fc;
+  border-bottom: 1px solid var(--tint-200);
+  font-weight: 700;
+  font-size: var(--th-font);
+  min-height: var(--th-min-h);
+  color: #374151;
+}
+.tableHeader > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  white-space: nowrap;
+}
+
+.inventory {
+  background: #fff;
+  height: calc(var(--row-h) * var(--rows-per-page));
+  overflow: hidden;
+}
+
+.tableRow {
+  height: var(--row-h);
+  border-top: 1px solid #deedf1;
+  padding: 0 var(--th-pad-x);
+}
+.tableRow:hover {
+  background: var(--tint-100);
+}
+
+.tableCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.noDataMessage {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+/* ---- Status Badge ---- */
+.stBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .85rem;
+  border: 1px solid transparent;
+  min-width: 90px;
+}
+.stAvailable { color: #166534; background: #dcfce7; border-color: #86efac; }
+.stLow { color: #92400e; background: #fef3c7; border-color: #fde68a; }
+
+/* ---- Action Button ---- */
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #3b82f6;
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px;
+  transition: background-color .2s ease, transform .15s ease;
+}
+.actionButton:hover {
+  background: #2563eb;
+  transform: scale(1.05);
+}
+.actionButton:active {
+  transform: scale(.95);
+}
+
+/* ---- Pagination ---- */
+.paginationControls {
+  display: flex;
+  list-style: none;
+  padding: 10px;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  background: #fff;
+}
+.pageButton {
+  background: #fff;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  padding: 6px 10px;
+  min-width: 34px;
+  cursor: pointer;
+}
+.pageButton:hover:not(:disabled) {
+  background: #e9f6fb;
+}
+.pageButton:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+.activePage {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.ellipsis {
+  color: var(--muted);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .filterGrid {
+    grid-template-columns: 1fr;
+  }
+  .searchCluster {
+    margin-left: 0;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
 }

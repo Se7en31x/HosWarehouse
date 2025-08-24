@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Scan, Plus, Save, RotateCcw, Trash2, Search, Package, ListChecks } from 'lucide-react';
+import { Scan, Plus, Save, RotateCcw, Trash2, Search, Package, ListChecks, ChevronLeft, ChevronRight } from 'lucide-react';
 import styles from './page.module.css';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
@@ -35,19 +35,15 @@ export default function ItemReceivingPage() {
     // States สำหรับตารางรายการที่รอการบันทึก
     const [receivingItems, setReceivingItems] = useState([]);
 
-    // State สำหรับ Pagination
+    // Pagination
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+    const itemsPerPage = 8;
     const totalPages = Math.ceil(allItems.length / itemsPerPage);
 
     const searchFieldRef = useRef(null);
 
-    // Effect สำหรับการดึงข้อมูลสินค้าทั้งหมด
-    useEffect(() => {
-        fetchItems();
-    }, []);
+    useEffect(() => { fetchItems(); }, []);
 
-    // Effect สำหรับการอัปเดตค่าฟอร์มเมื่อเลือกสินค้า
     useEffect(() => {
         if (selectedItem) {
             setItemPurchaseUnit(selectedItem.item_purchase_unit || '');
@@ -62,7 +58,6 @@ export default function ItemReceivingPage() {
         }
     }, [selectedItem]);
 
-    // Effect สำหรับการคำนวณจำนวนในหน่วยเบิกใช้
     useEffect(() => {
         const parsedPurchaseQuantity = parseFloat(purchaseQuantity);
         const parsedConversionRate = parseFloat(conversionRate);
@@ -102,9 +97,7 @@ export default function ItemReceivingPage() {
             let filtered = [];
             if (!isNaN(term) && term.length > 5) {
                 const item = allItems.find(i => i.item_barcode === term);
-                if (item) {
-                    filtered.push(item);
-                }
+                if (item) filtered.push(item);
             } else {
                 filtered = allItems.filter(item =>
                     item.item_name.toLowerCase().includes(term.toLowerCase()) ||
@@ -127,28 +120,17 @@ export default function ItemReceivingPage() {
 
     const validateForm = () => {
         const errors = {};
-        if (!selectedItem) {
-            errors.selectedItem = "กรุณาเลือกสินค้า";
-        }
-        if (!purchaseQuantity || parseFloat(purchaseQuantity) <= 0) {
-            errors.purchaseQuantity = "กรุณาใส่จำนวน (หน่วยสั่งซื้อ)";
-        }
-        if (!conversionRate || parseFloat(conversionRate) <= 0) {
-            errors.conversionRate = "กรุณาใส่อัตราส่วนการแปลงที่ถูกต้อง";
-        }
-        if (!lotNo) {
-            errors.lotNo = "กรุณาใส่เลข Lot";
-        }
-        if (!expiryDate) {
-            errors.expiryDate = "กรุณาใส่วันหมดอายุ";
-        }
+        if (!selectedItem) errors.selectedItem = "กรุณาเลือกสินค้า";
+        if (!purchaseQuantity || parseFloat(purchaseQuantity) <= 0) errors.purchaseQuantity = "กรุณาใส่จำนวน (หน่วยสั่งซื้อ)";
+        if (!conversionRate || parseFloat(conversionRate) <= 0) errors.conversionRate = "กรุณาใส่อัตราส่วนการแปลงที่ถูกต้อง";
+        if (!lotNo) errors.lotNo = "กรุณาใส่เลข Lot";
+        if (!expiryDate) errors.expiryDate = "กรุณาใส่วันหมดอายุ";
         return errors;
     };
 
     const handleAddItem = () => {
         const errors = validateForm();
         setFormErrors(errors);
-
         if (Object.keys(errors).length > 0) {
             MySwal.fire({
                 title: 'ข้อมูลไม่ครบถ้วน!',
@@ -176,12 +158,12 @@ export default function ItemReceivingPage() {
             documentNo: documentNo,
         };
 
-        setReceivingItems([...receivingItems, newItem]);
+        setReceivingItems(prev => [...prev, newItem]);
         handleClearForm();
     };
 
     const handleRemoveItem = (tempId) => {
-        setReceivingItems(receivingItems.filter(item => item.tempId !== tempId));
+        setReceivingItems(prev => prev.filter(item => item.tempId !== tempId));
     };
 
     const handleClearForm = () => {
@@ -197,9 +179,7 @@ export default function ItemReceivingPage() {
         setLotNo('');
         setMfgDate('');
         setDocumentNo('');
-        if (searchFieldRef.current) {
-            searchFieldRef.current.focus();
-        }
+        if (searchFieldRef.current) searchFieldRef.current.focus();
     };
 
     const handleSaveItems = () => {
@@ -213,16 +193,6 @@ export default function ItemReceivingPage() {
             });
             return;
         }
-        // if (!importType) {
-        //     MySwal.fire({
-        //         title: 'ข้อมูลไม่ครบถ้วน!',
-        //         text: 'กรุณาเลือกประเภทการนำเข้า',
-        //         icon: 'warning',
-        //         confirmButtonColor: '#ff9800',
-        //         confirmButtonText: 'ตกลง',
-        //     });
-        //     return;
-        // }
         MySwal.fire({
             title: 'ยืนยันการบันทึก',
             html: `คุณต้องการบันทึกการรับเข้าสินค้า <b>${receivingItems.length}</b> รายการใช่หรือไม่?`,
@@ -233,9 +203,7 @@ export default function ItemReceivingPage() {
             confirmButtonText: 'บันทึก',
             cancelButtonText: 'ยกเลิก',
         }).then((result) => {
-            if (result.isConfirmed) {
-                handleConfirmSave();
-            }
+            if (result.isConfirmed) handleConfirmSave();
         });
     };
 
@@ -253,7 +221,7 @@ export default function ItemReceivingPage() {
                 conversionRate: item.conversionRate || null,
                 expiryDate: item.expiryDate || null,
                 notes: item.notes || null,
-                lotNo: item.lotNo,            // ✅ เปลี่ยนเป็น camelCase
+                lotNo: item.lotNo,
                 mfgDate: item.mfgDate || null,
                 documentNo: item.documentNo || null,
             })),
@@ -261,7 +229,6 @@ export default function ItemReceivingPage() {
         console.log("📦 Payload ที่จะส่งไป backend:", payload);
         try {
             await axiosInstance.post('/receiving', payload);
-
             MySwal.fire({
                 title: 'บันทึกสำเร็จ!',
                 text: 'บันทึกการรับเข้าสินค้าเรียบร้อยแล้ว',
@@ -269,12 +236,10 @@ export default function ItemReceivingPage() {
                 confirmButtonColor: '#2e7d32',
                 confirmButtonText: 'ตกลง',
             });
-
             setReceivingItems([]);
             handleClearForm();
         } catch (error) {
             console.error("Error saving items:", error);
-
             if (error.response && error.response.data) {
                 MySwal.fire({
                     title: 'เกิดข้อผิดพลาด!',
@@ -295,20 +260,38 @@ export default function ItemReceivingPage() {
         }
     };
 
+    // Slice ของรายการสำหรับตารางด้านซ้าย (ทั้งหมด)
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = allItems.slice(indexOfFirstItem, indexOfLastItem);
     const totalItemsInTable = allItems.length;
 
+    // ✅ เพจจิเนชันแบบเลข + … + ลูกศร (เหมือนหน้าเดิม)
+    const getPageNumbers = () => {
+        const pages = [];
+        if (totalPages <= 7) for (let i = 1; i <= totalPages; i++) pages.push(i);
+        else if (currentPage <= 4) pages.push(1, 2, 3, 4, 5, '...', totalPages);
+        else if (currentPage >= totalPages - 3)
+            pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+        else
+            pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+        return pages;
+    };
+
     return (
         <div className={styles.pageContainer}>
             <div className={styles.mainCard}>
-                <div className={styles.header}>
-                    <h1>หน้าจอรับเข้าสินค้า</h1>
-                    <p>จัดการการรับเข้าสินค้าสำหรับคลังพัสดุ</p>
+                {/* ✅ Page Bar เหมือนหน้าเดิม */}
+                <div className={styles.pageBar}>
+                    <div className={styles.titleGroup}>
+                        <h1 className={styles.pageTitle}>รับเข้าสินค้า</h1>
+                        <span className={styles.pageSubtitle}>จัดการการรับเข้าคลังพัสดุ</span>
+                    </div>
                 </div>
+
                 <div className={styles.contentWrapper}>
                     <div className={styles.sider}>
+                        {/* Search */}
                         <div className={styles.searchSection}>
                             <div className={styles.searchBoxContainer}>
                                 <Search className={styles.searchIconPrefix} />
@@ -320,9 +303,7 @@ export default function ItemReceivingPage() {
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     ref={searchFieldRef}
                                     onKeyDown={(e) => {
-                                        if (e.key === 'Enter' && searchTerm) {
-                                            handleSearch(searchTerm);
-                                        }
+                                        if (e.key === 'Enter' && searchTerm) handleSearch(searchTerm);
                                     }}
                                 />
                                 <button className={styles.scanButton}>
@@ -346,6 +327,7 @@ export default function ItemReceivingPage() {
                             )}
                         </div>
 
+                        {/* ตารางรายการทั้งหมด */}
                         <div className={styles.tableSection}>
                             <h2 className={styles.tableHeader}>
                                 <Package size={20} className={styles.headerIcon} />
@@ -353,6 +335,13 @@ export default function ItemReceivingPage() {
                             </h2>
                             <div className={styles.tableWrapper}>
                                 <table className={styles.itemTable}>
+                                    {/* ✅ ล็อคความกว้างคอลัมน์ */}
+                                    <colgroup>
+                                        <col className={styles.colName} />     {/* ชื่อสินค้า */}
+                                        <col className={styles.colBarcode} />  {/* Barcode */}
+                                        <col className={styles.colActions} />  {/* ปุ่มเลือก */}
+                                    </colgroup>
+
                                     <thead>
                                         <tr>
                                             <th>ชื่อสินค้า</th>
@@ -363,9 +352,7 @@ export default function ItemReceivingPage() {
                                     <tbody>
                                         {isLoading ? (
                                             <tr>
-                                                <td colSpan="3" className={styles.emptyMessage}>
-                                                    กำลังโหลดข้อมูลสินค้า...
-                                                </td>
+                                                <td colSpan="3" className={styles.emptyMessage}>กำลังโหลดข้อมูลสินค้า...</td>
                                             </tr>
                                         ) : totalItemsInTable > 0 ? (
                                             currentItems.map(item => (
@@ -384,9 +371,7 @@ export default function ItemReceivingPage() {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="3" className={styles.emptyMessage}>
-                                                    ไม่พบรายการสินค้า
-                                                </td>
+                                                <td colSpan="3" className={styles.emptyMessage}>ไม่พบรายการสินค้า</td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -394,33 +379,55 @@ export default function ItemReceivingPage() {
                             </div>
                         </div>
 
+                        {/* ✅ Pagination แบบเดียวกับหน้าเดิม */}
                         {totalItemsInTable > itemsPerPage && (
-                            <div className={styles.paginationControls}>
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                    disabled={currentPage === 1}
-                                    className={styles.pageButton}
-                                >
-                                    ก่อนหน้า
-                                </button>
-                                <span>หน้า {currentPage} จาก {totalPages}</span>
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                    disabled={currentPage === totalPages}
-                                    className={styles.pageButton}
-                                >
-                                    ถัดไป
-                                </button>
-                            </div>
+                            <ul className={styles.paginationControls}>
+                                <li>
+                                    <button
+                                        className={styles.pageButton}
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                        aria-label="หน้าก่อนหน้า"
+                                    >
+                                        <ChevronLeft size={16} />
+                                    </button>
+                                </li>
+                                {getPageNumbers().map((p, idx) =>
+                                    p === '...' ? (
+                                        <li key={idx} className={styles.ellipsis}>…</li>
+                                    ) : (
+                                        <li key={idx}>
+                                            <button
+                                                className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ''}`}
+                                                onClick={() => setCurrentPage(p)}
+                                            >
+                                                {p}
+                                            </button>
+                                        </li>
+                                    )
+                                )}
+                                <li>
+                                    <button
+                                        className={styles.pageButton}
+                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage >= totalPages}
+                                        aria-label="หน้าถัดไป"
+                                    >
+                                        <ChevronRight size={16} />
+                                    </button>
+                                </li>
+                            </ul>
                         )}
                     </div>
 
+                    {/* Main form + waiting list + save */}
                     <div className={styles.mainContent}>
                         <div id="receiving-form" className={styles.detailsFormSection}>
                             <h2 className={styles.detailsFormHeader}>
                                 <Plus size={20} className={styles.headerIcon} />
                                 เพิ่มรายการรับเข้า: {selectedItem?.item_name || 'โปรดเลือกสินค้า'}
                             </h2>
+
                             <div className={styles.inputGrid}>
                                 <div className={styles.formField}>
                                     <label>ผู้ส่งมอบ / ผู้บริจาค</label>
@@ -432,6 +439,7 @@ export default function ItemReceivingPage() {
                                         disabled={!selectedItem}
                                     />
                                 </div>
+
                                 <div className={styles.formField}>
                                     <label>จำนวนที่รับเข้า (หน่วยสั่งซื้อ)</label>
                                     <input
@@ -444,10 +452,12 @@ export default function ItemReceivingPage() {
                                     />
                                     {formErrors.purchaseQuantity && <p className={styles.errorText}>{formErrors.purchaseQuantity}</p>}
                                 </div>
+
                                 <div className={styles.formField}>
                                     <label>หน่วยสั่งซื้อ</label>
                                     <input type="text" value={itemPurchaseUnit || ''} disabled />
                                 </div>
+
                                 <div className={styles.formField}>
                                     <label>อัตราส่วนแปลง (1 {itemPurchaseUnit || ''} = ... {selectedItem?.item_unit || ''})</label>
                                     <input
@@ -460,6 +470,7 @@ export default function ItemReceivingPage() {
                                     />
                                     {formErrors.conversionRate && <p className={styles.errorText}>{formErrors.conversionRate}</p>}
                                 </div>
+
                                 <div className={styles.formField}>
                                     <label>จำนวนในหน่วยเบิกใช้</label>
                                     <input
@@ -468,6 +479,7 @@ export default function ItemReceivingPage() {
                                         disabled
                                     />
                                 </div>
+
                                 <div className={styles.formField}>
                                     <label>เลขที่ Lot</label>
                                     <input
@@ -479,6 +491,7 @@ export default function ItemReceivingPage() {
                                     />
                                     {formErrors.lotNo && <p className={styles.errorText}>{formErrors.lotNo}</p>}
                                 </div>
+
                                 <div className={styles.formField}>
                                     <label>วันหมดอายุ</label>
                                     <input
@@ -489,6 +502,7 @@ export default function ItemReceivingPage() {
                                     />
                                     {formErrors.expiryDate && <p className={styles.errorText}>{formErrors.expiryDate}</p>}
                                 </div>
+
                                 <div className={styles.formField}>
                                     <label>วันผลิต (Mfg Date)</label>
                                     <input
@@ -498,6 +512,7 @@ export default function ItemReceivingPage() {
                                         disabled={!selectedItem}
                                     />
                                 </div>
+
                                 <div className={styles.formField}>
                                     <label>เลขที่เอกสาร</label>
                                     <input
@@ -509,6 +524,7 @@ export default function ItemReceivingPage() {
                                     />
                                 </div>
                             </div>
+
                             <div className={styles.formField}>
                                 <label>บันทึก / อ้างอิง</label>
                                 <textarea
@@ -519,6 +535,7 @@ export default function ItemReceivingPage() {
                                     disabled={!selectedItem}
                                 />
                             </div>
+
                             <div className={styles.formActions}>
                                 <button type="button" className={styles.clearButton} onClick={handleClearForm}>
                                     <RotateCcw className={styles.icon} />
@@ -536,6 +553,7 @@ export default function ItemReceivingPage() {
                             </div>
                         </div>
 
+                        {/* Waiting list */}
                         <div className={styles.tableSection}>
                             <h2 className={styles.tableHeader}>
                                 <ListChecks size={20} className={styles.headerIcon} />
@@ -571,9 +589,7 @@ export default function ItemReceivingPage() {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="6" className={styles.emptyMessage}>
-                                                    ไม่มีรายการสินค้าที่รอการบันทึก
-                                                </td>
+                                                <td colSpan="6" className={styles.emptyMessage}>ไม่มีรายการสินค้าที่รอการบันทึก</td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -581,6 +597,7 @@ export default function ItemReceivingPage() {
                             </div>
                         </div>
 
+                        {/* Save */}
                         <div className={styles.actionButtonsSection}>
                             <button
                                 type="button"

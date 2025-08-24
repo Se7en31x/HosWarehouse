@@ -100,7 +100,7 @@ export default function StockDeductionPage() {
 
   // pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 12;
 
   // load
   useEffect(() => {

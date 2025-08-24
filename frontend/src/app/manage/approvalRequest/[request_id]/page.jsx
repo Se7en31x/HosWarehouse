@@ -6,6 +6,7 @@ import axiosInstance from '../../../utils/axiosInstance';
 import Swal from 'sweetalert2';
 import Image from 'next/image';
 import styles from './page.module.css';
+import { FaSave, FaTimesCircle, FaThumbsDown } from 'react-icons/fa'; // ⬅️ เพิ่มไอคอน
 
 // รูปสินค้า
 function ItemImage({ item_img, alt }) {
@@ -241,6 +242,44 @@ export default function ApprovalRequestPage() {
     }
   };
 
+  // ⬅️ ปุ่มปฏิเสธทั้งหมด
+  const handleRejectAll = async () => {
+    if (isOverallDisabled) {
+      Swal.fire('ไม่สามารถทำได้', 'คำขออยู่ในสถานะที่ไม่อนุญาตให้แก้ไขแล้ว', 'warning');
+      return;
+    }
+    const { value: reason } = await Swal.fire({
+      title: 'ปฏิเสธทั้งหมด',
+      input: 'textarea',
+      inputLabel: 'เหตุผล (จะแนบให้ทุกรายการ)',
+      inputPlaceholder: 'เช่น พัสดุหมด, ไม่เข้าเกณฑ์การเบิก',
+      showCancelButton: true,
+      confirmButtonText: '❌ ปฏิเสธทั้งหมด',
+      cancelButtonText: 'ยกเลิก',
+    });
+    if (reason === undefined) return;
+
+    setDraftDetails((prev) => {
+      const next = { ...prev };
+      details.forEach((d) => {
+        next[d.request_detail_id] = {
+          ...(next[d.request_detail_id] || {
+            status: d.approval_status,
+            approved_qty:
+              d.approved_qty ?? (d.approval_status === 'rejected' ? 0 : d.requested_qty),
+            reason: d.approval_note,
+          }),
+          status: 'rejected',
+          approved_qty: 0,
+          reason,
+        };
+      });
+      return next;
+    });
+    setItemErrors({});
+    setTooltip({});
+  };
+
   const indexOfLast = currentPage * itemsPerPage;
   const indexOfFirst = indexOfLast - itemsPerPage;
   const currentItems = details.slice(indexOfFirst, indexOfLast);
@@ -305,7 +344,7 @@ export default function ApprovalRequestPage() {
               <col style={{ width: '110px' }} />   {/* หน่วย */}
               <col style={{ width: '150px' }} />   {/* สถานะ */}
               <col style={{ width: '160px' }} />   {/* อนุมัติ */}
-              <col style={{ width: '180px' }} />   {/* จัดการ */}
+              <col style={{ width: '220px' }} />   {/* จัดการ */}
             </colgroup>
 
             <thead className={styles.tableHead}>
@@ -377,19 +416,21 @@ export default function ApprovalRequestPage() {
                       </div>
                     </td>
 
-                    <td data-label="จัดการ">
-                      {btnDisabled ? (
-                        <>
-                          <button disabled className={`${styles.actionButton} ${styles.disabled}`}>✅ อนุมัติ</button>
-                          <button disabled className={`${styles.actionButton} ${styles.disabled}`}>❌ ปฏิเสธ</button>
-                        </>
-                      ) : (
-                        <>
-                          <button onClick={() => handleApproveOne(d)} className={`${styles.actionButton} ${styles.approve}`}>✅ อนุมัติ</button>
-                          <button onClick={() => handleRejectOne(d)} className={`${styles.actionButton} ${styles.reject}`}>❌ ปฏิเสธ</button>
-                        </>
-                      )}
-                    </td>
+                    <td data-label="จัดการ" className={styles.actionsCell}>
+  <div className={styles.actionBtnGroup}>
+    {btnDisabled ? (
+      <>
+        <button disabled className={`${styles.actionButton} ${styles.disabled}`}>✅ อนุมัติ</button>
+        <button disabled className={`${styles.actionButton} ${styles.disabled}`}>❌ ปฏิเสธ</button>
+      </>
+    ) : (
+      <>
+        <button onClick={() => handleApproveOne(d)} className={`${styles.actionButton} ${styles.approve}`}>✅ อนุมัติ</button>
+        <button onClick={() => handleRejectOne(d)} className={`${styles.actionButton} ${styles.reject}`}>❌ ปฏิเสธ</button>
+      </>
+    )}
+  </div>
+</td>
                   </tr>
                 );
               })}
@@ -414,10 +455,13 @@ export default function ApprovalRequestPage() {
               Object.values(itemErrors).some(Boolean)
             }
           >
-            💾 ยืนยันการบันทึก
+            <FaSave className={styles.btnIcon} aria-hidden="true" />
+            บันทึก
           </button>
+
           <button className={styles.cancelButton} onClick={() => router.push('/manage/requestList')}>
-            ❌ ยกเลิก
+            <FaTimesCircle className={styles.btnIcon} aria-hidden="true" />
+            ยกเลิก
           </button>
         </div>
       </div>

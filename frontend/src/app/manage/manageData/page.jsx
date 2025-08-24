@@ -61,10 +61,10 @@ const statusBadgeClass = (raw) => {
   if (['ไม่พร้อมใช้', 'inactive', 'disabled', 'unavailable'].includes(s)) return 'st-inactive';
   if (['กำลังซ่อม', 'ซ่อมบำรุง', 'maintenance', 'repairing'].includes(s)) return 'st-maintenance';
   if (['ชำรุด', 'เสีย', 'damaged', 'broken'].includes(s)) return 'st-broken';
-  
+
   if (['หมดสต็อก', 'out of stock', 'out_of_stock', 'oos'].includes(s)) return 'st-out';
   if (['ใกล้หมด', 'low', 'low stock', 'low_stock'].includes(s)) return 'st-low';
-  
+
   if (['หมดอายุ', 'expired', 'expire'].includes(s)) return 'st-expired';
   if (['ใกล้หมดอายุ', 'near expiry', 'near_expiry'].includes(s)) return 'st-near-exp';
 
@@ -83,7 +83,7 @@ const statusBadgeClass = (raw) => {
 /* ── แปลข้อความสถานะแบบง่าย (3 สถานะหลัก) ─────────── */
 const translateStatusText = (status, quantity) => {
   const s = String(status || '').trim().toLowerCase();
-  
+
   // 1. สถานะ 'สินค้าหมด'
   if (quantity <= 0) {
     return 'สินค้าหมด';
@@ -169,7 +169,7 @@ export default function ManageDataPage() {
       const matchesCategory =
         !category ||
         categoryValues[category]?.toLowerCase() ===
-          item.item_category?.toLowerCase();
+        item.item_category?.toLowerCase();
 
       const matchesUnit =
         !unit || (item.item_unit ?? '').toLowerCase() === unit.toLowerCase();
@@ -437,7 +437,10 @@ export default function ManageDataPage() {
                   <div className={styles.tableCell}>{item.item_unit}</div>
                   <div className={styles.tableCell}>
                     <span
-                      className={`${styles.badge} ${styles[statusBadgeClass(item.item_status)] || styles['st-generic']}`}
+                      className={`${styles.badge} ${(Number(item.total_on_hand_qty) || 0) <= 0
+                          ? styles['st-out'] // ✅ บังคับสีสินค้าหมด
+                          : (styles[statusBadgeClass(item.item_status)] || styles['st-generic'])
+                        }`}
                       title={item.item_status || 'ไม่ทราบสถานะ'}
                     >
                       {translateStatusText(item.item_status, item.total_on_hand_qty)}

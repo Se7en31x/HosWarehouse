@@ -66,7 +66,7 @@
   display:grid;
   grid-template-columns:
     minmax(50px,.6fr) minmax(120px,1.1fr) minmax(70px,.8fr) minmax(200px,2fr) minmax(120px,1.2fr)
-    minmax(100px,1fr) minmax(100px,1fr) minmax(140px,1.2fr) minmax(140px,1.2fr) minmax(160px,1.3fr);
+    minmax(100px,1fr) minmax(100px,1fr) minmax(140px,1.2fr) minmax(140px,1.2fr);
   align-items:center;
 }
 .tableHeader{
@@ -113,11 +113,12 @@
   .statusGroup,.statusInput{max-width:100%;}
   .tableGrid{
     grid-template-columns:
-      50px 120px 70px 200px 120px 100px 100px 140px 140px 160px;
+      50px 120px 70px 200px 120px 100px 100px 140px 140px;
   }
 }
 
 /* ── Status Badge: simple, flat, accessible ───────────────────── */
+/* ── Status Badge: simple, flat ───────────────────── */
 .badge{
   display:inline-flex; align-items:center; justify-content:center;
   padding:.35rem .7rem; border-radius:999px; font-weight:700; font-size:.86rem;
@@ -125,77 +126,48 @@
   border:1px solid transparent; letter-spacing:.01em;
 }
 
-/* Dot นำหน้าเล็ก ๆ (ช่วยสแกนด้วยสายตา) */
-.badge::before{
-  content:""; width:8px; height:8px; border-radius:999px; margin-right:8px;
-  background: currentColor; box-shadow:0 0 0 2px rgba(255,255,255,.7) inset;
-}
+/* เอาจุดหน้าสถานะออก */
+.badge::before{ content:none; display:none; }
 
-/* ── Palettes ── */
-/* ดีฟอลต์ */
-.st-generic{
-  color:#374151; background:#F3F4F6; border-color:#E5E7EB;
-}
+/* ── Palettes ปรับให้เข้ากับสถานะ ── */
+/* ทั่วไป */
+.st-generic{ color:#374151; background:#F3F4F6; border-color:#E5E7EB; }
 
 /* พร้อมใช้ */
-.st-ok{
-  color:#166534; background:#DCFCE7; border-color:#86EFAC;
-}
+.st-ok{ color:#0f5132; background:#D1FADF; border-color:#86EFAC; }
 
 /* ไม่พร้อมใช้ / ปิดใช้งาน */
-.st-inactive{
-  color:#374151; background:#F3F4F6; border-color:#E5E7EB;
-}
+.st-inactive{ color:#4b5563; background:#F3F4F6; border-color:#E5E7EB; }
 
 /* กำลังซ่อมบำรุง */
-.st-maintenance{
-  color:#1F2937; background:#E5E7EB; border-color:#D1D5DB;
-}
+.st-maintenance{ color:#92400E; background:#FFF7ED; border-color:#FED7AA; }
 
 /* ชำรุด */
-.st-broken{
-  color:#9F1239; background:#FFE4E6; border-color:#FECDD3;
-}
+.st-broken{ color:#9F1239; background:#FFE4E6; border-color:#FECDD3; }
 
 /* หมดสต็อก */
-.st-out{
-  color:#991B1B; background:#FEE2E2; border-color:#FCA5A5;
-}
+.st-out{ color:#991B1B; background:#FEE2E2; border-color:#FCA5A5; }
 
 /* ใกล้หมด */
-.st-low{
-  color:#92400E; background:#FEF3C7; border-color:#FDE68A;
-}
+.st-low{ color:#B45309; background:#FEF3C7; border-color:#FDE68A; }
 
 /* หมดอายุ */
-.st-expired{
-  color:#7C2D12; background:#FFEDD5; border-color:#FDBA74;
-}
+.st-expired{ color:#7C2D12; background:#FFEDD5; border-color:#FDBA74; }
 
 /* ใกล้หมดอายุ */
-.st-near-exp{
-  color:#92400E; background:#FFF7ED; border-color:#FED7AA;
-}
+.st-near-exp{ color:#9A3412; background:#FFF7ED; border-color:#FED7AA; }
 
 /* สงวนไว้ */
-.st-reserved{
-  color:#1F2937; background:#E5E7EB; border-color:#D1D5DB;
-}
+.st-reserved{ color:#334155; background:#E2E8F0; border-color:#CBD5E1; }
 
 /* เลิกผลิต / ระงับจำหน่าย */
-.st-disc{
-  color:#334155; background:#E2E8F0; border-color:#CBD5E1;
-}
+.st-disc{ color:#475569; background:#E5E7EB; border-color:#D1D5DB; }
 
 /* รอตรวจรับ / กำลังรับเข้า */
-.st-incoming{
-  color:#1D4ED8; background:#DBEAFE; border-color:#93C5FD;
-}
+.st-incoming{ color:#1D4ED8; background:#DBEAFE; border-color:#93C5FD; }
 
 /* รอคืน */
-.st-return{
-  color:#0369A1; background:#E0F2FE; border-color:#7DD3FC;
-}
+.st-return{ color:#0369A1; background:#E0F2FE; border-color:#7DD3FC; }
 
 /* มือถือ: ลดขนาดนิดหน่อย */
 @media (max-width:640px){

@@ -1,111 +1,142 @@
+:root {
+  --primary: #008dda;
+  --primary-hover: #006bb3;
+  --danger: #f44336;
+  --bg: #f9fafb;
+  --panel: #ffffff;
+  --border: #e5e7eb;
+  --text: #111827;
+}
+
 .container {
-  padding: 2rem;
-  font-family: Arial, sans-serif;
+  padding: 24px;
+  background: var(--panel);
+  min-height: 100vh;
 }
 
-.header {
-  margin-bottom: 2rem;
-}
-
-.title {
-  font-size: 2rem;
-  color: #333;
+.header h1 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 20px;
 }
 
 .form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  background: var(--panel);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 
 .formGroup {
-  display: flex;
-  flex-direction: column;
+  margin-bottom: 16px;
 }
 
-.label {
-  font-weight: bold;
-  margin-bottom: 0.5rem;
+.formGroup label {
+  font-weight: 500;
+  display: block;
+  margin-bottom: 6px;
 }
 
 .poSearch {
   display: flex;
-  gap: 0.5rem;
+  gap: 10px;
 }
 
-.input,
-.itemInput,
-.textarea {
-  padding: 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  width: 100%;
+.poSearch input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 }
 
-.input {
-  flex-grow: 1;
-}
-
-.fetchButton {
-  background-color: #1a73e8;
-  color: white;
-  padding: 0.75rem 1.5rem;
+.poSearch button {
+  background: var(--primary);
+  color: #fff;
+  padding: 8px 14px;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
 }
-
-.summarySection {
-  padding: 1rem;
-  background-color: #f0f8ff;
-  border: 1px solid #cceeff;
-  border-radius: 5px;
+.poSearch button:hover {
+  background: var(--primary-hover);
 }
 
-.table {
+.summaryBox {
+  background: #eef9fc;
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.tableSection {
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+
+.tableSection table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 0.95rem;
 }
 
-.table th,
-.table td {
-  padding: 1rem;
-  border-bottom: 1px solid #ddd;
-  text-align: left;
-}
-
-.table th {
-  background-color: #f4f4f4;
-}
-
-.itemInput {
-  max-width: 120px;
-}
-
-.textarea {
-  resize: vertical;
-}
-
-.buttonGroup {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-}
-
-.submitButton {
-  background-color: #0070f3;
+.tableSection th {
+  background: var(--primary);
   color: white;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+  text-align: left;
+  padding: 10px;
 }
 
-.cancelButton {
-  background-color: #ccc;
-  color: #333;
-  padding: 0.75rem 1.5rem;
+.tableSection td {
+  border: 1px solid var(--border);
+  padding: 8px;
+}
+
+.tableSection input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+/* ✅ fixed: ใช้ class local */
+.textarea {
+  width: 100%;
+  min-height: 80px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  justify-content: flex-end; /* ✅ จัดปุ่มไปขวา */
+}
+
+.primaryBtn {
+  background: var(--primary);
+  color: white;
+  padding: 10px 16px;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
+}
+.primaryBtn:hover {
+  background: var(--primary-hover);
+}
+
+.secondaryBtn {
+  background: var(--danger);
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.secondaryBtn:hover {
+  opacity: 0.85;
 }
