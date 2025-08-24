@@ -11,8 +11,10 @@ const statusMap = {
   waiting_approval: 'รอการอนุมัติ',
   approved_all: 'อนุมัติทั้งหมด',
   approved_partial: 'อนุมัติบางส่วน',
+  approved_partial_and_rejected_partial : 'อนุมัติบางส่วน',
   rejected_all: 'ปฏิเสธทั้งหมด',
   canceled: 'ยกเลิก',
+
 };
 
 // ✅ แผนที่สถานะของแต่ละรายการ

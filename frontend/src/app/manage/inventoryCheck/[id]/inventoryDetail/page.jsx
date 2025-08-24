@@ -22,7 +22,19 @@ export default function InventoryDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ✅ normalize category (กันกรณี API ส่ง id หรือสะกดไม่ตรง)
+  // ✅ ฟังก์ชันแปลงเวลา
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "-";
+    const d = new Date(dateStr);
+    if (isNaN(d)) return "-";
+    return d.toLocaleDateString("th-TH", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  // ✅ normalize category
   const normalizeCategory = (raw) => {
     if (raw === null || raw === undefined) return null;
     const key = String(raw).toLowerCase().trim();
@@ -38,7 +50,6 @@ export default function InventoryDetail() {
       medsup: "medsup",
       equipment: "equipment",
       meddevice: "meddevice",
-      // เผื่อ API ส่งตัวพิมพ์ใหญ่
       General: "general",
       Medicine: "medicine",
       Medsup: "medsup",
@@ -92,15 +103,6 @@ export default function InventoryDetail() {
     }
   };
 
-  // จัดสี badge สถานะ lot
-  const statusBadgeClass = (status) => {
-    const s = String(status || "").toLowerCase();
-    if (["active", "available", "ready", "ปกติ"].includes(s)) return styles.badgeSuccess;
-    if (["warning", "low", "near_expiry", "near-expiry", "ใกล้หมดอายุ"].includes(s)) return styles.badgeWarning;
-    if (["expired", "unavailable", "out", "หมดอายุ"].includes(s)) return styles.badgeDanger;
-    return styles.badgeMuted;
-  };
-
   // ฟังก์ชันแจ้งชำรุด
   const handleDamaged = (lot) => {
     Swal.fire({
@@ -110,9 +112,9 @@ export default function InventoryDetail() {
         `<input id="swal-input1" class="swal2-input" type="number" min="1" max="${lot.remaining_qty}" value="1">` +
         `<label for="swal-input2" class="swal2-label">ประเภท:</label>` +
         `<select id="swal-input2" class="swal2-select">
-          <option value="damaged">ชำรุด</option>
-          <option value="lost">สูญหาย</option>
-        </select>` +
+        <option value="damaged">ชำรุด</option>
+        <option value="lost">สูญหาย</option>
+      </select>` +
         `<label for="swal-input3" class="swal2-label">หมายเหตุ:</label>` +
         `<textarea id="swal-input3" class="swal2-textarea" placeholder="ระบุหมายเหตุ (ถ้ามี)"></textarea>`,
       focusConfirm: false,
@@ -138,14 +140,14 @@ export default function InventoryDetail() {
             lot_id: lot.lot_id,
             item_id: lot.item_id,
             qty: Number(qty),
-            damaged_type: type,
+            damage_type: type,
             note: note,
-            reported_by: 999, // TODO: แทนด้วย user id จริงเมื่อมี Auth
+            source_type: "stock_check",
+            source_ref_id: lot.lot_id,
+            reported_by: 999,
           });
 
           Swal.fire("✅ สำเร็จ", "บันทึกของชำรุดแล้ว", "success");
-
-          // Reload รายการ lot ใหม่
           const res = await axiosInstance.get(`/inventoryCheck/${lot.item_id}`);
           setItem(res.data);
         } catch (err) {
@@ -155,6 +157,75 @@ export default function InventoryDetail() {
       }
     });
   };
+
+  // ✅ ฟังก์ชันใหม่: ปรับปรุงจำนวน
+const handleAdjust = (lot) => {
+    Swal.fire({
+        title: `ปรับปรุงจำนวนคงเหลือ (Lot ${lot.lot_no || "-"})`,
+        html:
+            `<div class="swal2-html-container">` +
+            `<p>จำนวนคงเหลือในระบบ: <strong style="color: #007bff; font-weight: 600;">${lot.remaining_qty ?? 0}</strong></p>` +
+            `<p>จำนวนที่นำเข้า: <strong style="color: #28a745; font-weight: 600;">${lot.qty_imported ?? 0}</strong></p>` +
+            `<label for="swal-input1" class="swal2-label">จำนวนคงเหลือที่นับได้จริง:</label>` +
+            `<input id="swal-input1" class="swal2-input" type="number" min="0" value="${lot.remaining_qty ?? 0}">` +
+            `<label for="swal-input2" class="swal2-label">เหตุผลการปรับปรุง (สำคัญ):</label>` +
+            `<textarea id="swal-input2" class="swal2-textarea" placeholder="เช่น นับสต็อกประจำปีแล้วพบว่าจำนวนไม่ตรง"></textarea>` +
+            `</div>`,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: "ยืนยันการปรับปรุง",
+        cancelButtonText: "ยกเลิก",
+        preConfirm: () => {
+            const actual_qty = Number(document.getElementById("swal-input1").value);
+            const reason = document.getElementById("swal-input2").value.trim();
+
+            if (isNaN(actual_qty) || actual_qty < 0) {
+                Swal.showValidationMessage("กรุณากรอกจำนวนคงเหลือที่ถูกต้อง");
+                return false;
+            }
+
+            // ✅ เพิ่มเงื่อนไขใหม่: จำนวนที่นับได้จริงต้องไม่เกินจำนวนนำเข้า
+            if (actual_qty > lot.qty_imported) {
+                Swal.showValidationMessage(`จำนวนที่นับได้จริง (${actual_qty}) ไม่ควรเกินจำนวนที่นำเข้า (${lot.qty_imported})`);
+                return false;
+            }
+
+            if (!reason) {
+                Swal.showValidationMessage("กรุณาระบุเหตุผลในการปรับปรุง");
+                return false;
+            }
+            return { actual_qty, reason };
+        },
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            const { actual_qty, reason } = result.value;
+            const original_qty = lot.remaining_qty;
+            const diff = actual_qty - original_qty;
+
+            if (diff === 0) {
+                Swal.fire("💡 ไม่มีการเปลี่ยนแปลง", "จำนวนเท่าเดิม ไม่ต้องปรับปรุง", "info");
+                return;
+            }
+
+            try {
+                // ส่งข้อมูลไปที่ Endpoint ใหม่สำหรับการปรับปรุง
+                await axiosInstance.post(`/adjust`, {
+                    lot_id: lot.lot_id,
+                    item_id: lot.item_id,
+                    actual_qty,
+                    reason,
+                });
+
+                Swal.fire("✅ สำเร็จ", "ปรับปรุงจำนวนเรียบร้อยแล้ว", "success");
+                const res = await axiosInstance.get(`/inventoryCheck/${lot.item_id}`);
+                setItem(res.data);
+            } catch (err) {
+                console.error("❌ Error adjusting stock:", err);
+                Swal.fire("❌ ผิดพลาด", "ไม่สามารถปรับปรุงจำนวนได้", "error");
+            }
+        }
+    });
+};
 
   if (loading) return <p className={styles.loading}>⏳ กำลังโหลดข้อมูลพัสดุ...</p>;
   if (error) return <p className={styles.error}>❗ {error}</p>;
@@ -175,7 +246,7 @@ export default function InventoryDetail() {
   return (
     <div className={styles.appBg}>
       <div className={styles.containerWide}>
-        {/* ===== Overview Card (หัวกระดาน + รูปขวา) ===== */}
+        {/* ===== Overview Card ===== */}
         <div className={styles.overviewCard}>
           <div className={styles.overviewHeader}>
             <div className={styles.overviewMeta}>
@@ -192,7 +263,15 @@ export default function InventoryDetail() {
                   src={`http://localhost:5000/uploads/${item.item_img}`}
                   alt="รูปภาพพัสดุ"
                   className={styles.overviewImage}
-                  onError={(e) => { e.currentTarget.src = "http://localhost:5000/public/defaults/landscape.png"; }}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.replaceWith(
+                      Object.assign(document.createElement("div"), {
+                        className: styles.overviewImagePlaceholder,
+                        innerText: "ไม่มีรูปภาพ",
+                      })
+                    );
+                  }}
                 />
               ) : (
                 <div className={styles.overviewImagePlaceholder}>ไม่มีรูปภาพ</div>
@@ -201,7 +280,7 @@ export default function InventoryDetail() {
           </div>
         </div>
 
-        {/* ===== Content Grid: Basic + Category ===== */}
+        {/* ===== Content Grid ===== */}
         <div className={styles.contentGrid2}>
           <section className={styles.blockCard}>
             <BasicDetail form={item} />
@@ -225,43 +304,54 @@ export default function InventoryDetail() {
                   <th>ผลิต</th>
                   <th>หมดอายุ</th>
                   <th>นำเข้า</th>
+                  <th className={styles.center}>จำนวนที่นำเข้า</th>
                   <th className={styles.center}>คงเหลือ</th>
-                  <th className={styles.center}>สถานะ</th>
                   <th className={styles.center}>จัดการ</th>
                 </tr>
               </thead>
               <tbody>
-                {item.lots && item.lots.length > 0 ? (
-                  item.lots.map((lot) => (
+                {lots.length > 0 ? (
+                  lots.map((lot) => (
                     <tr key={lot.lot_id}>
-                      <td><span style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace', fontWeight: 600 }}>
-                        {lot.lot_no ?? "-"}</span>
+                      <td>
+                        <span style={{ fontFamily: 'ui-monospace', fontWeight: 600 }}>
+                          {lot.lot_no ?? "-"}
+                        </span>
                       </td>
-                      <td>{lot.mfg_date ?? "-"}</td>
-                      <td>{lot.exp_date ?? "-"}</td>
-                      <td>{lot.import_date ?? "-"}</td>
+                      <td>{formatDate(lot.mfg_date)}</td>
+                      <td>{formatDate(lot.exp_date)}</td>
+                      <td>{formatDate(lot.import_date)}</td>
+                      <td className={styles.center}>
+                        <span className={styles.qtyPill}>{lot.qty_imported ?? 0}</span>
+                      </td>
                       <td className={styles.center}>
                         <span className={styles.qtyPill}>{lot.remaining_qty ?? 0}</span>
                       </td>
                       <td className={styles.center}>
-                        <span className={`${styles.badge} ${statusBadgeClass(lot.status)}`}>
-                          {lot.status || "-"}
-                        </span>
-                      </td>
-                      <td className={styles.center}>
-                        <button
-                          type="button"
-                          onClick={() => handleDamaged(lot)}
-                          className={styles.damagedButton2}
-                        >
-                          แจ้งชำรุด
-                        </button>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleAdjust(lot)}
+                            className={`${styles.actionButton} ${styles.adjustButton}`}
+                          >
+                            ปรับปรุงจำนวน
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDamaged(lot)}
+                            className={`${styles.actionButton} ${styles.damagedButton}`}
+                          >
+                            แจ้งชำรุด
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', color: '#64748b', padding: '28px 0' }}>ไม่มีข้อมูล Lot</td>
+                    <td colSpan={7} style={{ textAlign: 'center', color: '#64748b', padding: '28px 0' }}>
+                      ไม่มีข้อมูล Lot
+                    </td>
                   </tr>
                 )}
               </tbody>

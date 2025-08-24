@@ -54,7 +54,7 @@ export default function RequestStatusManagerPage() {
     rejected_all: 'ปฏิเสธทั้งหมด',
     approved_partial: 'อนุมัติบางส่วน',
     rejected_partial: 'ปฏิเสธบางส่วน',
-    approved_partial_and_rejected_partial: 'อนุมัติ/ปฏิเสธบางส่วน',
+    approved_partial_and_rejected_partial: 'อนุมัติบางส่วน',
     pending: 'อยู่ระหว่างการดำเนินการ',
     preparing: 'กำลังจัดเตรียม',
     delivering: 'นำส่งแล้ว',

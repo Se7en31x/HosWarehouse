@@ -3,24 +3,20 @@ import { useEffect, useState, useMemo } from 'react';
 import axios from '@/app/utils/axiosInstance';
 import Swal from 'sweetalert2';
 import styles from './page.module.css';
-import { ChevronLeft, ChevronRight, Trash2, Clock, CheckCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Clock, CheckCircle, Search } from 'lucide-react';
 
 export default function ExpiredItemsPage() {
   const [expiredList, setExpiredList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dataError, setDataError] = useState(null);
 
+  // ✅ state สำหรับค้นหาและฟิลเตอร์
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+
   // pagination unified
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
-
-  const totalPages = Math.max(1, Math.ceil(expiredList.length / itemsPerPage));
-  const start = (currentPage - 1) * itemsPerPage;
-  const currentItems = expiredList.slice(start, start + itemsPerPage);
-
-  useEffect(() => {
-    if (currentPage > totalPages) setCurrentPage(totalPages);
-  }, [totalPages, currentPage]);
 
   // ✅ ตั้งค่า SweetAlert ให้เข้าธีมเดียวกัน
   const swal = useMemo(
@@ -88,7 +84,7 @@ export default function ExpiredItemsPage() {
         lot_id: lotId,
         item_id: itemId,
         action_qty: parseInt(qty, 10),
-        action_by: 1, // TODO: ใช้ user_id จริงจาก auth
+        action_by: 999, // TODO: ใช้ user_id จริงจาก auth
         note: ''
       });
       swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: `ทำลาย ${qty} ชิ้นแล้ว`, confirmButtonText: 'ตกลง' });
@@ -153,6 +149,35 @@ export default function ExpiredItemsPage() {
 
   useEffect(() => { fetchExpired(); }, []);
 
+  // ✅ Filter + Search
+  const filteredList = useMemo(() => {
+    return expiredList.filter(e => {
+      const remainingToDispose = (Number(e.expired_qty) || 0) - (Number(e.disposed_qty) || 0);
+      const status =
+        remainingToDispose === 0
+          ? 'complete'
+          : (Number(e.disposed_qty) || 0) > 0
+            ? 'partial'
+            : 'pending';
+
+      const matchesStatus = statusFilter === 'all' || statusFilter === status;
+      const matchesSearch =
+        e.item_name?.toLowerCase().includes(search.toLowerCase()) ||
+        e.lot_no?.toLowerCase().includes(search.toLowerCase());
+
+      return matchesStatus && matchesSearch;
+    });
+  }, [expiredList, search, statusFilter]);
+
+  // ✅ Pagination จาก filteredList
+  const totalPages = Math.max(1, Math.ceil(filteredList.length / itemsPerPage));
+  const start = (currentPage - 1) * itemsPerPage;
+  const currentItems = filteredList.slice(start, start + itemsPerPage);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [totalPages, currentPage]);
+
   const handlePrev = () => currentPage > 1 && setCurrentPage(p => p - 1);
   const handleNext = () => currentPage < totalPages && setCurrentPage(p => p + 1);
 
@@ -175,7 +200,28 @@ export default function ExpiredItemsPage() {
       <div className={styles.container}>
         <div className={styles.pageBar}>
           <div className={styles.titleGroup}>
-            <h1 className={styles.pageTitle}>จัดการพัสดุหมดอายุ</h1>
+            <h1 className={styles.pageTitle}>จัดการของหมดอายุ</h1>
+          </div>
+
+          {/* ✅ Search + Filter */}
+          <div className={styles.filterBar}>
+            <input
+              type="text"
+              className={styles.searchInput}
+              placeholder="ค้นหาชื่อพัสดุ หรือ Lot No."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <select
+              className={styles.filterSelect}
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+            >
+              <option value="all">สถานะทั้งหมด</option>
+              <option value="pending">รอดำเนินการ</option>
+              <option value="partial">ทำลายบางส่วน</option>
+              <option value="complete">ทำลายครบแล้ว</option>
+            </select>
           </div>
         </div>
 

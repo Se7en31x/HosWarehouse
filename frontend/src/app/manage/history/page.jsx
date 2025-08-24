@@ -26,8 +26,8 @@ const BLOCKS = [
     ) 
   },
   { path: "expired", label: "ของหมดอายุ (Expired)", color: "red", icon: <FaExclamationTriangle /> },
-  { path: "damaged", label: "ชำรุด / สูญหาย / ส่งซ่อม", color: "pink", icon: <FaTools /> },
-  { path: "disposal", label: "นำออก (Write-off)", color: "gray", icon: <FaTrash /> },
+  { path: "damaged", label: "ชำรุด / สูญหาย", color: "pink", icon: <FaTools /> },
+  { path: "stockout", label: "นำออก (Stockout)", color: "gray", icon: <FaTrash /> },
 ];
 
 export default function HistoryPage() {

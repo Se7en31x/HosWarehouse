@@ -1,26 +1,107 @@
 .container {
   padding: 2rem;
   font-family: "Sarabun", sans-serif;
+  background: #f9fafb;
 }
 
 .subtitle {
   font-size: 1.6rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
-  color: #1f2937;
+  color: #008dda;
 }
 
+/* ✅ Dashboard Summary */
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  color: white;
+  text-align: center;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease, background 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+}
+
+.card p {
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.card h3 {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+/* สี Dashboard */
+.cardAll {
+  background: #41c9e2;
+}
+.cardDamaged {
+  background: #008dda;
+}
+.cardLost {
+  background: #ef4444; /* แดงให้ชัดว่าหาย */
+}
+
+/* ✅ Filter bar */
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ace2e1;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  background: #fff;
+}
+
+.searchInput:focus {
+  border-color: #008dda;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 141, 218, 0.2);
+}
+
+.filterSelect {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ace2e1;
+  border-radius: 0.5rem;
+  background: white;
+  font-size: 0.95rem;
+}
+
+.filterSelect:focus {
+  border-color: #41c9e2;
+  outline: none;
+}
+
+/* ✅ Table */
 .table {
   width: 100%;
   border-collapse: collapse;
   background: white;
   border-radius: 0.75rem;
   overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .table th {
-  background: #2563eb;
+  background: #008dda;
   color: white;
   padding: 0.75rem;
   text-align: left;
@@ -33,24 +114,32 @@
 }
 
 .table tr:hover {
-  background: #f9fafb;
+  background: #f0fbfe;
 }
 
+.empty {
+  text-align: center;
+  padding: 1rem;
+  color: #6b7280;
+}
+
+/* ✅ ปุ่มดูรายละเอียด */
 .detailBtn {
-  background: #2563eb;
-  color: white;
+  background: #41c9e2;
+  color: #fff;
   border: none;
   padding: 0.5rem 0.75rem;
   border-radius: 0.5rem;
   cursor: pointer;
   transition: background 0.2s;
+  font-size: 0.9rem;
 }
 
 .detailBtn:hover {
-  background: #1e40af;
+  background: #1685bb;
 }
 
-/* Modal */
+/* ✅ Modal */
 .modalOverlay {
   position: fixed;
   inset: 0;
@@ -58,26 +147,85 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
 }
 
-.modal {
+.modalLarge {
   background: white;
-  padding: 2rem;
+  padding: 2.5rem;
   border-radius: 1rem;
-  max-width: 500px;
-  width: 90%;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+  max-width: 1000px;
+  width: 95%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   animation: fadeIn 0.3s ease-in-out;
+  font-size: 1.05rem;
+  line-height: 1.6;
 }
 
+.modalTitle {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #008dda;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 28px;
+  margin-bottom: 2rem;
+}
+
+.sectionTitle {
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: #1685bb;
+}
+
+/* ✅ ตารางใน Modal */
+.actionTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.actionTable th,
+.actionTable td {
+  border: 1px solid #e5e7eb;
+  padding: 0.75rem 1rem;
+  text-align: center;
+}
+
+.actionTable th {
+  background: #ace2e1;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* ✅ แจ้งเตือนสำหรับ lost */
+.lostNotice {
+  background: #ffe2e2;
+  color: #b91c1c;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+/* ปุ่มปิด */
 .closeBtn {
   margin-top: 1rem;
   background: #ef4444;
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
+  padding: 0.7rem 1.4rem;
+  border-radius: 0.6rem;
   cursor: pointer;
+  font-size: 1rem;
   transition: background 0.2s;
 }
 
