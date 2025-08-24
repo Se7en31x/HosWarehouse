@@ -2,7 +2,8 @@
 
 import styles from './Header.module.css';
 import Image from 'next/image';
-import { FaUserCircle, FaBell } from 'react-icons/fa'; // ใช้ FaBell สำหรับกระดิ่ง
+import Link from 'next/link';               // ✅ เพิ่ม import Link
+import { FaUserCircle, FaBell } from 'react-icons/fa';
 
 export default function Header() {
   return (
@@ -18,8 +19,15 @@ export default function Header() {
 
       {/* ไอคอนอยู่ชิดขวา */}
       <div className={styles.iconGroup}>
-        <FaBell className={styles.icon} size={24} />
-        <FaUserCircle className={styles.icon} size={32} />
+        {/* ✅ ลิงก์ไปยังหน้าการแจ้งเตือน */}
+        <Link href="/manage/notifications" passHref>
+          <FaBell className={`${styles.icon} cursor-pointer`} size={24} />
+        </Link>
+
+        {/* ✅ ตัวอย่าง: ลิงก์ไปยังหน้าโปรไฟล์ผู้ใช้ */}
+        <Link href="/manage/profile" passHref>
+          <FaUserCircle className={`${styles.icon} cursor-pointer`} size={32} />
+        </Link>
       </div>
     </header>
   );

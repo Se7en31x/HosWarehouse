@@ -160,12 +160,6 @@ export default function Sidebar() {
                             <span className={styles.sidebarText}>ออกรายงาน</span>
                         </Link>
                     </li>
-                    <li className={`${styles.sidebarItem} ${isActive("/manage/notifications") ? styles.active : ""}`}>
-                        <Link href="/manage/notifications" className={styles.noStyleLink}>
-                            <FaBell className={styles.sidebarIcon} />
-                            <span className={styles.sidebarText}>การแจ้งเตือน</span>
-                        </Link>
-                    </li>
                     <li className={`${styles.sidebarItem} ${isActive("/manage/settings") ? styles.active : ""}`}>
                         <Link href="/manage/settings" className={styles.noStyleLink}>
                             <FaCog className={styles.sidebarIcon} />
