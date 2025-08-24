@@ -88,7 +88,7 @@ export default function ExpiredItemsPage() {
         lot_id: lotId,
         item_id: itemId,
         action_qty: parseInt(qty, 10),
-        action_by: 1, // TODO: แทนด้วย user_id จริงจาก auth
+        action_by: 1, // TODO: ใช้ user_id จริงจาก auth
         note: ''
       });
       swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: `ทำลาย ${qty} ชิ้นแล้ว`, confirmButtonText: 'ตกลง' });
@@ -173,7 +173,7 @@ export default function ExpiredItemsPage() {
   return (
     <div className={styles.pageBackground}>
       <div className={styles.container}>
-       <div className={styles.pageBar}>
+        <div className={styles.pageBar}>
           <div className={styles.titleGroup}>
             <h1 className={styles.pageTitle}>จัดการพัสดุหมดอายุ</h1>
           </div>
@@ -187,7 +187,7 @@ export default function ExpiredItemsPage() {
             <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
               <div className={styles.headerItem}>Lot Number</div>
               <div className={styles.headerItem}>ชื่อพัสดุ</div>
-              <div className={`${styles.headerItem} ${styles.centerCell}`}>จำนวนทั้งหมด</div>
+              <div className={`${styles.headerItem} ${styles.centerCell}`}>จำนวนหมดอายุ</div>
               <div className={`${styles.headerItem} ${styles.centerCell}`}>เหลือให้ทำลาย</div>
               <div className={`${styles.headerItem} ${styles.centerCell}`}>ทำลายแล้ว</div>
               <div className={`${styles.headerItem} ${styles.centerCell}`}>หน่วย</div>
@@ -200,15 +200,17 @@ export default function ExpiredItemsPage() {
               {currentItems.length === 0 ? (
                 <div className={styles.noDataMessage}>ไม่พบรายการพัสดุหมดอายุ</div>
               ) : currentItems.map(e => {
+                const remainingToDispose = (Number(e.expired_qty) || 0) - (Number(e.disposed_qty) || 0);
+
                 const statusText =
-                  (Number(e.qty_remaining) || 0) === 0
+                  remainingToDispose === 0
                     ? 'ทำลายครบแล้ว'
                     : (Number(e.disposed_qty) || 0) > 0
                       ? 'ทำลายบางส่วนแล้ว'
                       : 'รอดำเนินการ';
 
                 const statusClass =
-                  (Number(e.qty_remaining) || 0) === 0
+                  remainingToDispose === 0
                     ? styles.statusComplete
                     : (Number(e.disposed_qty) || 0) > 0
                       ? styles.statusPartial
@@ -219,8 +221,8 @@ export default function ExpiredItemsPage() {
                     <div className={styles.tableCell}>{e.lot_no || '-'}</div>
                     <div className={styles.tableCell}>{e.item_name || '-'}</div>
 
-                    <div className={`${styles.tableCell} ${styles.centerCell}`}>{Number(e.qty_imported) || 0}</div>
-                    <div className={`${styles.tableCell} ${styles.centerCell}`}>{Number(e.qty_remaining) || 0}</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>{Number(e.expired_qty) || 0}</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>{remainingToDispose}</div>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>{Number(e.disposed_qty) || 0}</div>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>{e.item_unit || '-'}</div>
 
@@ -233,16 +235,14 @@ export default function ExpiredItemsPage() {
                     </div>
 
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                      {(Number(e.qty_remaining) || 0) > 0 && e.item_id ? (
+                      {remainingToDispose > 0 && e.item_id ? (
                         <div className={styles.actions}>
                           <button
                             className={`${styles.actionBtn} ${styles.btnDispose}`}
-                            onClick={() => handleDispose(e.lot_id, e.item_id, Number(e.qty_remaining) || 0)}
+                            onClick={() => handleDispose(e.lot_id, e.item_id, remainingToDispose)}
                             aria-label="ทำลาย"
-                          // title="ทำลาย"
                           >
                             <Trash2 size={16} />
-                            {/* <span>ทำลาย</span> */}
                           </button>
                           <button
                             className={`${styles.actionBtn} ${styles.btnHistory}`}
@@ -255,22 +255,20 @@ export default function ExpiredItemsPage() {
                           </button>
                         </div>
                       ) : (
-                        <>
-                          <div className={styles.actions}>
-                            <span className={styles.doneIcon} aria-label="ทำลายครบแล้ว" title="ทำลายครบแล้ว">
-                              <CheckCircle size={18} />
-                            </span>
-                            <button
-                              className={`${styles.actionBtn} ${styles.btnHistory}`}
-                              onClick={() => handleViewHistory(e.lot_id)}
-                              aria-label="ประวัติ"
-                              title="ประวัติ"
-                            >
-                              <Clock size={16} />
-                              <span>ประวัติ</span>
-                            </button>
-                          </div>
-                        </>
+                        <div className={styles.actions}>
+                          <span className={styles.doneIcon} aria-label="ทำลายครบแล้ว" title="ทำลายครบแล้ว">
+                            <CheckCircle size={18} />
+                          </span>
+                          <button
+                            className={`${styles.actionBtn} ${styles.btnHistory}`}
+                            onClick={() => handleViewHistory(e.lot_id)}
+                            aria-label="ประวัติ"
+                            title="ประวัติ"
+                          >
+                            <Clock size={16} />
+                            <span>ประวัติ</span>
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -278,7 +276,7 @@ export default function ExpiredItemsPage() {
               })}
             </div>
 
-            {/* Pagination แบบเดียวกับหน้าก่อน ๆ */}
+            {/* Pagination */}
             <ul className={styles.paginationControls}>
               <li>
                 <button className={styles.pageButton} onClick={handlePrev} disabled={currentPage === 1}>

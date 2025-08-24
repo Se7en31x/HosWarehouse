@@ -43,7 +43,7 @@ const mapStatusToThai = (status) => {
     case "rejected_all": return "ปฏิเสธทั้งหมด";
     case "approved_partial": return "อนุมัติบางส่วน";
     case "rejected_partial": return "ปฏิเสธบางรายการ";
-    case "approved_partial_and_rejected_partial": return "อนุมัติและปฏิเสธบางส่วน";
+    case "approved_partial_and_rejected_partial": return "อนุมัติบางส่วน";
     default: return status;
   }
 };

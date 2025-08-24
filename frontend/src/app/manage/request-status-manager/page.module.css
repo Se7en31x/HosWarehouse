@@ -43,18 +43,19 @@
 
 /* Table frame (Grid layout เหมือนหน้าอื่น) */
 .tableFrame{border:1px solid var(--tint-200);border-radius:var(--radius);background:#fff;overflow:hidden;}
-.tableGrid{
-  display:grid;
+.tableGrid {
+  display: grid;
   grid-template-columns:
-    minmax(140px,1.1fr) /* รหัสคำขอ */
-    minmax(180px,1.4fr) /* ผู้ขอ */
-    minmax(160px,1.2fr) /* แผนก */
-    minmax(140px,1fr)   /* วันที่ขอ */
-    minmax(120px,.9fr)  /* เวลา */
-    minmax(140px,1fr)   /* วันที่นำส่ง */
-    minmax(180px,1.3fr) /* สถานะ */
-    minmax(160px,1fr);  /* จัดการ */
-  align-items:center;
+    minmax(140px, 1.1fr)  /* รหัสคำขอ */
+    minmax(180px, 1.4fr)  /* ผู้ขอ */
+    minmax(160px, 1.2fr)  /* แผนก */
+    minmax(160px, 1fr)    /* วันที่/เวลา */
+    minmax(100px, 0.7fr)  /* ประเภท */
+    minmax(140px, 0.9fr)  /* ความคืบหน้า */
+    minmax(140px, 0.9fr)  /* วันที่นำส่ง */
+    minmax(180px, 1.2fr)  /* สถานะ */
+    minmax(160px, 1fr);   /* จัดการ */
+  align-items: center;
 }
 .tableHeader{
   position:sticky;top:0;z-index:var(--z-header);

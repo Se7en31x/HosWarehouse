@@ -177,7 +177,7 @@ export default function InventoryCheck() {
   // คัดกรอง
   const filteredInventory = useMemo(() => {
     const f = searchText.toLowerCase();
-    return allItems.filter((item) => {
+    let items = allItems.filter((item) => {
       const itemThaiCategory =
         categoryThaiMap[item.item_category?.toLowerCase()] || item.item_category;
       const matchCategory = selectedCategory ? itemThaiCategory === selectedCategory : true;
@@ -188,7 +188,26 @@ export default function InventoryCheck() {
         : true;
       return matchCategory && matchUnit && matchSearchText;
     });
+
+    // ✅ เรียง: ของหมด / จำนวนรวม = 0 ขึ้นก่อน → ที่เหลือเรียงตามชื่อ
+    items.sort((a, b) => {
+      const qtyA = Number(a?.total_on_hand_qty ?? 0);
+      const qtyB = Number(b?.total_on_hand_qty ?? 0);
+
+      // ของที่หมด (0) ขึ้นก่อน
+      if (qtyA === 0 && qtyB !== 0) return -1;
+      if (qtyB === 0 && qtyA !== 0) return 1;
+
+      // ถ้าต่างกัน → เรียงจากน้อยไปมาก (จะได้เห็นที่ใกล้หมดก่อน)
+      if (qtyA !== qtyB) return qtyA - qtyB;
+
+      // ถ้าเท่ากัน → เรียงตามชื่อ
+      return (a.item_name || "").localeCompare(b.item_name || "");
+    });
+
+    return items;
   }, [allItems, selectedCategory, selectedUnit, searchText]);
+
 
   const totalPages = Math.max(1, Math.ceil(filteredInventory.length / ITEMS_PER_PAGE));
   const paginatedItems = useMemo(() => {

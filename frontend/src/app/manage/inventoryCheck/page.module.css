@@ -216,8 +216,6 @@
     /* หน่วย */
     minmax(100px, 1.5fr)
     /* สถานะ */
-    minmax(130px, 1.2fr)
-    /* อัปเดตล่าสุด */
     minmax(110px, 1fr);
   /* ดำเนินการ */
   align-items: center;

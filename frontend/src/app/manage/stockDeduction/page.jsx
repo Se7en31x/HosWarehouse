@@ -40,7 +40,7 @@ const customSelectStyles = {
 const statusMap = {
   approved_all: { text: 'อนุมัติทั้งหมด', class: styles.statusApproved },
   approved_partial: { text: 'อนุมัติบางส่วน', class: styles.statusPartial },
-  approved_partial_and_rejected_partial: { text: 'อนุมัติ/ปฏิเสธบางส่วน', class: styles.statusPartial },
+  approved_partial_and_rejected_partial: { text: 'อนุมัติบางส่วน', class: styles.statusPartial },
   stock_deducted: { text: 'เบิก-จ่ายแล้ว', class: styles.statusDeducted },
   completed: { text: 'เสร็จสิ้น', class: styles.statusCompleted },
   pending_deduction: { text: 'รอเบิก-จ่าย', class: styles.statusPendingDeduction },

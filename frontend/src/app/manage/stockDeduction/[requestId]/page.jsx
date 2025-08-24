@@ -17,8 +17,8 @@ const statusMap = {
 
 // Map ประเภทคำขอ (request_type) เป็นภาษาไทย
 const typeMap = {
-  'Borrow': 'ยืม',
-  'Withdraw': 'เบิก',
+  'borrow': 'ยืม',
+  'withdraw': 'เบิก',
   'Transfer': 'โอน',
 };
 

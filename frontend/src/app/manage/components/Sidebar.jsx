@@ -100,10 +100,18 @@ export default function Sidebar() {
                             <span className={styles.sidebarText}>จัดการของชำรุด</span>
                         </Link>
                     </li>
-                    <li className={`${styles.sidebarItem} ${isActive('/manage/transactionHistory') ? styles.active : ''}`}>
-                        <Link href="/manage/transactionHistory" className={styles.noStyleLink}>
+                    <li className={`${styles.sidebarItem} ${isActive('/manage/history') ? styles.active : ''}`}>
+                        <Link href="/manage/history" className={styles.noStyleLink}>
                             <FaHistory className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>ประวัติการทำรายการ</span>
+                        </Link>
+                    </li>
+                    {/* ===== การจัดการ ===== */}
+
+                    <li className={`${styles.sidebarItem} ${isActive('/manage/manageReturn') ? styles.active : ''}`}>
+                        <Link href="/manage/manageReturn" className={styles.noStyleLink}>
+                            <FaHistory className={styles.sidebarIcon} />
+                            <span className={styles.sidebarText}>จัดการการคืน</span>
                         </Link>
                     </li>
 

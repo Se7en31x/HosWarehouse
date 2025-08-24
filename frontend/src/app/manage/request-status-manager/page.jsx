@@ -10,7 +10,7 @@ import styles from './page.module.css';
 
 const Select = dynamic(() => import('react-select'), { ssr: false });
 
-/* react-select styles (ให้ตรงกับหน้าอื่น) */
+/* react-select styles */
 const customSelectStyles = {
   control: (base, state) => ({
     ...base,
@@ -41,13 +41,13 @@ export default function RequestStatusManagerPage() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // ฟิลเตอร์ใหม่
+  // ฟิลเตอร์
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
   const itemsPerPage = 9;
 
-  // แผนที่สถานะ -> label ภาษาไทย
+  // แผนที่สถานะ
   const statusMap = {
     waiting_approval: 'รอการอนุมัติ',
     approved_all: 'อนุมัติทั้งหมด',
@@ -63,7 +63,6 @@ export default function RequestStatusManagerPage() {
     stock_deducted: 'ตัดสต็อกแล้ว',
   };
 
-  // สถานะ -> ชื่อคลาส (ให้มี default เสมอ)
   const statusToClass = {
     waiting_approval: 'waiting_approval',
     approved_all: 'approved_all',
@@ -80,7 +79,6 @@ export default function RequestStatusManagerPage() {
     __default: 'defaultStatus',
   };
 
-  // แสดงเฉพาะคำขอที่จบการอนุมัติแล้วหรือกำลังดำเนินการ
   const allowedStatuses = [
     'approved_all',
     'rejected_all',
@@ -93,26 +91,21 @@ export default function RequestStatusManagerPage() {
     'canceled',
   ];
 
-  // สถานะที่เป็น view-only (ไม่มีปุ่ม "จัดการสถานะ")
   const viewOnlyStatuses = ['rejected_all', 'completed', 'canceled', 'stock_deducted'];
 
-  // สร้าง options ของฟิลเตอร์สถานะ (มี “ทั้งหมด”)
   const STATUS_OPTIONS = useMemo(
     () => allowedStatuses.map(v => ({ value: v, label: statusMap[v] || v })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 
-  // จัดเรียงล่าสุดก่อน
   const sortedRequests = useMemo(() => {
     return [...requests].sort((a, b) => {
       const da = new Date(a.request_date).getTime();
       const db = new Date(b.request_date).getTime();
-      return db - da; // ใหม่ก่อน
+      return db - da;
     });
   }, [requests]);
 
-  // ฟิลเตอร์ (สถานะ + ค้นหา)
   const filteredRequests = useMemo(() => {
     const q = search.trim().toLowerCase();
     return sortedRequests.filter(r => {
@@ -134,7 +127,6 @@ export default function RequestStatusManagerPage() {
 
   useEffect(() => {
     fetchRequests();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function fetchRequests() {
@@ -142,8 +134,17 @@ export default function RequestStatusManagerPage() {
     try {
       const statusQuery = allowedStatuses.join(',');
       const res = await axiosInstance.get('/requestStatus', { params: { status: statusQuery } });
+
       if (!Array.isArray(res.data)) throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
-      setRequests(res.data);
+
+      // ✅ Normalize ข้อมูล (รองรับทั้ง camelCase / snake_case)
+      const normalized = res.data.map(r => ({
+        ...r,
+        request_type: r.request_type ?? r.requestType ?? '',
+        processing_summary: r.processing_summary ?? r.processingSummary ?? '-',
+      }));
+
+      setRequests(normalized);
       setCurrentPage(1);
     } catch (err) {
       console.error('โหลดคำขอล้มเหลว', err);
@@ -153,7 +154,6 @@ export default function RequestStatusManagerPage() {
     }
   }
 
-  // เลือกปฏิทิน/ภาษาและ timezone ชัดเจน
   const LOCALE_DATE = 'th-TH';
   const TIMEZONE = 'Asia/Bangkok';
 
@@ -170,9 +170,9 @@ export default function RequestStatusManagerPage() {
   }
 
   function formatTime(dateStr) {
-    if (!dateStr) return '-';
+    if (!dateStr) return '';
     const d = new Date(dateStr);
-    if (isNaN(d)) return '-';
+    if (isNaN(d)) return '';
     return new Intl.DateTimeFormat(LOCALE_DATE, {
       timeZone: TIMEZONE,
       hour: '2-digit',
@@ -181,7 +181,6 @@ export default function RequestStatusManagerPage() {
     }).format(d);
   }
 
-  // เปลี่ยนหน้าแบบเลข + ellipsis
   const getPageNumbers = () => {
     const pages = [];
     if (totalPages <= 7) for (let i = 1; i <= totalPages; i++) pages.push(i);
@@ -197,7 +196,6 @@ export default function RequestStatusManagerPage() {
     setCurrentPage(1);
   };
 
-  // รีเซ็ตไปหน้า 1 เมื่อฟิลเตอร์เปลี่ยน
   useEffect(() => { setCurrentPage(1); }, [search, statusFilter]);
 
   if (loading) {
@@ -219,7 +217,7 @@ export default function RequestStatusManagerPage() {
           </div>
         </div>
 
-        {/* Toolbar: สถานะ + ค้นหา + ล้างตัวกรอง */}
+        {/* Toolbar */}
         <div className={styles.toolbar}>
           <div className={`${styles.filterGrid} ${styles.filterGridCompact}`}>
             <div className={styles.filterGroup}>
@@ -263,14 +261,15 @@ export default function RequestStatusManagerPage() {
           </div>
         </div>
 
-        {/* ตาราง */}
+        {/* Table */}
         <div className={styles.tableFrame}>
           <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
             <div className={styles.headerItem}>รหัสคำขอ</div>
             <div className={styles.headerItem}>ผู้ขอ</div>
             <div className={styles.headerItem}>แผนก</div>
-            <div className={styles.headerItem}>วันที่ขอ</div>
-            <div className={styles.headerItem}>เวลา</div>
+            <div className={styles.headerItem}>วันที่/เวลา</div>
+            <div className={styles.headerItem}>ประเภท</div>
+            <div className={styles.headerItem}>สำเร็จ</div>
             <div className={styles.headerItem}>วันที่นำส่ง</div>
             <div className={styles.headerItem}>สถานะปัจจุบัน</div>
             <div className={styles.headerItem}>จัดการ</div>
@@ -283,14 +282,25 @@ export default function RequestStatusManagerPage() {
                 const label = statusMap[statusKey] || statusKey || 'ไม่ทราบสถานะ';
                 const badgeClass = styles[statusToClass[statusKey]] || styles[statusToClass.__default];
 
+                const typeLabel = String(r.request_type).toLowerCase() === 'borrow' ? 'ยืม' : 'เบิก';
+
                 return (
                   <div key={r.request_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
                     <div className={styles.tableCell}>{r.request_code}</div>
                     <div className={styles.tableCell}>{r.user_name}</div>
                     <div className={styles.tableCell}>{r.department}</div>
-                    <div className={styles.tableCell}>{formatDate(r.request_date)}</div>
-                    <div className={styles.tableCell}>{formatTime(r.request_date)}</div>
-                    <div className={styles.tableCell}>{r.request_due_date ? formatDate(r.request_due_date) : '-'}</div>
+                    <div className={styles.tableCell}>
+                      {formatDate(r.request_date)} {formatTime(r.request_date)}
+                    </div>
+                    <div className={styles.tableCell}>
+                      <span className={styles.badgeGray}>{typeLabel}</span>
+                    </div>
+                    <div className={styles.tableCell}>
+                      {r.processing_summary}
+                    </div>
+                    <div className={styles.tableCell}>
+                      {r.request_due_date ? formatDate(r.request_due_date) : '-'}
+                    </div>
                     <div className={styles.tableCell}>
                       <span className={`${styles.statusBadge} ${badgeClass}`}>{label}</span>
                     </div>
@@ -314,7 +324,7 @@ export default function RequestStatusManagerPage() {
             )}
           </div>
 
-          {/* Pagination แบบเลขหน้า + ไอคอน */}
+          {/* Pagination */}
           <ul className={styles.paginationControls}>
             <li>
               <button

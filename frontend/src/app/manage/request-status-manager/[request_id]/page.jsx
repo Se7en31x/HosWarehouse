@@ -113,7 +113,7 @@ export default function RequestDetailClient() {
             setLoading(false);
         }
     };
-    
+
     // ฟังก์ชันสำหรับแสดงการแจ้งเตือนแบบย่อ
     const showStockDeductionAlert = () => {
         MySwal.fire({
@@ -132,7 +132,7 @@ export default function RequestDetailClient() {
         const newValue = e.target.value === "" ? null : e.target.value;
         const currentDetail = details.find(d => d.request_detail_id === requestDetailId);
         const currentStatus = currentDetail?.processing_status || (currentDetail?.approval_status === 'approved' ? 'approved_in_queue' : null);
-        
+
         // เพิ่มการตรวจสอบ Workflow ที่นี่
         if (currentStatus === 'pending' && newValue === 'preparing') {
             showStockDeductionAlert();
@@ -263,8 +263,11 @@ export default function RequestDetailClient() {
     }, []);
 
     const totalRequestedQty = useMemo(() => {
-        return details.reduce((sum, d) => sum + d.requested_qty, 0);
+        return details
+            .filter(d => d.approval_status === 'approved')   // ✅ นับเฉพาะที่อนุมัติ
+            .reduce((sum, d) => sum + d.requested_qty, 0);
     }, [details]);
+
 
     const countByStatus = useMemo(() => {
         const counts = {};
@@ -272,21 +275,34 @@ export default function RequestDetailClient() {
             counts[status] = 0;
         });
 
-        const combinedDetails = details.map(d => ({
-            ...d,
-            processing_status: pendingProcessingStatus[d.request_detail_id] !== undefined ? pendingProcessingStatus[d.request_detail_id] : (d.approval_status === 'approved' ? 'approved_in_queue' : null)
-        }));
-
-        combinedDetails.forEach((d) => {
-            if (d.approval_status === 'approved') {
-                const statusToCount = d.processing_status || 'approved_in_queue';
-                if (summaryStatusesToDisplay.includes(statusToCount)) {
-                    counts[statusToCount] = (counts[statusToCount] || 0) + d.requested_qty;
+        details
+            .filter(d => d.approval_status === 'approved') // ✅ นับเฉพาะที่อนุมัติ
+            .forEach(d => {
+                const effectiveStatus = pendingProcessingStatus[d.request_detail_id] ??
+                    (d.processing_status || 'approved_in_queue');
+                if (summaryStatusesToDisplay.includes(effectiveStatus)) {
+                    counts[effectiveStatus] += d.requested_qty;
                 }
-            }
-        });
+            });
+
         return counts;
     }, [details, pendingProcessingStatus, summaryStatusesToDisplay]);
+
+    const sortedDetails = useMemo(() => {
+        if (!Array.isArray(details)) return [];
+        // กำหนดลำดับการจัดเรียง
+        const order = {
+            approved: 1,
+            waiting_approval: 2,
+            rejected: 3
+        };
+        return [...details].sort((a, b) => {
+            const aOrder = order[a.approval_status] || 99;
+            const bOrder = order[b.approval_status] || 99;
+            if (aOrder !== bOrder) return aOrder - bOrder;
+            return a.request_detail_id - b.request_detail_id; // กันชน ถ้าสถานะเหมือนกัน
+        });
+    }, [details]);
 
     const hasPendingChanges = useMemo(() => {
         return Object.keys(pendingProcessingStatus).some(detailId => {
@@ -412,7 +428,7 @@ export default function RequestDetailClient() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {details.map((d, index) => {
+                                    {sortedDetails.map((d, index) => {
                                         const isProcessingSelectDisabled =
                                             d.approval_status !== 'approved' || isSavingAll || d.processing_status === 'completed';
                                         const actualProcessingStatus = pendingProcessingStatus[d.request_detail_id] !== undefined
