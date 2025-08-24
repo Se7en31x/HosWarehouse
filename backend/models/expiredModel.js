@@ -17,13 +17,17 @@ const ExpiredModel = {
           il.qty_imported,
           il.lot_no,
           il.qty_remaining,
-          COALESCE(SUM(ea.action_qty), 0) AS disposed_qty
+          ei.expired_qty,  -- จำนวนที่หมดอายุจริง
+          COALESCE(SUM(ea.action_qty), 0) AS disposed_qty  -- จำนวนที่ทำลายแล้ว
         FROM item_lots il
+        JOIN expired_items ei ON il.lot_id = ei.lot_id
         LEFT JOIN items i ON il.item_id = i.item_id
         LEFT JOIN expired_actions ea ON il.lot_id = ea.lot_id
         WHERE il.is_expired = true
           AND (i.is_deleted = false OR i.is_deleted IS NULL)
-        GROUP BY il.lot_id, il.item_id, i.item_name, i.item_unit, il.exp_date, il.is_expired, il.qty_imported, il.lot_no, il.qty_remaining
+        GROUP BY il.lot_id, il.item_id, i.item_name, i.item_unit, 
+                 il.exp_date, il.is_expired, il.qty_imported, 
+                 il.lot_no, il.qty_remaining, ei.expired_qty
         ORDER BY il.exp_date ASC;
       `);
       return result.rows;
@@ -34,46 +38,22 @@ const ExpiredModel = {
   },
 
   // ======================
-  // บันทึกการทำลาย
+  // บันทึกการทำลาย (Dispose)
   // ======================
-  async addAction({ lot_id, item_id, action_qty, action_by, note }) {
+  async addAction({ lot_id, item_id, action_by, note }) {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
 
-      // ✅ บันทึกการทำลายลงใน expired_actions
+      // ✅ insert ลง expired_actions โดยอ้างอิงจำนวนหมดอายุจาก expired_items
       await client.query(
         `INSERT INTO expired_actions 
           (lot_id, item_id, action_type, action_qty, action_by, note, action_date)
-         VALUES ($1, $2, 'disposed', $3, $4, $5, NOW())`,
-        [lot_id, item_id, action_qty, action_by, note]
-      );
-
-      // ✅ อัปเดต qty_remaining ใน item_lots (ตัดสต็อกในระดับ lot)
-      await client.query(
-        `UPDATE item_lots
-           SET qty_remaining = GREATEST(qty_remaining - $1, 0)
-         WHERE lot_id = $2`,
-        [action_qty, lot_id]
-      );
-
-      // ✅ คำนวณ stock รวมใหม่จากทุก lot ของ item_id นี้
-      const { rows } = await client.query(
-        `SELECT COALESCE(SUM(qty_remaining), 0) AS total_remaining
-         FROM item_lots
-         WHERE item_id = $1`,
-        [item_id]
-      );
-      const totalRemaining = rows[0].total_remaining;
-
-      // ✅ เก็บค่ารวมกลับเข้า items (เพิ่มคอลัมน์ qty_total เองถ้ามีใน schema)
-      // ถ้าไม่มีคอลัมน์ qty_total ให้ข้ามส่วนนี้ไป
-      // หรือถ้าคุณไม่อยากเก็บค่าใน DB สามารถอ้างอิงจาก item_lots ตอน query ได้เสมอ
-      await client.query(
-        `UPDATE items
-           SET updated_at = NOW()
-         WHERE item_id = $1`,
-        [item_id]
+         SELECT $1, $2, 'disposed', ei.expired_qty, $3, $4, NOW()
+         FROM expired_items ei
+         WHERE ei.lot_id = $1
+         LIMIT 1`,
+        [lot_id, item_id, action_by, note]
       );
 
       await client.query('COMMIT');
@@ -92,17 +72,17 @@ const ExpiredModel = {
   async getActionsByLotId(lot_id) {
     const query = `
       SELECT 
-    a.action_id,
-    a.lot_id,
-    a.action_type,
-    a.action_qty,
-    a.note,
-    a.action_date,
-    u.user_fname || ' ' || u.user_lname AS action_by_name
-  FROM expired_actions a
-  LEFT JOIN users u ON a.action_by = u.user_id
-  WHERE a.lot_id = $1
-  ORDER BY a.action_date DESC;
+        a.action_id,
+        a.lot_id,
+        a.action_type,
+        a.action_qty,
+        a.note,
+        a.action_date,
+        u.user_fname || ' ' || u.user_lname AS action_by_name
+      FROM expired_actions a
+      LEFT JOIN users u ON a.action_by = u.user_id
+      WHERE a.lot_id = $1
+      ORDER BY a.action_date DESC;
     `;
     const { rows } = await pool.query(query, [lot_id]);
     return rows;

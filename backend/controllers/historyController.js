@@ -62,16 +62,16 @@ exports.getImportHistory = async (req, res) => {
 //   }
 // };
 
-// /* ---------------- Expired ---------------- */
-// exports.getExpiredHistory = async (req, res) => {
-//   try {
-//     const data = await expiredModel.getAll();
-//     res.json(data);
-//   } catch (err) {
-//     console.error("❌ Error getExpiredHistory:", err);
-//     res.status(500).json({ message: "ไม่สามารถดึงประวัติของหมดอายุได้" });
-//   }
-// };
+/* ---------------- Expired ---------------- */
+exports.getExpiredHistory = async (req, res) => {
+  try {
+    const data = await expiredHistoryModel.getAllExpired();
+    res.json(data);
+  } catch (err) {
+    console.error("❌ Error getExpiredHistory:", err);
+    res.status(500).json({ message: "ไม่สามารถดึงประวัติของหมดอายุได้" });
+  }
+};
 
 // /* ---------------- Disposal ---------------- */
 // exports.getDisposalHistory = async (req, res) => {
