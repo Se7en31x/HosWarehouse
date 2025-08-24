@@ -1,4 +1,5 @@
 const { pool } = require('../config/db');
+const { generateStockoutCode } = require('../utils/stockoutCounter');
 
 const ExpiredModel = {
   // ======================
@@ -40,23 +41,62 @@ const ExpiredModel = {
   // ======================
   // บันทึกการทำลาย (Dispose)
   // ======================
-  async addAction({ lot_id, item_id, action_by, note }) {
+  async addAction({ lot_id, item_id, action_qty, action_by, note }) {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
 
-      // ✅ insert ลง expired_actions โดยอ้างอิงจำนวนหมดอายุจาก expired_items
+      // 1) หา stockout_id เดิมที่ผูกกับ lot นี้
+      const { rows: existingStockout } = await client.query(
+        `SELECT so.stockout_id
+         FROM stock_outs so
+         JOIN stock_out_details sod ON so.stockout_id = sod.stockout_id
+         WHERE sod.lot_id = $1
+         LIMIT 1`,
+        [lot_id]
+      );
+
+      let stockoutId;
+      if (existingStockout.length > 0) {
+        // 👉 reuse stockout เดิม
+        stockoutId = existingStockout[0].stockout_id;
+      } else {
+        // 👉 ยังไม่มี → gen ใหม่
+        const stockoutNo = await generateStockoutCode(client);
+        const { rows } = await client.query(
+          `INSERT INTO stock_outs 
+            (stockout_no, stockout_date, stockout_type, note, user_id, created_at)
+           VALUES ($1, NOW()::timestamp, $2, $3, $4, NOW()::timestamp)
+           RETURNING stockout_id`,
+          [stockoutNo, 'expired_dispose', `ทำลาย lot #${lot_id}`, action_by]
+        );
+        stockoutId = rows[0].stockout_id;
+      }
+
+      // 2) insert ลง stock_out_details
+      const { rows: unitRows } = await client.query(
+        `SELECT item_unit FROM items WHERE item_id = $1`,
+        [item_id]
+      );
+      const itemUnit = unitRows[0]?.item_unit || 'ชิ้น';
+
+      await client.query(
+        `INSERT INTO stock_out_details
+          (stockout_id, item_id, lot_id, qty, unit, note)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [stockoutId, item_id, lot_id, action_qty, itemUnit, note || 'ทำลาย']
+      );
+
+      // 3) insert ลง expired_actions
       await client.query(
         `INSERT INTO expired_actions 
           (lot_id, item_id, action_type, action_qty, action_by, note, action_date)
-         SELECT $1, $2, 'disposed', ei.expired_qty, $3, $4, NOW()
-         FROM expired_items ei
-         WHERE ei.lot_id = $1
-         LIMIT 1`,
-        [lot_id, item_id, action_by, note]
+         VALUES ($1, $2, 'disposed', $3, $4, $5, NOW())`,
+        [lot_id, item_id, action_qty, action_by, note]
       );
 
       await client.query('COMMIT');
+      return { success: true, stockout_id: stockoutId };
     } catch (err) {
       await client.query('ROLLBACK');
       console.error('addAction error:', err);

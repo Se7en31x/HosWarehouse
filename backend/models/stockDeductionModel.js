@@ -1,8 +1,9 @@
-const { pool } = require('../config/db');
-const { getIO } = require('../socket'); // ✅ เพิ่มบรรทัดนี้เพื่อ import getIO
+const { pool } = require("../config/db");
+const { getIO } = require("../socket");
+const { generateStockoutCode } = require("../utils/stockoutCounter");
 
 /* ====================== Helpers ====================== */
-/** ใช้ตารางตัวนับรายวัน เพื่อสร้างรหัส MOV-YYYYMMDD-#### แบบกันชนพร้อมกัน */
+/** ใช้สำหรับ stock_movements เท่านั้น */
 async function generateMoveBatchCode(client) {
   const { rows: nowRows } = await client.query(`SELECT CURRENT_DATE::date AS d`);
   const d = nowRows[0].d;
@@ -12,12 +13,14 @@ async function generateMoveBatchCode(client) {
       counter_date date PRIMARY KEY,
       last_seq integer NOT NULL
     )`);
+
   await client.query(
     `INSERT INTO stock_move_counter(counter_date, last_seq)
       VALUES ($1, 0)
       ON CONFLICT (counter_date) DO NOTHING`,
     [d]
   );
+
   const { rows } = await client.query(
     `UPDATE stock_move_counter
       SET last_seq = last_seq + 1
@@ -25,17 +28,16 @@ async function generateMoveBatchCode(client) {
     RETURNING last_seq`,
     [d]
   );
+
   const seq = rows[0].last_seq;
   const y = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  const seqStr = String(seq).padStart(4, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const seqStr = String(seq).padStart(4, "0");
   return `MOV-${y}${mm}${dd}-${seqStr}`;
 }
 
 /* ====================== Queries หลัก ====================== */
-
-/** ดึงรายการคำขอที่มีแถวอนุมัติแล้ว */
 async function getApprovedRequestsForDeduction() {
   try {
     const query = `
@@ -64,12 +66,11 @@ async function getApprovedRequestsForDeduction() {
     const { rows } = await pool.query(query);
     return rows;
   } catch (error) {
-    console.error('Error fetching requests ready for processing (Model):', error);
-    throw new Error('Failed to retrieve requests ready for processing.');
+    console.error("Error fetching requests ready for processing (Model):", error);
+    throw new Error("Failed to retrieve requests ready for processing.");
   }
 }
 
-/** ดึงรายละเอียดคำขอ + รายการ */
 async function getRequestDetailsForProcessing(requestId) {
   try {
     const requestQuery = `
@@ -93,25 +94,25 @@ async function getRequestDetailsForProcessing(requestId) {
 
     const itemsQuery = `
       SELECT
-  rd.request_detail_id,
-  rd.item_id,
-  i.item_name,
-  i.item_unit,
-  rd.requested_qty,
-  rd.approved_qty,
-  rd.approval_status,
-  rd.processing_status,
-  rd.request_detail_note,
-  rd.updated_at AS detail_updated_at,
-  COALESCE(SUM(il.qty_remaining), 0) AS current_stock_qty
-FROM request_details rd
-JOIN items i ON rd.item_id = i.item_id
-LEFT JOIN item_lots il ON rd.item_id = il.item_id
-WHERE rd.request_id = $1
-GROUP BY rd.request_detail_id, rd.item_id, i.item_name, i.item_unit,
-         rd.requested_qty, rd.approved_qty, rd.approval_status,
-         rd.processing_status, rd.request_detail_note, rd.updated_at
-ORDER BY rd.request_detail_id ASC;
+        rd.request_detail_id,
+        rd.item_id,
+        i.item_name,
+        i.item_unit,
+        rd.requested_qty,
+        rd.approved_qty,
+        rd.approval_status,
+        rd.processing_status,
+        rd.request_detail_note,
+        rd.updated_at AS detail_updated_at,
+        COALESCE(SUM(il.qty_remaining), 0) AS current_stock_qty
+      FROM request_details rd
+      JOIN items i ON rd.item_id = i.item_id
+      LEFT JOIN item_lots il ON rd.item_id = il.item_id
+      WHERE rd.request_id = $1
+      GROUP BY rd.request_detail_id, rd.item_id, i.item_name, i.item_unit,
+               rd.requested_qty, rd.approved_qty, rd.approval_status,
+               rd.processing_status, rd.request_detail_note, rd.updated_at
+      ORDER BY rd.request_detail_id ASC;
     `;
     const { rows: itemRows } = await pool.query(itemsQuery, [requestId]);
 
@@ -119,19 +120,51 @@ ORDER BY rd.request_detail_id ASC;
     return request;
   } catch (error) {
     console.error(`Error fetching details for request ${requestId}:`, error);
-    throw new Error('Failed to retrieve request details for processing.');
+    throw new Error("Failed to retrieve request details for processing.");
   }
 }
 
-/**
- * ตัดสต็อก (ใช้ FEFO จาก item_lots)
- */
+/* ====================== ตัดสต็อก ====================== */
 async function deductStock(requestId, updates, userId) {
   const client = await pool.connect();
   try {
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
-    const moveBatchCode = await generateMoveBatchCode(client);
+    const moveBatchCode = await generateMoveBatchCode(client); // movements
+
+    // ดึง request_type
+    const { rows: reqRows } = await client.query(
+      `SELECT request_type FROM requests WHERE request_id = $1`,
+      [requestId]
+    );
+    if (reqRows.length === 0) throw new Error(`Request ${requestId} not found`);
+    const requestType = reqRows[0].request_type;
+
+    // mapping request_type → stockout_type (เก็บ eng)
+    let stockoutType = "withdraw";
+    if (requestType === "borrow") stockoutType = "borrow";
+
+    // ✅ เช็คว่ามี stockout header แล้วหรือยัง
+    const { rows: existingStockout } = await client.query(
+      `SELECT stockout_id FROM stock_outs WHERE note = $1 LIMIT 1`,
+      [`request#${requestId}`] // note เก็บสั้น ๆ
+    );
+
+    let stockoutId;
+    let stockoutNo;
+
+    if (existingStockout.length > 0) {
+      stockoutId = existingStockout[0].stockout_id;
+    } else {
+      stockoutNo = await generateStockoutCode(client);
+      const { rows: stockoutRows } = await client.query(
+        `INSERT INTO stock_outs (stockout_no, stockout_date, stockout_type, note, user_id, created_at)
+         VALUES ($1, NOW()::timestamp, $2, $3, $4, NOW()::timestamp)
+         RETURNING stockout_id`,
+        [stockoutNo, stockoutType, `request#${requestId}`, userId]
+      );
+      stockoutId = stockoutRows[0].stockout_id;
+    }
 
     for (const update of updates) {
       const {
@@ -141,17 +174,24 @@ async function deductStock(requestId, updates, userId) {
         current_processing_status,
         item_id,
         requested_qty,
-        deduction_reason
+        deduction_reason,
       } = update;
 
-      if (current_approval_status !== 'approved') {
-        throw new Error(`Item ${request_detail_id} (item ${item_id}) approval_status='${current_approval_status}'`);
+      if (current_approval_status !== "approved") {
+        throw new Error(
+          `Item ${request_detail_id} (item ${item_id}) approval_status='${current_approval_status}'`
+        );
       }
 
-      if (newStatus === 'preparing' && current_processing_status === 'pending') {
+      if (newStatus === "preparing" && current_processing_status === "pending") {
         let remainingToDeduct = requested_qty;
 
-        // ดึง lot ตามวันหมดอายุ (FEFO)
+        const { rows: unitRows } = await client.query(
+          `SELECT item_unit FROM items WHERE item_id = $1`,
+          [item_id]
+        );
+        const itemUnit = unitRows[0]?.item_unit || "ชิ้น";
+
         const { rows: lots } = await client.query(
           `SELECT lot_id, qty_remaining, exp_date
            FROM item_lots
@@ -166,7 +206,7 @@ async function deductStock(requestId, updates, userId) {
 
           const deductQty = Math.min(remainingToDeduct, lot.qty_remaining);
 
-          // update lot
+          // หักออกจาก lot
           await client.query(
             `UPDATE item_lots
              SET qty_remaining = qty_remaining - $1,
@@ -175,12 +215,7 @@ async function deductStock(requestId, updates, userId) {
             [deductQty, lot.lot_id]
           );
 
-          // insert stock movement
-          const note =
-            `ตัดสต็อกจาก lot #${lot.lot_id} (exp=${lot.exp_date}), ` +
-            `request #${requestId}, item ${item_id}, qty ${deductQty}` +
-            (deduction_reason ? `, เหตุผล: ${deduction_reason}` : '');
-
+          // ➡ stock_movements (note = code สั้น ๆ)
           await client.query(
             `INSERT INTO stock_movements
              (item_id, move_type, move_qty, move_date,
@@ -188,10 +223,17 @@ async function deductStock(requestId, updates, userId) {
              VALUES
               ($1, 'stock_cut', $2, NOW()::timestamp,
               'completed', $3, $4, $5, $6)`,
-            [item_id, deductQty, userId, note, moveBatchCode, lot.lot_id]
+            [item_id, deductQty, userId, `stockout:${stockoutType}`, moveBatchCode, lot.lot_id]
           );
 
-         // ✅ ใหม่ (เก็บว่า detail_id นี้ยืมออกจาก lot ไหน และกี่ยูนิต)
+          // ➡ stock_out_details (note = code สั้น ๆ)
+          await client.query(
+            `INSERT INTO stock_out_details (stockout_id, item_id, lot_id, qty, unit, note)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [stockoutId, item_id, lot.lot_id, deductQty, itemUnit, `detail:${stockoutType}`]
+          );
+
+          // ➡ borrow_detail_lots
           await client.query(
             `INSERT INTO borrow_detail_lots
               (request_detail_id, lot_id, qty)
@@ -204,12 +246,14 @@ async function deductStock(requestId, updates, userId) {
 
         if (remainingToDeduct > 0) {
           throw new Error(
-            `Insufficient stock for item ${item_id}. Need ${requested_qty}, deducted only ${requested_qty - remainingToDeduct}.`
+            `Insufficient stock for item ${item_id}. Need ${requested_qty}, deducted only ${
+              requested_qty - remainingToDeduct
+            }`
           );
         }
       }
 
-      // ประวัติการเปลี่ยนสถานะ
+      // ➡ request_status_history
       await client.query(
         `INSERT INTO request_status_history
            (request_id, request_detail_id, changed_by, changed_at,
@@ -224,11 +268,11 @@ async function deductStock(requestId, updates, userId) {
           userId,
           current_processing_status,
           newStatus,
-          `เปลี่ยนสถานะจาก '${current_processing_status || 'ไม่ระบุ'}' → '${newStatus}'.`
+          `เปลี่ยนสถานะจาก '${current_processing_status || "ไม่ระบุ"}' → '${newStatus}'.`,
         ]
       );
 
-      // อัปเดตสถานะ detail
+      // update request_details
       const resUpd = await client.query(
         `UPDATE request_details
            SET processing_status = $1,
@@ -239,12 +283,15 @@ async function deductStock(requestId, updates, userId) {
         [newStatus, request_detail_id, current_processing_status]
       );
       if (resUpd.rowCount === 0) {
-        throw new Error(`Failed to update processing status for detail ${request_detail_id}.`);
+        throw new Error(
+          `Failed to update processing status for detail ${request_detail_id}.`
+        );
       }
 
-      // เหตุผลเพิ่มเติม
-      if (deduction_reason && deduction_reason.trim() !== '') {
-        const reasonNote = `\n[${new Date().toLocaleString('th-TH')}] เหตุผลเบิกไม่ครบ: ${deduction_reason}`;
+      if (deduction_reason && deduction_reason.trim() !== "") {
+        const reasonNote = `\n[${new Date().toLocaleString(
+          "th-TH"
+        )}] เหตุผลเบิกไม่ครบ: ${deduction_reason}`;
         await client.query(
           `UPDATE request_details
               SET request_detail_note = COALESCE(request_detail_note, '') || $1
@@ -254,58 +301,30 @@ async function deductStock(requestId, updates, userId) {
       }
     }
 
-    // หลัง commit แล้ว
-    await client.query('COMMIT');
+    await client.query("COMMIT");
 
-    const io = getIO();
-    for (const update of updates) {
-      const { item_id, requested_qty } = update;
-
-      // ✅ ดึงยอดรวมจาก lot
-      const { rows: stockRows } = await pool.query(`
-        SELECT COALESCE(SUM(qty_remaining), 0) AS current_stock
-        FROM item_lots
-        WHERE item_id = $1
-      `, [item_id]);
-
-      const currentStock = stockRows[0].current_stock;
-
-      // ✅ ดึงข้อมูล item ล่าสุดจาก DB
-      const { rows } = await pool.query(`
-        SELECT i.*,
-               CASE 
-                 WHEN i.item_img IS NOT NULL 
-                 THEN CONCAT('http://localhost:5000/uploads/', i.item_img) 
-                 ELSE NULL 
-               END AS item_img_url
-        FROM items i
-        WHERE i.item_id = $1
-      `, [item_id]);
-
-      if (rows.length > 0 && io) {
-        io.emit("itemUpdated", {
-          item_id: rows[0].item_id,
-          item_name: rows[0].item_name,
-          item_unit: rows[0].item_unit,
-          item_img: rows[0].item_img,
-          deducted: requested_qty,
-          current_stock: currentStock
-        });
-      }
-    }
-    return { success: true, message: `Stock deducted for request ${requestId}`, move_code: moveBatchCode };
+    return {
+      success: true,
+      message: `Stock deducted for request ${requestId}`,
+      stockout_no: stockoutNo,
+      move_code: moveBatchCode,
+      stockout_type: stockoutType, // จะได้เป็น "withdraw" หรือ "borrow"
+    };
   } catch (error) {
-    try { await client.query('ROLLBACK'); } catch (e) { }
-    console.error('Error during stock deduction transaction:', error);
+    try {
+      await client.query("ROLLBACK");
+    } catch (e) {}
+    console.error("Error during stock deduction transaction:", error);
     throw error;
   } finally {
     client.release();
   }
 }
 
+
 /* ====================== Exports ====================== */
 module.exports = {
   getApprovedRequestsForDeduction,
   getRequestDetailsForProcessing,
-  deductStock
+  deductStock,
 };

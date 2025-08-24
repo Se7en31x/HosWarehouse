@@ -5,7 +5,7 @@ const {
   importHistoryModel,
   expiredHistoryModel,
   damagedHistoryModel,
-  disposalHistoryModel,
+  stockoutHistoryModel,
 } = require('../models/history');
 /* ---------------- Withdraw ---------------- */
 exports.getWithdrawHistory = async (req, res) => {
@@ -51,16 +51,32 @@ exports.getImportHistory = async (req, res) => {
 //   }
 // };
 
-// /* ---------------- Damaged ---------------- */
-// exports.getDamagedHistory = async (req, res) => {
-//   try {
-//     const data = await damagedModel.getAll();
-//     res.json(data);
-//   } catch (err) {
-//     console.error("❌ Error getDamagedHistory:", err);
-//     res.status(500).json({ message: "ไม่สามารถดึงประวัติการชำรุดได้" });
-//   }
-// };
+/* ---------------- Damaged ---------------- */
+exports.getDamagedHistory = async (req, res) => {
+  try {
+    const data = await damagedHistoryModel.getAllDamaged();
+    res.json(data);
+  } catch (err) {
+    console.error("❌ Error getDamagedHistory:", err);
+    res.status(500).json({ message: "ไม่สามารถดึงประวัติการชำรุดได้" });
+  }
+};
+// ✅ เพิ่มรายละเอียดตาม damaged_id
+exports.getDamagedDetail = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = await damagedHistoryModel.getDamagedDetail(id);
+
+    if (!data) {
+      return res.status(404).json({ message: "ไม่พบข้อมูล" });
+    }
+
+    res.json(data);
+  } catch (err) {
+    console.error("❌ Error getDamagedDetail:", err);
+    res.status(500).json({ message: "ไม่สามารถดึงรายละเอียดการชำรุดได้" });
+  }
+};
 
 /* ---------------- Expired ---------------- */
 exports.getExpiredHistory = async (req, res) => {
@@ -73,13 +89,30 @@ exports.getExpiredHistory = async (req, res) => {
   }
 };
 
-// /* ---------------- Disposal ---------------- */
-// exports.getDisposalHistory = async (req, res) => {
-//   try {
-//     const data = await disposalModel.getAll();
-//     res.json(data);
-//   } catch (err) {
-//     console.error("❌ Error getDisposalHistory:", err);
-//     res.status(500).json({ message: "ไม่สามารถดึงประวัติการนำออกได้" });
-//   }
-// };
+// /* ---------------- StockOut ---------------- */
+exports.getStockoutHistory = async (req, res) => {
+  try {
+    // ✅ ใช้ฟังก์ชันใหม่จาก model
+    const data = await stockoutHistoryModel.getAllStockoutHeaders();
+    res.json(data);
+  } catch (err) {
+    console.error("❌ Error getStockoutHistory:", err);
+    res.status(500).json({ message: "ไม่สามารถดึงประวัติการนำออกได้" });
+  }
+};
+
+exports.getStockoutById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = await stockoutHistoryModel.getById(id);
+
+    if (!data || data.length === 0) {
+      return res.status(404).json({ message: "ไม่พบข้อมูลเอกสารนี้" });
+    }
+
+    res.json(data);
+  } catch (err) {
+    console.error("❌ Error getStockoutById:", err);
+    res.status(500).json({ message: "ไม่สามารถดึงรายละเอียดการนำออกได้" });
+  }
+};

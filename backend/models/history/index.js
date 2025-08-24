@@ -5,7 +5,7 @@ const returnHistoryModel = require("./returnHistoryModel");
 const importHistoryModel = require("./importHistoryModel");
 const damagedHistoryModel = require("./damagedHistoryModel");
 const expiredHistoryModel = require("./expiredHistoryModel");
-const disposalHistoryModel = require("./disposalHistoryModel");
+const stockoutHistoryModel = require("./stockoutHistoryModel");
 const borrowHistoryModel = require("./borrowHistoryModel")
 
 module.exports = {
@@ -14,6 +14,6 @@ module.exports = {
     importHistoryModel,
     expiredHistoryModel,
     damagedHistoryModel,
-    disposalHistoryModel,
+    stockoutHistoryModel,
     borrowHistoryModel,
 };

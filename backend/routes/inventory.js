@@ -23,4 +23,7 @@ router.get('/for-withdrawal', inventoryController.getAllItemsForWithdrawal);
 // บันทึกของชำรุด (สามารถใช้ได้ทั้ง Staff และ Manager)
 router.post('/damaged', inventoryController.reportDamaged);
 
+// ✅ เพิ่ม Route ใหม่สำหรับปรับปรุงจำนวน
+router.post('/adjust', inventoryController.adjustInventory);
+
 module.exports = router;
