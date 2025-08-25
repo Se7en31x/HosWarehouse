@@ -1,5 +1,5 @@
 const { pool } = require("../config/db");
-const { getIO } = require("../ioInstance"); // ✅ ใช้ ioInstance ที่คุณมีอยู่
+const { getIO } = require("../socket"); // ✅ ใช้ ioInstance ที่คุณมีอยู่
 
 const NotificationModel = {
     async getByUser(userId) {

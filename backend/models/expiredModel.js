@@ -19,16 +19,17 @@ const ExpiredModel = {
           il.lot_no,
           il.qty_remaining,
           ei.expired_qty,  -- จำนวนที่หมดอายุจริง
-          COALESCE(SUM(ea.action_qty), 0) AS disposed_qty  -- จำนวนที่ทำลายแล้ว
+          COALESCE(ea.disposed_qty, 0) AS disposed_qty  -- จำนวนที่ทำลายแล้ว
         FROM item_lots il
         JOIN expired_items ei ON il.lot_id = ei.lot_id
         LEFT JOIN items i ON il.item_id = i.item_id
-        LEFT JOIN expired_actions ea ON il.lot_id = ea.lot_id
+        LEFT JOIN (
+          SELECT lot_id, SUM(action_qty) AS disposed_qty
+          FROM expired_actions
+          GROUP BY lot_id
+        ) ea ON il.lot_id = ea.lot_id
         WHERE il.is_expired = true
           AND (i.is_deleted = false OR i.is_deleted IS NULL)
-        GROUP BY il.lot_id, il.item_id, i.item_name, i.item_unit, 
-                 il.exp_date, il.is_expired, il.qty_imported, 
-                 il.lot_no, il.qty_remaining, ei.expired_qty
         ORDER BY il.exp_date ASC;
       `);
       return result.rows;

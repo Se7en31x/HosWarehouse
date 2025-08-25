@@ -1,6 +1,7 @@
 // models/manageReturnModel.js
 const { pool } = require('../config/db');
 const { generateImportNo } = require('../utils/docCounter');
+
 /**
  * จัดการคำขอยืมและรับคืนพัสดุ
  * - getBorrowQueue: หน้าแสดงรายการคำขอยืมที่รอรับคืน (ของถึงมือแล้ว + ยังค้างคืน)
@@ -91,43 +92,52 @@ const ManageReturnModel = {
     const totalPages = Math.max(1, Math.ceil(totalCount / l));
 
     const dataSql = `
-      SELECT
-        r.request_id,
-        r.request_code,
-        (COALESCE(u.user_fname,'') || ' ' || COALESCE(u.user_lname,'')) AS requester_name,
-        u.department,
-        MIN(rd.expected_return_date) FILTER (
-          WHERE GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
-        ) AS earliest_due_date,
-        SUM(
-          CASE WHEN GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
-                AND rd.expected_return_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '3 days'
-               THEN 1 ELSE 0 END
-        ) AS items_due_soon,
-        SUM(
-          CASE WHEN GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
-                AND rd.expected_return_date < CURRENT_DATE
-               THEN 1 ELSE 0 END
-        ) AS items_overdue,
-        CASE
-          WHEN SUM(
-            CASE WHEN GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
-                  AND rd.expected_return_date < CURRENT_DATE
-                 THEN 1 ELSE 0 END
-          ) > 0 THEN 'overdue'
-          WHEN SUM(
-            CASE WHEN GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
-                  AND rd.expected_return_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '3 days'
-                 THEN 1 ELSE 0 END
-          ) > 0 THEN 'due_soon'
-          ELSE 'borrowed'
-        END AS overall_status
-      ${baseQuery}
-      ${where}
-      GROUP BY r.request_id, r.request_code, requester_name, u.department
-      ORDER BY earliest_due_date NULLS LAST, r.request_id
-      OFFSET $${idx++} LIMIT $${idx++};
-    `;
+  SELECT
+    r.request_id,
+    r.request_code,
+    (COALESCE(u.user_fname,'') || ' ' || COALESCE(u.user_lname,'')) AS requester_name,
+    u.department,
+    MIN(rd.expected_return_date) FILTER (
+      WHERE GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
+    ) AS earliest_due_date,
+    SUM(
+      CASE WHEN GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
+            AND rd.expected_return_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '3 days'
+           THEN 1 ELSE 0 END
+    ) AS items_due_soon,
+    SUM(
+      CASE WHEN GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
+            AND rd.expected_return_date < CURRENT_DATE
+           THEN 1 ELSE 0 END
+    ) AS items_overdue,
+
+    -- ✅ จำนวนวันเกินกำหนดมากที่สุด
+    MAX(
+      GREATEST((CURRENT_DATE - rd.expected_return_date), 0)
+    ) FILTER (
+      WHERE GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
+    )::int AS max_days_overdue,
+
+    CASE
+      WHEN SUM(
+        CASE WHEN GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
+              AND rd.expected_return_date < CURRENT_DATE
+             THEN 1 ELSE 0 END
+      ) > 0 THEN 'overdue'
+      WHEN SUM(
+        CASE WHEN GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
+              AND rd.expected_return_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '3 days'
+             THEN 1 ELSE 0 END
+      ) > 0 THEN 'due_soon'
+      ELSE 'borrowed'
+    END AS overall_status
+  ${baseQuery}
+  ${where}
+  GROUP BY r.request_id, r.request_code, requester_name, u.department
+  ORDER BY earliest_due_date NULLS LAST, r.request_id
+  OFFSET $${idx++} LIMIT $${idx++};
+`;
+
     const dataRes = await pool.query(dataSql, [...params, offset, l]);
 
     return { rows: dataRes.rows, totalCount, totalPages, currentPage: p };
@@ -154,45 +164,48 @@ const ManageReturnModel = {
       const summary = sumRes.rows[0];
 
       const itemsSql = `
-        WITH base AS (
-          SELECT
-            rd.request_detail_id,
-            rd.item_id,
-            i.item_name,
-            i.item_unit,
-            rd.request_id,
-            COALESCE(rd.approved_qty,0)::int AS approved_qty,
-            COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0)::int AS delivered_qty,
-            rd.expected_return_date,
-            rd.processing_status,
-            rd.request_detail_type
-          FROM request_details rd
-          JOIN items i ON i.item_id = rd.item_id
-          WHERE rd.request_id = $1
-        ),
-        ret AS (
-          SELECT request_detail_id, COALESCE(SUM(return_qty),0)::int AS returned_total
-          FROM borrow_returns
-          WHERE request_detail_id IN (SELECT request_detail_id FROM base)
-            AND return_status IN ('received','accepted','completed')
-          GROUP BY request_detail_id
-        )
-        SELECT
-          b.request_detail_id,
-          b.item_id,
-          b.item_name,
-          b.item_unit,
-          b.approved_qty,
-          b.delivered_qty AS baseline_qty,
-          COALESCE(r.returned_total,0)::int AS returned_total,
-          GREATEST(b.delivered_qty - COALESCE(r.returned_total,0),0)::int AS remaining_qty,
-          b.expected_return_date,
-          b.processing_status,
-          b.request_detail_type
-        FROM base b
-        LEFT JOIN ret r ON r.request_detail_id = b.request_detail_id
-        ORDER BY b.request_detail_id;
-      `;
+  WITH base AS (
+    SELECT
+      rd.request_detail_id,
+      rd.item_id,
+      i.item_name,
+      i.item_unit,
+      rd.request_id,
+      COALESCE(rd.approved_qty,0)::int AS approved_qty,
+      COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0)::int AS delivered_qty,
+      rd.expected_return_date,
+      rd.processing_status,
+      rd.request_detail_type,
+      rd.borrow_status              -- ✅ ดึง borrow_status มาด้วย
+    FROM request_details rd
+    JOIN items i ON i.item_id = rd.item_id
+    WHERE rd.request_id = $1
+      AND rd.borrow_status = 'borrowed'  -- ✅ กรองเฉพาะที่ส่งมอบแล้ว
+  ),
+  ret AS (
+    SELECT request_detail_id, COALESCE(SUM(return_qty),0)::int AS returned_total
+    FROM borrow_returns
+    WHERE request_detail_id IN (SELECT request_detail_id FROM base)
+      AND return_status IN ('received','accepted','completed')
+    GROUP BY request_detail_id
+  )
+  SELECT
+    b.request_detail_id,
+    b.item_id,
+    b.item_name,
+    b.item_unit,
+    b.approved_qty,
+    b.delivered_qty AS baseline_qty,
+    COALESCE(r.returned_total,0)::int AS returned_total,
+    GREATEST(b.delivered_qty - COALESCE(r.returned_total,0),0)::int AS remaining_qty,
+    b.expected_return_date,
+    b.processing_status,
+    b.request_detail_type,
+    b.borrow_status   -- ✅ ส่งไปให้ frontend ด้วย
+  FROM base b
+  LEFT JOIN ret r ON r.request_detail_id = b.request_detail_id
+  ORDER BY b.request_detail_id;
+`;
       const itemsRes = await client.query(itemsSql, [requestId]);
 
       const historySql = `
@@ -236,7 +249,6 @@ const ManageReturnModel = {
     }
   },
 
-
   // 🟢 รับคืนของ
   async receiveReturn(returnData, userId) {
     const client = await pool.connect();
@@ -248,188 +260,153 @@ const ManageReturnModel = {
       const inspectedBy = parseInt(returnData.inspected_by ?? userId, 10);
       const condition = (returnData.condition || 'normal').toLowerCase();
 
-      if (!Number.isInteger(requestDetailId) || requestDetailId <= 0) {
+      if (!Number.isInteger(requestDetailId) || requestDetailId <= 0)
         throw new Error("Invalid request_detail_id");
-      }
-      if (!Number.isInteger(qty) || qty <= 0) {
+      if (!Number.isInteger(qty) || qty <= 0)
         throw new Error("Invalid qty_return: ต้องเป็นจำนวนเต็มบวก");
-      }
-      if (!Number.isInteger(inspectedBy) || inspectedBy <= 0) {
+      if (!Number.isInteger(inspectedBy) || inspectedBy <= 0)
         throw new Error("Invalid userId");
-      }
 
-      // 1) insert header ลง borrow_returns
+      // insert header
       const { rows: [header] } = await client.query(
         `INSERT INTO borrow_returns
-          (request_detail_id, return_date, return_qty, return_status, inspected_by, return_note, condition)
-         VALUES ($1, NOW(), $2, 'completed', $3, $4, $5)
-         RETURNING return_id`,
+        (request_detail_id, return_date, return_qty, return_status, inspected_by, return_note, condition)
+       VALUES ($1, NOW(), $2, 'completed', $3, $4, $5)
+       RETURNING return_id`,
         [requestDetailId, qty, inspectedBy, returnData.note || null, condition]
       );
       const returnId = header.return_id;
 
-      // 2) หา lots ที่ต้องคืน
-      let lotsToReturn = [];
-      if (returnData.lots && returnData.lots.length > 0) {
-        lotsToReturn = returnData.lots.map(lot => ({
-          borrow_detail_lot_id: lot.borrow_detail_lot_id,
-          lot_id: lot.lot_id,
-          qty: parseInt(lot.qty, 10)
-        }));
-      } else {
-        let qtyLeft = qty;
-        const { rows: borrowLots } = await client.query(
-          `SELECT bdl.borrow_detail_lot_id, bdl.lot_id, bdl.qty,
-                  COALESCE(SUM(brl.qty),0) AS returned_qty,
-                  (bdl.qty - COALESCE(SUM(brl.qty),0)) AS remaining_to_return
-           FROM borrow_detail_lots bdl
-           LEFT JOIN borrow_return_lots brl 
-             ON brl.borrow_detail_lot_id = bdl.borrow_detail_lot_id
-           WHERE bdl.request_detail_id = $1
-           GROUP BY bdl.borrow_detail_lot_id, bdl.lot_id, bdl.qty
-           HAVING (bdl.qty - COALESCE(SUM(brl.qty),0)) > 0
-           ORDER BY bdl.borrow_detail_lot_id`,
-          [requestDetailId]
-        );
+      // ดึง lots ที่เหลือให้คืน
+      let qtyLeft = qty;
+      const { rows: borrowLots } = await client.query(
+        `SELECT bdl.borrow_detail_lot_id, bdl.lot_id, bdl.qty,
+              COALESCE(SUM(brl.qty),0) AS returned_qty,
+              (bdl.qty - COALESCE(SUM(brl.qty),0)) AS remaining_to_return
+       FROM borrow_detail_lots bdl
+       LEFT JOIN borrow_return_lots brl 
+         ON brl.borrow_detail_lot_id = bdl.borrow_detail_lot_id
+       WHERE bdl.request_detail_id = $1
+       GROUP BY bdl.borrow_detail_lot_id, bdl.lot_id, bdl.qty
+       HAVING (bdl.qty - COALESCE(SUM(brl.qty),0)) > 0
+       ORDER BY bdl.borrow_detail_lot_id`,
+        [requestDetailId]
+      );
 
-        for (const lot of borrowLots) {
-          if (qtyLeft <= 0) break;
-          const lotQty = Math.min(lot.remaining_to_return, qtyLeft);
-          lotsToReturn.push({
-            borrow_detail_lot_id: lot.borrow_detail_lot_id,
-            lot_id: lot.lot_id,
-            qty: lotQty
-          });
-          qtyLeft -= lotQty;
-        }
-        if (qtyLeft > 0) {
-          throw new Error("Invalid return_qty: มากกว่าจำนวนที่เหลือให้คืน");
-        }
+      if (borrowLots.length === 0) {
+        throw new Error("ไม่มี lot ที่เหลือให้คืน");
       }
 
-      // 3) process ตาม condition
-      for (const lot of lotsToReturn) {
-        if (!lot.lot_id || !Number.isInteger(lot.qty) || lot.qty <= 0) continue;
+      let status = condition;
+
+      for (const lot of borrowLots) {
+        if (qtyLeft <= 0) break;
+        const useQty = Math.min(lot.remaining_to_return, qtyLeft);
+        qtyLeft -= useQty;
 
         // insert mapping return lot
         await client.query(
           `INSERT INTO borrow_return_lots
-            (return_id, borrow_detail_lot_id, lot_id, qty)
-           VALUES ($1,$2,$3,$4)`,
-          [returnId, lot.borrow_detail_lot_id, lot.lot_id, lot.qty]
+          (return_id, borrow_detail_lot_id, lot_id, qty)
+         VALUES ($1,$2,$3,$4)`,
+          [returnId, lot.borrow_detail_lot_id, lot.lot_id, useQty]
+        );
+
+        // ดึงข้อมูล lot
+        const { rows: [lotInfo] } = await client.query(
+          `SELECT item_id FROM item_lots WHERE lot_id=$1`,
+          [lot.lot_id]
         );
 
         if (condition === 'normal') {
           // ✅ คืนเข้าคลัง
           await client.query(
             `UPDATE item_lots
-               SET qty_remaining = qty_remaining + $1,
-                   updated_at = NOW()
-             WHERE lot_id = $2`,
-            [lot.qty, lot.lot_id]
+           SET qty_remaining = qty_remaining + $1, updated_at = NOW()
+           WHERE lot_id = $2`,
+            [useQty, lot.lot_id]
           );
 
           await client.query(
             `INSERT INTO stock_movements
-              (item_id, lot_id, move_type, move_qty, move_date, move_status, user_id, note, move_code)
-             SELECT rd.item_id, $1, 'return', $2, NOW(), 'completed', $3, $4, $5
-             FROM request_details rd
-             WHERE rd.request_detail_id = $6`,
+            (item_id, lot_id, move_type, move_qty, move_date, move_status, user_id, note, move_code)
+           VALUES ($1,$2,'return',$3,NOW(),'completed',$4,$5,$6)`,
             [
-              lot.lot_id,
-              lot.qty,
-              inspectedBy,
+              lotInfo.item_id, lot.lot_id, useQty, inspectedBy,
               `คืนของปกติ return_id=${returnId}`,
-              await generateMoveBatchCode(client),
-              requestDetailId
+              await generateMoveBatchCode(client)
             ]
           );
 
-          // ✅ บันทึกเข้า imports (import_type = return)
+          // import log
           const import_no = await generateImportNo(client, 'return');
           const { rows: [importRow] } = await client.query(
             `INSERT INTO imports (
-                import_date, user_id, import_status, import_type, source_name, source_type, source_ref_id, import_no
-             ) VALUES (
-                NOW(), $1, 'posted', 'return', 'คืนจากการยืม', 'borrow_return', $2, $3
-             )
-             RETURNING import_id`,
+              import_date, user_id, import_status, import_type, source_name, source_type, source_ref_id, import_no
+           ) VALUES (
+              NOW(), $1, 'posted', 'return', 'คืนจากการยืม', 'borrow_return', $2, $3
+           )
+           RETURNING import_id`,
             [inspectedBy, returnId, import_no]
           );
 
-          const import_id = importRow.import_id;
-
           await client.query(
             `INSERT INTO import_details (import_id, item_id, quantity, import_note)
-             SELECT $1, rd.item_id, $2, 'คืนจากการยืม'
-             FROM request_details rd
-             WHERE rd.request_detail_id = $3`,
-            [import_id, lot.qty, requestDetailId]
-          );
-        }
-
-        if (condition === 'damaged' || condition === 'lost') {
-          // ❌ ไม่คืนเข้าคลัง, แค่บันทึกเหตุการณ์
-          await client.query(
-            `INSERT INTO stock_movements
-              (item_id, lot_id, move_type, move_qty, move_date, move_status, user_id, note, move_code)
-             SELECT rd.item_id, $1, $2, $3, NOW(), 'completed', $4, $5, $6
-             FROM request_details rd
-             WHERE rd.request_detail_id = $7`,
-            [
-              lot.lot_id,
-              condition,
-              lot.qty,
-              inspectedBy,
-              `คืนของสภาพ=${condition} return_id=${returnId}`,
-              await generateMoveBatchCode(client),
-              requestDetailId
-            ]
+           VALUES ($1,$2,$3,'คืนจากการยืม')`,
+            [importRow.import_id, lotInfo.item_id, useQty]
           );
 
+        } else if (condition === 'damaged' || condition === 'lost') {
+          // ❌ ชำรุด/สูญหาย
           await client.query(
             `INSERT INTO damaged_items
-              (source_type, source_ref_id, damaged_qty, damaged_date, damaged_status, damaged_note, reported_by, lot_id, item_id, damage_type)
-             SELECT 'borrow_return', $1, $2, NOW(), 'waiting', $3, $4, $5, rd.item_id, $6
-             FROM request_details rd
-             WHERE rd.request_detail_id = $7`,
+            (source_type, source_ref_id, damaged_qty, damaged_date, damaged_status, damaged_note, reported_by, lot_id, item_id, damage_type)
+           VALUES ('borrow_return',$1,$2,NOW(),'waiting',$3,$4,$5,$6,$7)`,
+            [returnId, useQty, returnData.note || null, inspectedBy, lot.lot_id, lotInfo.item_id, condition]
+          );
+
+          await client.query(
+            `INSERT INTO stock_movements
+            (item_id, lot_id, move_type, move_qty, move_date, move_status, user_id, note, move_code)
+           VALUES ($1,$2,$3,$4,NOW(),'completed',$5,$6,$7)`,
             [
-              returnId,
-              lot.qty,
-              returnData.note || null,
-              inspectedBy,
-              lot.lot_id,
-              condition,
-              requestDetailId
+              lotInfo.item_id, lot.lot_id, condition, useQty, inspectedBy,
+              `คืนของสภาพ=${condition} return_id=${returnId}`,
+              await generateMoveBatchCode(client)
             ]
           );
         }
       }
 
-      // 4) check ว่าคืนครบหรือยัง
+      if (qtyLeft > 0) {
+        throw new Error("Invalid return_qty: มากกว่าจำนวนที่เหลือให้คืน");
+      }
+
+      // check คืนครบหรือยัง
       const { rows: [check] } = await client.query(
         `SELECT 
-            (SELECT COALESCE(SUM(qty),0) 
-             FROM borrow_detail_lots 
-             WHERE request_detail_id=$1) AS borrowed_qty,
-            (SELECT COALESCE(SUM(brl.qty),0)
-             FROM borrow_return_lots brl
-             JOIN borrow_returns br ON br.return_id = brl.return_id
-             WHERE br.request_detail_id=$1) AS returned_qty`,
+          (SELECT COALESCE(SUM(qty),0) 
+           FROM borrow_detail_lots 
+           WHERE request_detail_id=$1) AS borrowed_qty,
+          (SELECT COALESCE(SUM(brl.qty),0)
+           FROM borrow_return_lots brl
+           JOIN borrow_returns br ON br.return_id = brl.return_id
+           WHERE br.request_detail_id=$1) AS returned_qty`,
         [requestDetailId]
       );
 
       if (check.returned_qty >= check.borrowed_qty) {
         await client.query(
           `UPDATE request_details
-             SET borrow_status = 'returned',
-                 updated_at = NOW()
-           WHERE request_detail_id = $1`,
+           SET borrow_status = 'returned', updated_at = NOW()
+         WHERE request_detail_id = $1`,
           [requestDetailId]
         );
       }
+
       await client.query("COMMIT");
-      return { success: true, returnId };
+      return { success: true, returnId, status };
+
     } catch (err) {
       await client.query("ROLLBACK");
       console.error("❌ receiveReturn error:", err);
@@ -439,5 +416,4 @@ const ManageReturnModel = {
     }
   }
 };
-
 module.exports = ManageReturnModel;

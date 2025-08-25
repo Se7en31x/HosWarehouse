@@ -1,6 +1,14 @@
 const { pool } = require("../config/db");
 const { generateImportNo } = require("../utils/docCounter");
 
+// Helper: normalize date value
+function normalizeDate(value) {
+    if (!value || (typeof value === "string" && value.trim() === "")) {
+        return null; // ถ้าเป็น "" หรือ undefined/null → คืนค่า null
+    }
+    return value; // ถ้าเป็น YYYY-MM-DD ปกติ → ใช้ได้เลย
+}
+
 // Model Function: ดึงรายการสินค้าทั้งหมด (รวม item_barcode)
 exports.getAllItems = async () => {
     const query = `
@@ -80,7 +88,7 @@ exports.recordReceiving = async ({ user_id, receiving_note, import_type, source_
                 [
                     newReceivingId,
                     item.item_id,
-                    item.expiryDate || null,
+                    normalizeDate(item.expiryDate),   // ✅ ใช้ normalizeDate
                     item.notes || null,
                     item.vendor_item_code || null,
                     item.quantity,
@@ -101,7 +109,7 @@ exports.recordReceiving = async ({ user_id, receiving_note, import_type, source_
                     item.quantity,
                     item.quantity,
                     item.mfgDate || null,
-                    item.expiryDate || null,
+                    normalizeDate(item.expiryDate),   // ✅ ใช้ normalizeDate
                     user_id,
                     item.documentNo || null
                 ]
