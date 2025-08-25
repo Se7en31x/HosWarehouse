@@ -6,9 +6,9 @@ import axiosInstance from '../../../utils/axiosInstance';
 import Swal from 'sweetalert2';
 import Image from 'next/image';
 import styles from './page.module.css';
-import { FaSave, FaTimesCircle, FaThumbsDown } from 'react-icons/fa'; // ⬅️ เพิ่มไอคอน
+import { FaSave, FaTimesCircle } from 'react-icons/fa';
 
-// รูปสินค้า
+// ---- รูปสินค้า ----
 function ItemImage({ item_img, alt }) {
   const defaultImg = "http://localhost:5000/public/defaults/landscape.png";
   const [imgSrc, setImgSrc] = useState(
@@ -40,9 +40,6 @@ export default function ApprovalRequestPage() {
   const [tooltip, setTooltip] = useState({});
   const [loading, setLoading] = useState(true);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
-
   const statusMap = {
     waiting_approval_detail: 'รออนุมัติ',
     approved: 'อนุมัติแล้ว',
@@ -66,6 +63,7 @@ export default function ApprovalRequestPage() {
     "rejected_partial","approved_partial_and_rejected_partial"
   ];
 
+  // ---- fake user ----
   useEffect(() => {
     if (typeof window !== 'undefined' && !localStorage.getItem('user_id')) {
       localStorage.setItem('user_id', '999');
@@ -74,6 +72,7 @@ export default function ApprovalRequestPage() {
     }
   }, []);
 
+  // ---- โหลดรายละเอียดคำขอ ----
   useEffect(() => { if (request_id) fetchRequestDetail(); }, [request_id]);
 
   const fetchRequestDetail = async () => {
@@ -90,14 +89,13 @@ export default function ApprovalRequestPage() {
           approved_qty:
             d.approved_qty !== null && d.approved_qty !== undefined
               ? d.approved_qty
-              : (d.approval_status === 'rejected' ? 0 : d.requested_qty),
+              : (d.approval_status === 'rejected' ? 0 : ''),
           reason: d.approval_note
         };
       });
       setDraftDetails(initialDraft);
       setItemErrors({});
       setTooltip({});
-      setCurrentPage(1);
     } catch (err) {
       console.error(err);
       Swal.fire('ผิดพลาด','ไม่สามารถโหลดข้อมูลคำขอได้','error');
@@ -106,6 +104,7 @@ export default function ApprovalRequestPage() {
     }
   };
 
+  // ---- update draft ----
   const updateDraft = (id, newStatus, newApprovedQty, reason='') => {
     setDraftDetails(prev => ({
       ...prev,
@@ -136,6 +135,7 @@ export default function ApprovalRequestPage() {
     updateDraft(d.request_detail_id, 'rejected', 0, reason);
   };
 
+  // ---- เปลี่ยนจำนวนที่อนุมัติ ----
   const handleApprovedQtyChange = (id, value, requestedQty) => {
     let errorMsg = '';
     let finalQty = null;
@@ -161,6 +161,7 @@ export default function ApprovalRequestPage() {
     setDraftDetails(prev => ({ ...prev, [id]: { ...(prev[id]||{}), approved_qty: finalQty }}));
   };
 
+  // ---- save ----
   const handleSaveDraft = async () => {
     if (request && disabledOverallStatuses.includes(request.request_status)) {
       Swal.fire('ไม่สามารถบันทึกได้','คำขออยู่ในสถานะที่ไม่อนุญาตให้แก้ไขแล้ว','warning');
@@ -242,49 +243,6 @@ export default function ApprovalRequestPage() {
     }
   };
 
-  // ⬅️ ปุ่มปฏิเสธทั้งหมด
-  const handleRejectAll = async () => {
-    if (isOverallDisabled) {
-      Swal.fire('ไม่สามารถทำได้', 'คำขออยู่ในสถานะที่ไม่อนุญาตให้แก้ไขแล้ว', 'warning');
-      return;
-    }
-    const { value: reason } = await Swal.fire({
-      title: 'ปฏิเสธทั้งหมด',
-      input: 'textarea',
-      inputLabel: 'เหตุผล (จะแนบให้ทุกรายการ)',
-      inputPlaceholder: 'เช่น พัสดุหมด, ไม่เข้าเกณฑ์การเบิก',
-      showCancelButton: true,
-      confirmButtonText: '❌ ปฏิเสธทั้งหมด',
-      cancelButtonText: 'ยกเลิก',
-    });
-    if (reason === undefined) return;
-
-    setDraftDetails((prev) => {
-      const next = { ...prev };
-      details.forEach((d) => {
-        next[d.request_detail_id] = {
-          ...(next[d.request_detail_id] || {
-            status: d.approval_status,
-            approved_qty:
-              d.approved_qty ?? (d.approval_status === 'rejected' ? 0 : d.requested_qty),
-            reason: d.approval_note,
-          }),
-          status: 'rejected',
-          approved_qty: 0,
-          reason,
-        };
-      });
-      return next;
-    });
-    setItemErrors({});
-    setTooltip({});
-  };
-
-  const indexOfLast = currentPage * itemsPerPage;
-  const indexOfFirst = indexOfLast - itemsPerPage;
-  const currentItems = details.slice(indexOfFirst, indexOfLast);
-  const totalPages = Math.ceil(details.length / itemsPerPage);
-
   const summary = useMemo(() => {
     const c = { totalItems: 0, approvedCount: 0, rejectedCount: 0, pendingCount: 0 };
     details.forEach(d => {
@@ -335,18 +293,16 @@ export default function ApprovalRequestPage() {
 
         <div className={styles.tableContainer}>
           <table className={styles.table}>
-            {/* จัดคอลัมน์ให้ขนานกัน */}
             <colgroup>
-              <col style={{ width: '70px' }} />    {/* ลำดับ */}
-              <col style={{ width: '72px' }} />    {/* รูป */}
-              <col style={{ width: 'auto' }} />    {/* ชื่อพัสดุ */}
-              <col style={{ width: '130px' }} />   {/* ขอ */}
-              <col style={{ width: '110px' }} />   {/* หน่วย */}
-              <col style={{ width: '150px' }} />   {/* สถานะ */}
-              <col style={{ width: '160px' }} />   {/* อนุมัติ */}
-              <col style={{ width: '220px' }} />   {/* จัดการ */}
+              <col style={{ width: '70px' }} />
+              <col style={{ width: '72px' }} />
+              <col style={{ width: 'auto' }} />
+              <col style={{ width: '130px' }} />
+              <col style={{ width: '110px' }} />
+              <col style={{ width: '150px' }} />
+              <col style={{ width: '160px' }} />
+              <col style={{ width: '220px' }} />
             </colgroup>
-
             <thead className={styles.tableHead}>
               <tr>
                 <th>ลำดับ</th>
@@ -359,9 +315,8 @@ export default function ApprovalRequestPage() {
                 <th>จัดการ</th>
               </tr>
             </thead>
-
             <tbody>
-              {currentItems.map((d, i) => {
+              {details.map((d, i) => {
                 const draft = draftDetails[d.request_detail_id] || {
                   status: d.approval_status,
                   approved_qty: d.approved_qty,
@@ -371,75 +326,50 @@ export default function ApprovalRequestPage() {
                 const st = draft?.status;
                 const statusText = statusMap[st] || st;
                 const displayApprovedQty =
-                  draft?.approved_qty !== undefined
+                  draft?.approved_qty !== undefined && draft?.approved_qty !== null
                     ? String(draft.approved_qty)
-                    : (d.approved_qty ?? '') + '';
+                    : '';
 
                 const qtyDisabled = isOverallDisabled || st === 'rejected';
                 const btnDisabled = isOverallDisabled;
 
                 return (
                   <tr key={d.request_detail_id}>
-                    <td data-label="ลำดับ">{(currentPage - 1) * itemsPerPage + i + 1}</td>
-                    <td data-label="รูป"><ItemImage item_img={d.item_img} alt={d.item_name} /></td>
-                    <td data-label="ชื่อพัสดุ" title={d.item_name}>{d.item_name}</td>
-                    <td data-label="จำนวนที่ขอ">{d.requested_qty}</td>
-                    <td data-label="หน่วย">{d.item_unit}</td>
-
-                    {/* สถานะเป็น pill ให้เหมือนหน้าอื่น */}
-                    <td data-label="สถานะ">
-                      <span className={pillClassByStatus(st)}>{statusText}</span>
+                    <td>{i + 1}</td>
+                    <td><ItemImage item_img={d.item_img} alt={d.item_name} /></td>
+                    <td title={d.item_name}>{d.item_name}</td>
+                    <td>{d.requested_qty}</td>
+                    <td>{d.item_unit}</td>
+                    <td><span className={pillClassByStatus(st)}>{statusText}</span></td>
+                    <td>
+                      <input
+                        type="number"
+                        value={displayApprovedQty}
+                        onChange={(e) => handleApprovedQtyChange(d.request_detail_id, e.target.value, d.requested_qty)}
+                        min="0"
+                        max={d.requested_qty}
+                        className={`${styles.approvedQtyInput} ${itemErrors?.[d.request_detail_id] ? styles.inputErrorBorder : ''}`}
+                        disabled={qtyDisabled}
+                      />
                     </td>
-
-                    <td data-label="จำนวนที่อนุมัติ">
-                      <div
-                        className={styles.tooltipContainer}
-                        onMouseOver={() => tooltip?.[d.request_detail_id]?.message &&
-                          setTooltip(prev => ({ ...prev, [d.request_detail_id]: { ...prev?.[d.request_detail_id], show: true } }))}
-                        onMouseOut={() => setTooltip(prev => ({ ...prev, [d.request_detail_id]: { ...prev?.[d.request_detail_id], show: false } }))}
-                        onFocus={() => tooltip?.[d.request_detail_id]?.message &&
-                          setTooltip(prev => ({ ...prev, [d.request_detail_id]: { ...prev?.[d.request_detail_id], show: true } }))}
-                        onBlur={() => setTooltip(prev => ({ ...prev, [d.request_detail_id]: { ...prev?.[d.request_detail_id], show: false } }))}
-                      >
-                        <input
-                          type="number"
-                          value={displayApprovedQty}
-                          onChange={(e) => handleApprovedQtyChange(d.request_detail_id, e.target.value, d.requested_qty)}
-                          min="0"
-                          max={d.requested_qty}
-                          className={`${styles.approvedQtyInput} ${itemErrors?.[d.request_detail_id] ? styles.inputErrorBorder : ''}`}
-                          disabled={qtyDisabled}
-                        />
-                        {(itemErrors?.[d.request_detail_id] || tooltip?.[d.request_detail_id]?.show) && tooltip?.[d.request_detail_id]?.message && (
-                          <div className={styles.tooltip}>{tooltip?.[d.request_detail_id]?.message}</div>
+                    <td className={styles.actionsCell}>
+                      <div className={styles.actionBtnGroup}>
+                        {btnDisabled ? (
+                          <>
+                            <button disabled className={`${styles.actionButton} ${styles.disabled}`}>อนุมัติ</button>
+                            <button disabled className={`${styles.actionButton} ${styles.disabled}`}>ปฏิเสธ</button>
+                          </>
+                        ) : (
+                          <>
+                            <button onClick={() => handleApproveOne(d)} className={`${styles.actionButton} ${styles.approve}`}>อนุมัติ</button>
+                            <button onClick={() => handleRejectOne(d)} className={`${styles.actionButton} ${styles.reject}`}>ปฏิเสธ</button>
+                          </>
                         )}
                       </div>
                     </td>
-
-                    <td data-label="จัดการ" className={styles.actionsCell}>
-  <div className={styles.actionBtnGroup}>
-    {btnDisabled ? (
-      <>
-        <button disabled className={`${styles.actionButton} ${styles.disabled}`}>✅ อนุมัติ</button>
-        <button disabled className={`${styles.actionButton} ${styles.disabled}`}>❌ ปฏิเสธ</button>
-      </>
-    ) : (
-      <>
-        <button onClick={() => handleApproveOne(d)} className={`${styles.actionButton} ${styles.approve}`}>✅ อนุมัติ</button>
-        <button onClick={() => handleRejectOne(d)} className={`${styles.actionButton} ${styles.reject}`}>❌ ปฏิเสธ</button>
-      </>
-    )}
-  </div>
-</td>
                   </tr>
                 );
               })}
-
-              {Array.from({ length: itemsPerPage - currentItems.length }).map((_, idx) => (
-                <tr key={`empty-${idx}`} className={styles.emptyRow}>
-                  <td colSpan={8}>&nbsp;</td>
-                </tr>
-              ))}
             </tbody>
           </table>
         </div>
@@ -458,7 +388,6 @@ export default function ApprovalRequestPage() {
             <FaSave className={styles.btnIcon} aria-hidden="true" />
             บันทึก
           </button>
-
           <button className={styles.cancelButton} onClick={() => router.push('/manage/requestList')}>
             <FaTimesCircle className={styles.btnIcon} aria-hidden="true" />
             ยกเลิก

@@ -21,54 +21,115 @@
   min-height: 100vh;
   background: var(--bg);
   padding: 24px;
-  display: grid;
-  place-items: start center;
 }
 
-.card {
-  width: min(1200px, 100%);
+.container {
   background: var(--panel);
   color: var(--text);
   border-radius: var(--radius);
   box-shadow: 0 6px 20px rgba(0, 0, 0, .06);
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
 }
 
-.title {
-  text-align: center;
+.pageTitle {
   color: #0056b3;
-  margin: 4px 0 16px;
   font-size: clamp(1.4rem, 2.2vw, 2rem);
   font-weight: 700;
 }
 
-/* Loading */
-.loadingContainer {
-  display: grid;
-  place-items: center;
-  min-height: 220px;
+/* Toolbar */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  border: 1px solid var(--tint-200);
+  border-radius: 12px;
+  padding: 12px;
+  background: #f6fbfd;
 }
 
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid rgba(0,0,0,.1);
-  border-left-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+  max-width: 220px;
 }
-.loadingText { margin-top: 10px; color: #555; }
-@keyframes spin { to { transform: rotate(360deg); } }
 
-/* ===== Table (Grid style เหมือนโค้ดหลัก) ===== */
+.label {
+  font-size: .85rem;
+  color: #374151;
+  font-weight: 600;
+}
+
+.searchCluster {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.searchBox {
+  position: relative;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+}
+
+.input {
+  height: 38px;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  padding: 0 12px 0 32px;
+  font-size: .9rem;
+  background: #fff;
+  width: 220px;
+}
+
+.input:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.ghostBtn {
+  background: #fff;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  height: 38px;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.ghostBtn:hover {
+  background: #e9f6fb;
+}
+
+.clearButton {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* ===== Table ===== */
 .tableFrame {
   background: #fff;
   border: 1px solid var(--tint-200);
   border-radius: var(--radius);
   overflow: hidden;
+  width: 100%;
+  overflow-x: auto; /* ✅ ถ้าจอเล็ก ให้เลื่อนแนวนอนได้ */
 }
 
-/* คุมคอลัมน์ที่เดียว ใช้ได้ทั้ง header/body */
 .tableGrid {
   display: grid;
   grid-template-columns:
@@ -100,7 +161,6 @@
   text-overflow: ellipsis;
 }
 
-/* Body */
 .inventory {
   height: calc(var(--row-h) * var(--rows-per-page));
   overflow: hidden;
@@ -128,7 +188,6 @@
   font-style: italic;
 }
 
-/* ซ่อนเส้นคั่นของแถวว่างให้ดูเนียน */
 .placeholderRow { border-top-color: transparent !important; background: transparent !important; pointer-events: none; }
 .placeholderRow + .placeholderRow { border-top-color: transparent !important; }
 
@@ -187,8 +246,7 @@
 .activePage { background: var(--primary); color: #fff; border-color: var(--primary); }
 .ellipsis { color: var(--muted); }
 
-/* เดิมคงไว้ใช้กับข้อความว่าง/แจ้งเตือน */
-.container { padding: 0; }
+/* Error / Empty */
 .emptyList {
   color: #888;
   text-align: center;
@@ -211,5 +269,5 @@
   }
 }
 @media (max-width: 640px) {
-  .inventory { height: auto; } /* มือถือให้สูงตามเนื้อหา */
+  .inventory { height: auto; }
 }

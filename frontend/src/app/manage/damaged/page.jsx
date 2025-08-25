@@ -1,11 +1,52 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import axiosInstance from '@/app/utils/axiosInstance';
 import Swal from 'sweetalert2';
 import styles from './page.module.css';
 import { connectSocket, disconnectSocket } from '@/app/utils/socket';
-import { ChevronLeft, ChevronRight, Wrench, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Wrench, Trash2, Search } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+const Select = dynamic(() => import('react-select'), { ssr: false });
+
+/* react-select styles */
+const customSelectStyles = {
+  control: (base, state) => ({
+    ...base,
+    borderRadius: '0.5rem',
+    minHeight: '2.5rem',
+    borderColor: state.isFocused ? '#2563eb' : '#e5e7eb',
+    boxShadow: 'none',
+    '&:hover': { borderColor: '#2563eb' },
+    zIndex: 20,
+  }),
+  menu: (base) => ({
+    ...base,
+    zIndex: 9999,
+  }),
+  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isFocused ? '#f1f5ff' : '#fff',
+    color: '#111827',
+    padding: '8px 12px',
+  }),
+};
+
+/* options */
+const DAMAGE_OPTIONS = [
+  { value: 'all', label: 'ทั้งหมด' },
+  { value: 'damaged', label: 'ชำรุด' },
+  { value: 'lost', label: 'สูญหาย' },
+];
+
+const STATUS_OPTIONS = [
+  { value: 'all', label: 'ทั้งหมด' },
+  { value: 'stPending', label: 'รอดำเนินการ' },
+  { value: 'stPartial', label: 'บางส่วนแล้ว' },
+  { value: 'stDone', label: 'ครบแล้ว' },
+];
 
 /* คำนวณสถานะจาก damaged_qty และ remaining_qty */
 const getRowStatus = (damaged_qty, remaining_qty) => {
@@ -29,6 +70,11 @@ export default function DamagedItemsPage() {
   const [damagedList, setDamagedList] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // ฟิลเตอร์
+  const [damageFilter, setDamageFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [search, setSearch] = useState('');
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
@@ -39,7 +85,7 @@ export default function DamagedItemsPage() {
 
   const fetchDamaged = async () => {
     try {
-      const res = await axiosInstance.get('/damaged'); // ⚠ backend ต้องส่ง actions มาด้วย
+      const res = await axiosInstance.get('/damaged');
       setDamagedList(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error(err);
@@ -53,41 +99,6 @@ export default function DamagedItemsPage() {
     }
   };
 
-  const handleAction = async (id, remainingQty, actionType) => {
-    const actionText = actionType === 'repaired' ? 'ซ่อม' : 'ทิ้ง';
-    const { value: qty } = await Swal.fire({
-      title: `ระบุจำนวนที่จะ${actionText}`,
-      input: 'number',
-      inputLabel: `สามารถดำเนินการได้สูงสุด ${remainingQty} ชิ้น`,
-      inputAttributes: { min: 1, max: remainingQty, step: 1 },
-      inputValue: remainingQty > 0 ? 1 : 0,
-      showCancelButton: true,
-      confirmButtonText: 'บันทึก',
-      cancelButtonText: 'ยกเลิก',
-      preConfirm: (value) => {
-        const v = parseInt(value, 10);
-        if (isNaN(v) || v <= 0) {
-          Swal.showValidationMessage('กรุณาระบุจำนวนที่ถูกต้องและมากกว่า 0');
-        } else if (v > remainingQty) {
-          Swal.showValidationMessage('จำนวนเกินจากที่เหลืออยู่');
-        }
-      }
-    });
-
-    if (!qty) return;
-
-    try {
-      await axiosInstance.post(`/damaged/${id}/action`, {
-        action_type: actionType,
-        action_qty: parseInt(qty, 10),
-      });
-      Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: `${actionText} ${qty} ชิ้นแล้ว`, timer: 1800 });
-    } catch (err) {
-      console.error(err);
-      Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่สามารถบันทึกข้อมูลได้' });
-    }
-  };
-
   useEffect(() => {
     const socket = connectSocket(() => {
       fetchDamaged();
@@ -96,11 +107,24 @@ export default function DamagedItemsPage() {
     return () => { disconnectSocket(); };
   }, []);
 
+  // Filter list
+  const filteredList = useMemo(() => {
+    return damagedList.filter(d => {
+      const rowStatus = getRowStatus(d.damaged_qty, d.remaining_qty);
+      const damageOk = damageFilter === 'all' || d.damage_type === damageFilter;
+      const statusOk = statusFilter === 'all' || rowStatus.cls === statusFilter;
+      const searchOk =
+        search === '' ||
+        d.item_name?.toLowerCase().includes(search.toLowerCase()) ||
+        d.reporter_name?.toLowerCase().includes(search.toLowerCase());
+      return damageOk && statusOk && searchOk;
+    });
+  }, [damagedList, damageFilter, statusFilter, search]);
+
   // เรียง: เหลือ > 0 อยู่บน, ครบแล้วอยู่ล่าง
-  const sortedDamagedList = [...damagedList].sort((a, b) => {
+  const sortedDamagedList = [...filteredList].sort((a, b) => {
     const ra = Number(a.remaining_qty) || 0;
     const rb = Number(b.remaining_qty) || 0;
-
     if (ra > 0 && rb === 0) return -1;
     if (ra === 0 && rb > 0) return 1;
     return new Date(b.damaged_date) - new Date(a.damaged_date);
@@ -132,6 +156,13 @@ export default function DamagedItemsPage() {
     return pages;
   };
 
+  const clearFilters = () => {
+    setDamageFilter('all');
+    setStatusFilter('all');
+    setSearch('');
+    setCurrentPage(1);
+  };
+
   return (
     <div className={styles.pageBackground}>
       <div className={styles.container}>
@@ -141,10 +172,72 @@ export default function DamagedItemsPage() {
           </div>
         </div>
 
+        {/* Toolbar ฟิลเตอร์ */}
+        <div className={styles.toolbar}>
+          <div className={styles.filterGrid}>
+            {/* ประเภท */}
+            <div className={styles.filterGroup}>
+              <label className={styles.label} htmlFor="damageType">ประเภท</label>
+              <Select
+                inputId="damageType"
+                isClearable
+                isSearchable={false}
+                placeholder="ทั้งหมด"
+                options={DAMAGE_OPTIONS}
+                value={DAMAGE_OPTIONS.find(o => o.value === damageFilter) || null}
+                onChange={(opt) => setDamageFilter(opt?.value || 'all')}
+                styles={customSelectStyles}
+                menuPlacement="auto"
+                menuPosition="fixed"
+                menuPortalTarget={typeof window !== 'undefined' ? document.body : undefined}
+              />
+            </div>
+
+            {/* สถานะ */}
+            <div className={styles.filterGroup}>
+              <label className={styles.label} htmlFor="status">สถานะ</label>
+              <Select
+                inputId="status"
+                isClearable
+                isSearchable={false}
+                placeholder="ทั้งหมด"
+                options={STATUS_OPTIONS}
+                value={STATUS_OPTIONS.find(o => o.value === statusFilter) || null}
+                onChange={(opt) => setStatusFilter(opt?.value || 'all')}
+                styles={customSelectStyles}
+                menuPlacement="auto"
+                menuPosition="fixed"
+                menuPortalTarget={typeof window !== 'undefined' ? document.body : undefined}
+              />
+            </div>
+          </div>
+
+          {/* ช่องค้นหา */}
+          <div className={styles.searchCluster}>
+            <div className={styles.filterGroup}>
+              <label className={styles.label} htmlFor="search">ค้นหา</label>
+              <div className={styles.searchBox}>
+                <input
+                  id="search"
+                  type="text"
+                  className={styles.input}
+                  placeholder="ค้นหาชื่อพัสดุ หรือผู้แจ้ง"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+              </div>
+            </div>
+            <button className={`${styles.ghostBtn} ${styles.clearButton}`} onClick={clearFilters}>
+              ล้างตัวกรอง
+            </button>
+          </div>
+        </div>
+
         {loading ? (
           <p className={styles.infoMessage}>กำลังโหลดข้อมูล...</p>
         ) : (
           <div className={styles.tableFrame}>
+            {/* ==== ตาราง (คงเดิม ไม่แก้) ==== */}
             {/* Header */}
             <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
               <div className={styles.headerItem}>ชื่อพัสดุ</div>
@@ -153,7 +246,7 @@ export default function DamagedItemsPage() {
               <div className={`${styles.headerItem} ${styles.centerCell}`}>เหลือให้ดำเนินการ</div>
               <div className={styles.headerItem}>วันที่ชำรุด</div>
               <div className={styles.headerItem}>ผู้แจ้ง</div>
-              <div className={styles.headerItem}>หมายเหตุ</div>
+              {/* <div className={styles.headerItem}>หมายเหตุ</div> */}
               <div className={`${styles.headerItem} ${styles.centerCell}`}>สถานะ</div>
               <div className={`${styles.headerItem} ${styles.centerCell}`}>จัดการ</div>
             </div>
@@ -180,9 +273,7 @@ export default function DamagedItemsPage() {
                     {d.damaged_date ? new Date(d.damaged_date).toLocaleDateString('th-TH') : '-'}
                   </div>
                   <div className={styles.tableCell}>{d.reporter_name ?? '-'}</div>
-                  <div className={styles.tableCell}>
-                    <span className={styles.ellipsisText}>{d.note ?? '-'}</span>
-                  </div>
+                
                   {/* สถานะ */}
                   <div className={`${styles.tableCell} ${styles.centerCell}`}>
                     {(() => {
@@ -261,7 +352,7 @@ export default function DamagedItemsPage() {
           </div>
         )}
 
-        {/* Modal History */}
+        {/* ==== Popup History (คงเดิม) ==== */}
         {showHistory && (
           <div className={styles.modalOverlay}>
             <div className={styles.modal}>

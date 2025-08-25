@@ -1,66 +1,99 @@
 "use client";
-import { useRouter } from "next/navigation";
-import styles from "./page.module.css";
 import {
-  FaTruck,
-  FaArrowRight,
-  FaHandHolding,
-  FaUndo,
-  FaExclamationTriangle,
-  FaTools,
-  FaTrash,
-} from "react-icons/fa";
+  Truck,
+  ArrowRight,
+  Hand,
+  AlertTriangle,
+  Wrench,
+  Trash2,
+  ChevronRight,
+  FileClock,
+  Undo,
+} from "lucide-react";
+import styles from "./page.module.css";
 
-const BLOCKS = [
-  { path: "import", label: "นำเข้า (Import)", color: "blue", icon: <FaTruck /> },
-  { path: "withdraw", label: "เบิก (Withdraw)", color: "green", icon: <FaArrowRight /> },
-  { 
-    path: "borrow-return", 
-    label: "ยืม / คืน (Borrow & Return)", 
-    color: "purple", 
-    icon: (
-      <div style={{ display: "flex", gap: "6px" }}>
-        <FaHandHolding />
-        <FaUndo />
-      </div>
-    ) 
+const historyItems = [
+  {
+    id: "import",
+    title: "ประวัตินำเข้า",
+    description: "ดูประวัติการนำเข้าสินค้าทั้งหมด",
+    icon: Truck,
+    color: "blue",
+    link: "/manage/history/import",
   },
-  { path: "expired", label: "ของหมดอายุ (Expired)", color: "red", icon: <FaExclamationTriangle /> },
-  { path: "damaged", label: "ชำรุด / สูญหาย", color: "pink", icon: <FaTools /> },
-  { path: "stockout", label: "นำออก (Stockout)", color: "gray", icon: <FaTrash /> },
+  {
+    id: "withdraw",
+    title: "ประวัติการเบิก",
+    description: "ดูประวัติการเบิกสินค้า",
+    icon: ArrowRight,
+    color: "green",
+    link: "/manage/history/withdraw",
+  },
+  {
+    id: "borrow-return",
+    title: "ประวัติยืม / คืน",
+    description: "ตรวจสอบประวัติการยืมและการคืน",
+    icon: Hand,
+    color: "purple",
+    link: "/manage/history/borrow-return",
+  },
+  {
+    id: "expired",
+    title: "ประวัติสินค้าหมดอายุ",
+    description: "รายการสินค้าที่หมดอายุ",
+    icon: AlertTriangle,
+    color: "red",
+    link: "/manage/history/expired",
+  },
+  {
+    id: "damaged",
+    title: "ประวัติสินค้าชำรุด / สูญหาย",
+    description: "ติดตามสินค้าที่เสียหายหรือสูญหาย",
+    icon: Wrench,
+    color: "pink",
+    link: "/manage/history/damaged",
+  },
+  {
+    id: "stockout",
+    title: "ประวัติการนำออก",
+    description: "ตรวจสอบสินค้าที่ถูกนำออก",
+    icon: Trash2,
+    color: "gray",
+    link: "/manage/history/stockout",
+  },
 ];
 
 export default function HistoryPage() {
-  const router = useRouter();
-
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>ประวัติคลังพัสดุ</h1>
-      <nav className={styles.breadcrumb}>
-        <span>🏠 Dashboard</span> › <span>📜 ประวัติคลัง</span>
-      </nav>
-
-      {/* Summary */}
-      <div className={styles.summaryGrid}>
-        <div className={styles.summaryCard}>💊 เบิกเดือนนี้: 45</div>
-        <div className={styles.summaryCard}>📥 คืนเดือนนี้: 12</div>
-        <div className={styles.summaryCard}>⚠️ หมดอายุ: 5</div>
-        <div className={styles.summaryCard}>🛠️ ชำรุด: 3</div>
+      {/* Header */}
+      <div className={styles.header}>
+        <FileClock className={styles.headerIcon} />
+        <div>
+          <h1 className={styles.title}>ประวัติคลังพัสดุ</h1>
+          <p className={styles.subtitle}>ติดตามการเคลื่อนไหวของคลัง</p>
+        </div>
       </div>
 
-      {/* Blocks */}
+      {/* Cards Grid */}
       <div className={styles.grid}>
-        {BLOCKS.map((b) => (
-          <div
-            key={b.path}
-            className={`${styles.card} ${styles[b.color]}`}
-            onClick={() => router.push(`/manage/history/${b.path}`)}
-          >
-            <div className={styles.icon}>{b.icon}</div>
-            <h3 className={styles.cardTitle}>{b.label}</h3>
-            <p className={styles.cardDesc}>ดูประวัติ {b.label}</p>
-          </div>
-        ))}
+        {historyItems.map((item) => {
+          const IconComponent = item.icon;
+          return (
+            <a key={item.id} href={item.link} className={`${styles.card} ${styles[item.color]}`}>
+              <div className={`${styles.iconWrapper} ${styles[item.color]}`}>
+                <IconComponent className={styles.icon} />
+              </div>
+
+              <div className={styles.textContent}>
+                <h3 className={styles.cardTitle}>{item.title}</h3>
+                <p className={styles.cardDesc}>{item.description}</p>
+              </div>
+
+              <ChevronRight className={styles.arrow} />
+            </a>
+          );
+        })}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
-/* ===== Base & Layout (เหมือนหน้าอื่น) ===== */
-:root{
+/* ===== Base & Layout ===== */
+:root {
   --radius: 12px;
   --row-h: 56px;
   --border: #e5e7eb;
@@ -9,246 +9,379 @@
   --hover: #f5fbff;
 }
 
-.pageBackground{
-  min-height:100vh;
-  background:#f0f2f5;
-  display:flex;
-  align-items:flex-start;     /* ถ้าอยากกลางแนวตั้งเปลี่ยนเป็น center */
-  justify-content:center;
-  padding:20px;
-  font-family:'Kanit', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  color:#34495e;
+.pageBackground {
+  height: 100vh;
+  /* ✅ fix สูงเต็มจอ */
+  background: #f0f2f5;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+
+  font-family: 'Kanit', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #34495e;
+
+  overflow: hidden;
+  /* ✅ กันไม่ให้ container ดัน sidebar */
 }
 
-.container{
-  background:#fff;
-  width:100%;
-  max-width:1200px;           /* คุมความกว้างเท่าหน้าอื่น */
-  border-radius:var(--radius);
-  box-shadow:0 6px 20px rgba(0,0,0,.06);
-  padding:20px;
+.container {
+  background: #fff;
+  width: 100%;
+  max-width: 1600px;
+  border-radius: var(--radius);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .06);
+  padding: 20px;
+
+  display: flex;
+  flex-direction: column;
+
+  height: 100%;
+  /* ✅ เต็มความสูงของ pageBackground */
+  overflow-y: auto;
+  /* ✅ scroll ภายใน container */
 }
 
 /* ===== Header / Info ===== */
-.title{
-  font-size:1.8rem;
-  font-weight:700;
-  margin:0 0 14px 0;
-  text-align:center;
-  color:#2c3e50;
-  position:relative;
-  padding-bottom:10px;
-}
-.title::after{
-  content:'';
-  position:absolute; left:50%; bottom:0; transform:translateX(-50%);
-  width:64px; height:3px; background:#0ea5e9; border-radius:2px;
+.title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0 0 14px 0;
+  text-align: center;
+  color: #2c3e50;
+  position: relative;
+  padding-bottom: 10px;
 }
 
-.infoGrid{
-  display:flex; flex-wrap:wrap; gap:16px; margin-bottom:16px;
-  background:#fcfcfc; padding:16px; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,.04);
-}
-.infoLeft{
-  flex:2; display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-  padding-right:12px; border-right:1px solid #eef1f4;
-}
-.infoLeft div{ font-size:1rem; color:#555; line-height:1.4; }
-.status{ font-weight:700; color:#0ea5e9; }
-.summary{
-  grid-column:1 / -1; font-weight:600; color:#0ea5e9;
-  border-top:1px dashed #e3e8ef; padding-top:10px; margin-top:8px;
-}
-.noteBox{
-  flex:1; background:#ecf0f1; border:1px solid #dce4e8; border-radius:8px; padding:14px; color:#5d6d7e;
+.title::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 64px;
+  height: 3px;
+  background: #0ea5e9;
+  border-radius: 2px;
 }
 
-/* ===== Table (โทนเดียวกับหน้าก่อน ๆ) ===== */
-.subtitle{
-  font-size:1.25rem; font-weight:700; color:#2c3e50; margin:10px 0;
+.infoGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+  background: #fcfcfc;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .04);
 }
 
-.tableContainer{
-  border:1px solid #dbe8ef;
-  border-radius:10px;
-  overflow:auto;
-  box-shadow:0 3px 12px rgba(0,0,0,.05);
+.infoLeft {
+  flex: 2;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  padding-right: 12px;
+  border-right: 1px solid #eef1f4;
 }
 
-.table{
-  width:100%;
-  border-collapse:separate;
-  border-spacing:0;
-  table-layout:fixed;                 /* ทำให้หัวกับตัวข้อมูลขนานกัน */
-  font-size:.95rem;
-  color:#333;
+.infoLeft div {
+  font-size: 1rem;
+  color: #555;
+  line-height: 1.4;
 }
 
-.tableHead th{
-  position:sticky; top:0; z-index:1;  /* เผื่อมีสกรอลล์ */
-  background:var(--head-bg);
-  color:var(--head-fg);
-  font-weight:700;
-  text-align:left;
-  padding:12px;
-  border-bottom:1px solid #deedf1;
-  white-space:nowrap;
+.status {
+  font-weight: 700;
+  color: #0ea5e9;
 }
 
-.table tbody td{
-  padding:12px;
-  border-top:1px solid #f0f4f7;
-  vertical-align:middle;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  height:var(--row-h);
+.summary {
+  grid-column: 1 / -1;
+  font-weight: 600;
+  color: #0ea5e9;
+  border-top: 1px dashed #e3e8ef;
+  padding-top: 10px;
+  margin-top: 8px;
 }
 
-.table tbody tr:hover{ background:var(--hover); }
-
-/* แถวว่างให้ความสูงเท่ากัน และไม่เห็นเส้น */
-.emptyRow td{
-  visibility:hidden;
-  height:var(--row-h);
-  border-top-color:transparent !important;
+.noteBox {
+  flex: 1;
+  background: #ecf0f1;
+  border: 1px solid #dce4e8;
+  border-radius: 8px;
+  padding: 14px;
+  color: #5d6d7e;
 }
 
-/* ===== จำนวนที่อนุมัติ (input) + tooltip ===== */
-.approvedQtyInput{
-  width:90px;
-  padding:8px;
-  border:1px solid #ced4da;
-  border-radius:8px;
-  text-align:center;
-  font-size:.95rem;
-  transition:border-color .15s, box-shadow .15s;
-  background:#fff;
-}
-.approvedQtyInput:focus{
-  border-color:#41c9e2;
-  box-shadow:0 0 0 2px rgba(65,201,226,.25);
-  outline:none;
-}
-.approvedQtyInput:disabled{ background:#f4f6f8; color:#7f8c8d; }
-
-.inputErrorBorder{
-  border-color:#e74c3c !important;
-  box-shadow:0 0 0 2px rgba(231,76,60,.25) !important;
+/* ===== Table ===== */
+.subtitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 10px 0;
 }
 
-.tooltipContainer{ position:relative; display:inline-block; }
-.tooltip{
-  visibility:hidden; opacity:0; transition:opacity .2s;
-  position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
-  background:#333; color:#fff; border-radius:6px; padding:8px 10px; font-size:.85rem;
-  white-space:nowrap; z-index:5;
-}
-.tooltip::after{
-  content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%);
-  border:8px solid transparent; border-top-color:#333;
-}
-.tooltipContainer:hover .tooltip,
-.tooltipContainer:focus-within .tooltip,
-.approvedQtyInput.inputErrorBorder + .tooltip{
-  visibility:visible; opacity:1;
+.tableContainer {
+  flex: 1;
+  /* ✅ ใช้พื้นที่ที่เหลือทั้งหมด */
+  border: 1px solid #dbe8ef;
+  border-radius: 10px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, .05);
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  /* ✅ ซ่อน scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-/* ===== Badges (สถานะ) – ใช้ชุดเดียวกับหน้าอื่น ===== */
-.badge{
-  display:inline-flex; align-items:center; justify-content:center;
-  padding:.28rem .6rem; border-radius:999px; font-weight:700; font-size:.8rem; color:#fff; min-width:90px;
+.tableContainer::-webkit-scrollbar {
+  display: none;
 }
-.badgeGreen{ background:#16a34a; }
-.badgeYellow{ background:#f59e0b; }
-.badgeRed{ background:#ef4444; }
-.badgeGray{ background:#6b7280; }
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  font-size: .95rem;
+  color: #333;
+}
+
+.tableHead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--head-bg);
+  color: var(--head-fg);
+  font-weight: 700;
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid #deedf1;
+  white-space: nowrap;
+}
+
+.table tbody td {
+  padding: 12px;
+  border-top: 1px solid #f0f4f7;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: var(--row-h);
+}
+
+.table tbody tr:hover {
+  background: var(--hover);
+}
+
+/* ===== จำนวนที่อนุมัติ (input) ===== */
+.approvedQtyInput {
+  width: 90px;
+  padding: 8px;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  text-align: center;
+  font-size: .95rem;
+  transition: border-color .15s, box-shadow .15s;
+  background: #fff;
+}
+
+.approvedQtyInput:focus {
+  border-color: #41c9e2;
+  box-shadow: 0 0 0 2px rgba(65, 201, 226, .25);
+  outline: none;
+}
+
+.approvedQtyInput:disabled {
+  background: #f4f6f8;
+  color: #7f8c8d;
+}
+
+.inputErrorBorder {
+  border-color: #e74c3c !important;
+  box-shadow: 0 0 0 2px rgba(231, 76, 60, .25) !important;
+}
+
+/* ===== Badges ===== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .28rem .6rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .8rem;
+  color: #fff;
+  min-width: 90px;
+}
+
+.badgeGreen {
+  background: #16a34a;
+}
+
+.badgeYellow {
+  background: #f59e0b;
+}
+
+.badgeRed {
+  background: #ef4444;
+}
+
+.badgeGray {
+  background: #6b7280;
+}
 
 /* ===== ปุ่ม ===== */
-
-/* ทำให้คอลัมน์ปุ่มไม่ถูกตัดขอบและรองรับหลายปุ่มต่อแถว */
-.actions{
+.actions {
   display: flex;
-  justify-content: flex-end; /* ⬅️ ชิดขวา */
+  justify-content: flex-end;
   align-items: center;
-  gap: 16px;                 /* ⬅️ ระยะห่างระหว่างปุ่ม */
+  gap: 16px;
   margin-top: 16px;
 }
-.actionsCell{ white-space:normal; overflow:visible; }
-.actionBtnGroup{ display:flex; flex-wrap:wrap; gap:6px; }
-.saveButton, .cancelButton{
-  padding:12px 28px; border:none; border-radius:10px; font-weight:700; font-size:1rem; cursor:pointer;
-  transition:transform .1s, box-shadow .1s, background .15s;
+
+.actionsCell {
+  white-space: normal;
+  overflow: visible;
 }
-/* ไอคอนในปุ่ม */
-.btnIcon{ margin-right:8px; font-size:1rem; vertical-align:middle; }
 
-.saveButton{ background:#28a745; color:#fff; box-shadow:0 3px 10px rgba(40,167,69,.25); }
-.saveButton:hover:not(:disabled){ background:#218838; transform:translateY(-1px); }
-.saveButton:disabled{ background:#a4d8b2; cursor:not-allowed; box-shadow:none; }
+.actionBtnGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
 
-/* ปุ่มปฏิเสธทั้งหมด */
-.rejectAllButton{
-  background:#f59e0b;   /* amber-500 */
-  color:#fff;
-  border:none;
-  border-radius:10px;
-  padding:12px 20px;
-  font-weight:700;
-  font-size:1rem;
-  cursor:pointer;
-  box-shadow:0 3px 10px rgba(245, 158, 11, .25);
+.saveButton,
+.cancelButton {
+  padding: 12px 28px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
   transition: transform .1s, box-shadow .1s, background .15s;
 }
-.rejectAllButton:hover:not(:disabled){
-  background:#d97706;   /* amber-600 */
-  transform:translateY(-1px);
-}
-.rejectAllButton:disabled{
-  background:#fcd34d;   /* amber-300 */
-  cursor:not-allowed; box-shadow:none;
+
+.btnIcon {
+  margin-right: 8px;
+  font-size: 1rem;
+  vertical-align: middle;
 }
 
-.cancelButton{ background:#e74c3c; color:#fff; box-shadow:0 3px 10px rgba(231,76,60,.25); }
-.cancelButton:hover{ background:#c0392b; transform:translateY(-1px); }
+.saveButton {
+  background: #28a745;
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(40, 167, 69, .25);
+}
 
-.actionButton{
-  color:#fff; border:none; border-radius:8px; padding:8px 14px; font-size:.85rem; cursor:pointer;
-  box-shadow:0 1px 5px rgba(0,0,0,.08); margin-right:6px;
+.saveButton:hover:not(:disabled) {
+  background: #218838;
+  transform: translateY(-1px);
 }
-.actionButton:last-child{ margin-right:0; }
-.actionButton.approve{ background:#2ecc71; }
-.actionButton.approve:hover{ background:#27ae60; }
-.actionButton.reject{ background:#e74c3c; }
-.actionButton.reject:hover{ background:#c0392b; }
-.actionButton.disabled{ background:#bdc3c7; cursor:not-allowed; box-shadow:none; }
 
-/* ===== Pagination ===== */
-.pagination{
-  display:flex; justify-content:flex-end; align-items:center; gap:12px;
-  margin-top:12px; padding-top:12px; border-top:1px dashed #e3e8ef;
+.saveButton:disabled {
+  background: #a4d8b2;
+  cursor: not-allowed;
+  box-shadow: none;
 }
-.pageButton{
-  background:#0ea5e9; color:#fff; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-weight:600;
+
+.cancelButton {
+  background: #e74c3c;
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(231, 76, 60, .25);
 }
-.pageButton:hover:not(:disabled){ background:#0b8ccc; }
-.pageButton:disabled{ background:#bbdefb; cursor:not-allowed; }
+
+.cancelButton:hover {
+  background: #c0392b;
+  transform: translateY(-1px);
+}
+
+.actionButton {
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: .85rem;
+  cursor: pointer;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .08);
+  margin-right: 6px;
+}
+
+.actionButton:last-child {
+  margin-right: 0;
+}
+
+.actionButton.approve {
+  background: #2ecc71;
+}
+
+.actionButton.approve:hover {
+  background: #27ae60;
+}
+
+.actionButton.reject {
+  background: #e74c3c;
+}
+
+.actionButton.reject:hover {
+  background: #c0392b;
+}
+
+.actionButton.disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  box-shadow: none;
+}
 
 /* ===== Loading / Error ===== */
-.loading, .error{
-  text-align:center; padding:40px; font-size:1.05rem; color:#7f8c8d; background:#fff; border-radius:10px;
-  box-shadow:0 3px 12px rgba(0,0,0,.04); margin:20px auto; max-width:720px;
+.loading,
+.error {
+  text-align: center;
+  padding: 40px;
+  font-size: 1.05rem;
+  color: #7f8c8d;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, .04);
+  margin: 20px auto;
+  max-width: 720px;
 }
-.error{ color:#e74c3c; font-weight:700; }
+
+.error {
+  color: #e74c3c;
+  font-weight: 700;
+}
 
 /* ===== Responsive ===== */
-@media (max-width: 1024px){
-  .container{ max-width: 100%; }
-}
-@media (max-width: 768px){
-  .infoLeft{ grid-template-columns:1fr; border-right:none; padding-right:0; border-bottom:1px dashed #e3e8ef; padding-bottom:12px; }
-  .table{ font-size:.9rem; }
+@media (max-width: 1024px) {
+  .container {
+    max-width: 100%;
+  }
 }
 
-@media (max-width: 640px){
-  .actions { flex-direction: column; align-items: stretch; }
-  .saveButton, .cancelButton { width: 100%; }
+@media (max-width: 768px) {
+  .infoLeft {
+    grid-template-columns: 1fr;
+    border-right: none;
+    padding-right: 0;
+    border-bottom: 1px dashed #e3e8ef;
+    padding-bottom: 12px;
+  }
+
+  .table {
+    font-size: .9rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .saveButton,
+  .cancelButton {
+    width: 100%;
+  }
 }

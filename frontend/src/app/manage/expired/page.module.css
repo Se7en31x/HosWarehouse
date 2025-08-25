@@ -22,8 +22,10 @@
   --z-header: 10;
   /* ปรับความสูงช่องกรอกได้จากตัวแปรนี้ */
   --swal-focus: #0e86fd;
-  --swal-input-w: 320px;    /* ลอง 280px, 300px, 360px ได้ */
-  --swal-input-h: 40px;     /* สูงเท่าเดิม (ปรับได้) */
+  --swal-input-w: 320px;
+  /* ลอง 280px, 300px, 360px ได้ */
+  --swal-input-h: 40px;
+  /* สูงเท่าเดิม (ปรับได้) */
 }
 
 /* ===== Layout ===== */
@@ -106,7 +108,7 @@
     /* สถานะ */
     minmax(160px, 1.1fr)
     /* จัดการ */
-    
+
   ;
 }
 
@@ -202,38 +204,64 @@
 }
 
 /* ===== สถานะ & ป้ายครบแล้ว ===== */
-.statusBadge{
-  display:inline-flex; align-items:center; justify-content:center;
-  padding:.35rem .7rem; border-radius:999px; font-weight:700; font-size:.86rem;
-  min-width:110px; line-height:1; white-space:nowrap; border:1px solid transparent;
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .35rem .7rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .86rem;
+  min-width: 110px;
+  line-height: 1;
+  white-space: nowrap;
+  border: 1px solid transparent;
 }
 
 /* ทำลายครบแล้ว (เขียว) */
-.statusComplete{
-  color:#166534;               /* emerald-800 */
-  background:#DCFCE7;          /* emerald-100 */
-  border-color:#86EFAC;        /* emerald-300 */
+.statusComplete {
+  color: #166534;
+  /* emerald-800 */
+  background: #DCFCE7;
+  /* emerald-100 */
+  border-color: #86EFAC;
+  /* emerald-300 */
 }
 
 /* ทำลายบางส่วนแล้ว (ฟ้า) */
-.statusPartial{
-  color:#1E3A8A;               /* blue-800 */
-  background:#DBEAFE;          /* blue-100 */
-  border-color:#93C5FD;        /* blue-300 */
+.statusPartial {
+  color: #1E3A8A;
+  /* blue-800 */
+  background: #DBEAFE;
+  /* blue-100 */
+  border-color: #93C5FD;
+  /* blue-300 */
 }
 
 /* รอดำเนินการ (เหลือง) */
-.statusPending{
-  color:#92400E;               /* amber-800 */
-  background:#FEF3C7;          /* amber-100 */
-  border-color:#FDE68A;        /* amber-200/300 */
+.statusPending {
+  color: #92400E;
+  /* amber-800 */
+  background: #FEF3C7;
+  /* amber-100 */
+  border-color: #FDE68A;
+  /* amber-200/300 */
 }
 
 /* ป้าย “ครบแล้ว” ข้างปุ่ม (คงโทนให้เข้ากัน) */
-.doneLabel{
-  display:inline-flex; align-items:center; justify-content:center;
-  padding:4px 10px; border-radius:999px; font-weight:700; font-size:.85rem;
-  color:#166534; background:#ECFDF5; border:1px solid #86EFAC; min-height:28px; margin-right:8px;
+.doneLabel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .85rem;
+  color: #166534;
+  background: #ECFDF5;
+  border: 1px solid #86EFAC;
+  min-height: 28px;
+  margin-right: 8px;
 }
 
 .doneLabel {
@@ -258,9 +286,11 @@
   justify-content: center;
 }
 
-.actions > * + *{
-  margin-left: 8px;  /* ปรับเป็น 10 หรือ 12 ได้ตามต้องการ */
+.actions>*+* {
+  margin-left: 8px;
+  /* ปรับเป็น 10 หรือ 12 ได้ตามต้องการ */
 }
+
 .actionBtn {
   display: inline-flex;
   align-items: center;
@@ -298,13 +328,26 @@
 
 /* ไอคอน 'ครบแล้ว' (ไม่สามารถกดได้) */
 
-.doneIcon{
-  display:inline-flex; align-items:center; justify-content:center;
-  padding:6px 12px; min-height:32px; border-radius:8px;
-  background:#ecfdf5; border:1px solid #86efac; color:#16a34a;
-  pointer-events:none; user-select:none; line-height:1; box-sizing:border-box;
+.doneIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  min-height: 32px;
+  border-radius: 8px;
+  background: #ecfdf5;
+  border: 1px solid #86efac;
+  color: #16a34a;
+  pointer-events: none;
+  user-select: none;
+  line-height: 1;
+  box-sizing: border-box;
 }
-.doneIcon svg{ width:16px; height:16px; }
+
+.doneIcon svg {
+  width: 16px;
+  height: 16px;
+}
 
 /* ===== Pagination (เลขหน้า + … + ลูกศร) ===== */
 .paginationControls {
@@ -493,9 +536,11 @@
 }
 
 /* ทำให้ช่องกรอกแคบลงและอยู่กึ่งกลาง */
-:global(.swal2-popup .swal2-input){
-  width: var(--swal-input-w) !important;  /* << ปรับความกว้างตรงนี้ */
-  max-width: 100% !important;             /* กันหลุดจอ */
+:global(.swal2-popup .swal2-input) {
+  width: var(--swal-input-w) !important;
+  /* << ปรับความกว้างตรงนี้ */
+  max-width: 100% !important;
+  /* กันหลุดจอ */
   height: var(--swal-input-h) !important;
   margin-left: auto !important;
   margin-right: auto !important;
@@ -503,8 +548,92 @@
 }
 
 /* ถ้าหน้าจอเล็ก ให้แคบลงอีกนิด */
-@media (max-width: 480px){
-  :global(.swal2-popup .swal2-input){
+@media (max-width: 480px) {
+  :global(.swal2-popup .swal2-input) {
     width: 240px !important;
+  }
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  justify-content: space-between; /* ✅ ซ้าย-ขวา */
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  border: 1px solid var(--tint-200);
+  border-radius: 12px;
+  padding: 12px;
+  background: #f6fbfd;
+}
+
+
+/* ✅ grid ฟิลเตอร์ */
+.filterGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 240px)); /* 🔧 ย่อความยาว */
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+/* ฟิลเตอร์สถานะ (อยู่ซ้าย) */
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+  max-width: 220px;
+}
+
+.label {
+  font-size: .85rem;
+  color: #374151;
+  font-weight: 600;
+}
+
+/* ✅ ช่องค้นหาอยู่ขวา */
+.searchCluster {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-left: auto; /* ดันไปขวาสุด */
+}
+
+.input {
+  height: 38px;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-size: .9rem;
+  background: #fff;
+  width: 100%;
+}
+
+.input:focus {
+  outline: 2px solid var(--primary-500);
+  outline-offset: 1px;
+}
+
+.ghostBtn {
+  background: #fff;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  height: 38px;
+  padding: 0 10px;
+  cursor: pointer;
+}
+
+.ghostBtn:hover { background: #e9f6fb; }
+.clearButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary-600);
+}
+
+/* ✅ responsive */
+@media (max-width: 768px) {
+  .filterGrid {
+    grid-template-columns: 1fr; /* เหลือช่องเดียวต่อแถว */
   }
 }

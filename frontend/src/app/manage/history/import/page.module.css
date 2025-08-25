@@ -1,109 +1,262 @@
-/* page.module.css */
-.page {
-  padding: 24px;
-  background: #f9fafb; /* โทนสว่าง */
+/* Theme vars */
+:root {
+  --bg: #f0f2f5;
+  --panel: #fff;
+  --text: #111827;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --primary: #0e86fd;
+  --tint-100: #f5fbff;
+  --tint-200: #deedf1;
+  --radius: 12px;
+  --row-h: 56px;
+  --rows-per-page: 10;
+  --pad-x: 12px;
+}
+
+/* Layout */
+.pageBackground {
   min-height: 100vh;
-  font-family: "Segoe UI", sans-serif;
+  background: var(--bg);
+  padding: 24px;
 }
 
-.title {
-  font-size: 1.6rem;
-  font-weight: 700;
-  margin-bottom: 20px;
-  color: #2563eb; /* น้ำเงินเด่น */
-}
-
-/* ตาราง */
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-}
-
-.table thead {
-  background: #2563eb;
-  color: white;
-}
-
-.table th,
-.table td {
-  padding: 12px 16px;
-  text-align: left;
-  border-bottom: 1px solid #e5e7eb;
-  font-size: 0.95rem;
-}
-
-.table th {
-  font-weight: 600;
-}
-
-.table tbody tr:hover {
-  background: #f3f4f6;
-}
-
-/* ป้ายสถานะ */
-.badge {
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  display: inline-block;
-}
-
-.approved {
-  background: #dcfce7;
-  color: #15803d;
-}
-
-.pending {
-  background: #fef9c3;
-  color: #a16207;
-}
-
-.rejected {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
-/* ปุ่ม */
-.btn {
-  background: #2563eb;
-  color: white;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  transition: background 0.2s;
-}
-
-.btn:hover {
-  background: #1e40af;
-}
-/* Summary Cards */
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+.container {
+  background: var(--panel);
+  color: var(--text);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .06);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
-  margin-bottom: 24px;
+  width: 100%;
 }
 
-.card {
-  background: white;
-  padding: 16px;
+.pageTitle {
+  color: #0056b3;
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  font-weight: 700;
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  border: 1px solid var(--tint-200);
   border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  font-size: 0.95rem;
+  padding: 12px;
+  background: #f6fbfd;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+  max-width: 220px;
+}
+
+.label {
+  font-size: .85rem;
+  color: #374151;
+  font-weight: 600;
+}
+
+.searchCluster {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.searchBox {
+  position: relative;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+}
+
+.input {
+  height: 38px;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  padding: 0 12px 0 32px;
+  font-size: .9rem;
+  background: #fff;
+  width: 240px;
+}
+
+.input:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.ghostBtn {
+  background: #fff;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  height: 38px;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.ghostBtn:hover {
+  background: #e9f6fb;
+}
+
+.clearButton {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* ===== Table ===== */
+.tableFrame {
+  background: #fff;
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
+  overflow: hidden;
+  width: 100%;
+  overflow-x: auto;
+}
+
+.tableGrid {
+  display: grid;
+  grid-template-columns:
+    minmax(160px, 1.1fr) /* วันที่ */
+    minmax(160px, 1.1fr) /* เลขที่เอกสาร */
+    minmax(150px, 1fr)   /* ประเภท */
+    minmax(160px, 1.2fr) /* แหล่งที่มา */
+    minmax(150px, 1fr)   /* ผู้นำเข้า */
+    minmax(150px, 1fr)   /* สถานะ */
+    minmax(140px, .9fr); /* จัดการ */
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tableHeader {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #eef9fc;
+  border-bottom: 1px solid var(--tint-200);
+  padding: 12px var(--pad-x);
+  font-weight: 700;
   color: #374151;
 }
 
-.card b {
-  display: block;
-  font-size: 1.4rem;
-  color: #2563eb;
-  margin-bottom: 4px;
+.headerItem {
+  padding: 0 var(--pad-x);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
+.inventory {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  overflow: hidden;
+  background: #fff;
+}
+
+.tableRow {
+  height: var(--row-h);
+  border-top: 1px solid var(--tint-200);
+  padding: 0 var(--pad-x);
+}
+.tableRow:hover { background: var(--tint-100); }
+
+.tableCell {
+  padding: 0 var(--pad-x);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.centerCell { display: flex; justify-content: center; }
+
+.noDataRow {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--muted);
+  font-style: italic;
+  padding: 1rem;
+}
+
+/* Status badge */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 110px;
+  padding: .38rem .7rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .82rem;
+  color: #fff;
+  background: var(--primary);
+}
+
+/* ปุ่ม */
+.detailButton {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: .85rem;
+  transition: background-color .2s;
+}
+.detailButton:hover { background-color: #0056b3; }
+
+/* ===== Pagination ===== */
+.paginationControls {
+  display: flex;
+  list-style: none;
+  padding: 10px;
+  margin: 0;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  background: #fff;
+  border-top: 1px solid var(--tint-200);
+}
+
+.pageButton {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  min-width: 36px;
+  cursor: pointer;
+}
+.pageButton:hover:not(:disabled) { background: #e9f6fb; }
+.pageButton:disabled { opacity: .5; cursor: not-allowed; }
+.activePage { background: var(--primary); color: #fff; border-color: var(--primary); }
+.ellipsis { color: var(--muted); }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .tableGrid {
+    grid-template-columns:
+      minmax(140px, 1fr)
+      minmax(140px, 1fr)
+      minmax(130px, 1fr)
+      minmax(130px, 1fr)
+      minmax(130px, 1fr)
+      minmax(120px, 1fr)
+      minmax(120px, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .inventory { height: auto; }
+}
+

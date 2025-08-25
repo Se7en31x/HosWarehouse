@@ -1,355 +1,262 @@
-/* --- Global Styles (ปรับเล็กน้อย) --- */
-.pageBackground {
-  background-color: #f4f7f9;
+/* ===== Base Layout ===== */
+.pageContainer {
   min-height: 100vh;
-  font-family: 'Inter', 'Segoe UI', sans-serif; /* ลองใช้ font ที่ทันสมัยขึ้น */
-  box-sizing: border-box;
-  display: flex; /* เพิ่ม Flexbox เพื่อจัดวาง .container */
-  justify-content: center;
-  align-items: flex-start; /* จัดชิดด้านบน */
+  background: #f9fafb;
+  font-family: 'Kanit', sans-serif;
+  font-size: 1rem;   /* ตัวอักษรหลัก */
 }
 
-.container {
-  height: 100vh;
-  background-color: #ffffff;
-  padding: 2.5rem; /* เพิ่ม padding ให้ container */
-  border-radius: 12px; /* เพิ่มความมนของมุมให้มากขึ้น */
-  min-height: auto; /* ไม่ต้อง min-height 100vh ใน container */
-  width: 100%;
-  max-width: 1600px; /* กำหนด max-width เพื่อไม่ให้กว้างเกินไปบนจอใหญ่ๆ */
-  display: flex; /* เพิ่ม Flexbox เพื่อจัดการ Layout ภายใน */
-  flex-direction: column; /* จัดเรียงเนื้อหาในแนวตั้ง */
+.mainCard {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  max-width: 1280px;   /* ✅ จำกัดความกว้างรวม */
+  margin: 0 auto;      /* ✅ จัดให้อยู่กลาง */
 }
 
-.title {
-  font-size: 2.5rem; /* เพิ่มขนาดตัวอักษร */
-  color: #2c3e50; /* สีเข้มขึ้นเพื่อความโดดเด่น */
-  padding-bottom: 1.2rem;
-  margin-bottom: 2rem;
-  border-bottom: 2px solid #e0e0e0; /* เพิ่มความหนาของเส้นคั่น */
-  font-weight: 700; /* ทำให้ตัวหนาขึ้น */
-}
-
-.subtitle {
-  font-size: 1.8rem; /* เพิ่มขนาดตัวอักษร */
-  color: #34495e; /* สีเข้มขึ้น */
-  margin-top: 2.5rem;
-  margin-bottom: 1.2rem;
+.pageTitle {
+  font-size: 1.6rem;
   font-weight: 600;
+  color: #111827;
+  margin-bottom: 20px;
 }
 
-.detailSection {
-  background-color: #f9fafb;
-  border: 1px solid #e0e0e0;
-  border-radius: 10px; /* เพิ่มความมนของมุม */
-  padding: 2rem; /* เพิ่ม padding */
-  margin-bottom: 2.5rem;
-}
-
-.detailsGrid {
+/* ===== Content Layout ===== */
+.contentWrapper {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* ปรับ minmax */
-  gap: 1.5rem; /* เพิ่มระยะห่าง */
+  grid-template-columns: 40% 60%;  /* ซ้าย 40 / ขวา 60 */
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 20px;
 }
 
-.detailsGrid p {
-  margin: 0;
-  font-size: 1.05rem; /* ปรับขนาดเล็กน้อย */
-  color: #555;
+/* ===== Section Box ===== */
+.tableSection,
+.detailsFormSection {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.tableHeader,
+.detailsFormHeader {
+  font-size: 1.1rem;
+  font-weight: 600;
   display: flex;
   align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  color: #374151;
 }
 
-.detailsGrid p strong {
-  color: #333;
-  min-width: 120px; /* เพิ่ม min-width เพื่อจัดแนวให้ดีขึ้น */
-  margin-right: 1rem; /* เพิ่มระยะห่าง */
+/* ===== Table ===== */
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.itemTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+  table-layout: fixed;  /* ล็อคคอลัมน์ */
+}
+
+.itemTable th,
+.itemTable td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 10px 12px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemTable th {
+  background: #eef9fc;
+  color: #374151;
   font-weight: 600;
 }
 
-.statusBadge {
+.itemTable th:nth-child(1),
+.itemTable td:nth-child(1) {
+  width: 40%;  /* ชื่อสินค้า */
+}
+.itemTable th:nth-child(2),
+.itemTable td:nth-child(2) {
+  width: 40%;  /* Barcode */
+}
+.itemTable th:nth-child(3),
+.itemTable td:nth-child(3) {
+  width: 20%;  /* ปุ่มเลือก */
+  text-align: right;
+}
+
+.emptyMessage {
+  text-align: center;
+  color: #6b7280;
+  padding: 14px;
+  font-size: 1rem;
+}
+
+.textRight {
+  text-align: right;
+}
+
+/* ===== Pagination ===== */
+.paginationControls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  list-style: none;
+  padding: 0;
+}
+
+.pageButton {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #111827;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+  min-width: 36px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pageButton:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.pageButton:disabled {
+  background: #f9fafb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.activePage {
+  background: #008dda;
+  color: #fff;
+  border-color: #008dda;
+  font-weight: 600;
+}
+
+.ellipsis {
+  color: #6b7280;
+  font-size: 1rem;
+  padding: 0 4px;
+}
+
+/* ===== Form Section ===== */
+.detailsFormSection {
+  max-width: 100%;
+}
+
+.inputGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 20px;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+}
+
+.formField label {
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+  color: #374151;
+}
+
+.formField input,
+.formField textarea {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 1rem;
+  width: 100%;
+  max-width: 360px;   /* ไม่ให้ input ยาวเกิน */
+}
+
+.notesField {
+  min-height: 80px;
+  grid-column: span 2;
+}
+
+.errorText {
+  font-size: 0.85rem;
+  color: #dc2626;
+  margin-top: 2px;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+/* ===== Buttons ===== */
+.selectItemButton,
+.addItemButton,
+.clearButton,
+.saveButton,
+.deleteButton {
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 0.95rem;
   display: inline-flex;
   align-items: center;
-  padding: 0.35rem 1rem; /* เพิ่ม padding */
-  border-radius: 20px; /* ทำให้โค้งมนขึ้น */
-  font-size: 0.9rem; /* ปรับขนาดตัวอักษร */
-  font-weight: bold;
-  color: #ffffff;
-  margin-left: 0.7rem; /* เพิ่มระยะห่าง */
+  gap: 4px;
 }
 
-.statusApproved { background-color: #28a745; }
-.statusPartial { background-color: #ffc107; color: #333; } /* เพิ่มสีข้อความสำหรับสีเหลือง */
-.statusDeducted { background-color: #007bff; }
-.statusCompleted { background-color: #6c757d; }
-
-/* --- Table Styles Enhancement --- */
-.tableContainer {
-  overflow-x: auto;
-  margin-top: 2rem; /* เพิ่ม margin-top */
-  border-radius: 10px; /* เพิ่มความมนของมุม */
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08); /* เพิ่มเงาให้ดูมีมิติมากขึ้น */
-  width: 100%;
-  border: 1px solid #e0e0e0; /* เพิ่มเส้นขอบรอบ table container */
+.selectItemButton {
+  background: #e0f2fe;
+  color: #0369a1;
 }
 
-.table {
-  width: 100%;
-  border-collapse: separate; /* เพื่อให้ border-radius ทำงานได้ดีขึ้น */
-  border-spacing: 0;
-  min-width: 700px; /* กำหนด min-width เพื่อป้องกันการบีบตัวเกินไปในจอเล็ก */
+.addItemButton {
+  background: #22c55e;
+  color: #fff;
 }
 
-.table thead tr {
-  background-color: #eef2f7; /* ปรับสีพื้นหลัง header */
-  color: #4a5568; /* สีข้อความ header */
-  text-transform: uppercase;
-  font-size: 0.95rem; /* ปรับขนาดตัวอักษร */
-  letter-spacing: 0.7px; /* เพิ่มระยะห่างตัวอักษร */
-  font-weight: 600; /* ทำให้ตัวหนาขึ้น */
+.clearButton {
+  background: #f3f4f6;
+  color: #374151;
 }
 
-.table th, .table td {
-  padding: 14px 20px; /* เพิ่ม padding */
-  text-align: left;
-  border-bottom: 1px solid #e0e0e0; /* เพิ่มเส้นคั่นระหว่างแถว */
+.saveButton {
+  background: #008dda;
+  color: #fff;
 }
 
-.table th:first-child,
-.table td:first-child {
-  padding-left: 25px; /* เพิ่ม padding ด้านซ้ายของคอลัมน์แรก */
+.deleteButton {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 6px 10px;
 }
 
-.table th:last-child,
-.table td:last-child {
-  padding-right: 25px; /* เพิ่ม padding ด้านขวาของคอลัมน์สุดท้าย */
+/* ===== Bottom Section ===== */
+.bottomSection {
+  margin-top: 20px;
+  max-width: 1280px;  /* เท่ากับ mainCard */
+  margin-left: auto;
+  margin-right: auto;
 }
 
-/* Rounded corners for table header */
-.table thead th:first-child {
-  border-top-left-radius: 10px;
-}
-.table thead th:last-child {
-  border-top-right-radius: 10px;
-}
-
-
-.table tbody tr:nth-child(odd) {
-  background-color: #ffffff;
-}
-
-.table tbody tr:nth-child(even) {
-  background-color: #f8f9fa;
-}
-
-.table tbody tr:hover {
-  background-color: #e0f2f7; /* เปลี่ยนสี hover ให้ดูสบายตาขึ้น */
-  cursor: pointer; /* เพิ่ม cursor pointer */
-}
-
-.qtyInput, .reasonInput {
-  width: 100px;
-  padding: 9px; /* เพิ่ม padding */
-  border: 1px solid #c9d6de; /* ปรับสีเส้นขอบ */
-  border-radius: 6px; /* เพิ่มความมนของมุม */
-  box-sizing: border-box;
-  font-size: 0.95rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.qtyInput:focus, .reasonInput:focus {
-  outline: none;
-  border-color: #007bff;
-}
-
-.reasonInput {
-  width: 100%;
-  max-width: 250px; /* เพิ่ม max-width */
-}
-
-.lowStock {
-  color: #dc3545;
-  font-weight: bold;
-  background-color: #fff0f0; /* เพิ่มพื้นหลังสีอ่อน */
-  padding: 0.2em 0.5em;
-  border-radius: 4px;
-}
-
-.infoMessage {
-  text-align: center;
-  color: #6c757d;
-  font-size: 1.2rem;
-  padding: 2.5rem 0;
-  font-style: italic; /* ทำให้ดูเป็นข้อความแนะนำ */
-}
-
-.errorMessage {
-  text-align: center;
-  color: #dc3545;
-  font-size: 1.25rem;
-  padding: 2.5rem;
-  background-color: #fff3f3;
-  border: 1px solid #dc3545;
-  border-radius: 10px;
-  margin-top: 2rem;
-  font-weight: 600;
-}
-
-/* --- Action Buttons (จัดให้อยู่ด้านล่างขวา) --- */
-.actionButtons {
-  margin-top: 3rem; /* เพิ่ม margin-top เพื่อแยกจากเนื้อหาตาราง */
-  display: flex;
-  justify-content: flex-end; /* จัดให้อยู่ชิดขวา */
-  padding: 20px; /* เพิ่ม padding */
-  background-color: #ffffff; /* เปลี่ยนเป็นสีขาวเพื่อให้เข้ากับ container */
-  width: 100%;
-  gap: 15px;
-  border-top: 1px solid #e0e0e0; /* เพิ่มเส้นคั่นด้านบน */
-  border-bottom-left-radius: 12px; /* ทำให้มุมล่างซ้ายมนตาม container */
-  border-bottom-right-radius: 12px; /* ทำให้มุมล่างขวามนตาม container */
-}
-
-.button {
-  padding: 13px 28px; /* เพิ่ม padding */
-  border-radius: 8px; /* เพิ่มความมนของมุม */
-  font-size: 1.05rem; /* ปรับขนาดตัวอักษร */
-  font-weight: bold;
-  cursor: pointer;
-  border: none;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease; /* เพิ่ม transform */
-}
-
-.primaryButton {
-  background-color: #007bff;
-  color: #ffffff;
-}
-
-.primaryButton:hover:not(:disabled) {
-  background-color: #0056b3;
-  transform: translateY(-2px); /* ทำให้ปุ่มเด้งขึ้นเล็กน้อย */
-}
-
-.primaryButton:disabled {
-  background-color: #a0c9f1;
-  cursor: not-allowed;
-  opacity: 0.8;
-}
-
-.secondaryButton {
-  background-color: #6c757d;
-  color: #ffffff;
-}
-
-.secondaryButton:hover {
-  background-color: #5a6268;
-  transform: translateY(-2px);
-}
-
-/* --- Responsive Design (ปรับปรุง) --- */
-@media (max-width: 768px) {
-  .pageBackground {
-    padding: 1rem;
-    align-items: stretch; /* ให้ container ยืดเต็มความกว้าง */
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .contentWrapper {
+    grid-template-columns: 1fr; /* มือถือ → 1 คอลัมน์ */
   }
-
-  .container {
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-  }
-
-  .title {
-    font-size: 1.8rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .subtitle {
-    font-size: 1.4rem;
-    margin-top: 2rem;
-  }
-
-  .detailSection {
-    padding: 1.2rem;
-    margin-bottom: 1.8rem;
-  }
-  
-  .detailsGrid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .detailsGrid p {
-    font-size: 0.95rem;
-  }
-
-  .detailsGrid p strong {
-    min-width: 90px;
-    margin-right: 0.8rem;
-  }
-
-  .tableContainer {
-    margin-top: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-  }
-
-  .table thead {
-    display: none;
-  }
-
-  .table, .table tbody, .table tr, .table td {
-    display: block;
-    width: 100%;
-  }
-
-  .table tr {
-    margin-bottom: 1rem;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 0.5rem;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* เพิ่มเงาให้แต่ละแถว */
-  }
-  
-  .table td {
-    border: none;
-    text-align: right;
-    position: relative;
-    padding-left: 45%; /* ปรับ padding-left */
-    padding-top: 8px;
-    padding-bottom: 8px;
-  }
-
-  .table td:before {
-    content: attr(data-label);
-    position: absolute;
-    left: 15px;
-    width: calc(45% - 30px); /* ปรับ width */
-    text-align: left;
-    font-weight: bold;
-    color: #333;
-    top: 50%; /* จัดตำแหน่งกลาง */
-    transform: translateY(-50%);
-  }
-
-  .qtyInput, .reasonInput {
-    width: 100%;
-    max-width: none;
-    padding: 7px;
-    font-size: 0.9rem;
-  }
-
-  .actionButtons {
-    margin-top: 2rem;
-    padding: 15px;
-    flex-direction: column; /* จัดปุ่มในแนวตั้งบนมือถือ */
-    gap: 10px;
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
-  }
-
-  .button {
-    width: 100%; /* ทำให้ปุ่มกว้างเต็ม */
-    padding: 10px 15px;
-    font-size: 0.95rem;
+  .notesField {
+    grid-column: span 1;
   }
 }

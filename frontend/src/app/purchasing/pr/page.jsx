@@ -1,22 +1,44 @@
-// src/app/purchasing/pr/page.jsx
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
 import styles from "./page.module.css";
 import axiosInstance from "@/app/utils/axiosInstance";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react"; // ✅ import ไอคอน
+import { ChevronLeft, ChevronRight, Trash2, Search } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const Select = dynamic(() => import("react-select"), { ssr: false });
+
+/* react-select styles */
+const customSelectStyles = {
+  control: (base, state) => ({
+    ...base,
+    borderRadius: "0.5rem",
+    minHeight: "2.3rem",
+    borderColor: state.isFocused ? "#2563eb" : "#e5e7eb",
+    boxShadow: "none",
+    "&:hover": { borderColor: "#2563eb" },
+  }),
+  menu: (base) => ({
+    ...base,
+    zIndex: 9999,
+  }),
+  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+};
 
 export default function PurchasingPrPage() {
   const [purchaseRequests, setPurchaseRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // ฟิลเตอร์
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [search, setSearch] = useState("");
+
   // Pagination
-  const rowsPerPage = 10;
+  const rowsPerPage = 12;
   const [currentPage, setCurrentPage] = useState(1);
 
-  // แปลสถานะ
   const statusMap = {
     submitted: "รออนุมัติ",
     approved: "อนุมัติแล้ว",
@@ -25,6 +47,16 @@ export default function PurchasingPrPage() {
     canceled: "ยกเลิก",
     processed: "กำลังดำเนินการ",
   };
+
+  const STATUS_OPTIONS = [
+    { value: "all", label: "ทุกสถานะ" },
+    { value: "submitted", label: "รออนุมัติ" },
+    { value: "approved", label: "อนุมัติแล้ว" },
+    { value: "rejected", label: "ปฏิเสธแล้ว" },
+    { value: "draft", label: "ฉบับร่าง" },
+    { value: "canceled", label: "ยกเลิก" },
+    { value: "processed", label: "กำลังดำเนินการ" },
+  ];
 
   const getStatusClass = (status) => {
     switch (status) {
@@ -64,10 +96,22 @@ export default function PurchasingPrPage() {
       minute: "2-digit",
     });
 
+  // Filter list
+  const filteredList = useMemo(() => {
+    return purchaseRequests.filter((pr) => {
+      const okStatus = statusFilter === "all" || pr.status === statusFilter;
+      const okSearch =
+        search === "" ||
+        pr.pr_no?.toLowerCase().includes(search.toLowerCase()) ||
+        pr.requester_name?.toLowerCase().includes(search.toLowerCase());
+      return okStatus && okSearch;
+    });
+  }, [purchaseRequests, statusFilter, search]);
+
   const totalPages = useMemo(() => {
-    const t = Math.ceil((purchaseRequests?.length || 0) / rowsPerPage);
+    const t = Math.ceil((filteredList?.length || 0) / rowsPerPage);
     return t > 0 ? t : 1;
-  }, [purchaseRequests]);
+  }, [filteredList]);
 
   useEffect(() => {
     if (currentPage > totalPages) setCurrentPage(totalPages);
@@ -75,7 +119,7 @@ export default function PurchasingPrPage() {
 
   const start = (currentPage - 1) * rowsPerPage;
   const end = start + rowsPerPage;
-  const pageRows = (purchaseRequests || []).slice(start, end);
+  const pageRows = (filteredList || []).slice(start, end);
   const displayRows = [...pageRows];
   while (displayRows.length < rowsPerPage) displayRows.push({ _placeholder: true });
 
@@ -97,33 +141,59 @@ export default function PurchasingPrPage() {
     if (p >= 1 && p <= totalPages) setCurrentPage(p);
   };
 
-  // ✅ ฟังก์ชันสำหรับปุ่มลูกศร
   const goToPreviousPage = () => handlePageChange(currentPage - 1);
   const goToNextPage = () => handlePageChange(currentPage + 1);
 
-  if (loading) {
-    return (
-      <div className={styles.loadingContainer}>
-        <div className={styles.spinner} />
-        <p className={styles.loadingText}>กำลังโหลดรายการคำขอซื้อ…</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className={styles.container}>
-        <h1 className={styles.title}>รายการคำขอซื้อ</h1>
-        <p className={styles.emptyList}>{error}</p>
-      </div>
-    );
-  }
+  const clearFilters = () => {
+    setStatusFilter("all");
+    setSearch("");
+    setCurrentPage(1);
+  };
 
   return (
     <div className={styles.pageBackground}>
-      <div className={styles.card}>
-        <h1 className={styles.title}>รายการคำขอซื้อ</h1>
+      <div className={styles.container}>
+        <h1 className={styles.pageTitle}>รายการคำขอซื้อ</h1>
 
+        {/* Toolbar */}
+        <div className={styles.toolbar}>
+          <div className={styles.filterGroup}>
+            <label className={styles.label} htmlFor="status">สถานะ</label>
+            <Select
+              inputId="status"
+              isClearable
+              isSearchable={false}
+              placeholder="ทุกสถานะ"
+              options={STATUS_OPTIONS}
+              value={STATUS_OPTIONS.find((o) => o.value === statusFilter) || null}
+              onChange={(opt) => setStatusFilter(opt?.value || "all")}
+              styles={customSelectStyles}
+              menuPortalTarget={typeof window !== "undefined" ? document.body : undefined}
+            />
+          </div>
+
+          <div className={styles.searchCluster}>
+            <div className={styles.filterGroup}>
+              <label className={styles.label} htmlFor="search">ค้นหา</label>
+              <div className={styles.searchBox}>
+                <Search size={16} className={styles.searchIcon} />
+                <input
+                  id="search"
+                  type="text"
+                  className={styles.input}
+                  placeholder="ค้นหาเลขที่ PR หรือผู้ร้องขอ"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+            </div>
+            <button className={`${styles.ghostBtn} ${styles.clearButton}`} onClick={clearFilters}>
+              <Trash2 size={16} /> ล้างตัวกรอง
+            </button>
+          </div>
+        </div>
+
+        {/* Table */}
         <div className={styles.tableFrame}>
           <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
             <div className={styles.headerItem}>เลขที่ PR</div>
@@ -134,13 +204,12 @@ export default function PurchasingPrPage() {
           </div>
 
           <div className={styles.inventory} style={{ "--rows-per-page": rowsPerPage }}>
-            {purchaseRequests.length === 0 ? (
-              <div className={`${styles.noData} ${styles.centerCell}`}>ยังไม่มีรายการคำขอซื้อ</div>
+            {filteredList.length === 0 ? (
+              <div className={`${styles.noData} ${styles.centerCell}`}>ไม่พบคำขอซื้อ</div>
             ) : (
               displayRows.map((pr, idx) => {
                 const placeholder = !!pr._placeholder;
                 const key = placeholder ? `empty-${currentPage}-${idx}` : `pr-${pr.pr_id}`;
-
                 return (
                   <div
                     key={key}
@@ -172,11 +241,7 @@ export default function PurchasingPrPage() {
           {/* Pagination */}
           <ul className={styles.paginationControls}>
             <li>
-              <button
-                className={styles.pageButton}
-                onClick={goToPreviousPage}
-                disabled={currentPage === 1}
-              >
+              <button className={styles.pageButton} onClick={goToPreviousPage} disabled={currentPage === 1}>
                 <ChevronLeft size={16} />
               </button>
             </li>
@@ -195,11 +260,7 @@ export default function PurchasingPrPage() {
               )
             )}
             <li>
-              <button
-                className={styles.pageButton}
-                onClick={goToNextPage}
-                disabled={currentPage >= totalPages}
-              >
+              <button className={styles.pageButton} onClick={goToNextPage} disabled={currentPage >= totalPages}>
                 <ChevronRight size={16} />
               </button>
             </li>

@@ -1,319 +1,151 @@
-/* ✅ หน้าโดยรวม */
-.page {
-  padding: 24px;
-  background: #f9fafa;
+.pageBackground {
   min-height: 100vh;
-  font-family: 'Segoe UI', sans-serif;
-  color: #111827;
+  background: #f0f2f5;
+  padding: 24px;
 }
-
-/* ✅ ส่วนหัว */
-.header {
-  margin-bottom: 24px;
-  text-align: center;
-}
-
-.title {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #008dda;
-  margin-bottom: 8px;
-}
-
-.subtitle {
-  font-size: 1rem;
-  color: #374151;
-  line-height: 1.5;
-}
-
-/* ✅ Dashboard cards */
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+.container {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.06);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
-  margin-bottom: 24px;
 }
-
-.card {
-  background: white;
-  padding: 16px;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
-  border-top: 4px solid #41c9e2;
-  transition: transform 0.2s ease;
-}
-.card:hover {
-  transform: translateY(-3px);
-}
-
-.card h3 {
-  margin: 0;
-  font-size: 1rem;
+.pageTitle {
+  font-size: 1.6rem;
+  font-weight: 700;
   color: #008dda;
 }
 
-.card p {
-  font-size: 1.4rem;
-  font-weight: 700;
-  margin: 6px 0 0;
-  color: #41c9e2;
-}
-
-/* ✅ ตาราง */
-.tableWrapper {
-  background: white;
+/* Toolbar */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-  overflow-x: auto;
+  padding: 12px;
+  background: #f6fbfd;
 }
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 700px;
+.filterGroup { display: flex; flex-direction: column; gap: 6px; min-width: 180px; }
+.label { font-size: .85rem; font-weight: 600; color: #374151; }
+.searchCluster { display: flex; align-items: flex-end; gap: 10px; margin-left: auto; }
+.searchBox { position: relative; }
+.searchIcon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #6b7280; }
+.input { height: 38px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0 12px 0 32px; width: 220px; }
+.ghostBtn {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+  height: 38px; padding: 0 12px; cursor: pointer;
 }
+.ghostBtn:hover { background: #e9f6fb; }
+.clearButton { color: #2563eb; font-weight: 600; }
 
-.table th {
-  background: #008dda;
-  color: white;
-  padding: 12px 10px;
-  text-align: left;
-  font-weight: 600;
-  font-size: 0.9rem;
+/* Table */
+.tableFrame {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
 }
-
-.table td {
-  padding: 12px 10px;
-  border-bottom: 1px solid #f1f5f9;
-  font-size: 0.9rem;
+.tableGrid {
+  display: grid;
+  grid-template-columns:
+    minmax(140px,1fr)
+    minmax(150px,1fr)
+    minmax(160px,1.2fr)
+    minmax(160px,1.2fr)
+    minmax(120px,.8fr)
+    minmax(120px,.8fr)
+    minmax(150px,1fr)
+    minmax(100px,.6fr)
+    minmax(130px,.9fr);
+  align-items: center;
+}
+.tableHeader {
+  background: #eef9fc;
+  font-weight: 700;
+  padding: 12px;
   color: #374151;
 }
+.tableRow { border-top: 1px solid #e5e7eb; height: 56px; }
+.tableRow:hover { background: #f5f9ff; }
+.tableCell { padding: 0 12px; overflow: hidden; text-overflow: ellipsis; }
+.centerCell { display: flex; justify-content: center; }
 
-.table tr:hover {
-  background: #f9fafb;
+/* Badge */
+.statusBadge {
+  background: #e0f2fe;
+  color: #2563eb;
+  border-radius: 999px;
+  padding: .3rem .7rem;
+  font-size: .82rem;
+  font-weight: 600;
 }
 
-/* ✅ ปุ่ม */
-.btn {
-  padding: 8px 16px;
+/* No Data */
+.noDataRow {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+  padding: 16px;
+}
+
+/* Detail button */
+.detailButton {
   background: #41c9e2;
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
+  padding: 6px 12px;
   cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 500;
-  transition: background 0.2s ease;
+  font-size: .85rem;
 }
-.btn:hover {
-  background: #008dda;
-}
+.detailButton:hover { background: #008dda; }
 
-/* ✅ Badge */
-.badge {
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-}
-
-.approved {
-  background: #d1f7f5;
-  color: #008dda;
-}
-.partial  {
-  background: #fef3c7;
-  color: #92400e;
-}
-.waiting {
-  background: #e0f2fe;
-  color: #2563eb;
-}
-.rejected {
-  background: #fecaca;
-  color: #991b1b;
-}
-.urgent {
-  background-color: #fef2f2;
-  color: #dc2626;
-}
-.normal {
-  background-color: #eff6ff;
-  color: #2563eb;
-}
-
-/* ✅ Loading & No Data */
-.loadingContainer,
-.noDataMessage {
-  text-align: center;
-  padding: 20px;
-  font-size: 1rem;
-  color: #374151;
-}
-
-/* ✅ SweetAlert Modal */
+/* SweetAlert Custom */
 .swalPopup {
-  width: 90vw;
-  max-width: 1100px;   /* 🔹 กว้างขึ้น */
-  min-width: 320px;
-  max-height: 90vh;
-  overflow-y: auto;
   border-radius: 16px !important;
-  padding: 32px !important;
-  background: #f9fafa !important;
-  font-family: 'Segoe UI', sans-serif;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15) !important;
+  padding: 20px !important;
+}
+.swalTitle {
+  font-size: 1.2rem !important;
+  font-weight: 700 !important;
+  color: #2563eb !important;
+  margin-bottom: 12px !important;
 }
 
-/* ✅ Header ใน Modal */
-.modal-header {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px 24px;
-  margin-bottom: 24px;
-  font-size: 0.95rem;
-  color: #374151;
-  line-height: 1.6;
-}
-
-/* ✅ Divider */
-.modal-divider {
-  border: 0;
-  border-top: 1px solid #e5e7eb;
-  margin: 20px 0;
-}
-
-/* ✅ Details ใน Modal */
-.modal-details {
-  margin-top: 20px;
-  max-height: 500px;
-  overflow-y: auto;
-  padding-right: 6px;
-}
-
-/* ✅ ตารางภายใน Modal */
-.detail-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-  color: #374151;
-}
-
-.detail-table th,
-.detail-table td {
-  padding: 10px 14px;
-  border-bottom: 1px solid #e5e7eb;
-  word-break: break-word;
-}
-
-.detail-table th {
-  background: #f1f5f9;
-  font-weight: 600;
-  text-align: left;
-}
-
-.detail-table td.text-right {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-/* ✅ ปุ่มใน Swal */
-.swalBtn {
-  background: linear-gradient(135deg, #41c9e2, #008dda) !important;
-  border: none !important;
-  border-radius: 8px !important;
-  padding: 12px 28px !important;
-  font-size: 1rem !important;
-  font-weight: 600 !important;
-  color: white !important;
-  min-width: 120px;
-  transition: all 0.2s ease-in-out;
-}
-.swalBtn:hover {
-  background: linear-gradient(135deg, #008dda, #41c9e2) !important;
-  transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* ✅ ปุ่มปิด Swal */
-.swalClose {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  color: #008dda !important;
-  font-size: 1.6rem !important;
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-.swalClose:hover {
-  color: #41c9e2 !important;
-}
-
-/* ✅ Responsive */
-@media (max-width: 768px) {
-  .page {
-    padding: 16px;
-  }
-  .title {
-    font-size: 1.5rem;
-  }
-  .subtitle {
-    font-size: 0.9rem;
-  }
-  .swalPopup {
-    width: 95vw;
-    max-width: 650px;
-    padding: 20px !important;
-  }
-  .modal-header {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    font-size: 0.9rem;
-  }
-  .detail-table th,
-  .detail-table td {
-    padding: 8px 10px;
-    font-size: 0.85rem;
-  }
-}
-.summaryCards {
-  display: flex;              /* เรียงเป็นแถว */
-  justify-content: space-between;
-  align-items: stretch;
-  gap: 16px;                  /* ระยะห่างระหว่างการ์ด */
-  margin: 20px 0 28px;
-  flex-wrap: wrap;            /* ถ้าหน้าจอเล็กให้ขึ้นบรรทัดใหม่ */
-}
-
-.card {
-  flex: 1;                    /* ให้การ์ดกว้างเท่าๆ กัน */
-  min-width: 180px;           /* การ์ดไม่เล็กเกินไป */
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
-  border-top: 4px solid #41c9e2;
-  transition: transform 0.2s ease;
-}
-
-.card:hover {
-  transform: translateY(-3px);
-}
-
-.card h3 {
+/* Pagination */
+.paginationControls {
+  display: flex;
+  list-style: none;
+  padding: 10px;
   margin: 0;
-  font-size: 1rem;
-  color: #008dda;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  background: #fff;
+  border-top: 1px solid #e5e7eb;
 }
+.pageButton {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 6px 10px;
+  min-width: 36px;
+  cursor: pointer;
+}
+.pageButton:hover:not(:disabled) { background: #e9f6fb; }
+.pageButton:disabled { opacity: .5; cursor: not-allowed; }
+.activePage { background: #008dda; color: #fff; border-color: #008dda; }
+.ellipsis { color: #6b7280; }
 
-.card p {
-  font-size: 1.6rem;   /* ขยายตัวเลขให้เด่น */
-  font-weight: 700;
-  margin: 6px 0 0;
-  color: #41c9e2;
+.placeholderRow {
+  border-top-color: transparent !important;
+  background: transparent !important;
+  pointer-events: none;
+}
+.placeholderRow + .placeholderRow {
+  border-top-color: transparent !important;
 }

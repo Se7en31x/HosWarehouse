@@ -74,13 +74,13 @@ export default function BasicDetail({ form = {} }) {
                     </div>
                     {/* เพิ่มสถานะการยืมได้ */}
                     <div className={styles.field}>
-                        <label>ประเภทพัสดุ</label>
+                        <label>สามารถยืมได้</label>
                         <input value={isBorrowableValue} disabled />
                     </div>
                 </div>
             </fieldset>
 
-            {/* <fieldset className={styles.section}>
+            <fieldset className={styles.section}>
                 <legend>รูปภาพพัสดุ</legend>
                 {item_img ? (
                     <div className={styles.imagePreview}>
@@ -89,7 +89,7 @@ export default function BasicDetail({ form = {} }) {
                 ) : (
                     <p>ไม่มีรูปภาพ</p>
                 )}
-            </fieldset> */}
+            </fieldset>
         </>
     );
 }

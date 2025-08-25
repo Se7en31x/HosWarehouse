@@ -1,56 +1,81 @@
-'use client';
+"use client";
+import { useState, useEffect, useMemo } from "react";
+import axiosInstance from "@/app/utils/axiosInstance";
+import Swal from "sweetalert2";
+import styles from "./page.module.css";
+import { Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import dynamic from "next/dynamic";
 
-import { useState, useEffect } from 'react';
-import axiosInstance from '@/app/utils/axiosInstance';
-import Swal from 'sweetalert2';
-import styles from './page.module.css';
+const Select = dynamic(() => import("react-select"), { ssr: false });
 
-// ✅ สถานะการอนุมัติ (request_status)
+/* react-select styles */
+const customSelectStyles = {
+  control: (base, state) => ({
+    ...base,
+    borderRadius: "0.5rem",
+    minHeight: "2.3rem",
+    borderColor: state.isFocused ? "#2563eb" : "#e5e7eb",
+    boxShadow: "none",
+    "&:hover": { borderColor: "#2563eb" },
+  }),
+  menu: (base) => ({ ...base, zIndex: 9999 }),
+  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+};
+
+/* mapping */
 const approvalStatusMap = {
-  waiting_approval: '⏳ รอการอนุมัติ',
-  approved_all: '✅ อนุมัติทั้งหมด',
-  approved_partial: '🟡 อนุมัติบางส่วน',
-  rejected: '❌ ถูกปฏิเสธ',
-  canceled: '🚫 ยกเลิก',
-  completed: '📦 ดำเนินการเสร็จสิ้น',
+  waiting_approval: "รอการอนุมัติ",
+  approved_all: "อนุมัติทั้งหมด",
+  approved_partial: "อนุมัติบางส่วน",
+  approved_partial_and_rejected_partial: "อนุมัติบางส่วน",  // ✅ เพิ่มตรงนี้
+  rejected: "ปฏิเสธ",
+  canceled: "ยกเลิก",
+  completed: "เสร็จสิ้น",
 };
 
-// ✅ สถานะการยืม/คืน
 const borrowStatusMap = {
-  not_returned: '⏳ ยังไม่คืน',
-  partially_returned: '🟡 คืนบางส่วน',
-  returned: '🟢 คืนครบแล้ว',
+  not_returned: "ยังไม่คืน",
+  partially_returned: "คืนบางส่วน",
+  returned: "คืนครบแล้ว",
 };
-
-// ✅ สถานะการคืนของแต่ละ record
+const urgentMap = { true: "ด่วน", false: "ปกติ" };
 const returnStatusMap = {
-  normal: '📦 คืนปกติ',
-  damaged: '⚠️ ชำรุด',
-  lost: '💔 สูญหาย',
+  normal: "คืนปกติ",
+  damaged: "ชำรุด",
+  lost: "สูญหาย",
 };
 
-// ✅ format วันที่ (รองรับ short / long)
-const formatThaiDate = (isoString, type = 'long') => {
-  if (!isoString) return '-';
-  const date = new Date(isoString);
-  if (isNaN(date.getTime())) return '-';
+/* options */
+const STATUS_OPTIONS = [
+  { value: "all", label: "ทุกสถานะ" },
+  { value: "waiting_approval", label: "รอการอนุมัติ" },
+  { value: "approved_all", label: "อนุมัติทั้งหมด" },
+  { value: "approved_partial", label: "อนุมัติบางส่วน" },
+  { value: "rejected", label: "ถูกปฏิเสธ" },
+  { value: "canceled", label: "ยกเลิก" },
+];
+const RETURN_OPTIONS = [
+  { value: "all", label: "การคืนทั้งหมด" },
+  { value: "normal", label: "คืนปกติ" },
+  { value: "damaged", label: "คืนชำรุด" },
+  { value: "lost", label: "สูญหาย" },
+];
+const URGENT_OPTIONS = [
+  { value: "all", label: "เร่งด่วน/ปกติ" },
+  { value: "urgent", label: "เฉพาะเร่งด่วน" },
+  { value: "normal", label: "เฉพาะปกติ" },
+];
 
-  if (type === 'short') {
-    return date.toLocaleString('th-TH', {
-      year: '2-digit',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }
-
-  return date.toLocaleString('th-TH', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+/* helper */
+const formatThaiDate = (isoString) => {
+  if (!isoString) return "-";
+  const d = new Date(isoString);
+  return d.toLocaleString("th-TH", {
+    year: "2-digit",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 
@@ -58,19 +83,22 @@ export default function BorrowHistory() {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 🔹 Filters
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterReturn, setFilterReturn] = useState('all');
-  const [filterUrgent, setFilterUrgent] = useState('all');
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterReturn, setFilterReturn] = useState("all");
+  const [filterUrgent, setFilterUrgent] = useState("all");
+  const [searchText, setSearchText] = useState("");
+
+  // pagination
+  const rowsPerPage = 10;
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axiosInstance.get('/history/borrow');
+        const res = await axiosInstance.get("/history/borrow");
         setData(Array.isArray(res.data) ? res.data : []);
-      } catch (err) {
-        console.error('❌ Error fetching borrow history:', err);
-        Swal.fire({ icon: 'error', title: 'โหลดข้อมูลผิดพลาด' });
+      } catch {
+        Swal.fire({ icon: "error", title: "โหลดข้อมูลผิดพลาด" });
       } finally {
         setIsLoading(false);
       }
@@ -78,251 +106,203 @@ export default function BorrowHistory() {
     fetchData();
   }, []);
 
-  // 🔹 กรองข้อมูล
-  const filteredData = data.filter((req) => {
-    let matchStatus = filterStatus === 'all' || req.request_status === filterStatus;
-    let matchReturn =
-      filterReturn === 'all' ||
-      req.details?.some((d) => d.returns?.some((r) => r.condition === filterReturn));
-    let matchUrgent =
-      filterUrgent === 'all' ||
-      (filterUrgent === 'urgent' && req.is_urgent) ||
-      (filterUrgent === 'normal' && !req.is_urgent);
-
-    return matchStatus && matchReturn && matchUrgent;
-  });
-
-  // 🔹 Dashboard summary
-  const total = data.length;
-
-  const returnedComplete = data.filter((d) => {
-    if (!d.details || d.details.length === 0) return false;
-    return d.details.every((i) => {
-      const approved = i.approved_qty ?? 0;
-      const returned =
-        i.returns?.reduce((sum, r) => sum + (r.return_qty ?? 0), 0) || 0;
-      return returned >= approved;
+  const filteredData = useMemo(() => {
+    return data.filter((req) => {
+      const okStatus = filterStatus === "all" || req.request_status === filterStatus;
+      const okReturn =
+        filterReturn === "all" ||
+        req.details?.some((d) => d.returns?.some((r) => r.condition === filterReturn));
+      const okUrgent =
+        filterUrgent === "all" ||
+        (filterUrgent === "urgent" && req.is_urgent) ||
+        (filterUrgent === "normal" && !req.is_urgent);
+      const okSearch =
+        searchText === "" ||
+        req.request_code?.toLowerCase().includes(searchText.toLowerCase()) ||
+        req.department?.toLowerCase().includes(searchText.toLowerCase()) ||
+        req.requester_name?.toLowerCase().includes(searchText.toLowerCase());
+      return okStatus && okReturn && okUrgent && okSearch;
     });
-  }).length;
+  }, [data, filterStatus, filterReturn, filterUrgent, searchText]);
 
-  const partiallyReturned = data.filter((d) => {
-    if (!d.details || d.details.length === 0) return false;
-    let hasReturnedSome = false;
-    let hasRemaining = false;
-    d.details.forEach((i) => {
-      const approved = i.approved_qty ?? 0;
-      const returned =
-        i.returns?.reduce((sum, r) => sum + (r.return_qty ?? 0), 0) || 0;
-      if (returned > 0 && returned < approved) hasReturnedSome = true;
-      if (returned < approved) hasRemaining = true;
-    });
-    return hasReturnedSome && hasRemaining;
-  }).length;
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / rowsPerPage));
+  const start = (currentPage - 1) * rowsPerPage;
+  const pageRows = filteredData.slice(start, start + rowsPerPage);
 
-  let damaged = 0,
-    lost = 0;
-  data.forEach((d) => {
-    d.details?.forEach((i) => {
-      i.returns?.forEach((r) => {
-        if (r.condition === 'damaged') damaged += r.return_qty ?? 1;
-        if (r.condition === 'lost') lost += r.return_qty ?? 1;
-      });
-    });
-  });
+  // เติม placeholder rows
+  const displayRows = [...pageRows];
+  while (displayRows.length < rowsPerPage) {
+    displayRows.push({ _placeholder: true, request_id: `ph-${displayRows.length}` });
+  }
 
-  // 🔹 Popup รายละเอียด
-  const showDetail = (row) => {
-    const itemList = (row.details || [])
-      .map((i) => {
-        const totalReturned =
-          i.returns?.reduce((sum, r) => sum + r.return_qty, 0) || 0;
-        const remaining = (i.approved_qty ?? 0) - totalReturned;
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else if (currentPage <= 4) {
+      pages.push(1, 2, 3, 4, 5, "...", totalPages);
+    } else if (currentPage >= totalPages - 3) {
+      pages.push(1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+    } else {
+      pages.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
+    }
+    return pages;
+  };
 
-        const returnTable =
-          (i.returns || []).length > 0
-            ? `
-          <table class="${styles.returnTable}">
-            <thead><tr>
-              <th>วันที่คืน</th><th>จำนวน</th><th>สถานะ</th><th>ผู้ตรวจรับ</th>
-            </tr></thead>
-            <tbody>
-              ${i.returns
-                .map(
-                  (r) => `
-                <tr>
-                  <td>${formatThaiDate(r.return_date, 'long')}</td>
-                  <td>${r.return_qty} ${i.unit || '-'}</td>
-                  <td>${returnStatusMap[r.condition] || r.condition}</td>
-                  <td>${r.inspected_by_name || '-'}</td>
-                </tr>`
-                )
-                .join('')}
-            </tbody>
-          </table>`
-            : '<p style="color:gray;">ยังไม่มีการคืน</p>';
+  const clearFilters = () => {
+    setFilterStatus("all");
+    setFilterReturn("all");
+    setFilterUrgent("all");
+    setSearchText("");
+    setCurrentPage(1);
+  };
 
-        return `
-          <div class="${styles.detailItem}">
-            <div class="${styles.detailItemHeader}">
-              <span>${i.item_name || '-'}</span>
-            </div>
-            <ul class="${styles.detailListHorizontal}">
-              <li><b>จำนวนอนุมัติ:</b> ${i.approved_qty ?? 0} ${i.unit || '-'}</li>
-              <li><b>คืนแล้ว:</b> ${totalReturned} ${i.unit || '-'}</li>
-              <li><b>คงค้าง:</b> ${remaining} ${i.unit || '-'}</li>
-              <li><b>กำหนดคืน:</b> ${formatThaiDate(i.expected_return_date, 'short')}</li>
-            </ul>
-            <div><b>ประวัติการคืน:</b> ${returnTable}</div>
-          </div>`;
-      })
-      .join('');
-
+  // popup
+  const showDetail = (req) => {
     Swal.fire({
-      title: `รายละเอียดคำขอ ${row.request_code}`,
+      title: `รายละเอียดคำขอ ${req.request_code}`,
       html: `
-        <div class="${styles.modalHeader}">
-          <div><b>ผู้ยืม:</b> ${row.requester_name || '-'}</div>
-          <div><b>แผนก:</b> ${row.department || '-'}</div>
-          <div><b>วันที่ยืม:</b> ${formatThaiDate(row.request_date, 'long')}</div>
-          <div><b>กำหนดคืน:</b> ${formatThaiDate(row.request_due_date, 'long')}</div>
-          <div><b>ผู้อนุมัติ:</b> ${row.approved_by_name || '-'}</div>
-          <div><b>อนุมัติเมื่อ:</b> ${formatThaiDate(row.approved_at, 'long')}</div>
-        </div>
-        <hr class="${styles.modalDivider}" />
-        <div class="${styles.modalDetails}">
-          ${itemList || '<p>ไม่พบรายการ</p>'}
-        </div>`,
-      showCloseButton: true,
-      confirmButtonText: 'ปิด',
-      customClass: { popup: styles.swalPopup },
+        <p><b>วันที่ยืม:</b> ${formatThaiDate(req.request_date)}</p>
+        <p><b>ผู้ยืม:</b> ${req.requester_name}</p>
+        <p><b>แผนก:</b> ${req.department}</p>
+        <p><b>กำหนดคืน:</b> ${formatThaiDate(req.request_due_date)}</p>
+        <p><b>สถานะอนุมัติ:</b> ${approvalStatusMap[req.request_status] || req.request_status}</p>
+        <p><b>ความเร่งด่วน:</b> ${req.is_urgent ? urgentMap.true : urgentMap.false}</p>
+      `,
+      width: "700px",
+      confirmButtonText: "ปิด",
+      confirmButtonColor: "#2563eb",
     });
   };
 
   return (
-    <div className={styles.page}>
-      <div className={styles.header}>
-        <h2 className={styles.title}>📚 ประวัติการยืม-คืน</h2>
-      </div>
+    <div className={styles.pageBackground}>
+      <div className={styles.container}>
+        <h1 className={styles.pageTitle}>📚 ประวัติการยืม/คืน</h1>
 
-      {/* Dashboard */}
-      <div className={styles.summaryCards}>
-        <div className={styles.card}><h4>ทั้งหมด</h4><p>{total}</p></div>
-        <div className={styles.card}><h4>คืนครบ</h4><p>{returnedComplete}</p></div>
-        <div className={styles.card}><h4>คืนบางส่วน</h4><p>{partiallyReturned}</p></div>
-        <div className={styles.card}><h4>ชำรุด</h4><p>{damaged}</p></div>
-        <div className={styles.card}><h4>สูญหาย</h4><p>{lost}</p></div>
-      </div>
+        {/* Toolbar */}
+        <div className={styles.toolbar}>
+          <div className={styles.filterGroup}>
+            <label className={styles.label}>สถานะอนุมัติ</label>
+            <Select
+              isClearable
+              isSearchable={false}
+              options={STATUS_OPTIONS}
+              value={STATUS_OPTIONS.find((o) => o.value === filterStatus) || null}
+              onChange={(opt) => setFilterStatus(opt?.value || "all")}
+              styles={customSelectStyles}
+            />
+          </div>
+          <div className={styles.filterGroup}>
+            <label className={styles.label}>สถานะการคืน</label>
+            <Select
+              isClearable
+              isSearchable={false}
+              options={RETURN_OPTIONS}
+              value={RETURN_OPTIONS.find((o) => o.value === filterReturn) || null}
+              onChange={(opt) => setFilterReturn(opt?.value || "all")}
+              styles={customSelectStyles}
+            />
+          </div>
+          <div className={styles.filterGroup}>
+            <label className={styles.label}>ความเร่งด่วน</label>
+            <Select
+              isClearable
+              isSearchable={false}
+              options={URGENT_OPTIONS}
+              value={URGENT_OPTIONS.find((o) => o.value === filterUrgent) || null}
+              onChange={(opt) => setFilterUrgent(opt?.value || "all")}
+              styles={customSelectStyles}
+            />
+          </div>
+          <div className={styles.searchCluster}>
+            <div className={styles.searchBox}>
+              <Search size={16} className={styles.searchIcon} />
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="ค้นหา: รหัส / แผนก / ผู้ยืม"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+            </div>
+            <button className={`${styles.ghostBtn} ${styles.clearButton}`} onClick={clearFilters}>
+              <Trash2 size={16} /> ล้างตัวกรอง
+            </button>
+          </div>
+        </div>
 
-      {/* Filters */}
-      <div className={styles.filters}>
-        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-          <option value="all">สถานะอนุมัติทั้งหมด</option>
-          <option value="waiting_approval">รอการอนุมัติ</option>
-          <option value="approved_all">อนุมัติทั้งหมด</option>
-          <option value="approved_partial">อนุมัติบางส่วน</option>
-          <option value="rejected">ถูกปฏิเสธ</option>
-        </select>
-        <select value={filterReturn} onChange={(e) => setFilterReturn(e.target.value)}>
-          <option value="all">การคืนทั้งหมด</option>
-          <option value="normal">คืนปกติ</option>
-          <option value="damaged">คืนชำรุด</option>
-          <option value="lost">สูญหาย</option>
-        </select>
-        <select value={filterUrgent} onChange={(e) => setFilterUrgent(e.target.value)}>
-          <option value="all">เร่งด่วน/ปกติ</option>
-          <option value="urgent">เร่งด่วน</option>
-          <option value="normal">ปกติ</option>
-        </select>
-      </div>
+        {/* Table */}
+        <div className={styles.tableFrame}>
+          <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+            <div className={styles.headerItem}>วันที่ยืม</div>
+            <div className={styles.headerItem}>เลขที่คำขอ</div>
+            <div className={styles.headerItem}>ผู้ยืม</div>
+            <div className={styles.headerItem}>แผนก</div>
+            <div className={styles.headerItem}>กำหนดคืน</div>
+            <div className={styles.headerItem}>ด่วน</div>
+            <div className={styles.headerItem}>สถานะอนุมัติ</div>
+            <div className={styles.headerItem}>สถานะการคืน</div>
+            <div className={styles.headerItem}>จำนวนรายการ</div>
+            <div className={`${styles.headerItem} ${styles.centerCell}`}>จัดการ</div>
+          </div>
 
-      {/* Table */}
-      <div className={styles.tableWrapper}>
-        {isLoading ? (
-          <div className={styles.loadingContainer}>กำลังโหลด...</div>
-        ) : (
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>วันที่ยืม</th>
-                <th>เลขที่คำขอ</th>
-                <th>ผู้ยืม</th>
-                <th>แผนก</th>
-                <th>กำหนดคืน</th>
-                <th>เร่งด่วน</th>
-                <th>สถานะอนุมัติ</th>
-                <th>สถานะการยืม</th>
-                <th>จำนวนรายการ</th>
-                <th>รายละเอียด</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData.map((req) => {
-                let overallBorrow = 'not_returned';
+          <div className={styles.inventory} style={{ "--rows-per-page": rowsPerPage }}>
+            {isLoading ? (
+              <div className={`${styles.tableGrid} ${styles.tableRow} ${styles.noDataRow}`}>กำลังโหลดข้อมูล...</div>
+            ) : displayRows.map((req, idx) => {
+              const placeholder = !!req._placeholder;
+              let overallBorrow = "not_returned";
+              if (!placeholder) {
                 const statuses = req.details?.map((d) => d.borrow_status) || [];
                 if (statuses.length > 0) {
-                  if (statuses.every((s) => s === 'returned')) {
-                    overallBorrow = 'returned';
-                  } else if (
-                    statuses.some((s) => s === 'returned' || s === 'partially_returned')
-                  ) {
-                    overallBorrow = 'partially_returned';
-                  }
+                  if (statuses.every((s) => s === "returned")) overallBorrow = "returned";
+                  else if (statuses.some((s) => s === "returned" || s === "partially_returned"))
+                    overallBorrow = "partially_returned";
                 }
+              }
+              return (
+                <div key={req.request_id || `row-${idx}`} className={`${styles.tableGrid} ${styles.tableRow} ${placeholder ? styles.placeholderRow : ""}`}>
+                  <div className={styles.tableCell}>{placeholder ? "" : formatThaiDate(req.request_date)}</div>
+                  <div className={styles.tableCell}>{placeholder ? "" : req.request_code}</div>
+                  <div className={styles.tableCell}>{placeholder ? "" : req.requester_name}</div>
+                  <div className={styles.tableCell}>{placeholder ? "" : req.department}</div>
+                  <div className={styles.tableCell}>{placeholder ? "" : formatThaiDate(req.request_due_date)}</div>
+                  <div className={styles.tableCell}>{placeholder ? "" : <span className={styles.statusBadge}>{req.is_urgent ? urgentMap.true : urgentMap.false}</span>}</div>
+                  <div className={styles.tableCell}>{placeholder ? "" : <span className={styles.statusBadge}>{approvalStatusMap[req.request_status] || req.request_status}</span>}</div>
+                  <div className={styles.tableCell}>{placeholder ? "" : <span className={styles.statusBadge}>{borrowStatusMap[overallBorrow]}</span>}</div>
+                  <div className={styles.tableCell}>{placeholder ? "" : req.details?.length ?? 0}</div>
+                  <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                    {placeholder ? "" : <button className={styles.detailButton} onClick={() => showDetail(req)}>ดูรายละเอียด</button>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
 
-                return (
-                  <tr key={req.request_id}>
-                    <td>{formatThaiDate(req.request_date, 'short')}</td>
-                    <td>{req.request_code}</td>
-                    <td>{req.requester_name}</td>
-                    <td>{req.department}</td>
-                    <td>{formatThaiDate(req.request_due_date, 'short')}</td>
-                    <td>
-                      {req.is_urgent ? (
-                        <span className={`${styles.badge} ${styles.urgent}`}>🔴 ด่วน</span>
-                      ) : (
-                        <span className={`${styles.badge} ${styles.normal}`}>⚪ ปกติ</span>
-                      )}
-                    </td>
-                    <td>
-                      <span
-                        className={`${styles.badge} ${
-                          req.request_status === 'approved_all'
-                            ? styles.approved
-                            : req.request_status === 'approved_partial'
-                            ? styles.partial
-                            : req.request_status === 'waiting_approval'
-                            ? styles.waiting
-                            : styles.rejected
-                        }`}
-                      >
-                        {approvalStatusMap[req.request_status] || req.request_status}
-                      </span>
-                    </td>
-                    <td>
-                      <span
-                        className={`${styles.badge} ${
-                          overallBorrow === 'returned'
-                            ? styles.borrowComplete
-                            : overallBorrow === 'partially_returned'
-                            ? styles.borrowPartial
-                            : styles.borrowWaiting
-                        }`}
-                      >
-                        {borrowStatusMap[overallBorrow]}
-                      </span>
-                    </td>
-                    <td>{req.details?.length ?? 0}</td>
-                    <td>
-                      <button onClick={() => showDetail(req)} className={styles.btn}>
-                        ดูรายละเอียด
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
+          {/* Pagination */}
+          <ul className={styles.paginationControls}>
+            <li>
+              <button className={styles.pageButton} onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                <ChevronLeft size={16} />
+              </button>
+            </li>
+            {getPageNumbers().map((p, idx) =>
+              p === "..." ? <li key={`ellipsis-${idx}`} className={styles.ellipsis}>…</li> : (
+                <li key={`page-${p}`}>
+                  <button className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`} onClick={() => setCurrentPage(p)}>
+                    {p}
+                  </button>
+                </li>
+              )
+            )}
+            <li>
+              <button className={styles.pageButton} onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages}>
+                <ChevronRight size={16} />
+              </button>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   );

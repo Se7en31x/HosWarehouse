@@ -3,180 +3,110 @@ import { useEffect, useState, useMemo } from 'react';
 import axios from '@/app/utils/axiosInstance';
 import Swal from 'sweetalert2';
 import styles from './page.module.css';
-import { ChevronLeft, ChevronRight, Trash2, Clock, CheckCircle, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Clock, CheckCircle } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+const Select = dynamic(() => import('react-select'), { ssr: false });
+
+/* react-select styles */
+const customSelectStyles = {
+  control: (base, state) => ({
+    ...base,
+    borderRadius: '0.5rem',
+    minHeight: '2.5rem',
+    borderColor: state.isFocused ? '#2563eb' : '#e5e7eb',
+    boxShadow: 'none',
+    '&:hover': { borderColor: '#2563eb' },
+  }),
+  menu: (base) => ({
+    ...base,
+    borderRadius: '0.5rem',
+    marginTop: 6,
+    border: '1px solid #e5e7eb',
+    zIndex: 9000,
+  }),
+  menuPortal: (base) => ({ ...base, zIndex: 9000 }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isFocused ? '#f1f5ff' : '#fff',
+    color: '#111827',
+    padding: '8px 12px',
+  }),
+};
+
+/* สถานะที่เลือกได้ */
+const STATUS_OPTIONS = [
+  { value: 'all', label: 'สถานะทั้งหมด' },
+  { value: 'pending', label: 'รอดำเนินการ' },
+  { value: 'partial', label: 'ทำลายบางส่วน' },
+  { value: 'complete', label: 'ทำลายครบแล้ว' },
+];
 
 export default function ExpiredItemsPage() {
   const [expiredList, setExpiredList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dataError, setDataError] = useState(null);
 
-  // ✅ state สำหรับค้นหาและฟิลเตอร์
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  // pagination unified
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
-  // ✅ ตั้งค่า SweetAlert ให้เข้าธีมเดียวกัน
-  const swal = useMemo(
-    () =>
-      Swal.mixin({
-        customClass: {
-          popup: styles.swalPopup,
-          title: styles.swalTitle,
-          confirmButton: styles.swalConfirm,
-          cancelButton: styles.swalCancel,
-          actions: styles.swalActions,
-          htmlContainer: styles.swalHtml
-        },
-        buttonsStyling: false
-      }),
-    []
-  );
-
+  // โหลดข้อมูล
   const fetchExpired = async () => {
     try {
       const res = await axios.get('/expired');
       const data = Array.isArray(res.data) ? res.data : [];
-
-      const hasInvalidItem = data.some(e => !e.item_id);
-      setDataError(hasInvalidItem ? 'ข้อมูลบางรายการไม่สมบูรณ์: ไม่มี Item ID' : null);
-
       setExpiredList(data);
     } catch (err) {
-      console.error('Error fetching expired items:', err);
       setDataError('ไม่สามารถดึงข้อมูลพัสดุหมดอายุได้');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDispose = async (lotId, itemId, remainingQty) => {
-    const { value: qty } = await swal.fire({
-      title: 'ระบุจำนวนที่จะทำลาย',
-      input: 'number',
-      inputLabel: `สามารถทำลายได้สูงสุด ${remainingQty} ชิ้น`,
-      inputAttributes: { min: 1, max: remainingQty, step: 1 },
-      inputValue: remainingQty,
-      showCancelButton: true,
-      confirmButtonText: 'บันทึก',
-      cancelButtonText: 'ยกเลิก',
-      focusConfirm: false,
-      didOpen: () => {
-        const input = Swal.getInput();
-        if (input) input.classList.add(styles.swalInput);
-      },
-      preConfirm: (value) => {
-        const v = parseInt(value, 10);
-        if (!v || v <= 0) {
-          Swal.showValidationMessage('กรุณาระบุจำนวนที่ถูกต้อง');
-        } else if (v > remainingQty) {
-          Swal.showValidationMessage('จำนวนเกินจากที่เหลืออยู่');
-        }
-      }
-    });
-
-    if (!qty) return;
-
-    try {
-      await axios.post(`/expired/action`, {
-        lot_id: lotId,
-        item_id: itemId,
-        action_qty: parseInt(qty, 10),
-        action_by: 999, // TODO: ใช้ user_id จริงจาก auth
-        note: ''
-      });
-      swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: `ทำลาย ${qty} ชิ้นแล้ว`, confirmButtonText: 'ตกลง' });
-      fetchExpired();
-    } catch (err) {
-      console.error('Error during disposal action:', err);
-      swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่สามารถบันทึกข้อมูลได้' });
-    }
-  };
-
-  const handleViewHistory = async (lotId) => {
-    try {
-      const res = await axios.get(`/expired/actions/${lotId}`);
-      const history = Array.isArray(res.data) ? res.data : [];
-
-      if (history.length === 0) {
-        await swal.fire({
-          title: '🕒 ยังไม่มีประวัติการทำลาย',
-          icon: 'info',
-          confirmButtonText: 'ปิด',
-        });
-        return;
-      }
-
-      const htmlList = `
-        <div class="swal-history">
-          <table>
-            <thead>
-              <tr>
-                <th>วันที่</th>
-                <th>จำนวน</th>
-                <th>ผู้ทำลาย</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${history
-          .map(
-            (h) => `
-                <tr>
-                  <td>${new Date(h.action_date).toLocaleString('th-TH')}</td>
-                  <td class="qty">${h.action_qty} ชิ้น</td>
-                  <td>${h.action_by_name || 'ไม่ทราบ'}</td>
-                </tr>`
-          )
-          .join('')}
-            </tbody>
-          </table>
-        </div>
-      `;
-
-      await swal.fire({
-        title: '📜 ประวัติการทำลาย',
-        html: htmlList,
-        width: 720,
-        confirmButtonText: 'ปิด'
-      });
-    } catch (err) {
-      console.error('Error fetching history:', err);
-      swal.fire('เกิดข้อผิดพลาดในการโหลดประวัติ');
-    }
-  };
-
   useEffect(() => { fetchExpired(); }, []);
 
-  // ✅ Filter + Search
+  // ฟังก์ชันจำลองสำหรับทำลาย
+  const handleDispose = async (lotId, itemId, qty) => {
+    await Swal.fire({
+      icon: 'info',
+      title: 'ทำลาย',
+      text: `Lot ${lotId} / Item ${itemId} จำนวน ${qty} ชิ้น`,
+      confirmButtonText: 'ตกลง'
+    });
+  };
+
+  // ฟังก์ชันจำลองสำหรับดูประวัติ
+  const handleViewHistory = async (lotId) => {
+    await Swal.fire({
+      icon: 'info',
+      title: 'ประวัติการทำลาย',
+      text: `Lot ${lotId}`,
+      confirmButtonText: 'ปิด'
+    });
+  };
+
+  // Filter
   const filteredList = useMemo(() => {
     return expiredList.filter(e => {
-      const remainingToDispose = (Number(e.expired_qty) || 0) - (Number(e.disposed_qty) || 0);
-      const status =
-        remainingToDispose === 0
-          ? 'complete'
-          : (Number(e.disposed_qty) || 0) > 0
-            ? 'partial'
-            : 'pending';
+      const remaining = (Number(e.expired_qty) || 0) - (Number(e.disposed_qty) || 0);
+      const status = remaining === 0 ? 'complete' : (e.disposed_qty > 0 ? 'partial' : 'pending');
 
-      const matchesStatus = statusFilter === 'all' || statusFilter === status;
-      const matchesSearch =
+      const okStatus = statusFilter === 'all' || statusFilter === status;
+      const okSearch =
         e.item_name?.toLowerCase().includes(search.toLowerCase()) ||
         e.lot_no?.toLowerCase().includes(search.toLowerCase());
 
-      return matchesStatus && matchesSearch;
+      return okStatus && okSearch;
     });
   }, [expiredList, search, statusFilter]);
 
-  // ✅ Pagination จาก filteredList
+  // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredList.length / itemsPerPage));
   const start = (currentPage - 1) * itemsPerPage;
   const currentItems = filteredList.slice(start, start + itemsPerPage);
-
-  useEffect(() => {
-    if (currentPage > totalPages) setCurrentPage(totalPages);
-  }, [totalPages, currentPage]);
 
   const handlePrev = () => currentPage > 1 && setCurrentPage(p => p - 1);
   const handleNext = () => currentPage < totalPages && setCurrentPage(p => p + 1);
@@ -195,38 +125,61 @@ export default function ExpiredItemsPage() {
     return pages;
   };
 
+  const clearFilters = () => {
+    setSearch('');
+    setStatusFilter('all');
+    setCurrentPage(1);
+  };
+
   return (
     <div className={styles.pageBackground}>
       <div className={styles.container}>
         <div className={styles.pageBar}>
-          <div className={styles.titleGroup}>
-            <h1 className={styles.pageTitle}>จัดการของหมดอายุ</h1>
+          <h1 className={styles.pageTitle}>จัดการของหมดอายุ</h1>
+        </div>
+
+        {/* ✅ Toolbar */}
+        <div className={styles.toolbar}>
+          {/* ฟิลเตอร์สถานะ (ซ้าย) */}
+          <div className={styles.filterGroup}>
+            <label className={styles.label} htmlFor="status">สถานะ</label>
+            <Select
+              inputId="status"
+              isClearable
+              isSearchable={false}
+              placeholder="ทุกสถานะ"
+              options={STATUS_OPTIONS}
+              value={STATUS_OPTIONS.find(o => o.value === statusFilter) || null}
+              onChange={(opt) => setStatusFilter(opt?.value || 'all')}
+              styles={customSelectStyles}
+              menuPlacement="auto"
+              menuPosition="fixed"
+              menuPortalTarget={typeof window !== 'undefined' ? document.body : undefined}
+            />
           </div>
 
-          {/* ✅ Search + Filter */}
-          <div className={styles.filterBar}>
-            <input
-              type="text"
-              className={styles.searchInput}
-              placeholder="ค้นหาชื่อพัสดุ หรือ Lot No."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-            <select
-              className={styles.filterSelect}
-              value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
-            >
-              <option value="all">สถานะทั้งหมด</option>
-              <option value="pending">รอดำเนินการ</option>
-              <option value="partial">ทำลายบางส่วน</option>
-              <option value="complete">ทำลายครบแล้ว</option>
-            </select>
+          {/* ช่องค้นหา (ขวา) */}
+          <div className={styles.searchCluster}>
+            <div className={styles.filterGroup}>
+              <label className={styles.label} htmlFor="search">ค้นหา</label>
+              <input
+                id="search"
+                type="text"
+                className={styles.input}
+                placeholder="ค้นหาชื่อพัสดุ หรือ Lot No."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </div>
+            <button className={`${styles.ghostBtn} ${styles.clearButton}`} onClick={clearFilters}>
+              <Trash2 size={18} /> ล้างตัวกรอง
+            </button>
           </div>
         </div>
 
+        {/* ✅ Table */}
         {loading && <p className={styles.infoMessage}>กำลังโหลดข้อมูล...</p>}
-        {dataError && !loading && <p className={styles.errorMessage}>{dataError}</p>}
+        {!loading && currentItems.length === 0 && <p className={styles.noDataMessage}>ไม่พบข้อมูล</p>}
 
         {!loading && (
           <div className={styles.tableFrame}>
@@ -243,9 +196,7 @@ export default function ExpiredItemsPage() {
             </div>
 
             <div className={styles.inventory} style={{ '--rows-per-page': itemsPerPage }}>
-              {currentItems.length === 0 ? (
-                <div className={styles.noDataMessage}>ไม่พบรายการพัสดุหมดอายุ</div>
-              ) : currentItems.map(e => {
+              {currentItems.map(e => {
                 const remainingToDispose = (Number(e.expired_qty) || 0) - (Number(e.disposed_qty) || 0);
 
                 const statusText =
@@ -266,35 +217,28 @@ export default function ExpiredItemsPage() {
                   <div key={e.lot_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
                     <div className={styles.tableCell}>{e.lot_no || '-'}</div>
                     <div className={styles.tableCell}>{e.item_name || '-'}</div>
-
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>{Number(e.expired_qty) || 0}</div>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>{remainingToDispose}</div>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>{Number(e.disposed_qty) || 0}</div>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>{e.item_unit || '-'}</div>
-
                     <div className={styles.tableCell}>
                       {e.exp_date ? new Date(e.exp_date).toLocaleDateString('th-TH') : '-'}
                     </div>
-
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>
                       <span className={`${styles.statusBadge} ${statusClass}`}>{statusText}</span>
                     </div>
-
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>
                       {remainingToDispose > 0 && e.item_id ? (
                         <div className={styles.actions}>
                           <button
                             className={`${styles.actionBtn} ${styles.btnDispose}`}
                             onClick={() => handleDispose(e.lot_id, e.item_id, remainingToDispose)}
-                            aria-label="ทำลาย"
                           >
                             <Trash2 size={16} />
                           </button>
                           <button
                             className={`${styles.actionBtn} ${styles.btnHistory}`}
                             onClick={() => handleViewHistory(e.lot_id)}
-                            aria-label="ประวัติ"
-                            title="ประวัติ"
                           >
                             <Clock size={16} />
                             <span>ประวัติ</span>
@@ -302,14 +246,12 @@ export default function ExpiredItemsPage() {
                         </div>
                       ) : (
                         <div className={styles.actions}>
-                          <span className={styles.doneIcon} aria-label="ทำลายครบแล้ว" title="ทำลายครบแล้ว">
+                          <span className={styles.doneIcon}>
                             <CheckCircle size={18} />
                           </span>
                           <button
                             className={`${styles.actionBtn} ${styles.btnHistory}`}
                             onClick={() => handleViewHistory(e.lot_id)}
-                            aria-label="ประวัติ"
-                            title="ประวัติ"
                           >
                             <Clock size={16} />
                             <span>ประวัติ</span>
@@ -344,11 +286,7 @@ export default function ExpiredItemsPage() {
                 )
               )}
               <li>
-                <button
-                  className={styles.pageButton}
-                  onClick={handleNext}
-                  disabled={currentPage >= totalPages}
-                >
+                <button className={styles.pageButton} onClick={handleNext} disabled={currentPage >= totalPages}>
                   <ChevronRight size={16} />
                 </button>
               </li>

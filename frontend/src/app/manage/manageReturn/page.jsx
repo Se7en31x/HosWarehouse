@@ -223,7 +223,7 @@ export default function ManageReturnPage() {
                     </div>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>
                       <Link href={`/manage/manageReturn/${r.request_id}`} className={styles.actionBtnLink}>
-                        ตรวจสอบ/อนุมัติการคืน
+                        รายละเอียด
                       </Link>
                     </div>
                   </div>
