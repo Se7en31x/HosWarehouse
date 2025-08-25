@@ -1,5 +1,5 @@
 const inventoryModel = require('../models/inventoryModel');
-const { getIO } = require('../socket');
+const { getIO } = require('../ioInstance');
 const damagedModel = require('../models/damagedModel');
 
 // --------------------------- REST API --------------------------- //
