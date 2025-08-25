@@ -1,146 +1,241 @@
-/* ===== Variables scoped ในหน้านี้ (เลี่ยง :root เพื่อกัน error CSS Modules) ===== */
-.mainHome{
-  --bg:#f3f4f6;
-  --panel:#fff;
-  --text:#111827;
-  --muted:#6b7280;
-  --border:#e5e7eb;
+.mainHome {
+  --bg: #f3f4f6;
+  --panel: #fff;
+  --text: #111827;
+  --muted: #6b7280;
+  --border: #e5e7eb;
 
-  --primary:#3b82f6;
-  --primary-500:#3b82f6;
+  --row-h: 60px;
+  --rows-per-page: 12;
 
-  --row-h:60px;
-  --rows-per-page:12;
+  --tbl-header-bg: #e9f6fb;
+  --tbl-header-text: #0f3a54;
+  --tbl-border: #cfeaf6;
+  --tbl-row-hover: #f0fbfe;
 
-  --tbl-header-bg:#e9f6fb;
-  --tbl-header-text:#0f3a54;
-  --tbl-border:#cfeaf6;
-  --tbl-row-hover:#f0fbfe;
-
-  --z-toolbar:100;
-  --z-header:10;
-
-  min-height:100vh;
-  display:flex; align-items:flex-start; justify-content:center;
-  background:var(--bg);
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background: var(--bg);
 }
 
 /* Container */
-.infoContainer{
-  width:100%; min-height:100vh;
-  background:var(--panel); color:var(--text);
-  padding:24px; display:flex; flex-direction:column; gap:14px;
+.infoContainer {
+  width: 100%;
+  min-height: 100vh;
+  background: var(--panel);
+  color: var(--text);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
-.pageTitle{ font-weight:700; font-size:clamp(1.4rem,2.2vw,2rem); margin:0; }
 
-/* Summary */
-.summaryCard{
-  border:1px solid var(--tbl-border);
-  border-radius:12px; padding:14px 16px; background:#fff;
-  display:grid; grid-template-columns: 1.2fr 1.5fr; gap:12px;
+.pageTitle {
+  font-weight: 700;
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  margin: 0;
 }
-.summaryLeft > div, .summaryRight > div{ margin:2px 0; }
 
-/* ===== Table (โครงเดียวกับโค้ดตัวอย่าง) ===== */
-.tableFrame{
-  border:1px solid var(--tbl-border);
-  border-radius:10px; background:#fff; overflow:hidden;
-  box-shadow:0 10px 30px rgba(2,132,199,.08);
-  display:flex; flex-direction:column;
+.summaryCard {
+  border: 1px solid var(--tbl-border);
+  border-radius: 12px;
+  padding: 16px 20px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
-/* 9 คอลัมน์ของหน้ารายการย่อย */
-.tableGrid{
-  display:grid;
+
+/* แถวข้อมูล */
+.summaryCard {
+  border: 1px solid var(--tbl-border);
+  border-radius: 12px;
+  padding: 16px 20px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* บรรทัดบน 4 ช่อง */
+.summaryRowTop {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);  /* ✅ 4 คอลัมน์ */
+  gap: 12px 24px;
+  width: 100%;
+}
+
+/* บรรทัดล่าง 2 ช่อง 
+   คอลัมน์ 2 จะขนานกับคอลัมน์ 2 ของบรรทัดบน (วันที่ขอ) */
+.summaryRowBottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr; /* ✅ ช่อง 2 = สถานะ ตรงกับ วันที่ขอ */
+  gap: 12px 24px;
+  width: 100%;
+}
+
+.summaryNote {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.summaryRowTop strong,
+.summaryRowBottom strong,
+.summaryNote strong {
+  font-weight: 600;
+  color: var(--tbl-header-text);
+}
+
+/* ===== Table ===== */
+.tableFrame {
+  border: 1px solid var(--tbl-border);
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(2, 132, 199, .08);
+  display: flex;
+  flex-direction: column;
+}
+
+.tableGrid {
+  display: grid;
   grid-template-columns:
-    minmax(100px,1fr)  /* รหัส */
-    72px               /* รูป (พอดี 45px + padding) */
-    minmax(220px,2fr)  /* ชื่อรายการ */
-    minmax(140px,1.2fr)/* ประเภท */
-    minmax(160px,1.2fr)/* จำนวนที่ขอ/อนุมัติ */
-    minmax(100px,0.9fr)/* หน่วย */
-    minmax(170px,1.2fr)/* สถานะอนุมัติ */
-    minmax(170px,1.2fr)/* สถานะดำเนินการ */
-    minmax(140px,1fr); /* กำหนดคืน */
-  align-items:center;
+    minmax(100px, 1fr) 72px minmax(220px, 2fr) minmax(140px, 1.2fr) minmax(160px, 1.2fr) minmax(100px, 0.9fr) minmax(170px, 1.2fr) minmax(170px, 1.2fr) minmax(140px, 1fr);
+  align-items: center;
 }
-.tableHeader{
-  position:sticky; top:0; z-index:var(--z-header);
-  background:var(--tbl-header-bg); color:var(--tbl-header-text);
-  border-bottom:1px solid var(--tbl-border);
-  padding-block:14px; padding-inline:12px;
-  font-weight:700; font-size:1.05rem; min-height:60px;
-}
-.tableBody{ min-height: calc(var(--row-h) * var(--rows-per-page)); }
 
-.tableRow{
-  height:var(--row-h);
-  padding:0 12px;
-  border-top:1px solid var(--tbl-border);
-  transition:background .18s ease;
+.tableHeader {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--tbl-header-bg);
+  color: var(--tbl-header-text);
+  border-bottom: 1px solid var(--tbl-border);
+  padding-block: 14px;
+  padding-inline: 12px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  min-height: 60px;
 }
-.tableRow:hover{ background:var(--tbl-row-hover); }
 
-/* Cells */
-.tableGrid > div{
-  padding:0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-}
-.noDataCell{
+.tableBody {
   min-height: calc(var(--row-h) * var(--rows-per-page));
-  display:flex; align-items:center; justify-content:center;
-  color:var(--muted);
 }
 
-.tableFooter{ background:#fff; padding:10px 12px; display:flex; justify-content:flex-start; }
-
-/* รูป 45×45 */
-.imgThumb{
-  width:45px; height:45px; object-fit:cover;
-  border-radius:6px; border:1px solid var(--tbl-border);
-  background:#fff; display:block;
+.tableRow {
+  height: var(--row-h);
+  padding: 0 12px;
+  border-top: 1px solid var(--tbl-border);
+  transition: background .18s ease;
 }
-.mono{ font-variant-numeric: tabular-nums; }
 
-/* ===== Badges (คงสไตล์เดิม) ===== */
-.statusBadge{
-  display:inline-block; padding:.25rem .7rem; font-size:.95rem;
-  font-weight:700; border-radius:9999px; line-height:1; border:1px solid transparent;
+.tableRow:hover {
+  background: var(--tbl-row-hover);
 }
-.statusSuccess{ background:#ecfdf5; color:#065f46; border-color:#bbf7d0; }
-.statusCancelled{ background:#fef2f2; color:#991b1b; border-color:#fecaca; }
-.statusPending{ background:#fffbeb; color:#92400e; border-color:#fde68a; }
-.statusMixed{ background:#eff6ff; color:#1e40af; border-color:#bfdbfe; }
 
-.urgentBadge{
-  display:inline-block; padding:.25rem .7rem; font-size:.9rem;
-  font-weight:700; border-radius:9999px; line-height:1; border:1px solid transparent;
+.tableGrid>div {
+  padding: 0 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.urgentTrue{ background:#fef3c7; color:#92400e; border-color:#fde68a; }
-.urgentFalse{ background:#ecfdf5; color:#065f46; border-color:#bbf7d0; }
 
-.typeBadge{
-  display:inline-block; padding:.25rem .7rem; font-size:.95rem; font-weight:700;
-  border-radius:9999px; background:#fff; border:2px solid;
+.noDataCell {
+  min-height: calc(var(--row-h) * var(--rows-per-page));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
 }
-.typeWithdraw{ color:#2196f3; border-color:#2196f3; }
-.typeBorrow{ color:#f44336; border-color:#f44336; }
 
-.badge{
-  display:inline-block; padding:.35rem .7rem; font-size:.95rem; font-weight:700;
-  border-radius:10px; border:1px solid transparent;
+/* รูป */
+.imgThumb {
+  width: 45px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--tbl-border);
+  background: #fff;
+  display: block;
 }
-.apprApproved{ background:#ecfdf5; color:#065f46; border-color:#bbf7d0; }
-.apprPartial{ background:#eef2ff; color:#3730a3; border-color:#c7d2fe; }
-.apprRejected{ background:#fef2f2; color:#b91c1c; border-color:#fecaca; }
-.apprWaiting{ background:#fffbeb; color:#92400e; border-color:#fde68a; }
 
-.procPreparing{ background:#f0f9ff; color:#075985; border-color:#bae6fd; }
-.procProcessing{ background:#f5f3ff; color:#5b21b6; border-color:#ddd6fe; }
-.procCompleted{ background:#f0fdf4; color:#166534; border-color:#bbf7d0; }
-.procReturned{ background:#f5fffa; color:#065f46; border-color:#a7f3d0; }
-.procWaiting{ background:#fffbeb; color:#92400e; border-color:#fde68a; }
+.mono {
+  font-variant-numeric: tabular-nums;
+}
 
-/* Responsive: ป้องกันตารางถูกบีบเล็กเกินไป */
-@media (max-width:900px){
-  .tableGrid{ min-width: 980px; }
-  .tableFrame{ overflow:auto; }
+/* Badges (เฉพาะในตาราง) */
+.badge {
+  display: inline-block;
+  padding: .35rem .7rem;
+  font-size: .95rem;
+  font-weight: 700;
+  border-radius: 15px;
+  border: 1px solid transparent;
+}
+
+.apprApproved {
+  background: #ecfdf5;
+  color: #065f46;
+  border-color: #bbf7d0;
+}
+
+.apprPartial {
+  background: #eef2ff;
+  color: #3730a3;
+  border-color: #c7d2fe;
+}
+
+.apprRejected {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.apprWaiting {
+  background: #fffbeb;
+  color: #92400e;
+  border-color: #fde68a;
+}
+
+.procPreparing {
+  background: #f0f9ff;
+  color: #075985;
+  border-color: #bae6fd;
+}
+
+.procProcessing {
+  background: #f5f3ff;
+  color: #5b21b6;
+  border-color: #ddd6fe;
+}
+
+.procCompleted {
+  background: #f0fdf4;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+.procReturned {
+  background: #f5fffa;
+  color: #065f46;
+  border-color: #a7f3d0;
+}
+
+.procWaiting {
+  background: #fffbeb;
+  color: #92400e;
+  border-color: #fde68a;
+}
+
+@media (max-width:900px) {
+  .tableGrid {
+    min-width: 980px;
+  }
+
+  .tableFrame {
+    overflow: auto;
+  }
 }

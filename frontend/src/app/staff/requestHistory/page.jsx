@@ -209,19 +209,28 @@ export default function RequestHistory() {
   const startIdx = (currentPage - 1) * itemsPerPage;
   const pageRequests = filteredRequests.slice(startIdx, startIdx + itemsPerPage);
 
-  const getPageNumbers = () => {
-    const pages = [];
-    if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else if (currentPage <= 4) {
-      pages.push(1, 2, 3, 4, 5, "...", totalPages);
-    } else if (currentPage >= totalPages - 3) {
-      pages.push(1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+  // ===== Pagination =====
+const getPageNumbers = () => {
+  const pages = [];
+
+  if (totalPages <= 5) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    if (currentPage <= 3) {
+      // ต้น ๆ
+      pages.push(1, 2, 3, 4, '...', totalPages);
+    } else if (currentPage >= totalPages - 2) {
+      // ท้าย ๆ
+      pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
     } else {
-      pages.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
+      // กลาง
+      pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
     }
-    return pages;
-  };
+  }
+
+  return pages;
+};
+
 
   // Export
   const prepareTableData = () => {
@@ -360,10 +369,10 @@ export default function RequestHistory() {
             <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
               <div>เลขคำขอ</div>
               <div>วันที่</div>
-              <div>ประเภท</div>
-              <div>สถานะการอนุมัติ</div>
-              <div>ความเร่งด่วน</div>
               <div>ผู้ขอ</div>
+              <div>ประเภท</div>
+              <div>ความเร่งด่วน</div>
+              <div>สถานะการอนุมัติ</div>
               <div>จัดการ</div>
             </div>
 
@@ -375,16 +384,15 @@ export default function RequestHistory() {
                     <div>{req.request_code}</div>
                     <div>{formatDate(req.request_date)}</div>
                     {/* ✅ ใช้ชิปประเภท */}
-                    <div className={styles.typeCell}>{renderTypeChips(req.request_type)}</div>
-                    <div>{getRequestStatusBadge(req.request_status)}</div>
-                    <div>{getUrgentBadge(req.is_urgent)}</div>
                     <div>{req.user_name || "-"}</div>
+                    <div className={styles.typeCell}>{renderTypeChips(req.request_type)}</div>
+                    <div>{getUrgentBadge(req.is_urgent)}</div>
+                    <div>{getRequestStatusBadge(req.request_status)}</div>
                     <div>
                       <button
                         className={`${styles.btn} ${styles.primaryBtn}`}
                         onClick={() => router.push(`/staff/requestHistory/${req.request_id}`)}
-                      >
-                        ดูรายละเอียด
+                      >ดูรายละเอียด
                       </button>
                     </div>
                   </div>

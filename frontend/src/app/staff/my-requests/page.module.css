@@ -125,25 +125,12 @@
   margin-bottom: 6px;
 }
 
-.statValue {
+.statValue,
+.statWithdraw,
+.statBorrow {
   font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.02em;
-}
-
-.statInfo {
-  border-color: #bae6fd;
-  background: #f0f9ff;
-}
-
-.statSuccess {
-  border-color: #bbf7d0;
-  background: #ecfdf5;
-}
-
-.statDanger {
-  border-color: #fecaca;
-  background: #fef2f2;
 }
 
 /* Toolbar */
@@ -722,45 +709,83 @@
   }
 }
 
-/* ชิปประเภท (อยู่ในคอลัมน์ ประเภท) */
-.typePills {
+/* ===== Toolbar Filters ===== */
+.toolbar {
   display: flex;
-  gap: 6px;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin: 16px 0;
+  gap: 16px;
+  flex-wrap: wrap; /* ✅ รองรับจอเล็ก */
+}
+
+.filterGrid {
+  display: flex;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
-.typePill {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 12px;
-  /* เดิม 2px 10px */
-  border-radius: 999px;
-  font-weight: 700;
-  font-size: 0.95rem;
-  /* เดิม 12px */
-  line-height: 1.1;
-  border: 1.5px solid currentColor;
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+}
+
+.label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.input {
+  padding: 20px 14px;      /* ✅ เพิ่ม padding ให้สูงขึ้น */
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  min-width: 220px;        /* กว้างขึ้นเล็กน้อย */
+  height: 42px;            /* ✅ กำหนดความสูงตรงๆ */
+}
+
+.input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-100);
+}
+
+.searchCluster {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.ghostBtn {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
   background: #fff;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
 }
 
-/* เบิก = #2196f3 */
-.typeWithdraw {
-  color: #2196f3;
-  background: rgba(33, 150, 243, .06);
-  /* ทินท์บาง ๆ (ลบได้ถ้าอยากมีแค่กรอบ) */
-  border-color: #2196f3;
+.ghostBtn:hover {
+  background: #f3f4f6;
 }
 
-/* ยืม = #f44336 */
-.typeBorrow {
-  color: #f44336;
-  background: rgba(244, 67, 54, .06);
-  border-color: #f44336;
+.clearButton {
+  color: #1685bb;           /* แดงเข้มขึ้น */
+  border-color: #008dda;
+  background: #ffffff;      /* ✅ เพิ่มพื้นหลังแดงอ่อน */
+  height: 42px;             /* ✅ เท่ากับ input */
+  padding: 0 14px;
+  font-weight: 600;
+  border-radius: 8px;
 }
 
-/* (เผื่อ) คืน = โทนเขียว */
-.typeReturn {
-  color: #10b981;
-  background: rgba(16, 185, 129, .06);
-  border-color: #10b981;
+.clearButton:hover {
+  background: #f0fbfe;      /* hover สีแดงอ่อนเข้มขึ้น */
+  border-color: #008dda;
 }

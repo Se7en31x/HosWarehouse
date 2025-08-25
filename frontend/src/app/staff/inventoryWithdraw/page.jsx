@@ -312,36 +312,36 @@ export default function InventoryWithdraw() {
   // };
 
   const handleBorrow = async (item) => {
-  try {
-    // ✅ เรียก API ไป backend เพื่อตรวจสอบว่ายืมค้างหรือไม่
-    const response = await axiosInstance.get(`/check-pending-borrow/${item.item_id}`);
+    try {
+      // ✅ เรียก API ไป backend เพื่อตรวจสอบว่ายืมค้างหรือไม่
+      const response = await axiosInstance.get(`/check-pending-borrow/${item.item_id}`);
 
-    if (response.data.pending) {
-      // 🚫 มีการยืมค้าง → แจ้งเตือนผู้ใช้
+      if (response.data.pending) {
+        // 🚫 มีการยืมค้าง → แจ้งเตือนผู้ใช้
+        Swal.fire({
+          title: "ไม่สามารถยืมได้",
+          text: "คุณมีการยืมค้างอยู่ กรุณาคืนสินค้าก่อนทำรายการใหม่",
+          icon: "error",
+          confirmButtonText: "ตกลง",
+        });
+        return; // หยุดการทำงาน
+      }
+
+      // ✅ ไม่มีการยืมค้าง → เปิด modal กรอกจำนวน
+      setSelectedItem(item);
+      setInputQuantity(1);
+      setShowModal(true);
+
+    } catch (error) {
+      console.error("❌ ตรวจสอบการยืมล้มเหลว:", error);
       Swal.fire({
-        title: "ไม่สามารถยืมได้",
-        text: "คุณมีการยืมค้างอยู่ กรุณาคืนสินค้าก่อนทำรายการใหม่",
+        title: "เกิดข้อผิดพลาด",
+        text: "ไม่สามารถตรวจสอบสถานะการยืมได้",
         icon: "error",
         confirmButtonText: "ตกลง",
       });
-      return; // หยุดการทำงาน
     }
-
-    // ✅ ไม่มีการยืมค้าง → เปิด modal กรอกจำนวน
-    setSelectedItem(item);
-    setInputQuantity(1);
-    setShowModal(true);
-
-  } catch (error) {
-    console.error("❌ ตรวจสอบการยืมล้มเหลว:", error);
-    Swal.fire({
-      title: "เกิดข้อผิดพลาด",
-      text: "ไม่สามารถตรวจสอบสถานะการยืมได้",
-      icon: "error",
-      confirmButtonText: "ตกลง",
-    });
-  }
-};
+  };
 
 
   const handleConfirm = async () => {
@@ -393,19 +393,28 @@ export default function InventoryWithdraw() {
     setReturnDate(actionType === 'borrow' ? new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0] : '');
   };
 
+  // ===== Pagination =====
   const getPageNumbers = () => {
     const pages = [];
-    if (totalPages <= 7) {
+
+    if (totalPages <= 5) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else if (currentPage <= 4) {
-      pages.push(1, 2, 3, 4, 5, '...', totalPages);
-    } else if (currentPage >= totalPages - 3) {
-      pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
     } else {
-      pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+      if (currentPage <= 3) {
+        // ต้น ๆ
+        pages.push(1, 2, 3, 4, '...', totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        // ท้าย ๆ
+        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        // กลาง
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+      }
     }
+
     return pages;
   };
+
 
   // ── Render ─────────────────────────────────
   return (

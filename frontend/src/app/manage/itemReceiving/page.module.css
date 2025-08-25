@@ -2,17 +2,18 @@
 .pageContainer {
   background: #f9fafb;
   font-family: 'Kanit', sans-serif;
-  font-size: 1rem; /* ✅ ขนาดตัวหนังสือฐาน */
+  font-size: 1rem;
+  /* ✅ ขนาดตัวหนังสือฐาน */
 }
 
 .mainCard {
-   height: 100vh;
+  height: 100vh;
   background: #fff;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  max-width: 1600px;   /* ✅ จำกัดความกว้างรวม */
-  margin: 0 auto;      /* ✅ จัดให้อยู่กลาง */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  max-width: 1600px;
+  margin: 0 auto;
 }
 
 .pageBar {
@@ -20,16 +21,18 @@
 }
 
 .pageTitle {
-  font-size: 2rem;   /* ✅ ใหญ่ขึ้นจาก 1.4 */
+  font-size: 2rem;
   font-weight: 700;
   color: #111827;
-  margin-bottom: 15px; /* ✅ เพิ่มระยะห่างด้านล่าง */
+  margin-bottom: 15px;
+  /* ✅ เพิ่มระยะห่างด้านล่าง */
 }
 
 /* ===== Grid ===== */
 .contentWrapper {
   display: grid;
-  grid-template-columns: 40% 58.5%;  /* ✅ ซ้าย 40 / ขวา 60 */
+  grid-template-columns: 40% 58.5%;
+  /* ✅ ซ้าย 40 / ขวา 60 */
   gap: 20px;
   align-items: flex-start;
 }
@@ -48,7 +51,7 @@
 
 .tableHeader,
 .detailsFormHeader {
-  font-size: 1.4rem;   /* ✅ ใหญ่ขึ้นจาก 1rem */
+  font-size: 1.4rem;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -61,46 +64,68 @@
   width: 100%;
   overflow-x: auto;
   flex: 1;
+  border: 1px solid #d1d5db;
+  /* ✅ กรอบรอบนอกตาราง */
+  border-radius: 10px;
+  background: #fff;
 }
 
 .itemTable {
   width: 100%;
-  border-collapse: collapse;
-  font-size: 1rem;  /* ✅ ใหญ่ขึ้นจาก 0.9rem */
+  border-collapse: collapse;   /* ✅ รวมเส้น border */
+  font-size: 1rem;
   table-layout: fixed;
 }
 
-.itemTable th,
+/* Header */
+.itemTable th {
+  background: #eef9fc;
+  /* ✅ ฟ้าอ่อน */
+  color: #374151;
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.4;
+  padding: 12px;
+  text-align: center;
+  white-space: nowrap;
+  border-bottom: 1px solid #e5e7eb;
+  height: 56px;
+  /* ✅ ล็อคความสูงแถวหัวตาราง */
+  vertical-align: middle;
+}
+
+/* Body */
 .itemTable td {
   border-bottom: 1px solid #e5e7eb;
-  padding: 10px 12px; /* ✅ เพิ่ม padding ให้โปร่ง */
-  text-align: left;
+  padding: 10px 12px;
+  text-align: center;
+  /* ✅ จัดให้อยู่ตรงกลาง */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  height: 56px;
+  /* ✅ ล็อคความสูงแถวข้อมูล */
+  vertical-align: middle;
+  /* ✅ ข้อความ + ปุ่มอยู่ตรงกลางแนวตั้ง */
+  color: #111827;
+  font-size: 0.95rem;
 }
 
-.itemTable th:nth-child(1),
-.itemTable td:nth-child(1) {
-  width: 40%;
+/* สลับสีแถว */
+.itemTable tbody tr:nth-child(even) {
+  background: #f9fafb;
 }
 
-.itemTable th:nth-child(2),
-.itemTable td:nth-child(2) {
-  width: 40%;
-}
-
-.itemTable th:nth-child(3),
-.itemTable td:nth-child(3) {
-  width: 20%;
-  text-align: right;
+/* Hover effect */
+.itemTable tbody tr:hover {
+  background: #f1f9ff;
 }
 
 .emptyMessage {
   text-align: center;
   color: #6b7280;
   padding: 18px;
-  font-size: 1rem; /* ✅ ใหญ่ขึ้น */
+  font-size: 1rem;
 }
 
 .textRight {
@@ -120,7 +145,7 @@
 }
 
 .formField label {
-  font-size: 1rem; /* ✅ ใหญ่ขึ้น */
+  font-size: 1rem;
   margin-bottom: 4px;
   color: #374151;
 }
@@ -129,8 +154,8 @@
 .formField textarea {
   border: 1px solid #d1d5db;
   border-radius: 6px;
-  padding: 8px 10px; /* ✅ padding มากขึ้น */
-  font-size: 1rem;   /* ✅ ใหญ่ขึ้น */
+  padding: 8px 10px;
+  font-size: 1rem;
 }
 
 .notesField {
@@ -138,7 +163,7 @@
 }
 
 .errorText {
-  font-size: 0.85rem; /* ✅ ใหญ่ขึ้นจาก 0.75rem */
+  font-size: 0.85rem;
   color: #dc2626;
   margin-top: 2px;
 }
@@ -157,9 +182,9 @@
 .saveButton {
   border: none;
   border-radius: 6px;
-  padding: 8px 14px; /* ✅ ปรับให้โปร่ง */
+  padding: 8px 14px;
   cursor: pointer;
-  font-size: 1rem;   /* ✅ ใหญ่ขึ้น */
+  font-size: 1rem;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -211,7 +236,7 @@
   color: #111827;
   padding: 8px 12px;
   border-radius: 8px;
-  font-size: 1rem; /* ✅ ใหญ่ขึ้น */
+  font-size: 1rem;
   min-width: 38px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -236,7 +261,7 @@
 
 .ellipsis {
   color: #6b7280;
-  font-size: 1.1rem; /* ✅ ใหญ่ขึ้น */
+  font-size: 1.1rem;
   padding: 0 4px;
 }
 
@@ -255,4 +280,23 @@
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   padding: 14px;
+}
+
+.saveArea {
+  display: flex;
+  justify-content: flex-end; /* ✅ จัดไปด้านขวา */
+  margin-top: 12px;
+}
+
+.saveButton {
+  background: #008dda;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }

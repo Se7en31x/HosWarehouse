@@ -77,34 +77,7 @@ export default function RequestDetailPage() {
     returned: "คืนแล้ว",
   };
 
-  // ===== Badges =====
-  const getRequestStatusBadge = (status) => {
-    let cls = styles.statusBadge;
-    if (status === "approved_all") cls += ` ${styles.statusSuccess}`;
-    else if (status === "rejected_all") cls += ` ${styles.statusCancelled}`;
-    else if (
-      status === "approved_partial" ||
-      status === "rejected_partial" ||
-      status === "approved_partial_and_rejected_partial"
-    )
-      cls += ` ${styles.statusMixed}`;
-    else cls += ` ${styles.statusPending}`;
-    return <span className={cls}>{requestStatusMap[status] || status}</span>;
-  };
-
-  const getUrgentBadge = (isUrgent) => (
-    <span className={`${styles.urgentBadge} ${isUrgent ? styles.urgentTrue : styles.urgentFalse}`}>
-      {isUrgent ? "เร่งด่วน" : "ปกติ"}
-    </span>
-  );
-
-  const getTypeBadge = (type) => {
-    const isBorrow = type === "borrow";
-    const text = isBorrow ? "ยืม" : "เบิก";
-    const cls = `${styles.typeBadge} ${isBorrow ? styles.typeBorrow : styles.typeWithdraw}`;
-    return <span className={cls}>{text}</span>;
-  };
-
+  // ===== Badges ของ detail table เท่านั้น =====
   const getApprovalBadge = (st) => {
     let cls = `${styles.badge} `;
     if (st === "approved") cls += styles.apprApproved;
@@ -137,20 +110,25 @@ export default function RequestDetailPage() {
           <>
             {/* Summary card */}
             <div className={styles.summaryCard}>
-              <div className={styles.summaryLeft}>
+              {/* แถวบน */}
+              <div className={styles.summaryRowTop}>
                 <div><strong>เลขคำขอ:</strong> {header.request_code}</div>
                 <div><strong>วันที่ขอ:</strong> {fmtDate(header.request_date)}</div>
                 <div><strong>ผู้ขอ:</strong> {header.user_name || "-"}</div>
+                <div><strong>ประเภท:</strong> {header.request_type === "borrow" ? "ยืม" : "เบิก"}</div>
               </div>
-              <div className={styles.summaryRight}>
-                <div><strong>ประเภท:</strong> {getTypeBadge(header.request_type)}</div>
-                <div><strong>ความเร่งด่วน:</strong> {getUrgentBadge(!!header.is_urgent)}</div>
-                <div><strong>สถานะคำขอ:</strong> {getRequestStatusBadge(header.request_status)}</div>
-                {header.request_note && <div><strong>หมายเหตุ:</strong> {header.request_note}</div>}
-                <div>
-                  <strong>รวมทั้งหมด:</strong> {(header.total_requested ?? 0)} ที่ขอ / {(header.total_approved ?? 0)} ที่อนุมัติ
+
+              {/* แถวล่าง */}
+              <div className={styles.summaryRowBottom}>
+                <div><strong>ความเร่งด่วน:</strong> {header.is_urgent ? "เร่งด่วน" : "ปกติ"}</div>
+                <div><strong>สถานะคำขอ:</strong> {requestStatusMap[header.request_status] || "-"}</div>
+              </div>
+
+              {header.request_note && (
+                <div className={styles.summaryNote}>
+                  <strong>หมายเหตุ:</strong> {header.request_note}
                 </div>
-              </div>
+              )}
             </div>
 
             {/* ===== TABLE ===== */}

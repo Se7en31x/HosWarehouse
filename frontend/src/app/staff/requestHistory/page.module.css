@@ -160,38 +160,6 @@
 .urgentTrue{ background:#fef3c7; color:#92400e; border-color:#fde68a; }
 .urgentFalse{ background:#ecfdf5; color:#065f46; border-color:#bbf7d0; }
 
-/* ===== ชิปประเภท (เหมือนหน้า MyRequests) ===== */
-.typeCell { color: #0b6ea4; }
-
-.typePills {
-  display: flex; gap: 6px; flex-wrap: wrap;
-}
-
-.typePill {
-  display: inline-flex; align-items: center;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-weight: 700; font-size: 0.95rem; line-height: 1.1;
-  border: 1.5px solid currentColor;
-  background: #fff;
-}
-
-.typeWithdraw {
-  color: #2196f3;
-  background: rgba(33,150,243,.06);
-  border-color: #2196f3;
-}
-.typeBorrow {
-  color: #f44336;
-  background: rgba(244,67,54,.06);
-  border-color: #f44336;
-}
-.typeReturn {
-  color: #10b981;
-  background: rgba(16,185,129,.06);
-  border-color: #10b981;
-}
-
 /* Responsive */
 @media (max-width:700px){ .tableGrid{ min-width:700px; } }
 @media (max-width:520px){ .tableGrid{ min-width:560px; } }

@@ -8,10 +8,10 @@ import styles from './page.module.css';
 
 // Map สถานะ
 const statusMap = {
-  approved_all: { text: 'อนุมัติทั้งหมด', class: styles.statusApproved },
-  approved_partial: { text: 'อนุมัติบางส่วน', class: styles.statusPartial },
-  stock_deducted: { text: 'เบิก-จ่ายแล้ว', class: styles.statusDeducted },
-  completed: { text: 'เสร็จสิ้น', class: styles.statusCompleted },
+  approved_all: { text: 'อนุมัติทั้งหมด', class: styles.stApproved },
+  approved_partial: { text: 'อนุมัติบางส่วน', class: styles.stPartial },
+  stock_deducted: { text: 'เบิก-จ่ายแล้ว', class: styles.stDeducted },
+  completed: { text: 'เสร็จสิ้น', class: styles.stCompleted },
 };
 
 // Map ประเภทคำขอ
@@ -32,80 +32,57 @@ export default function SingleStockDeductionPage() {
   const [deductionSuccess, setDeductionSuccess] = useState(false);
   const [itemQuantities, setItemQuantities] = useState({});
 
-  // ───────── โหลดข้อมูล ─────────
+  // โหลดข้อมูล
   useEffect(() => {
     if (!requestId) return;
-
-    const fetchRequestDetail = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
-        setError(null);
         const res = await axiosInstance.get(`/stockDeduction/${requestId}/details`);
         const fetched = res.data;
-
-        // เอาเฉพาะรายการ pending
         const pendingItems = fetched.details.filter(i => i.processing_status === 'pending');
         setRequestDetail({ ...fetched, details: pendingItems });
 
-        // กำหนดค่า default
         const initial = {};
         pendingItems.forEach(i => {
-          initial[i.item_id] = {
-            actual_deducted_qty: i.approved_qty,
-            deduction_reason: '',
-          };
+          initial[i.item_id] = { actual_deducted_qty: i.approved_qty, deduction_reason: '' };
         });
         setItemQuantities(initial);
       } catch (err) {
-        setError(err.response?.data?.message || 'ไม่สามารถโหลดรายละเอียดคำขอได้');
+        setError(err.response?.data?.message || 'โหลดข้อมูลไม่สำเร็จ');
       } finally {
         setIsLoading(false);
       }
     };
-
-    fetchRequestDetail();
+    fetchData();
   }, [requestId, deductionSuccess]);
 
-  // ───────── ฟังก์ชัน helper ─────────
-  const handleActualQtyChange = (itemId, val) => {
+  // จัดการจำนวน
+  const handleQtyChange = (id, val) => {
     const qty = parseInt(val, 10);
     setItemQuantities(prev => ({
       ...prev,
-      [itemId]: { ...prev[itemId], actual_deducted_qty: isNaN(qty) ? 0 : Math.max(0, qty) },
+      [id]: { ...prev[id], actual_deducted_qty: isNaN(qty) ? 0 : Math.max(0, qty) },
     }));
   };
-
-  const handleReasonChange = (itemId, val) => {
-    setItemQuantities(prev => ({
-      ...prev,
-      [itemId]: { ...prev[itemId], deduction_reason: val },
-    }));
+  const handleReasonChange = (id, val) => {
+    setItemQuantities(prev => ({ ...prev, [id]: { ...prev[id], deduction_reason: val } }));
   };
 
-  const handleDeductStock = async () => {
+  // เบิกสต็อก
+  const handleDeduct = async () => {
     if (!requestDetail || isProcessing) return;
-
     const itemsToProcess = requestDetail.details
-      .map(item => {
-        const actualQty = itemQuantities[item.item_id]?.actual_deducted_qty || 0;
-        const reason = itemQuantities[item.item_id]?.deduction_reason || '';
-
-        if (actualQty > item.approved_qty) {
-          setError(`จำนวนที่เบิกจริงของ ${item.item_name} เกินจำนวนที่อนุมัติ`);
-          return null;
-        }
-        if (actualQty > item.current_stock_qty) {
-          setError(`จำนวนที่เบิกจริงของ ${item.item_name} เกินกว่าสต็อก`);
-          return null;
-        }
-        if (actualQty < item.approved_qty && !reason.trim()) {
-          setError(`กรุณาใส่เหตุผลการเบิกไม่ครบสำหรับ ${item.item_name}`);
-          return null;
-        }
+      .map(it => {
+        const qty = itemQuantities[it.item_id]?.actual_deducted_qty || 0;
+        const reason = itemQuantities[it.item_id]?.deduction_reason || '';
+        if (qty > it.approved_qty) return null;
+        if (qty > it.current_stock_qty) return null;
+        if (qty < it.approved_qty && !reason.trim()) return null;
         return {
-          request_detail_id: item.request_detail_id,
-          item_id: item.item_id,
-          actual_deducted_qty: actualQty,
+          request_detail_id: it.request_detail_id,
+          item_id: it.item_id,
+          actual_deducted_qty: qty,
           deduction_reason: reason,
         };
       })
@@ -114,14 +91,13 @@ export default function SingleStockDeductionPage() {
     if (itemsToProcess.length !== requestDetail.details.length) return;
 
     const confirm = await Swal.fire({
-      title: 'ยืนยันการเบิก-จ่ายสต็อก?',
-      text: `คุณแน่ใจหรือไม่ที่จะเบิก-จ่ายสต็อกสำหรับคำขอ ${requestDetail.request_code}?`,
+      title: 'ยืนยันการเบิก-จ่าย?',
+      text: `คุณแน่ใจหรือไม่ที่จะเบิก-จ่ายคำขอ ${requestDetail.request_code}`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'ใช่, ยืนยัน',
+      confirmButtonText: 'ยืนยัน',
       cancelButtonText: 'ยกเลิก',
     });
-
     if (!confirm.isConfirmed) return;
 
     try {
@@ -139,8 +115,8 @@ export default function SingleStockDeductionPage() {
         userId: 999,
       });
       setDeductionSuccess(true);
-      Swal.fire('สำเร็จ!', 'ดำเนินการเบิก-จ่ายสำเร็จแล้ว', 'success');
-      setTimeout(() => router.push('/manage/stockDeduction'), 500);
+      Swal.fire('สำเร็จ', 'เบิก-จ่ายสำเร็จแล้ว', 'success');
+      setTimeout(() => router.push('/manage/stockDeduction'), 600);
     } catch (err) {
       Swal.fire('ผิดพลาด', err.response?.data?.message || 'ไม่สามารถดำเนินการได้', 'error');
     } finally {
@@ -148,118 +124,89 @@ export default function SingleStockDeductionPage() {
     }
   };
 
-  // ───────── Render ─────────
-  if (isLoading) return <p className={styles.infoMessage}>กำลังโหลด...</p>;
-  if (error) return <p className={styles.errorMessage}>{error}</p>;
+  // Render
+  if (isLoading) return <div className={styles.loading}>กำลังโหลด...</div>;
+  if (error) return <div className={styles.error}>{error}</div>;
 
   return (
-    <div className={styles.pageBackground}>
-      <div className={styles.container}>
-        
-        {/* Header */}
-        <div className={styles.header}>
-          <h1>เบิก-จ่ายสต็อก</h1>
-          <span className={styles.requestCode}>#{requestDetail?.request_code}</span>
-        </div>
-
-        {/* Info Section */}
-        <div className={styles.detailCard}>
-          <div><strong>ผู้ขอ:</strong> {requestDetail?.user_name}</div>
-          <div><strong>แผนก:</strong> {requestDetail?.department_name}</div>
-          <div><strong>วันที่ขอ:</strong> {new Date(requestDetail?.request_date).toLocaleDateString('th-TH')}</div>
-          <div><strong>ประเภทคำขอ:</strong> {typeMap[requestDetail?.request_type]}</div>
-          <div>
+    <div className={styles.page}>
+      <div className={styles.headerCard}>
+        <h1>เบิก-จ่ายสต็อก <span>#{requestDetail?.request_code}</span></h1>
+        <div className={styles.meta}>
+          <span><strong>ผู้ขอ:</strong> {requestDetail?.user_name}</span>
+          <span><strong>แผนก:</strong> {requestDetail?.department_name}</span>
+          <span><strong>วันที่:</strong> {new Date(requestDetail?.request_date).toLocaleDateString('th-TH')}</span>
+          <span><strong>ประเภท:</strong> {typeMap[requestDetail?.request_type]}</span>
+          <span>
             <strong>สถานะ:</strong>
-            <span className={`${styles.statusBadge} ${statusMap[requestDetail?.request_status]?.class}`}>
+            <span className={`${styles.stBadge} ${statusMap[requestDetail?.request_status]?.class}`}>
               {statusMap[requestDetail?.request_status]?.text}
             </span>
-          </div>
+          </span>
         </div>
+      </div>
 
-        {/* Table */}
-        <h2 className={styles.subtitle}>รายละเอียดสินค้า</h2>
-        <div className={styles.tableWrapper}>
-          {/* หัวตาราง */}
-          <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
-            <div>ลำดับ</div>
-            <div>สินค้า</div>
-            <div>ที่ขอ</div>
-            <div>อนุมัติ</div>
-            <div>คงเหลือ</div>
-            <div>เบิกจริง</div>
-            <div>เหตุผล</div>
-          </div>
-
-          {/* body: fix สูงสุด 8 แถวก่อนมี scroll */}
-          <div className={styles.tableBody}>
-            {Array.from({ length: Math.max(8, requestDetail.details.length) }).map((_, idx) => {
-              const item = requestDetail.details[idx];
-              if (!item) {
-                // ✅ แถวเปล่า ไม่มีเลข
-                return (
-                  <div key={`empty-${idx}`} className={`${styles.tableGrid} ${styles.tableRow} ${styles.emptyRow}`}>
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                  </div>
-                );
-              }
-              return (
-                <div key={item.item_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
-                  <div>{idx + 1}</div>
-                  <div>{item.item_name}</div>
-                  <div>{item.requested_qty}</div>
-                  <div>{item.approved_qty}</div>
-                  <div className={item.current_stock_qty < item.approved_qty ? styles.lowStock : ''}>
-                    {item.current_stock_qty}
-                  </div>
-                  <div>
+      <div className={styles.tableSection}>
+        <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+          <div>ลำดับ</div>
+          <div>สินค้า</div>
+          <div>ที่ขอ</div>
+          <div>อนุมัติ</div>
+          <div>คงเหลือ</div>
+          <div>เบิกจริง</div>
+          <div>เหตุผล</div>
+        </div>
+        <div className={styles.tableBody}>
+          {Array.from({ length: Math.max(8, requestDetail.details.length) }).map((_, idx) => {
+            const it = requestDetail.details[idx];
+            if (!it) {
+              return <div key={`empty-${idx}`} className={`${styles.tableGrid} ${styles.tableRow} ${styles.emptyRow}`} />;
+            }
+            return (
+              <div key={it.item_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                <div>{idx + 1}</div>
+                <div>{it.item_name}</div>
+                <div>{it.requested_qty}</div>
+                <div>{it.approved_qty}</div>
+                <div className={it.current_stock_qty < it.approved_qty ? styles.lowStock : ''}>
+                  {it.current_stock_qty}
+                </div>
+                <div>
+                  <input
+                    type="number"
+                    min="0"
+                    max={it.approved_qty}
+                    value={itemQuantities[it.item_id]?.actual_deducted_qty || 0}
+                    onChange={e => handleQtyChange(it.item_id, e.target.value)}
+                    className={styles.qtyInput}
+                    disabled={isProcessing}
+                  />
+                </div>
+                <div>
+                  {itemQuantities[it.item_id]?.actual_deducted_qty < it.approved_qty && (
                     <input
-                      type="number"
-                      min="0"
-                      max={item.approved_qty}
-                      value={itemQuantities[item.item_id]?.actual_deducted_qty || 0}
-                      onChange={e => handleActualQtyChange(item.item_id, e.target.value)}
-                      className={styles.qtyInput}
+                      type="text"
+                      placeholder="เหตุผล"
+                      value={itemQuantities[it.item_id]?.deduction_reason || ''}
+                      onChange={e => handleReasonChange(it.item_id, e.target.value)}
+                      className={styles.reasonInput}
                       disabled={isProcessing}
                     />
-                  </div>
-                  <div>
-                    {itemQuantities[item.item_id]?.actual_deducted_qty < item.approved_qty && (
-                      <input
-                        type="text"
-                        placeholder="เหตุผล"
-                        value={itemQuantities[item.item_id]?.deduction_reason || ''}
-                        onChange={e => handleReasonChange(item.item_id, e.target.value)}
-                        className={styles.reasonInput}
-                        disabled={isProcessing}
-                      />
-                    )}
-                  </div>
+                  )}
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
+      </div>
 
-        {/* Actions */}
-        <div className={styles.actions}>
-          <button 
-            className={`${styles.button} ${styles.primaryButton}`}
-            onClick={handleDeductStock}
-            disabled={isProcessing}>
-            {isProcessing ? 'กำลังดำเนินการ...' : 'ยืนยันเบิก-จ่าย'}
-          </button>
-          <button 
-            className={`${styles.button} ${styles.secondaryButton}`}
-            onClick={() => router.push('/manage/stockDeduction')}>
-            ย้อนกลับ
-          </button>
-        </div>
+      <div className={styles.actions}>
+        <button onClick={handleDeduct} disabled={isProcessing} className={styles.primaryBtn}>
+          {isProcessing ? 'กำลังดำเนินการ...' : 'ยืนยันเบิก-จ่าย'}
+        </button>
+        <button onClick={() => router.push('/manage/stockDeduction')} className={styles.secondaryBtn}>
+          ย้อนกลับ
+        </button>
       </div>
     </div>
   );

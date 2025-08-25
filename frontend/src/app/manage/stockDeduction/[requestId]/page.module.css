@@ -1,262 +1,122 @@
-/* ===== Base Layout ===== */
-.pageContainer {
+.page {
+  padding: 24px;
+  background: #f0f6fa;
   min-height: 100vh;
-  background: #f9fafb;
-  font-family: 'Kanit', sans-serif;
-  font-size: 1rem;   /* ตัวอักษรหลัก */
+  font-family: 'Inter', sans-serif;
 }
 
-.mainCard {
+/* Header Card */
+.headerCard {
   background: #fff;
-  border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  max-width: 1280px;   /* ✅ จำกัดความกว้างรวม */
-  margin: 0 auto;      /* ✅ จัดให้อยู่กลาง */
-}
-
-.pageTitle {
-  font-size: 1.6rem;
-  font-weight: 600;
-  color: #111827;
-  margin-bottom: 20px;
-}
-
-/* ===== Content Layout ===== */
-.contentWrapper {
-  display: grid;
-  grid-template-columns: 40% 60%;  /* ซ้าย 40 / ขวา 60 */
-  gap: 20px;
-  align-items: flex-start;
-  margin-bottom: 20px;
-}
-
-/* ===== Section Box ===== */
-.tableSection,
-.detailsFormSection {
-  background: #fff;
+  border-radius: 12px;
   border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+}
+.headerCard h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #1f2937;
+}
+.headerCard h1 span { color: #3b82f6; }
+.headerCard .meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+/* Table */
+.tableSection {
+  border: 1px solid #e0e0e0;
   border-radius: 10px;
-  padding: 16px;
-}
-
-.tableHeader,
-.detailsFormHeader {
-  font-size: 1.1rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 12px;
-  color: #374151;
-}
-
-/* ===== Table ===== */
-.tableWrapper {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.itemTable {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 1rem;
-  table-layout: fixed;  /* ล็อคคอลัมน์ */
-}
-
-.itemTable th,
-.itemTable td {
-  border-bottom: 1px solid #e5e7eb;
-  padding: 10px 12px;
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.itemTable th {
-  background: #eef9fc;
-  color: #374151;
-  font-weight: 600;
-}
-
-.itemTable th:nth-child(1),
-.itemTable td:nth-child(1) {
-  width: 40%;  /* ชื่อสินค้า */
-}
-.itemTable th:nth-child(2),
-.itemTable td:nth-child(2) {
-  width: 40%;  /* Barcode */
-}
-.itemTable th:nth-child(3),
-.itemTable td:nth-child(3) {
-  width: 20%;  /* ปุ่มเลือก */
-  text-align: right;
-}
-
-.emptyMessage {
-  text-align: center;
-  color: #6b7280;
-  padding: 14px;
-  font-size: 1rem;
-}
-
-.textRight {
-  text-align: right;
-}
-
-/* ===== Pagination ===== */
-.paginationControls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 6px;
-  margin-top: 12px;
-  list-style: none;
-  padding: 0;
-}
-
-.pageButton {
-  border: 1px solid #d1d5db;
   background: #fff;
-  color: #111827;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 1rem;
-  min-width: 36px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  overflow: hidden;
 }
-
-.pageButton:hover:not(:disabled) {
-  background: #f3f4f6;
+.tableGrid {
+  display: grid;
+  grid-template-columns: 60px 2fr 1fr 1fr 1fr 1.2fr 2fr;
+  align-items: center;
+  padding: 10px 14px;
 }
-
-.pageButton:disabled {
-  background: #f9fafb;
-  color: #9ca3af;
-  cursor: not-allowed;
+.tableHeader {
+  background: #eef9fc;
+  font-weight: 700;
+  color: #374151;
 }
+.tableRow {
+  border-top: 1px solid #e5e7eb;
+}
+.tableRow:hover {
+  background: #f9fbfd;
+}
+.emptyRow { height: 50px; background: #fafafa; }
 
-.activePage {
-  background: #008dda;
-  color: #fff;
-  border-color: #008dda;
+/* Inputs */
+.qtyInput, .reasonInput {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 0.9rem;
+}
+.qtyInput:focus, .reasonInput:focus {
+  border-color: #3b82f6;
+  outline: none;
+}
+.reasonInput { width: 100%; }
+
+/* Status Badge */
+.stBadge {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-left: 6px;
+}
+.stApproved { background: #16a34a; color: #fff; }
+.stPartial { background: #facc15; color: #333; }
+.stDeducted { background: #3b82f6; color: #fff; }
+.stCompleted { background: #6b7280; color: #fff; }
+
+/* Low stock */
+.lowStock {
+  color: #dc2626;
   font-weight: 600;
 }
 
-.ellipsis {
-  color: #6b7280;
-  font-size: 1rem;
-  padding: 0 4px;
-}
-
-/* ===== Form Section ===== */
-.detailsFormSection {
-  max-width: 100%;
-}
-
-.inputGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px 20px;
-}
-
-.formField {
+/* Actions */
+.actions {
+  margin-top: 24px;
   display: flex;
-  flex-direction: column;
-}
-
-.formField label {
-  font-size: 0.95rem;
-  margin-bottom: 4px;
-  color: #374151;
-}
-
-.formField input,
-.formField textarea {
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  padding: 8px 10px;
-  font-size: 1rem;
-  width: 100%;
-  max-width: 360px;   /* ไม่ให้ input ยาวเกิน */
-}
-
-.notesField {
-  min-height: 80px;
-  grid-column: span 2;
-}
-
-.errorText {
-  font-size: 0.85rem;
-  color: #dc2626;
-  margin-top: 2px;
-}
-
-.formActions {
-  display: flex;
+  gap: 12px;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 14px;
 }
-
-/* ===== Buttons ===== */
-.selectItemButton,
-.addItemButton,
-.clearButton,
-.saveButton,
-.deleteButton {
-  border: none;
-  border-radius: 6px;
-  padding: 8px 14px;
+.primaryBtn, .secondaryBtn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 0.95rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  border: none;
 }
-
-.selectItemButton {
-  background: #e0f2fe;
-  color: #0369a1;
-}
-
-.addItemButton {
-  background: #22c55e;
+.primaryBtn {
+  background: #3b82f6;
   color: #fff;
 }
-
-.clearButton {
-  background: #f3f4f6;
-  color: #374151;
-}
-
-.saveButton {
-  background: #008dda;
+.primaryBtn:hover:not(:disabled) { background: #2563eb; }
+.primaryBtn:disabled { background: #93c5fd; cursor: not-allowed; }
+.secondaryBtn {
+  background: #6b7280;
   color: #fff;
 }
+.secondaryBtn:hover { background: #4b5563; }
 
-.deleteButton {
-  background: #fee2e2;
-  color: #b91c1c;
-  padding: 6px 10px;
+/* Loading / Error */
+.loading, .error {
+  text-align: center;
+  margin-top: 50px;
+  font-size: 1.1rem;
 }
-
-/* ===== Bottom Section ===== */
-.bottomSection {
-  margin-top: 20px;
-  max-width: 1280px;  /* เท่ากับ mainCard */
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* ===== Responsive ===== */
-@media (max-width: 900px) {
-  .contentWrapper {
-    grid-template-columns: 1fr; /* มือถือ → 1 คอลัมน์ */
-  }
-  .notesField {
-    grid-column: span 1;
-  }
-}
+.error { color: #dc2626; }

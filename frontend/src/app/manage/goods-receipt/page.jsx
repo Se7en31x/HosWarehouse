@@ -104,15 +104,14 @@ export default function GoodsReceiptListPage() {
 
   const getPageNumbers = () => {
     const pages = [];
-    if (totalPages <= 7) {
+    if (totalPages <= 4) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else if (currentPage <= 4) {
-      pages.push(1, 2, 3, 4, 5, "...", totalPages);
+      pages.push(1, 2, 3, 4, "...", totalPages);
     } else if (currentPage >= totalPages - 3) {
       pages.push(
         1,
         "...",
-        totalPages - 4,
         totalPages - 3,
         totalPages - 2,
         totalPages - 1,

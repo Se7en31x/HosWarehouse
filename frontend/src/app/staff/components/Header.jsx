@@ -21,12 +21,15 @@ export default function Header() {
 
       {/* ไอคอนอยู่ชิดขวา */}
       <div className={styles.iconGroup}>
-        <div className={styles.bellWrapper}>
+        {/* 🔔 Notification */}
+        <div className={styles.notiWrapper}>
           <FaBell className={styles.icon} size={24} />
           {unreadCount > 0 && (
             <span className={styles.badge}>{unreadCount}</span>
           )}
         </div>
+
+        {/* 👤 User */}
         <FaUserCircle className={styles.icon} size={32} />
       </div>
     </header>

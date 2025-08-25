@@ -1,4 +1,3 @@
-/* src/app/components/Header.module.css — ใช้สีจากโค้ดเดิม */
 :root{
   --primary-600: #008dda;
   --primary-400: #41c9e2;
@@ -10,7 +9,6 @@
 
 /* Header */
 .header {
-  /* เดิม: margin: 0 2 0 2; (ไม่มีหน่วย) */
   margin: 0;
   position: sticky;
   top: 0;
@@ -27,28 +25,20 @@
   box-shadow: var(--shadow);
 }
 
-/* โลโก้ (ถ้ามีใช้ class นี้) */
+/* โลโก้ */
 .logo {
   border-radius: 8px;
   object-fit: contain;
 }
 
-.icon { color: #ffffff; }
-
 /* ชื่อระบบ */
 .headerTitle {
   font-size: 24px;
-  font-weight: 500; /* คงค่าตามเดิม */
+  font-weight: 500;
   color: var(--text-on-primary);
   margin: 0;
   padding: 0;
   line-height: 1;
-}
-
-/* (ออปชัน) ไอคอนเดี่ยวที่ตั้งชื่อ userIcon ไว้ */
-.userIcon {
-  color: var(--text-on-primary);
-  margin-right: 10px;
 }
 
 /* กลุ่มไอคอนขวาสุด */
@@ -64,23 +54,18 @@
   color: var(--text-on-primary);
   cursor: pointer;
   transition: color 0.2s ease-in-out, transform 0.08s ease;
+  background: transparent !important;
 }
 
 .icon:hover {
-  color: var(--hover); /* #007bff */
+  color: var(--hover);
 }
 
 .icon:active {
   transform: scale(0.97);
 }
 
-/* Responsive */
-@media (max-width: 640px) {
-  .header { height: 64px; padding: 0 16px; }
-  .headerTitle { font-size: 18px; }
-}
-
-
+/* ปุ่ม reset style */
 .iconBtn {
   -webkit-appearance: none;
   appearance: none;
@@ -95,7 +80,6 @@
   cursor: pointer;
 }
 
-/* กันกรอบ/พื้นจาก pseudo state ด้วย */
 .iconBtn:hover,
 .iconBtn:active,
 .iconBtn:focus {
@@ -104,20 +88,13 @@
   box-shadow: none !important;
 }
 
-/* คงวงแหวนโฟกัสแบบโปร่งใสอ่านง่าย (ถ้าไม่ต้องการลบได้) */
 .iconBtn:focus-visible {
   outline: 2px solid rgba(255,255,255,.6);
   outline-offset: 2px;
   border-radius: 9999px;
 }
 
-/* ไอคอนเองให้โปร่งใสและสีขาวคมชัด */
-.icon {
-  background: transparent !important;
-  color: #ffffff;
-}
-
-/* Header.module.css */
+/* Badge Notification */
 .notiWrapper {
   position: relative;
   display: inline-block;
@@ -135,4 +112,10 @@
   padding: 2px 6px;
   min-width: 18px;
   text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .header { height: 64px; padding: 0 16px; }
+  .headerTitle { font-size: 18px; }
 }

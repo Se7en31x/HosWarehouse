@@ -4,10 +4,38 @@ import { useEffect, useMemo, useState } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
 import styles from './page.module.css';
 import Swal from 'sweetalert2';
-import { ChevronLeft, ChevronRight, X, Eye, Trash2, RotateCw, CheckCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Eye, Trash2, CheckCircle } from 'lucide-react';
+import dynamic from "next/dynamic";
 
-// ─────────────────────────────────────────────────────────────
-// แผนที่สำหรับแปลสถานะ (ย้ายมาไว้ด้านนอกเพื่อให้ใช้ได้ทั่วถึง)
+// ✅ เพิ่ม Select (react-select) แบบ dynamic
+const Select = dynamic(() => import("react-select"), { ssr: false });
+
+/* ---- custom styles สำหรับ react-select ---- */
+const customSelectStyles = {
+  control: (base, state) => ({
+    ...base,
+    borderRadius: "0.5rem",
+    minHeight: "2.5rem",
+    borderColor: state.isFocused ? "#2563eb" : "#e5e7eb",
+    boxShadow: "none",
+    "&:hover": { borderColor: "#2563eb" },
+  }),
+  menu: (base) => ({
+    ...base,
+    borderRadius: "0.5rem",
+    marginTop: 6,
+    border: "1px solid #e5e7eb",
+    zIndex: 9999,
+  }),
+  menuPortal: (base) => ({
+    ...base,
+    zIndex: 9999,
+  }),
+};
+
+/* ============================================================
+   แผนที่สำหรับแปลสถานะ
+============================================================ */
 const statusMap = {
   waiting_approval_detail: 'รออนุมัติ',
   waiting_approval: 'รอการอนุมัติ',
@@ -26,6 +54,19 @@ const statusMap = {
   in_progress: 'กำลังดำเนินการ',
   pending: 'รอดำเนินการ',
 };
+
+// ✅ สร้าง options สำหรับสถานะ
+const statusOptions = Object.entries(statusMap).map(([value, label]) => ({
+  value,
+  label,
+}));
+
+// ✅ สร้าง options สำหรับประเภทคำขอ
+const typeOptions = [
+  { value: 'withdraw', label: 'เบิก' },
+  { value: 'borrow', label: 'ยืม' },
+  { value: 'return', label: 'คืน' },
+];
 
 // ฟังก์ชันสำหรับแปลสถานะ
 const translateStatus = (status) => {
@@ -186,19 +227,24 @@ function RequestDetailBody({ requestId }) {
 // ─────────────────────────────────────────────────────────────
 // หน้า List หลัก + Popup ดูรายละเอียด
 export default function MyRequestsPage() {
+  // ✅ filter state
+  const [typeFilter, setTypeFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+
+  // ✅ menuPortalTarget สำหรับ react-select
+  const menuPortalTarget = typeof window !== "undefined" ? document.body : null;
+
   const [requests, setRequests] = useState([]);
   const [loadingList, setLoadingList] = useState(true);
-
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
   const userId = 1;
-
   const [openId, setOpenId] = useState(null);
 
-  // ค้นหา/กรอง (client-side)
+  // ค้นหา/กรอง
   const [query, setQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
 
+  // ดึงคำขอ
   const fetchRequests = async () => {
     try {
       setLoadingList(true);
@@ -217,17 +263,13 @@ export default function MyRequestsPage() {
     }
   };
 
-  useEffect(() => {
-    fetchRequests();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useEffect(() => { fetchRequests(); }, []);
 
   useEffect(() => {
     document.body.style.overflow = openId ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [openId]);
 
-  // ─────────────────────────────────────────────────────────────
   // ยกเลิกคำขอ
   const handleCancel = async (requestId) => {
     const result = await Swal.fire({
@@ -242,25 +284,15 @@ export default function MyRequestsPage() {
     if (!result.isConfirmed) return;
     try {
       await axiosInstance.put(`/myRequest/${requestId}/cancel`, { user_id: userId });
-      await Swal.fire({
-        icon: 'success',
-        title: 'สำเร็จ',
-        text: 'ยกเลิกคำขอเรียบร้อยแล้ว',
-        customClass: { container: 'swal-topmost' }
-      });
+      await Swal.fire({ icon: 'success', title: 'สำเร็จ', text: 'ยกเลิกคำขอเรียบร้อยแล้ว' });
       fetchRequests();
     } catch (err) {
       console.error(err);
-      Swal.fire({
-        icon: 'error',
-        title: 'ผิดพลาด',
-        text: 'ไม่สามารถแก้ไขคำขอได้',
-        customClass: { container: 'swal-topmost' }
-      });
+      Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: 'ไม่สามารถแก้ไขคำขอได้' });
     }
   };
 
-  // ✅ เพิ่มโค้ด: ฟังก์ชันสำหรับยืนยันการรับของ
+  // ยืนยันการรับของ
   const handleConfirmReceipt = async (requestId) => {
     const result = await Swal.fire({
       title: 'ยืนยันการรับของครบ?',
@@ -269,34 +301,16 @@ export default function MyRequestsPage() {
       showCancelButton: true,
       confirmButtonText: 'ใช่, ยืนยัน',
       cancelButtonText: 'ยกเลิก',
-      customClass: { container: 'swal-topmost' }
     });
     if (!result.isConfirmed) return;
     try {
-      // ✅ สมมติว่ามี API สำหรับยืนยันการรับของอยู่
       await axiosInstance.put(`/myRequest/${requestId}/complete`, { user_id: userId });
-      await Swal.fire({
-        icon: 'success',
-        title: 'สำเร็จ',
-        text: 'ยืนยันการรับของเรียบร้อยแล้ว',
-        customClass: { container: 'swal-topmost' }
-      });
-      fetchRequests(); // รีเฟรชข้อมูลในตาราง
+      await Swal.fire({ icon: 'success', title: 'สำเร็จ', text: 'ยืนยันการรับของเรียบร้อยแล้ว' });
+      fetchRequests();
     } catch (err) {
       console.error(err);
-      Swal.fire({
-        icon: 'error',
-        title: 'ผิดพลาด',
-        text: 'ไม่สามารถยืนยันการรับของได้',
-        customClass: { container: 'swal-topmost' }
-      });
+      Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: 'ไม่สามารถยืนยันการรับของได้' });
     }
-  };
-
-  const translateRequestTypes = (types) => {
-    if (!types) return '-';
-    const mapType = { withdraw: 'การเบิก', borrow: 'การยืม', return: 'การคืน' };
-    return [...new Set(String(types).split(',').map((t) => mapType[t?.toLowerCase()] || t))].join(' และ ');
   };
 
   const formatDate = (d) => {
@@ -304,173 +318,105 @@ export default function MyRequestsPage() {
     try {
       const dt = new Date(d);
       if (isNaN(dt.getTime())) return '-';
-
-      // วันที่แบบตัวเลข: dd/mm/yyyy (พ.ศ.) + เวลา HH:mm
       const datePart = new Intl.DateTimeFormat('th-TH-u-nu-latn', {
-        timeZone: 'Asia/Bangkok',
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',   // จะได้ พ.ศ. อัตโนมัติ
+        timeZone: 'Asia/Bangkok', day: '2-digit', month: '2-digit', year: 'numeric'
       }).format(dt);
-
       const timePart = new Intl.DateTimeFormat('th-TH-u-nu-latn', {
-        timeZone: 'Asia/Bangkok',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
+        timeZone: 'Asia/Bangkok', hour: '2-digit', minute: '2-digit', hour12: false
       }).format(dt);
-
-      return `${datePart} ${timePart}`; // ตัวอย่าง: 22/08/2568 22:04
-    } catch {
-      return '-';
-    }
+      return `${datePart} ${timePart}`;
+    } catch { return '-'; }
   };
 
   const renderStatus = (status) => {
     const s = String(status || '').toLowerCase();
     let cls = styles.badgeNeutral;
-
-    // ✅ จับ "อนุมัติบางส่วน" ก่อนเสมอ (ทั้งไทยและอังกฤษ)
-    if (
-      s.includes('อนุมัติบางส่วน') ||
-      s.includes('approved_partial') ||
-      s.includes('approved_partial_and_rejected_partial')
-    ) {
-      cls = styles.badgePartial;
-
-      // ถัดมา: รอ/กำลังดำเนินการ
-    } else if (
-      s.includes('รอ') || s.includes('pending') || s.includes('waiting') || s.includes('in_progress')
-    ) {
-      cls = styles.badgeWaiting ?? styles.badgeWarning; // ถ้ามี badgeWaiting ใช้อันนั้น
-
-      // อนุมัติทั้งหมด / เสร็จสิ้น
-    } else if (
-      s.includes('อนุมัติทั้งหมด') ||
-      (s.includes('อนุมัติ') && !s.includes('บางส่วน')) ||
-      s.includes('approved_all') ||
-      s.includes('completed') || s.includes('complete') ||
-      s.includes('success') || s.includes('stock_deducted')
-    ) {
-      cls = styles.badgeSuccess;
-
-      // ยกเลิก/ปฏิเสธ
-    } else if (
-      s.includes('ยกเลิก') || s.includes('ปฏิเสธ') ||
-      s.includes('cancel') || s.includes('reject')
-    ) {
-      cls = styles.badgeDanger;
-    }
-
+    if (s.includes('อนุมัติบางส่วน') || s.includes('approved_partial')) cls = styles.badgePartial;
+    else if (s.includes('รอ') || s.includes('pending') || s.includes('waiting') || s.includes('in_progress')) cls = styles.badgeWaiting ?? styles.badgeWarning;
+    else if (s.includes('อนุมัติทั้งหมด') || (s.includes('อนุมัติ') && !s.includes('บางส่วน')) || s.includes('approved_all') || s.includes('completed') || s.includes('complete') || s.includes('success') || s.includes('stock_deducted')) cls = styles.badgeSuccess;
+    else if (s.includes('ยกเลิก') || s.includes('ปฏิเสธ') || s.includes('cancel') || s.includes('reject')) cls = styles.badgeDanger;
     return <span className={`${styles.badge} ${cls}`}>{translateStatus(status)}</span>;
   };
 
-
-  // แปลงชนิดคำขอให้เป็นอาร์เรย์ไม่ซ้ำ: ['withdraw','borrow',...]
   const parseTypes = (types) => {
     if (!types) return [];
     if (Array.isArray(types)) return [...new Set(types.map(t => String(t).toLowerCase().trim()))];
     return [...new Set(String(types).split(',').map(t => t.trim().toLowerCase()))];
   };
 
-  // เรนเดอร์ชิปสีตามประเภท
   const renderTypeChips = (types) => {
     const arr = parseTypes(types);
     if (arr.length === 0) return '-';
-
-    const label = (t) =>
-      t === 'withdraw' ? 'เบิก' :
-        t === 'borrow' ? 'ยืม' :
-          t === 'return' ? 'คืน' : t;
-
+    const label = (t) => t === 'withdraw' ? 'เบิก' : t === 'borrow' ? 'ยืม' : t === 'return' ? 'คืน' : t;
     return (
       <div className={styles.typePills}>
         {arr.map((t) => {
           let cls = styles.typePill;
           if (t === 'withdraw') cls += ` ${styles.typeWithdraw}`;
           else if (t === 'borrow') cls += ` ${styles.typeBorrow}`;
-          else if (t === 'return') cls += ` ${styles.typeReturn}`; // เผื่อไว้ (ไม่บังคับ)
+          else if (t === 'return') cls += ` ${styles.typeReturn}`;
           return <span key={t} className={cls}>{label(t)}</span>;
         })}
       </div>
     );
   };
 
-  // สถิติบนหัว
   const stats = useMemo(() => {
     const total = (requests || []).length;
-    const pending = (requests || []).filter(r => {
-      const t = String(r.request_status || '').toLowerCase();
-      return t.includes('รอ') || t.includes('pending') || t.includes('await');
-    }).length;
-    const approved = (requests || []).filter(r => {
-      const t = String(r.request_status || '').toLowerCase();
-      return t.includes('อนุมัติ') || t.includes('เสร็จสิ้น') || t.includes('approved') || t.includes('complete') || t.includes('success') || t.includes('stock_deducted');
-    }).length;
-    const cancelled = total - pending - approved;
-    return { total, pending, approved, cancelled };
-  }, [requests]);
-  // ✅ โค้ดที่เพิ่ม: สร้างตัวเลือกฟิลเตอร์แบบไดนามิก
-  const filterOptions = useMemo(() => {
-    const uniqueStatuses = new Set(requests.map(r => r.request_status));
-    const options = [{ key: 'all', label: 'ทั้งหมด' }];
-    for (const status of uniqueStatuses) {
-      const s = String(status || '').toLowerCase();
-      // เพิ่มเงื่อนไขเพื่อไม่แสดงสถานะที่ต้องการซ่อน
-      if (s && s !== 'completed' && s !== 'canceled') {
-        const translated = translateStatus(status);
-        options.push({ key: status, label: translated });
-      }
-    }
-    return options;
+    const pending = (requests || []).filter(r => String(r.request_status || '').toLowerCase().includes('รอ') || String(r.request_status || '').toLowerCase().includes('pending')).length;
+    const withdrawApproved = (requests || []).filter(r =>
+      (String(r.request_status || '').toLowerCase().includes('อนุมัติ') ||
+        String(r.request_status || '').toLowerCase().includes('approved') ||
+        String(r.request_status || '').toLowerCase().includes('completed')) &&
+      parseTypes(r.request_types).includes('withdraw')
+    ).length;
+    const borrowApproved = (requests || []).filter(r =>
+      (String(r.request_status || '').toLowerCase().includes('อนุมัติ') ||
+        String(r.request_status || '').toLowerCase().includes('approved') ||
+        String(r.request_status || '').toLowerCase().includes('completed')) &&
+      parseTypes(r.request_types).includes('borrow')
+    ).length;
+    const cancelled = (requests || []).filter(r =>
+      String(r.request_status || '').toLowerCase().includes('ยกเลิก') ||
+      String(r.request_status || '').toLowerCase().includes('cancel') ||
+      String(r.request_status || '').toLowerCase().includes('ปฏิเสธ') ||
+      String(r.request_status || '').toLowerCase().includes('reject')
+    ).length;
+    return { total, pending, withdrawApproved, borrowApproved, cancelled };
   }, [requests]);
 
-
-  // กรอง/ค้นหา + หน้า
   const filtered = useMemo(() => {
-    let list = Array.isArray(requests) ? requests : [];
-
-    // ✅ จุดที่ 1: กรองรายการที่ 'completed' และ 'canceled' ออกไปก่อนเสมอ
-    list = list.filter(r =>
-      String(r.request_status || '').toLowerCase() !== 'completed' &&
-      String(r.request_status || '').toLowerCase() !== 'canceled'
-    );
-
-    // ✅ จุดที่ 2: ใช้ statusFilter เพื่อกรองสถานะที่เหลือ
-    if (statusFilter !== 'all') {
+    let list = [...requests];
+    list = list.filter(r => String(r.request_status || '').toLowerCase() !== 'completed' && String(r.request_status || '').toLowerCase() !== 'canceled');
+    if (statusFilter) {
       list = list.filter(r => String(r.request_status || '').toLowerCase() === statusFilter.toLowerCase());
     }
-
+    if (typeFilter) {
+      list = list.filter(r => parseTypes(r.request_types).includes(typeFilter.toLowerCase()));
+    }
     if (query.trim()) {
       const q = query.trim().toLowerCase();
-      list = list.filter(
-        (r) =>
-          String(r.request_code || '').toLowerCase().includes(q) ||
-          String(r.request_types || '').toLowerCase().includes(q) ||
-          String(r.request_status || '').toLowerCase().includes(q)
+      list = list.filter(r =>
+        String(r.request_code || '').toLowerCase().includes(q) ||
+        String(r.request_types || '').toLowerCase().includes(q) ||
+        String(r.request_status || '').toLowerCase().includes(q)
       );
     }
     return list;
-  }, [requests, statusFilter, query]);
+  }, [requests, statusFilter, typeFilter, query]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
-  const paginatedRequests = filtered.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-
+  const paginatedRequests = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
   const handlePrev = () => setCurrentPage((p) => Math.max(1, p - 1));
   const handleNext = () => setCurrentPage((p) => Math.min(totalPages, p + 1));
+
   const getPageNumbers = () => {
     const pages = [];
-    if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else if (currentPage <= 4) {
-      pages.push(1, 2, 3, 4, 5, '...', totalPages);
-    } else if (currentPage >= totalPages - 3) {
-      pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-    } else {
-      pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+    if (totalPages <= 4) { for (let i = 1; i <= totalPages; i++) pages.push(i); }
+    else {
+      if (currentPage <= 3) pages.push(1, 2, 3, 4, '...', totalPages);
+      else if (currentPage >= totalPages - 2) pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      else pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
     }
     return pages;
   };
@@ -480,7 +426,6 @@ export default function MyRequestsPage() {
 
   return (
     <div className={styles.page}>
-      {/* Header */}
       <div className={styles.headerBar}>
         <div>
           <h1 className={styles.pageTitle}>คำขอของฉัน</h1>
@@ -488,125 +433,106 @@ export default function MyRequestsPage() {
         </div>
       </div>
 
-      {/* Summary */}
       <div className={styles.summaryGrid}>
         <div className={styles.statCard}>
           <div className={styles.statLabel}>ทั้งหมด</div>
           <div className={styles.statValue}>{stats.total}</div>
         </div>
-        <div className={`${styles.statCard} ${styles.statSuccess}`}>
-          <div className={styles.statLabel}>อนุมัติ/เสร็จสิ้น</div>
-          <div className={styles.statValue}>{stats.approved}</div>
+        <div className={`${styles.statCard} ${styles.statWithdraw}`}>
+          <div className={styles.statLabel}>เบิก</div>
+          <div className={styles.statValue}>{stats.withdrawApproved}</div>
+        </div>
+        <div className={`${styles.statCard} ${styles.statBorrow}`}>
+          <div className={styles.statLabel}>ยืม</div>
+          <div className={styles.statValue}>{stats.borrowApproved}</div>
         </div>
       </div>
 
-      {/* Toolbar: chips + search */}
+      {/* Toolbar Filters */}
       <div className={styles.toolbar}>
-        <div className={styles.segmented}>
-          {filterOptions.map(b => (
-            <button
-              key={b.key}
-              className={`${styles.segmentedBtn} ${statusFilter === b.key ? styles.segmentedActive : ''}`}
-              onClick={() => { setCurrentPage(1); setStatusFilter(b.key); }}
-            >
-              {b.label}
-            </button>
-          ))}
+        <div className={styles.filterGrid}>
+          <div className={styles.filterGroup}>
+            <label className={styles.label}>สถานะ</label>
+            <Select
+              inputId="statusFilter"
+              options={statusOptions}
+              isClearable
+              isSearchable={false}
+              placeholder="เลือกสถานะ..."
+              styles={customSelectStyles}
+              value={statusOptions.find(o => o.value === statusFilter) || null}
+              onChange={opt => setStatusFilter(opt?.value || '')}
+              menuPortalTarget={menuPortalTarget}
+            />
+          </div>
+          <div className={styles.filterGroup}>
+            <label className={styles.label}>ประเภท</label>
+            <Select
+              inputId="typeFilter"
+              options={typeOptions}
+              isClearable
+              isSearchable={false}
+              placeholder="เลือกประเภท..."
+              styles={customSelectStyles}
+              value={typeOptions.find(o => o.value === typeFilter) || null}
+              onChange={opt => setTypeFilter(opt?.value || '')}
+              menuPortalTarget={menuPortalTarget}
+            />
+          </div>
         </div>
-
-        <div className={styles.searchWrap}>
-          <input
-            className={styles.inputSearch}
-            placeholder="ค้นหา: รหัส/ประเภท/สถานะ"
-            value={query}
-            onChange={(e) => { setCurrentPage(1); setQuery(e.target.value); }}
-          />
-          {query && (
-            <button className={styles.btnGhost} onClick={() => setQuery('')}>ล้าง</button>
-          )}
+        <div className={styles.searchCluster}>
+          <div className={styles.filterGroup}>
+            <label htmlFor="filter" className={styles.label}>ค้นหา</label>
+            <input
+              id="filter"
+              className={styles.input}
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="..."
+            />
+          </div>
+          <button className={`${styles.ghostBtn} ${styles.clearButton}`} onClick={() => { setQuery(''); setTypeFilter(''); setStatusFilter(''); }}>
+            <Trash2 size={18} /> ล้างตัวกรอง
+          </button>
         </div>
       </div>
 
-      {/* ===== ตารางแบบ “โค้ดต้นแบบ” ===== */}
+      {/* Table */}
       <div className={styles.tableFrame}>
-        {/* Header ติดบนในกรอบเดียวกัน */}
         <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
           <div className={styles.headerItem}>ลำดับ</div>
           <div className={styles.headerItem}>รหัสคำขอ</div>
           <div className={styles.headerItem}>วันที่/เวลา</div>
           <div className={styles.headerItem}>ประเภท</div>
-          <div className={styles.headerItem}>สถานะ</div>
           <div className={styles.headerItem}>จำนวน</div>
+          <div className={styles.headerItem}>สถานะ</div>
           <div className={styles.headerItem}>จัดการ</div>
         </div>
 
-        {/* Body สูงคงที่ = rows-per-page */}
         <div className={styles.inventory} style={{ '--rows-per-page': ITEMS_PER_PAGE }}>
           {loadingList ? (
-            <div className={styles.noData}>
-              กำลังโหลดข้อมูล…
-            </div>
+            <div className={styles.noData}>กำลังโหลดข้อมูล…</div>
           ) : paginatedRequests.length > 0 ? (
             paginatedRequests.map((req, index) => {
               const rowNo = (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
               const status = String(req.request_status || '').toLowerCase();
               return (
-                <div
-                  key={req.request_id ?? req.request_code ?? index}
-                  className={`${styles.tableGrid} ${styles.tableRow}`}
-                >
+                <div key={req.request_id ?? req.request_code ?? index} className={`${styles.tableGrid} ${styles.tableRow}`}>
                   <div className={`${styles.tableCell} ${styles.centerCell}`}>{rowNo}</div>
                   <div className={`${styles.tableCell} ${styles.codeCell}`}>#{req.request_code || '-'}</div>
-                  <div className={`${styles.tableCell} ${styles.muted}`}>
-                    {req.request_date ? formatDate(req.request_date) : '-'}
-                  </div>
-                  <div className={`${styles.tableCell} ${styles.typeCell}`}>
-                    {renderTypeChips(req.request_types)}
-                  </div>
-                  <div className={styles.tableCell}>{renderStatus(req.request_status)}</div>
+                  <div className={`${styles.tableCell} ${styles.muted}`}>{req.request_date ? formatDate(req.request_date) : '-'}</div>
+                  <div className={`${styles.tableCell} ${styles.typeCell}`}>{renderTypeChips(req.request_types)}</div>
                   <div className={styles.tableCell}>{req.item_count ?? '-'}</div>
+                  <div className={styles.tableCell}>{renderStatus(req.request_status)}</div>
                   <div className={`${styles.tableCell} ${styles.centerCell}`}>
                     <div className={styles.rowActions}>
-                      <button
-                        className={styles.btnIcon}
-                        onClick={() => openPopupView(req.request_id)}
-                        title="ดูรายละเอียด"
-                      >
-                        <Eye size={16} />
-                      </button>
-
-                      {(() => {
-                        const allowCancel = status.includes('รอ') || status.includes('pending') || status.includes('await');
-                        return allowCancel ? (
-                          <button
-                            className={styles.btnIconWarning}
-                            onClick={() => handleCancel(req.request_id)}
-                            title="ยกเลิก"
-                          >
-                            <X size={16} /> <span>ยกเลิก</span>
-                          </button>
-                        ) : null;
-                      })()}
-
-                      {/* ✅ เพิ่มโค้ด: ปุ่มยืนยันการรับของ */}
+                      <button className={styles.btnIcon} onClick={() => openPopupView(req.request_id)} title="ดูรายละเอียด"><Eye size={16} /></button>
+                      {status.includes('รอ') || status.includes('pending') ? (
+                        <button className={styles.btnIconWarning} onClick={() => handleCancel(req.request_id)} title="ยกเลิก"><X size={16} /> <span>ยกเลิก</span></button>
+                      ) : null}
                       {status === 'delivering' && (
-                        <button
-                          className={styles.btnIconSuccess}
-                          onClick={() => handleConfirmReceipt(req.request_id)}
-                          title="ยืนยันการรับของครบ"
-                        >
-                          <CheckCircle size={16} /> <span>รับของแล้ว</span>
-                        </button>
-                      )}
-
-                      {status === 'waiting_approval' && (
-                        <button
-                          className={styles.btnIconDanger}
-                          onClick={() => handleDelete(req.request_id)}
-                          title="ลบคำขอถาวร"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        <button className={styles.btnIconSuccess} onClick={() => handleConfirmReceipt(req.request_id)} title="ยืนยันการรับของครบ"><CheckCircle size={16} /> <span>รับของแล้ว</span></button>
                       )}
                     </div>
                   </div>
@@ -618,57 +544,34 @@ export default function MyRequestsPage() {
           )}
         </div>
 
-        {/* Pagination (สไตล์เดียวกับต้นแบบ) */}
+        {/* Pagination */}
         <ul className={styles.paginationControls}>
           <li>
-            <button className={styles.pageButton} onClick={handlePrev} disabled={currentPage === 1} aria-label="หน้าก่อนหน้า">
-              <ChevronLeft size={16} />
-            </button>
+            <button className={styles.pageButton} onClick={handlePrev} disabled={currentPage === 1}><ChevronLeft size={16} /></button>
           </li>
-
           {getPageNumbers().map((p, idx) =>
             p === '...' ? (
               <li key={idx} className={styles.ellipsis}>…</li>
             ) : (
               <li key={idx}>
-                <button
-                  className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ''}`}
-                  onClick={() => setCurrentPage(p)}
-                >
-                  {p}
-                </button>
+                <button className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ''}`} onClick={() => setCurrentPage(p)}>{p}</button>
               </li>
             )
           )}
-
           <li>
-            <button
-              className={styles.pageButton}
-              onClick={handleNext}
-              disabled={currentPage >= totalPages}
-              aria-label="หน้าถัดไป"
-            >
-              <ChevronRight size={16} />
-            </button>
+            <button className={styles.pageButton} onClick={handleNext} disabled={currentPage >= totalPages}><ChevronRight size={16} /></button>
           </li>
         </ul>
       </div>
 
-      {/* Popup (รายละเอียดเท่านั้น) */}
+      {/* Popup */}
       {openId && (
         <div className={styles.modalOverlay} onClick={closePopup}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <div className={styles.modalHeaderLeft}>
-                <h3 className={styles.modalTitle}>
-                  รายละเอียดคำขอ <span className={styles.modalCode}>#{openId}</span>
-                </h3>
-              </div>
-              <button className={styles.modalClose} onClick={closePopup} aria-label="ปิด">
-                <X size={18} />
-              </button>
+              <h3 className={styles.modalTitle}>รายละเอียดคำขอ</h3>
+              <button className={styles.modalClose} onClick={closePopup}><X size={18} /></button>
             </div>
-
             <RequestDetailBody requestId={openId} />
           </div>
         </div>
