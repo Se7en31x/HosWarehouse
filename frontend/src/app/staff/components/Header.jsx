@@ -2,9 +2,12 @@
 
 import styles from './Header.module.css';
 import Image from 'next/image';
-import { FaUserCircle, FaBell } from 'react-icons/fa'; // ใช้ FaBell สำหรับกระดิ่ง
+import { FaUserCircle, FaBell } from 'react-icons/fa';
+import { useNotifications } from '@/app/context/NotificationContextUser';
 
 export default function Header() {
+  const { notifications = [], unreadCount = 0 } = useNotifications() || {};
+
   return (
     <header className={styles.header}>
       <Image
@@ -18,7 +21,12 @@ export default function Header() {
 
       {/* ไอคอนอยู่ชิดขวา */}
       <div className={styles.iconGroup}>
-        <FaBell className={styles.icon} size={24} />
+        <div className={styles.bellWrapper}>
+          <FaBell className={styles.icon} size={24} />
+          {unreadCount > 0 && (
+            <span className={styles.badge}>{unreadCount}</span>
+          )}
+        </div>
         <FaUserCircle className={styles.icon} size={32} />
       </div>
     </header>

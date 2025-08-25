@@ -1,0 +1,218 @@
+/* 📌 Wrapper หลัก */
+.notiWrapper {
+  position: relative;
+  display: inline-block;
+}
+
+/* 📌 Bell Icon */
+.bellWrapper {
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  transition: background 0.2s ease;
+}
+
+.bellWrapper:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.bellIcon {
+  color: #ffffff;
+  transition: color 0.2s ease, transform 0.08s ease;
+}
+
+.bellIcon:hover {
+  color: #e6f4ff;
+  transform: scale(1.1);
+}
+
+/* 📌 Badge (ตัวเลขแจ้งเตือน) */
+.badge {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  background: #cc0000;
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 50%;
+  padding: 2px 6px;
+  min-width: 18px;
+  text-align: center;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* 📌 Dropdown */
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: 52px;
+  width: 540px;
+  min-height: 550px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  animation: fadeDown 0.25s ease;
+  overflow: hidden;
+}
+
+@keyframes fadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 📌 Header */
+.dropdownHeader {
+  font-weight: bold;
+  padding: 14px 18px;
+  background: #f9f9f9;
+  border-bottom: 1px solid #eaeaea;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 15px;
+}
+
+.count {
+  font-size: 12px;
+  color: #666;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 📌 ปุ่ม Action (อ่านทั้งหมด, ลบทั้งหมด) */
+.markAllBtn,
+.clearBtn {
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.markAllBtn {
+  color: #0d6efd;
+}
+.markAllBtn:hover {
+  background: #e7f1ff;
+}
+
+.clearBtn {
+  color: #dc3545;
+}
+.clearBtn:hover {
+  background: #fde2e2;
+}
+
+/* 📌 Body */
+.dropdownBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.notiList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 500px;   /* ✅ ล็อคความสูง */
+  overflow-y: auto;    /* ✅ เลื่อนแทน */
+}
+
+.notiItem {
+  display: flex;
+  align-items: flex-start;
+  margin: 6px 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  transition: background 0.2s, transform 0.1s;
+}
+.notiItem:hover {
+  background: #f5f5f5;
+  transform: translateY(-1px);
+}
+
+.unread {
+  background: #eef6ff;
+}
+
+/* 📌 เนื้อหาแจ้งเตือน */
+.notiContent {
+  flex: 1;
+}
+
+.notiContent strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 3px;
+  color: #000;
+}
+
+.notiContent p {
+  margin: 0;
+  font-size: 13px;
+  color: #444;
+}
+
+.notiContent small {
+  font-size: 11px;
+  color: #777;
+  display: block;
+  margin-top: 8px;
+  text-align: left;
+}
+
+/* 📌 Empty State */
+.empty {
+  padding: 50px 20px;
+  text-align: center;
+  color: #777;
+  font-size: 14px;
+}
+
+/* 📌 Footer */
+.dropdownFooter {
+  padding: 12px;
+  text-align: center;
+  border-top: 1px solid #eee;
+  background: #fafafa;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+}
+
+.viewAllBtn {
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  color: #065fd4;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.viewAllBtn:hover {
+  background: #f0f7ff;
+}

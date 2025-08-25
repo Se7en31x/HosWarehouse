@@ -1,0 +1,151 @@
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: "Segoe UI", sans-serif;
+  background-color: #ffffff;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bell {
+  color: #2563eb;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.markAll {
+  background: #2563eb;
+  color: white;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+.markAll:hover {
+  background: #1d4ed8;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.tabs button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.tabs button:hover {
+  background: #f3f4f6;
+}
+
+.tabs .active {
+  background: white;
+  border: 1px solid #2563eb;
+  color: #2563eb;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.item {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.item:hover {
+  border-color: #2563eb;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.unread {
+  border-left: 4px solid #2563eb;
+  background: #f0f7ff;
+}
+
+.read {
+  border-left: 4px solid #9ca3af;
+}
+
+.info h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.info p {
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+
+.time {
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.new {
+  background: #2563eb;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+}
+
+.empty {
+  text-align: center;
+  color: #9ca3af;
+  padding: 40px 0;
+  font-size: 1rem;
+}

@@ -1,25 +1,27 @@
-// src/app/layout.js
 'use client';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
-import './globals.css'; // ยังคงใช้ globals.css เหมือนที่คุณเลือก
+import './globals.css';
+
+// 🔔 Import Provider ที่เราสร้างไว้
+import { NotificationProvider } from '../context/NotificationContextPurchasing';
 
 export default function RootLayout({ children }) {
   return (
-    <div className="app-layout-container"> {/* เปลี่ยนชื่อ className เพื่อให้ชัดเจน */}
-      {/* Header จะอยู่ด้านบนสุดและขยายเต็มความกว้าง */}
-      <Header />
+    <NotificationProvider>   {/* ✅ ครอบทั้งแอป */}
+      <div className="app-layout-container">
+        {/* Header ด้านบน */}
+        <Header />
 
-      {/* ส่วนที่รวม Sidebar และ Main Content ที่จะอยู่ใต้ Header */}
-      <div className="main-content-wrapper"> {/* เปลี่ยนชื่อ className เพื่อให้ชัดเจน */}
-        {/* Sidebar */}
-        <Sidebar />
+        {/* Layout ส่วนที่เหลือ */}
+        <div className="main-content-wrapper">
+          <Sidebar />
 
-        {/* Main Content Area (Header ของเนื้อหาส่วนนี้, และ Main content จริงๆ) */}
-        <main className="content-area"> {/* เปลี่ยนชื่อ className เพื่อให้ชัดเจน */}
-          {children} {/* เนื้อหาของหน้าแต่ละหน้า */}
-        </main>
+          <main className="content-area">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </NotificationProvider>
   );
 }

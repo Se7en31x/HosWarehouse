@@ -2,23 +2,26 @@
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import './globals.css';
-import 'react-day-picker/dist/style.css';
 
-
-import { CartProvider } from './context/CartContext'; // ✅ เพิ่มบรรทัดนี้
+// 🔔 Import Provider ที่เราสร้างไว้
+import { NotificationProvider } from '../context/NotificationContext';
 
 export default function RootLayout({ children }) {
   return (
-    <CartProvider> {/* ✅ ครอบ context provider ตรงนี้ */}
+    <NotificationProvider>   {/* ✅ ครอบทั้งแอป */}
       <div className="app-layout-container">
+        {/* Header ด้านบน */}
         <Header />
+
+        {/* Layout ส่วนที่เหลือ */}
         <div className="main-content-wrapper">
           <Sidebar />
+
           <main className="content-area">
             {children}
           </main>
         </div>
       </div>
-    </CartProvider>
+    </NotificationProvider>
   );
 }

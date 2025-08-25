@@ -1,9 +1,8 @@
-'use client';
-
+"use client";
 import styles from './Header.module.css';
 import Image from 'next/image';
-import Link from 'next/link';               // ✅ เพิ่ม import Link
-import { FaUserCircle, FaBell } from 'react-icons/fa';
+import { FaUserCircle } from 'react-icons/fa';
+import NotificationBell from './NotificationBell';
 
 export default function Header() {
   return (
@@ -17,17 +16,12 @@ export default function Header() {
       />
       <h1 className={styles.headerTitle}>ระบบคลังโรงพยาบาล</h1>
 
-      {/* ไอคอนอยู่ชิดขวา */}
       <div className={styles.iconGroup}>
-        {/* ✅ ลิงก์ไปยังหน้าการแจ้งเตือน */}
-        <Link href="/manage/notifications" passHref>
-          <FaBell className={`${styles.icon} cursor-pointer`} size={24} />
-        </Link>
+        {/* 🔔 ปุ่มแจ้งเตือน */}
+        <NotificationBell />
 
-        {/* ✅ ตัวอย่าง: ลิงก์ไปยังหน้าโปรไฟล์ผู้ใช้ */}
-        <Link href="/manage/profile" passHref>
-          <FaUserCircle className={`${styles.icon} cursor-pointer`} size={32} />
-        </Link>
+        {/* 👤 ปุ่มโปรไฟล์ */}
+        <FaUserCircle className={`${styles.icon} cursor-pointer`} size={32} />
       </div>
     </header>
   );
