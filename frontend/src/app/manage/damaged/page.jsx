@@ -163,6 +163,57 @@ export default function DamagedItemsPage() {
     setCurrentPage(1);
   };
 
+  const handleAction = async (damagedId, remaining, actionType) => {
+    try {
+      const { value: qty } = await Swal.fire({
+        title: actionType === 'repaired' ? 'ซ่อมพัสดุ' : 'ทำลายพัสดุ',
+        input: 'number',
+        inputLabel: `จำนวนที่ต้องการ${actionType === 'repaired' ? 'ซ่อม' : 'ทำลาย'}`,
+        inputAttributes: { min: 1, max: remaining },
+        inputValue: remaining,
+        showCancelButton: true,
+        confirmButtonText: 'ยืนยัน',
+        cancelButtonText: 'ยกเลิก',
+        preConfirm: (val) => {
+          const n = Number(val);
+          if (isNaN(n) || n <= 0 || n > remaining) {
+            Swal.showValidationMessage(`จำนวนต้องอยู่ระหว่าง 1 ถึง ${remaining}`);
+            return false;
+          }
+          return n;
+        },
+      });
+
+      if (!qty) return;
+
+      // ✅ call API
+      await axiosInstance.post(`/damaged/${damagedId}/action`, {
+        damaged_id: damagedId,
+        action_type: actionType,
+        action_qty: qty,
+      });
+
+      Swal.fire({
+        icon: 'success',
+        title: 'สำเร็จ',
+        text: 'บันทึกการดำเนินการแล้ว',
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      // reload ข้อมูล
+      fetchDamaged();
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'เกิดข้อผิดพลาด',
+        text: 'ไม่สามารถบันทึกการดำเนินการได้',
+      });
+    }
+  };
+
+
   return (
     <div className={styles.pageBackground}>
       <div className={styles.container}>
@@ -273,7 +324,7 @@ export default function DamagedItemsPage() {
                     {d.damaged_date ? new Date(d.damaged_date).toLocaleDateString('th-TH') : '-'}
                   </div>
                   <div className={styles.tableCell}>{d.reporter_name ?? '-'}</div>
-                
+
                   {/* สถานะ */}
                   <div className={`${styles.tableCell} ${styles.centerCell}`}>
                     {(() => {

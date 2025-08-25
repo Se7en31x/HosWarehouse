@@ -1,33 +1,35 @@
-'use client';
-import { useEffect, useMemo, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import axiosInstance from '@/app/utils/axiosInstance';
-import Swal from 'sweetalert2';
-import styles from './page.module.css';
+"use client";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import axiosInstance from "@/app/utils/axiosInstance";
+import Swal from "sweetalert2";
+import styles from "./page.module.css";
 
 function formatDate(d) {
-  if (!d) return '-';
+  if (!d) return "-";
   const dt = new Date(d);
-  if (isNaN(dt)) return '-';
-  return dt.toLocaleString('th-TH', { hour12: false });
+  if (isNaN(dt)) return "-";
+  return dt.toLocaleString("th-TH", { hour12: false });
 }
 
 // 🔹 แปลสถานะคืนจาก DB → ไทย
 function translateConditionFromDB(c) {
-  const v = String(c || '').toLowerCase();
-  if (v === 'normal') return 'คืนปกติ';
-  if (v === 'damaged') return 'คืนชำรุด';
-  if (v === 'lost') return 'สูญหาย';
-  return 'สถานะไม่ทราบ';
+  const v = String(c || "").toLowerCase();
+  if (v === "normal") return "คืนปกติ";
+  if (v === "damaged") return "คืนชำรุด";
+  if (v === "lost") return "สูญหาย";
+  if (v === "expired") return "คืนแล้วหมดอายุ";
+  return "สถานะไม่ทราบ";
 }
 
 // 🔹 แปลสภาพที่เลือกในฟอร์ม → ไทย
 function translateCondition(c) {
-  const v = String(c || '').toLowerCase();
-  if (v === 'normal') return 'ปกติ';
-  if (v === 'damaged') return 'ชำรุด';
-  if (v === 'lost') return 'สูญหาย';
-  return v || '-';
+  const v = String(c || "").toLowerCase();
+  if (v === "normal") return "ปกติ";
+  if (v === "damaged") return "ชำรุด";
+  if (v === "lost") return "สูญหาย";
+  if (v === "expired") return "หมดอายุ";
+  return v || "-";
 }
 
 export default function ManageReturnDetailPage() {
@@ -38,15 +40,16 @@ export default function ManageReturnDetailPage() {
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState('');
+  const [err, setErr] = useState("");
   const [activeRow, setActiveRow] = useState(null);
-  const [qty, setQty] = useState('');
-  const [condition, setCondition] = useState('normal');
-  const [note, setNote] = useState('');
+  const [qty, setQty] = useState("");
+  const [condition, setCondition] = useState("normal");
+  const [note, setNote] = useState("");
+  const [submitStatus, setSubmitStatus] = useState(null); // เพิ่มเพื่อแสดงผลลัพธ์หลัง submit
 
   const fetchDetail = async () => {
     setLoading(true);
-    setErr('');
+    setErr("");
     try {
       const res = await axiosInstance.get(`/manage/returns/request/${requestId}`, {
         params: { _t: Date.now() },
@@ -54,7 +57,7 @@ export default function ManageReturnDetailPage() {
       setData(res?.data ?? null);
     } catch (e) {
       console.error(e);
-      setErr('โหลดรายละเอียดไม่สำเร็จ');
+      setErr("โหลดรายละเอียดไม่สำเร็จ");
     } finally {
       setLoading(false);
     }
@@ -69,8 +72,8 @@ export default function ManageReturnDetailPage() {
   const rawReturns = data?.returnHistory || [];
 
   const isBorrow = useMemo(() => {
-    const t = (summary.request_type || '').toString().toLowerCase();
-    return t === 'ยืม' || t === 'borrow';
+    const t = (summary.request_type || "").toString().toLowerCase();
+    return t === "ยืม" || t === "borrow";
   }, [summary]);
 
   const detailMap = useMemo(() => {
@@ -81,15 +84,18 @@ export default function ManageReturnDetailPage() {
 
   const combinedItems = useMemo(() => {
     const itemMap = new Map(
-      items.map((item) => [
-        item.request_detail_id,
-        {
-          ...item,
-          baseline_qty: Number(item.baseline_qty ?? item.delivered_qty ?? 0),
-          returned_total: 0,
-          remaining_qty: Number(item.baseline_qty ?? item.delivered_qty ?? 0),
-        },
-      ])
+      items
+        // ✅ กรองสถานะย่อยออกไปก่อน
+        .filter(it => it.borrow_status !== "waiting_borrow")
+        .map((item) => [
+          item.request_detail_id,
+          {
+            ...item,
+            baseline_qty: Number(item.baseline_qty ?? item.delivered_qty ?? 0),
+            returned_total: 0,
+            remaining_qty: Number(item.baseline_qty ?? item.delivered_qty ?? 0),
+          },
+        ])
     );
 
     for (const ret of rawReturns) {
@@ -104,7 +110,6 @@ export default function ManageReturnDetailPage() {
     return Array.from(itemMap.values());
   }, [items, rawReturns]);
 
-  // ✅ ใช้ translateConditionFromDB
   const returns = useMemo(() => {
     return rawReturns.map((r) => {
       const base = detailMap.get(r.request_detail_id) || {};
@@ -127,27 +132,27 @@ export default function ManageReturnDetailPage() {
   }, [isBorrow, combinedItems]);
 
   const openReceive = (row) => {
-    if (!row || typeof row.remaining_qty !== 'number' || row.remaining_qty <= 0) {
+    if (!row || typeof row.remaining_qty !== "number" || row.remaining_qty <= 0) {
       Swal.fire({
-        icon: 'error',
-        title: 'ข้อผิดพลาด',
-        text: 'ไม่สามารถรับคืนได้: จำนวนคงเหลือไม่ถูกต้อง',
+        icon: "warning",
+        title: "ไม่สามารถรับคืนได้",
+        text: "ไม่มีจำนวนคงเหลือที่สามารถรับคืนได้ กรุณาตรวจสอบข้อมูล",
       });
       return;
     }
     setActiveRow(row);
-    setQty(String(row.remaining_qty)); // ตั้งเป็น string ของจำนวนเต็ม
-    setCondition('normal');
-    setNote('');
+    setQty(String(row.remaining_qty));
+    setCondition("normal");
+    setNote("");
+    setSubmitStatus(null); // รีเซ็ตสถานะเมื่อเปิด modal ใหม่
   };
 
   const submitReceive = async () => {
-    console.log('qty state:', qty, typeof qty, 'activeRow:', activeRow); // ดีบัก state
-    if (!activeRow || typeof activeRow.remaining_qty !== 'number') {
+    if (!activeRow || typeof activeRow.remaining_qty !== "number") {
       await Swal.fire({
-        icon: 'error',
-        title: 'ข้อผิดพลาด',
-        text: 'ไม่มีรายการที่เลือกหรือข้อมูลไม่ถูกต้อง',
+        icon: "error",
+        title: "ข้อผิดพลาด",
+        text: "ไม่มีรายการที่เลือกหรือข้อมูลไม่ถูกต้อง",
       });
       setActiveRow(null);
       return;
@@ -156,44 +161,59 @@ export default function ManageReturnDetailPage() {
     const n = Number(qty);
     const remaining = Number(activeRow.remaining_qty || 0);
 
-    // ตรวจสอบว่า qty เป็นจำนวนเต็มบวก
     if (isNaN(n) || !Number.isInteger(n) || n <= 0) {
       await Swal.fire({
-        icon: 'warning',
-        title: 'จำนวนไม่ถูกต้อง',
-        text: 'กรุณาใส่จำนวนเต็มที่มากกว่า 0',
+        icon: "warning",
+        title: "จำนวนไม่ถูกต้อง",
+        text: "กรุณาใส่จำนวนเต็มที่มากกว่า 0",
       });
       return;
     }
     if (n > remaining) {
       await Swal.fire({
-        icon: 'warning',
-        title: 'จำนวนเกินคงเหลือ',
+        icon: "warning",
+        title: "จำนวนเกินคงเหลือ",
         text: `จำนวนที่รับคืนไม่ควรเกิน ${remaining} หน่วย`,
       });
       return;
     }
 
+    const actionNote =
+      condition === "normal"
+        ? "คืนเข้าคลัง"
+        : condition === "expired"
+          ? "ตัดออก (หมดอายุ)"
+          : condition === "damaged"
+            ? "บันทึกของชำรุด"
+            : condition === "lost"
+              ? "บันทึกสูญหาย"
+              : "-";
+
     const confirm = await Swal.fire({
-      icon: 'question',
-      title: 'ยืนยันการรับคืน?',
+      icon: "question",
+      title: "ยืนยันการรับคืน?",
       html: `
-      <div style="text-align:left">
-        <div><b>พัสดุ:</b> ${activeRow?.item_name || '-'}</div>
-        <div><b>จำนวน:</b> ${n}</div>
-        <div><b>สภาพ:</b> ${translateCondition(condition)}</div>
-        <div><b>หมายเหตุ:</b> ${note ? note : '-'}</div>
-      </div>
-    `,
+        <div style="text-align:left">
+          <div><b>พัสดุ:</b> ${activeRow?.item_name || "-"}</div>
+          <div><b>จำนวน:</b> ${n}</div>
+          <div><b>สภาพ:</b> ${translateCondition(condition)}</div>
+          <div><b>ผลการจัดการ:</b> ${actionNote}</div>
+          <div><b>หมายเหตุ:</b> ${note ? note : "-"}</div>
+          ${condition === "expired" || condition === "damaged" || condition === "lost"
+          ? "<div style='color: orange'><b>คำเตือน:</b> ของจะไม่ถูกคืนเข้าคลังและถูกบันทึกเป็นสถานะนี้</div>"
+          : ""
+        }
+        </div>
+      `,
       showCancelButton: true,
-      confirmButtonText: 'บันทึก',
-      cancelButtonText: 'ยกเลิก',
+      confirmButtonText: "บันทึก",
+      cancelButtonText: "ยกเลิก",
       reverseButtons: true,
     });
     if (!confirm.isConfirmed) return;
 
     Swal.fire({
-      title: 'กำลังบันทึก...',
+      title: "กำลังบันทึก...",
       allowOutsideClick: false,
       allowEscapeKey: false,
       didOpen: () => Swal.showLoading(),
@@ -203,33 +223,49 @@ export default function ManageReturnDetailPage() {
       const payload = {
         request_detail_id: activeRow.request_detail_id,
         qty_return: parseInt(n, 10),
-        condition,
+        condition, // รองรับ expired ด้วย
         note,
         inspected_by: 1,
-        lots: [], // กันพลาด
+        item_id: activeRow.item_id, // เพิ่ม item_id เพื่อใช้ในกรณี fallback
       };
 
-      console.log('Sending payload:', payload); // ดีบัก payload
-
-      const res = await axiosInstance.post('/manage/returns/receive', payload);
+      const res = await axiosInstance.post("/manage/returns/receive", payload);
 
       Swal.close();
+      const status = res?.data?.status || "normal"; // ดึง status จาก backend
+      setSubmitStatus(status); // เก็บสถานะเพื่อแสดงผล
       await Swal.fire({
-        icon: 'success',
-        title: 'บันทึกสำเร็จ',
-        text: `รหัสรับคืน: RET-${res?.data?.data?.return_id ?? '-'}`,
-        timer: 1500,
+        icon: "success",
+        title: "บันทึกสำเร็จ",
+        html: `
+          <div style="text-align:left">
+            <div>รหัสรับคืน: RET-${res?.data?.data?.return_id ?? "-"}</div>
+            <div>ผลการจัดการ: ${status === "normal"
+            ? "คืนเข้าคลังสำเร็จ"
+            : status === "expired"
+              ? "บันทึกเป็นของหมดอายุ"
+              : status === "damaged"
+                ? "บันทึกเป็นของชำรุด"
+                : status === "lost"
+                  ? "บันทึกเป็นของสูญหาย"
+                  : "เสร็จสิ้น"
+          }</div>
+          </div>
+        `,
+        timer: 2000,
         showConfirmButton: false,
       });
 
       setActiveRow(null);
-      setQty(''); // รีเซ็ต qty
+      setQty("");
+      setCondition("normal");
+      setNote("");
       await fetchDetail();
     } catch (e) {
-      console.error('receive error:', e?.response?.data || e);
-      const msg = e?.response?.data?.message || 'เกิดข้อผิดพลาดในการรับคืน';
+      console.error("receive error:", e?.response?.data || e);
+      const msg = e?.response?.data?.message || "เกิดข้อผิดพลาดในการรับคืน";
       Swal.close();
-      await Swal.fire({ icon: 'error', title: 'ไม่สามารถบันทึกได้', text: msg });
+      await Swal.fire({ icon: "error", title: "ไม่สามารถบันทึกได้", text: msg });
     }
   };
 
@@ -245,8 +281,8 @@ export default function ManageReturnDetailPage() {
       <div className={styles.page}>
         <div className={styles.shell}>
           <div className={styles.card} style={{ padding: 22 }}>
-            <div style={{ marginBottom: 12 }}>{err || 'ไม่พบข้อมูลใบคำขอนี้'}</div>
-            <button className={styles.btnGhost} onClick={() => router.push('/manage/manageReturn')}>
+            <div style={{ marginBottom: 12 }}>{err || "ไม่พบข้อมูลใบคำขอนี้"}</div>
+            <button className={styles.btnGhost} onClick={() => router.push("/manage/manageReturn")}>
               กลับรายการรวม
             </button>
           </div>
@@ -262,7 +298,7 @@ export default function ManageReturnDetailPage() {
             <h1 className={styles.title}>
               ตรวจรับคืน — {summary.request_code} ({summary.user_name})
             </h1>
-            <button className={styles.backBtn} onClick={() => router.push('/manage/manageReturn')}>
+            <button className={styles.backBtn} onClick={() => router.push("/manage/manageReturn")}>
               ← กลับ
             </button>
           </div>
@@ -287,7 +323,7 @@ export default function ManageReturnDetailPage() {
                   pendingItems.map((it) => (
                     <tr key={it.request_detail_id}>
                       <td>{it.item_name}</td>
-                      <td>{it.item_unit || '-'}</td>
+                      <td>{it.item_unit || "-"}</td>
                       <td>{it.approved_qty ?? 0}</td>
                       <td>{it.returned_total ?? 0}</td>
                       <td>{it.remaining_qty ?? 0}</td>
@@ -301,8 +337,8 @@ export default function ManageReturnDetailPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: 16 }}>
-                      {isBorrow ? 'ไม่มีรายการค้างคืน' : 'ใบนี้ไม่ใช่โหมดยืม'}
+                    <td colSpan={7} style={{ textAlign: "center", padding: 16 }}>
+                      {isBorrow ? "ไม่มีรายการค้างคืน" : "ใบนี้ไม่ใช่โหมดยืม"}
                     </td>
                   </tr>
                 )}
@@ -325,27 +361,54 @@ export default function ManageReturnDetailPage() {
                   <th>คืนสะสม</th>
                   <th>คงเหลือ</th>
                   <th>สถานะ</th>
+                  <th>ผลการจัดการ</th>
                 </tr>
               </thead>
               <tbody>
                 {isBorrow && returns.length > 0 ? (
-                  returns.map((r) => (
-                    <tr key={r.return_code}>
-                      <td>{r.return_code}</td>
-                      <td>{formatDate(r.return_date)}</td>
-                      <td>{r.inspected_by_name || '-'}</td>
-                      <td>{r.item_name || '-'}</td>
-                      <td>{r.approved_qty ?? 0}</td>
-                      <td>{r.returned_this_time ?? 0}</td>
-                      <td>{r.returned_total ?? 0}</td>
-                      <td>{r.remaining_qty ?? 0}</td>
-                      <td>{r._status_thai}</td>
-                    </tr>
-                  ))
+                  returns.map((r) => {
+                    let actionNote = "";
+                    let actionClass = "";
+                    switch ((r.condition || "").toLowerCase()) {
+                      case "normal":
+                        actionNote = "คืนเข้าคลัง";
+                        actionClass = styles.statusNormal;
+                        break;
+                      case "expired":
+                        actionNote = "ตัดออก (หมดอายุ)";
+                        actionClass = styles.statusExpired;
+                        break;
+                      case "damaged":
+                        actionNote = "บันทึกของชำรุด";
+                        actionClass = styles.statusDamaged;
+                        break;
+                      case "lost":
+                        actionNote = "บันทึกสูญหาย";
+                        actionClass = styles.statusLost;
+                        break;
+                      default:
+                        actionNote = "-";
+                    }
+
+                    return (
+                      <tr key={r.return_code}>
+                        <td>{r.return_code}</td>
+                        <td>{formatDate(r.return_date)}</td>
+                        <td>{r.inspected_by_name || "-"}</td>
+                        <td>{r.item_name || "-"}</td>
+                        <td>{r.approved_qty ?? 0}</td>
+                        <td>{r.returned_this_time ?? 0}</td>
+                        <td>{r.returned_total ?? 0}</td>
+                        <td>{r.remaining_qty ?? 0}</td>
+                        <td>{r._status_thai}</td>
+                        <td className={actionClass}>{actionNote}</td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
-                    <td colSpan={9} style={{ textAlign: 'center', padding: 16 }}>
-                      {isBorrow ? 'ยังไม่มีประวัติการคืน' : '—'}
+                    <td colSpan={10} style={{ textAlign: "center", padding: 16 }}>
+                      {isBorrow ? "ยังไม่มีประวัติการคืน" : "—"}
                     </td>
                   </tr>
                 )}
@@ -359,7 +422,13 @@ export default function ManageReturnDetailPage() {
           <div className={styles.modalOverlay}>
             <div className={styles.modalCard}>
               <h3 className={styles.modalTitle}>รับคืน: {activeRow.item_name}</h3>
-
+              {submitStatus && (
+                <div className={styles.submitStatus}>
+                  <p>
+                    ผลลัพธ์: {submitStatus === "normal" ? "คืนเข้าคลังสำเร็จ" : submitStatus === "expired" ? "บันทึกเป็นของหมดอายุ" : submitStatus === "damaged" ? "บันทึกเป็นของชำรุด" : submitStatus === "lost" ? "บันทึกเป็นของสูญหาย" : "เสร็จสิ้น"}
+                  </p>
+                </div>
+              )}
               <div className="field">
                 <label>จำนวนที่รับคืน</label>
                 <input
@@ -372,8 +441,7 @@ export default function ManageReturnDetailPage() {
                   step="1"
                   onChange={(e) => {
                     const value = e.target.value;
-                    // อนุญาตเฉพาะตัวเลขเต็มบวกหรือว่าง (ขณะพิมพ์)
-                    if (value === '' || (Number(value) > 0 && Number.isInteger(Number(value)))) {
+                    if (value === "" || (Number(value) > 0 && Number.isInteger(Number(value)))) {
                       setQty(value);
                     }
                   }}

@@ -26,8 +26,8 @@ export function NotificationProvider({ children }) {
                 setNotifications((prev) =>
                     prev.map((n) =>
                         Number(n.notification_id) === Number(updated.notification_id)
-                            ? updated
-                            : n
+                            ? updated 
+                            : n 
                     )
                 );
             },

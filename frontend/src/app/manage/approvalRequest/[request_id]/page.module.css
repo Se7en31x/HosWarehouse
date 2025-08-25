@@ -335,7 +335,7 @@
 }
 
 /* ===== Loading / Error ===== */
-.loading,
+/* .loading,
 .error {
   text-align: center;
   padding: 40px;
@@ -351,7 +351,7 @@
 .error {
   color: #e74c3c;
   font-weight: 700;
-}
+} */
 
 /* ===== Responsive ===== */
 @media (max-width: 1024px) {

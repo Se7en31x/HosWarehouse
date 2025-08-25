@@ -1,4 +1,4 @@
-/* =============================
+/* ============================= 
    Manage Return — page.module.css
    ============================= */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -117,16 +117,16 @@
 .tableGrid {
   display: grid;
   grid-template-columns:
-    minmax(140px, 1.1fr)
-    minmax(180px, 1.4fr)
-    minmax(160px, 1.2fr)
-    minmax(160px, 1.2fr)
-    minmax(140px, 1fr)
-    minmax(140px, 1fr)
-    minmax(160px, 1.2fr)
-    minmax(180px, 1.3fr);
+    minmax(140px, 1.1fr)   /* รหัสคำขอ */
+    minmax(180px, 1.4fr)   /* ผู้ขอ */
+    minmax(160px, 1.2fr)   /* แผนก */
+    minmax(160px, 1.2fr)   /* ครบกำหนดเร็วสุด */
+    minmax(140px, 1fr)     /* ✅ เกิน (วัน) */
+    minmax(160px, 1.2fr)   /* สถานะ */
+    minmax(180px, 1.3fr);  /* จัดการ */
   align-items: center;
 }
+
 
 .tableHeader {
   position: sticky; top: 0; z-index: var(--z-header);
@@ -174,6 +174,11 @@
 .badgeWarn   { background-color: #fffbeb; color: #92400e; border-color: #fde68a; }
 .badgeDanger { background-color: #fef2f2; color: #991b1b; border-color: #fecaca; }
 
+/* ✅ Badge สำหรับวันเกินกำหนด */
+.badgeOver1to3 { background-color: #fff7ed; color: #9a3412; border-color: #fdba74; }   /* 1–3 วัน: ส้ม */
+.badgeOver4to7 { background-color: #fef2f2; color: #991b1b; border-color: #fecaca; }   /* 4–7 วัน: แดงอ่อน */
+.badgeOver8plus { background-color: #fee2e2; color: #7f1d1d; border-color: #fca5a5; } /* >7 วัน: แดงเข้ม */
+
 /* ปุ่มลิงก์จัดการ */
 .actionBtnLink {
   display: inline-block; padding: 8px 12px;
@@ -215,6 +220,6 @@
   }
   .tableGrid {
     grid-template-columns:
-      140px 180px 160px 160px 120px 120px 160px 160px;
+      140px 180px 160px 160px 120px 160px 160px;
   }
 }

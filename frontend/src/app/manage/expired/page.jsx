@@ -1,10 +1,10 @@
 'use client';
 import { useEffect, useState, useMemo } from 'react';
 import axios from '@/app/utils/axiosInstance';
-import Swal from 'sweetalert2';
 import styles from './page.module.css';
 import { ChevronLeft, ChevronRight, Trash2, Clock, CheckCircle } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import Swal from "sweetalert2";
 
 const Select = dynamic(() => import('react-select'), { ssr: false });
 
@@ -39,7 +39,7 @@ const STATUS_OPTIONS = [
   { value: 'all', label: 'สถานะทั้งหมด' },
   { value: 'pending', label: 'รอดำเนินการ' },
   { value: 'partial', label: 'ทำลายบางส่วน' },
-  { value: 'complete', label: 'ทำลายครบแล้ว' },
+  { value: 'complete', label: 'ทำลายครบ' },
 ];
 
 export default function ExpiredItemsPage() {
@@ -52,6 +52,13 @@ export default function ExpiredItemsPage() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
+
+  // ✅ modal states
+  const [showDisposeModal, setShowDisposeModal] = useState(false);
+  const [disposeData, setDisposeData] = useState(null);
+
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyData, setHistoryData] = useState([]);
 
   // โหลดข้อมูล
   const fetchExpired = async () => {
@@ -68,24 +75,53 @@ export default function ExpiredItemsPage() {
 
   useEffect(() => { fetchExpired(); }, []);
 
-  // ฟังก์ชันจำลองสำหรับทำลาย
-  const handleDispose = async (lotId, itemId, qty) => {
-    await Swal.fire({
-      icon: 'info',
-      title: 'ทำลาย',
-      text: `Lot ${lotId} / Item ${itemId} จำนวน ${qty} ชิ้น`,
-      confirmButtonText: 'ตกลง'
-    });
+  // 👉 เปิด modal ทำลาย
+  const openDisposeModal = (lotId, itemId, itemName, lotNo, qty) => {
+    setDisposeData({ lotId, itemId, itemName, lotNo, qty, actionQty: qty });
+    setShowDisposeModal(true);
+  };
+  // 👉 บันทึกทำลาย
+  const confirmDispose = async () => {
+    try {
+      await axios.post(`/expired/action`, {
+        lot_id: disposeData.lotId,
+        item_id: disposeData.itemId,
+        action_qty: disposeData.actionQty,
+        note: 'ทำลายเนื่องจากหมดอายุ',
+        action_by: 999
+      });
+
+      // ✅ ใช้ Swal แจ้งเตือนสำเร็จ
+      Swal.fire({
+        icon: 'success',
+        title: 'บันทึกสำเร็จ',
+        text: `ทำลาย Lot ${disposeData.lotId} จำนวน ${disposeData.actionQty} ชิ้นแล้ว`,
+        confirmButtonText: 'ตกลง'
+      });
+
+      setShowDisposeModal(false); // ปิด modal
+      fetchExpired(); // reload ข้อมูล
+    } catch (err) {
+      console.error("confirmDispose error:", err);
+
+      Swal.fire({
+        icon: 'error',
+        title: 'เกิดข้อผิดพลาด',
+        text: 'ไม่สามารถบันทึกการทำลายได้',
+        confirmButtonText: 'ปิด'
+      });
+    }
   };
 
-  // ฟังก์ชันจำลองสำหรับดูประวัติ
-  const handleViewHistory = async (lotId) => {
-    await Swal.fire({
-      icon: 'info',
-      title: 'ประวัติการทำลาย',
-      text: `Lot ${lotId}`,
-      confirmButtonText: 'ปิด'
-    });
+  // 👉 เปิด modal ประวัติ
+  const openHistoryModal = async (lotId) => {
+    try {
+      const res = await axios.get(`/expired/actions/${lotId}`);
+      setHistoryData(Array.isArray(res.data) ? res.data : []);
+      setShowHistoryModal(true);
+    } catch (err) {
+      alert('❌ ไม่สามารถดึงข้อมูลประวัติได้');
+    }
   };
 
   // Filter
@@ -140,7 +176,6 @@ export default function ExpiredItemsPage() {
 
         {/* ✅ Toolbar */}
         <div className={styles.toolbar}>
-          {/* ฟิลเตอร์สถานะ (ซ้าย) */}
           <div className={styles.filterGroup}>
             <label className={styles.label} htmlFor="status">สถานะ</label>
             <Select
@@ -158,7 +193,6 @@ export default function ExpiredItemsPage() {
             />
           </div>
 
-          {/* ช่องค้นหา (ขวา) */}
           <div className={styles.searchCluster}>
             <div className={styles.filterGroup}>
               <label className={styles.label} htmlFor="search">ค้นหา</label>
@@ -196,14 +230,14 @@ export default function ExpiredItemsPage() {
             </div>
 
             <div className={styles.inventory} style={{ '--rows-per-page': itemsPerPage }}>
-              {currentItems.map(e => {
+              {currentItems.map((e, idx) => {
                 const remainingToDispose = (Number(e.expired_qty) || 0) - (Number(e.disposed_qty) || 0);
 
                 const statusText =
                   remainingToDispose === 0
-                    ? 'ทำลายครบแล้ว'
+                    ? 'ทำลายครบ'
                     : (Number(e.disposed_qty) || 0) > 0
-                      ? 'ทำลายบางส่วนแล้ว'
+                      ? 'ทำลายบางส่วน'
                       : 'รอดำเนินการ';
 
                 const statusClass =
@@ -214,7 +248,7 @@ export default function ExpiredItemsPage() {
                       : styles.statusPending;
 
                 return (
-                  <div key={e.lot_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                  <div key={`${e.lot_id}-${e.item_id}-${idx}`} className={`${styles.tableGrid} ${styles.tableRow}`}>
                     <div className={styles.tableCell}>{e.lot_no || '-'}</div>
                     <div className={styles.tableCell}>{e.item_name || '-'}</div>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>{Number(e.expired_qty) || 0}</div>
@@ -232,16 +266,15 @@ export default function ExpiredItemsPage() {
                         <div className={styles.actions}>
                           <button
                             className={`${styles.actionBtn} ${styles.btnDispose}`}
-                            onClick={() => handleDispose(e.lot_id, e.item_id, remainingToDispose)}
+                            onClick={() => openDisposeModal(e.lot_id, e.item_id, e.item_name, e.lot_no, remainingToDispose)}
                           >
                             <Trash2 size={16} />
                           </button>
                           <button
                             className={`${styles.actionBtn} ${styles.btnHistory}`}
-                            onClick={() => handleViewHistory(e.lot_id)}
+                            onClick={() => openHistoryModal(e.lot_id)}
                           >
-                            <Clock size={16} />
-                            <span>ประวัติ</span>
+                            <Clock size={16} /> ประวัติ
                           </button>
                         </div>
                       ) : (
@@ -251,10 +284,9 @@ export default function ExpiredItemsPage() {
                           </span>
                           <button
                             className={`${styles.actionBtn} ${styles.btnHistory}`}
-                            onClick={() => handleViewHistory(e.lot_id)}
+                            onClick={() => openHistoryModal(e.lot_id)}
                           >
-                            <Clock size={16} />
-                            <span>ประวัติ</span>
+                            <Clock size={16} /> ประวัติ
                           </button>
                         </div>
                       )}
@@ -263,6 +295,7 @@ export default function ExpiredItemsPage() {
                 );
               })}
             </div>
+
 
             {/* Pagination */}
             <ul className={styles.paginationControls}>
@@ -291,6 +324,77 @@ export default function ExpiredItemsPage() {
                 </button>
               </li>
             </ul>
+          </div>
+        )}
+
+        {/* ✅ Modal ทำลาย */}
+        {showDisposeModal && (
+          <div className={styles.modalOverlay}>
+            <div className={styles.modal}>
+              <h2>ทำลาย Lot {disposeData.lotNo}</h2>   {/* 👈 ใช้ lotNo */}
+              <p>ชื่อพัสดุ: {disposeData.itemName}</p>
+              <p>เหลือให้ทำลาย: {disposeData.qty} ชิ้น</p>
+              <input
+                type="number"
+                min="1"
+                max={disposeData.qty}
+                value={disposeData.actionQty}
+                onChange={(e) =>
+                  setDisposeData({ ...disposeData, actionQty: Number(e.target.value) })
+                }
+                className={styles.input}
+              />
+              <div className={styles.modalActions}>
+                <button className={styles.btnPrimary} onClick={confirmDispose}>
+                  ยืนยัน
+                </button>
+                <button
+                  className={styles.btnSecondary}
+                  onClick={() => setShowDisposeModal(false)}
+                >
+                  ยกเลิก
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ✅ Modal ประวัติ (ปรับแก้ส่วนนี้) */}
+        {showHistoryModal && (
+          <div className={styles.modalOverlay}>
+            <div className={styles.modal}>
+              <h2>ประวัติการทำลาย</h2>
+              {historyData.length === 0 ? (
+                <p>ไม่มีข้อมูลประวัติ</p>
+              ) : (
+                // ✅ เพิ่ม div ใหม่เพื่อจัดการ overflow
+                <div className={styles.historyTableContainer}>
+                  <table className={styles.historyTable}>
+                    <thead>
+                      <tr>
+                        <th>วันที่</th>
+                        <th>จำนวน</th>
+                        <th>ผู้ทำรายการ</th>
+                        <th>หมายเหตุ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {historyData.map((a, idx) => (
+                        <tr key={idx}>
+                          <td>{new Date(a.action_date).toLocaleDateString('th-TH')}</td>
+                          <td>{a.action_qty}</td>
+                          <td>{a.action_by_name || '-'}</td>
+                          <td>{a.note || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <div className={styles.modalActions}>
+                <button className={styles.btnPrimary} onClick={() => setShowHistoryModal(false)}>ปิด</button>
+              </div>
+            </div>
           </div>
         )}
       </div>

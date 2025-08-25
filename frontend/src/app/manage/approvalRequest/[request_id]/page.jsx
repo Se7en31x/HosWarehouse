@@ -58,9 +58,9 @@ export default function ApprovalRequestPage() {
   };
 
   const disabledOverallStatuses = [
-    "preparing","delivering","completed","canceled",
-    "approved_all","rejected_all","approved_partial",
-    "rejected_partial","approved_partial_and_rejected_partial"
+    "preparing", "delivering", "completed", "canceled",
+    "approved_all", "rejected_all", "approved_partial",
+    "rejected_partial", "approved_partial_and_rejected_partial"
   ];
 
   // ---- fake user ----
@@ -98,14 +98,14 @@ export default function ApprovalRequestPage() {
       setTooltip({});
     } catch (err) {
       console.error(err);
-      Swal.fire('ผิดพลาด','ไม่สามารถโหลดข้อมูลคำขอได้','error');
+      Swal.fire('ผิดพลาด', 'ไม่สามารถโหลดข้อมูลคำขอได้', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   // ---- update draft ----
-  const updateDraft = (id, newStatus, newApprovedQty, reason='') => {
+  const updateDraft = (id, newStatus, newApprovedQty, reason = '') => {
     setDraftDetails(prev => ({
       ...prev,
       [id]: {
@@ -115,7 +115,7 @@ export default function ApprovalRequestPage() {
       }
     }));
     setItemErrors(prev => ({ ...prev, [id]: '' }));
-    setTooltip(prev => ({ ...prev, [id]: { show:false, message:'' } }));
+    setTooltip(prev => ({ ...prev, [id]: { show: false, message: '' } }));
   };
 
   const handleApproveOne = (d) =>
@@ -156,20 +156,32 @@ export default function ApprovalRequestPage() {
     }
 
     setItemErrors(prev => ({ ...prev, [id]: errorMsg }));
-    setTooltip(prev => ({ ...prev, [id]: { show: !!errorMsg, message: errorMsg }}));
+    setTooltip(prev => ({ ...prev, [id]: { show: !!errorMsg, message: errorMsg } }));
 
-    setDraftDetails(prev => ({ ...prev, [id]: { ...(prev[id]||{}), approved_qty: finalQty }}));
+    setDraftDetails(prev => ({ ...prev, [id]: { ...(prev[id] || {}), approved_qty: finalQty } }));
   };
 
   // ---- save ----
   const handleSaveDraft = async () => {
     if (request && disabledOverallStatuses.includes(request.request_status)) {
-      Swal.fire('ไม่สามารถบันทึกได้','คำขออยู่ในสถานะที่ไม่อนุญาตให้แก้ไขแล้ว','warning');
+      Swal.fire('ไม่สามารถบันทึกได้', 'คำขออยู่ในสถานะที่ไม่อนุญาตให้แก้ไขแล้ว', 'warning');
+      return;
+    }
+
+    // ✅ เช็กว่ามีรายการค้างรออยู่หรือไม่
+    const hasPending = details.some(d => {
+      const draft = draftDetails[d.request_detail_id];
+      const status = draft?.status || d.approval_status;
+      return status === 'waiting_approval_detail' || !status; // ยังไม่ได้เลือก
+    });
+
+    if (hasPending) {
+      Swal.fire('ยังอนุมัติไม่ครบ', 'กรุณาเลือกอนุมัติหรือปฏิเสธให้ครบทุกรายการก่อนบันทึก', 'warning');
       return;
     }
 
     if (Object.values(itemErrors).some(e => e)) {
-      Swal.fire('ข้อผิดพลาด','กรุณาแก้ไขข้อมูลจำนวนที่อนุมัติให้ถูกต้องก่อนบันทึก','error');
+      Swal.fire('ข้อผิดพลาด', 'กรุณาแก้ไขข้อมูลจำนวนที่อนุมัติให้ถูกต้องก่อนบันทึก', 'error');
       return;
     }
 
@@ -182,16 +194,16 @@ export default function ApprovalRequestPage() {
 
         const approvedQty =
           draft.approved_qty === '' ? 0 :
-          (isNaN(parseInt(draft.approved_qty,10)) ? 0 : parseInt(draft.approved_qty,10));
+            (isNaN(parseInt(draft.approved_qty, 10)) ? 0 : parseInt(draft.approved_qty, 10));
 
         if (approvedQty === 0 && draft.status !== 'rejected') {
-          setItemErrors(prev => ({ ...prev, [idStr]:'จำนวนที่อนุมัติเป็น 0 ไม่ได้ หากสถานะไม่ใช่ปฏิเสธ' }));
-          setTooltip(prev => ({ ...prev, [idStr]: { show:true, message:'จำนวนที่อนุมัติเป็น 0 ไม่ได้ หากสถานะไม่ใช่ปฏิเสธ' } }));
+          setItemErrors(prev => ({ ...prev, [idStr]: 'จำนวนที่อนุมัติเป็น 0 ไม่ได้ หากสถานะไม่ใช่ปฏิเสธ' }));
+          setTooltip(prev => ({ ...prev, [idStr]: { show: true, message: 'จำนวนที่อนุมัติเป็น 0 ไม่ได้ หากสถานะไม่ใช่ปฏิเสธ' } }));
           return null;
         }
         if (draft.status === 'rejected' && approvedQty !== 0) {
-          setItemErrors(prev => ({ ...prev, [idStr]:'จำนวนที่อนุมัติควรเป็น 0 เมื่อสถานะปฏิเสธ' }));
-          setTooltip(prev => ({ ...prev, [idStr]: { show:true, message:'จำนวนที่อนุมัติควรเป็น 0 เมื่อสถานะปฏิเสธ' } }));
+          setItemErrors(prev => ({ ...prev, [idStr]: 'จำนวนที่อนุมัติควรเป็น 0 เมื่อสถานะปฏิเสธ' }));
+          setTooltip(prev => ({ ...prev, [idStr]: { show: true, message: 'จำนวนที่อนุมัติควรเป็น 0 เมื่อสถานะปฏิเสธ' } }));
           return null;
         }
 
@@ -214,7 +226,7 @@ export default function ApprovalRequestPage() {
       });
 
     if (!changesToSave.length) {
-      Swal.fire('ไม่พบการเปลี่ยนแปลง','ไม่มีรายการใดที่ถูกเลือกเพื่อบันทึก','info');
+      Swal.fire('ไม่พบการเปลี่ยนแปลง', 'ไม่มีรายการใดที่ถูกเลือกเพื่อบันทึก', 'info');
       return;
     }
 
@@ -232,7 +244,7 @@ export default function ApprovalRequestPage() {
     try {
       const userId = parseInt(localStorage.getItem('user_id'), 10);
       await axiosInstance.put(`/approval/${request_id}/bulk-update`, { updates: changesToSave, userId });
-      Swal.fire('สำเร็จ','บันทึกสำเร็จแล้ว','success');
+      Swal.fire('สำเร็จ', 'บันทึกสำเร็จแล้ว', 'success');
       await fetchRequestDetail();
     } catch (err) {
       console.error(err);
@@ -263,8 +275,7 @@ export default function ApprovalRequestPage() {
     return `${styles.badge} ${styles.badgeYellow}`;
   };
 
-  if (loading) return <p className={styles.loading}>กำลังโหลดข้อมูล...</p>;
-  if (!request) return <p className={styles.error}>ไม่พบคำขอ</p>;
+  if (!request) return <p className={styles.error}></p>;
 
   return (
     <div className={styles.pageBackground}>

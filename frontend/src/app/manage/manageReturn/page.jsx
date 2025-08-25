@@ -12,6 +12,7 @@ const STATUS_OPTS = [
   { value: 'due_soon', label: 'ใกล้ครบกำหนด' },
   { value: 'overdue', label: 'เกินกำหนด' },
   { value: 'all', label: 'ทั้งหมดที่ค้างคืน' },
+  { value: 'borrowed', label: 'รอการคืน' },
 ];
 
 const customSelectStyles = {
@@ -48,6 +49,7 @@ const fdate = (d) => {
 };
 
 const statusMap = {
+  borrowed: 'รอการคืน',
   due_soon: 'ใกล้ครบกำหนด',
   overdue: 'เกินกำหนด',
   returned_all: 'คืนครบแล้ว',
@@ -106,8 +108,8 @@ export default function ManageReturnPage() {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedQ, status, page]);
 
   const clearFilters = () => {
@@ -194,29 +196,34 @@ export default function ManageReturnPage() {
               <div className={styles.headerItem}>รหัสคำขอ</div>
               <div className={styles.headerItem}>ผู้ขอ</div>
               <div className={styles.headerItem}>แผนก</div>
-              <div className={styles.headerItem}>ครบกำหนดเร็วสุด</div>
-              <div className={styles.headerItem}>ใกล้ครบกำหนด</div>
-              <div className={styles.headerItem}>เกินกำหนด</div>
+              <div className={styles.headerItem}>ครบกำหนด</div>
+              <div className={styles.headerItem}>เกินกำหนด (วัน)</div>
               <div className={styles.headerItem}>สถานะ</div>
               <div className={styles.headerItem}>จัดการ</div>
             </div>
 
             <div className={styles.inventory} style={{ '--rows-per-page': 12 }}>
               {rows.length ? rows.map((r) => {
-                const over = Number(r.items_overdue || 0) > 0;
-                const soon = !over && Number(r.items_due_soon || 0) > 0;
-                const rowClass = over ? styles.rowOverdue : (soon ? styles.rowDueSoon : '');
                 return (
-                  <div key={r.request_id} className={`${styles.tableGrid} ${styles.tableRow} ${rowClass}`}>
+                  <div key={r.request_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
                     <div className={styles.tableCell}>{r.request_code}</div>
                     <div className={styles.tableCell}>{r.requester_name}</div>
                     <div className={styles.tableCell}>{r.department}</div>
                     <div className={styles.tableCell}>{fdate(r.earliest_due_date)}</div>
                     <div className={styles.tableCell}>
-                      <span className={`${styles.badge} ${styles.badgeWarn}`}>{r.items_due_soon ?? 0}</span>
-                    </div>
-                    <div className={styles.tableCell}>
-                      <span className={`${styles.badge} ${styles.badgeDanger}`}>{r.items_overdue ?? 0}</span>
+                      {r.max_days_overdue > 0 ? (
+                        <span
+                          className={`${styles.badge} ${
+                            r.max_days_overdue <= 3
+                              ? styles.badgeOver1to3
+                              : r.max_days_overdue <= 7
+                              ? styles.badgeOver4to7
+                              : styles.badgeOver8plus
+                          }`}
+                        >
+                          {r.max_days_overdue} วัน
+                        </span>
+                      ) : "-"}
                     </div>
                     <div className={styles.tableCell}>
                       {statusMap[r.overall_status] || '-'}
