@@ -123,6 +123,7 @@
     minmax(160px, 1.2fr)   /* ครบกำหนดเร็วสุด */
     minmax(140px, 1fr)     /* ✅ เกิน (วัน) */
     minmax(160px, 1.2fr)   /* สถานะ */
+    minmax(180px, 1.3fr)  /* จัดการ */
     minmax(180px, 1.3fr);  /* จัดการ */
   align-items: center;
 }

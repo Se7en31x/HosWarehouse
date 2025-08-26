@@ -47,46 +47,46 @@ export default function Sidebar() {
         <ul className={styles.navLinks}>
           {/* 🔹 การจัดซื้อ */}
           <li className={styles.sidebarSectionTitle}>การจัดซื้อ</li>
-          <li className={`${styles.sidebarItem} ${isActive('/purchasing/pr') ? styles.active : ''}`}>
-            <Link href="/purchasing/pr" className={styles.noStyleLink}>
+          <li className={`${styles.sidebarItem} ${isActive('/purchasing/prList') ? styles.active : ''}`}>
+            <Link href="/purchasing/prList" className={styles.noStyleLink}>
               <FaFileAlt className={styles.sidebarIcon} />
               <span className={styles.sidebarText}>ใบขอซื้อ (PR)</span>
             </Link>
           </li>
-          <li className={`${styles.sidebarItem} ${isActive('/purchasing/rfq') ? styles.active : ''}`}>
+          {/* <li className={`${styles.sidebarItem} ${isActive('/purchasing/rfq') ? styles.active : ''}`}>
             <Link href="/purchasing/rfq" className={styles.noStyleLink}>
               <FaListAlt className={styles.sidebarIcon} />
               <span className={styles.sidebarText}>ใบขอราคา (RFQ)</span>
             </Link>
-          </li>
-          <li className={`${styles.sidebarItem} ${isActive('/purchasing/po') ? styles.active : ''}`}>
-            <Link href="/purchasing/po" className={styles.noStyleLink}>
+          </li> */}
+          <li className={`${styles.sidebarItem} ${isActive('/purchasing/poList') ? styles.active : ''}`}>
+            <Link href="/purchasing/poList" className={styles.noStyleLink}>
               <FaClipboardCheck className={styles.sidebarIcon} />
               <span className={styles.sidebarText}>ใบสั่งซื้อ (PO)</span>
             </Link>
           </li>
-          <li className={`${styles.sidebarItem} ${isActive('/purchasing/goods-receipt') ? styles.active : ''}`}>
-            <Link href="/purchasing/goods-receipt" className={styles.noStyleLink}>
+          <li className={`${styles.sidebarItem} ${isActive('/purchasing/goodsReceipt') ? styles.active : ''}`}>
+            <Link href="/purchasing/goodsReceipt" className={styles.noStyleLink}>
               <FaShoppingCart className={styles.sidebarIcon} />
               <span className={styles.sidebarText}>รับสินค้า (GR)</span>
             </Link>
           </li>
-          <li className={`${styles.sidebarItem} ${isActive('/purchasing/goods-receipt/history') ? styles.active : ''}`}>
-            <Link href="/purchasing/goods-receipt/history" className={styles.noStyleLink}>
+          <li className={`${styles.sidebarItem} ${isActive('/purchasing/historypo') ? styles.active : ''}`}>
+            <Link href="/purchasing/historypo" className={styles.noStyleLink}>
               <FaHistory className={styles.sidebarIcon} />
-              <span className={styles.sidebarText}>ประวัติรับสินค้า</span>
+              <span className={styles.sidebarText}>ประวัติการสั่งซื้อ</span>
+            </Link>
+          </li>
+          <li className={`${styles.sidebarItem} ${isActive('/purchasing/reportpo') ? styles.active : ''}`}>
+            <Link href="/purchasing/reportpo" className={styles.noStyleLink}>
+              <FaFileInvoice className={styles.sidebarIcon} />
+              <span className={styles.sidebarText}>ออกรายการ (Report PO)</span>
             </Link>
           </li>
 
           {/* 🔹 อื่นๆ */}
           <hr className={styles.divider} />
           <li className={styles.sidebarSectionTitle}>อื่นๆ</li>
-          <li className={`${styles.sidebarItem} ${isActive('/purchasing/notifications') ? styles.active : ''}`}>
-            <Link href="/purchasing/notifications" className={styles.noStyleLink}>
-              <FaBell className={styles.sidebarIcon} />
-              <span className={styles.sidebarText}>การแจ้งเตือน</span>
-            </Link>
-          </li>
           <li className={`${styles.sidebarItem} ${isActive('/purchasing/settings') ? styles.active : ''}`}>
             <Link href="/purchasing/settings" className={styles.noStyleLink}>
               <FaCog className={styles.sidebarIcon} />

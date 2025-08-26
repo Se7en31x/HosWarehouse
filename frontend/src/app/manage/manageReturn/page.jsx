@@ -9,9 +9,9 @@ import { Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 const Select = dynamic(() => import('react-select'), { ssr: false });
 
 const STATUS_OPTS = [
+  { value: 'all', label: 'ทั้งหมดที่ค้างคืน' },
   { value: 'due_soon', label: 'ใกล้ครบกำหนด' },
   { value: 'overdue', label: 'เกินกำหนด' },
-  { value: 'all', label: 'ทั้งหมดที่ค้างคืน' },
   { value: 'borrowed', label: 'รอการคืน' },
 ];
 
@@ -45,7 +45,11 @@ const fdate = (d) => {
   if (!d) return '-';
   const dt = new Date(d);
   if (isNaN(dt)) return '-';
-  return dt.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+  return dt.toLocaleDateString('th-TH', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
 };
 
 const statusMap = {
@@ -124,9 +128,20 @@ export default function ManageReturnPage() {
     const currentPage = page;
     const pages = [];
     if (total <= 7) for (let i = 1; i <= total; i++) pages.push(i);
-    else if (currentPage <= 4) pages.push(1, 2, 3, 4, 5, '...', total);
-    else if (currentPage >= total - 3) pages.push(1, '...', total - 4, total - 3, total - 2, total - 1, total);
-    else pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', total);
+    else if (currentPage <= 4)
+      pages.push(1, 2, 3, 4, 5, '...', total);
+    else if (currentPage >= total - 3)
+      pages.push(1, '...', total - 4, total - 3, total - 2, total - 1, total);
+    else
+      pages.push(
+        1,
+        '...',
+        currentPage - 1,
+        currentPage,
+        currentPage + 1,
+        '...',
+        total
+      );
     return pages;
   };
 
@@ -147,17 +162,21 @@ export default function ManageReturnPage() {
               <label className={styles.label} htmlFor="status">สถานะ</label>
               <Select
                 inputId="status"
-                isClearable
+                isClearable={false} // ❌ ปิด clear ได้ เพื่อไม่ให้ค่ากลับไปเป็น null
                 isSearchable={false}
-                placeholder="ทั้งหมดที่ค้างคืน"
-                options={STATUS_OPTS.filter(o => o.value !== 'all')}
-                value={STATUS_OPTS.find(o => o.value === status && status !== 'all') || null}
-                onChange={(opt) => { setStatus(opt?.value || 'all'); setPage(1); }}
+                placeholder="เลือกสถานะ"
+                options={STATUS_OPTS} // ✅ ไม่ต้อง filter ออก
+                value={STATUS_OPTS.find((o) => o.value === status) || STATUS_OPTS[0]}
+                onChange={(opt) => {
+                  setStatus(opt?.value || 'all');
+                  setPage(1);
+                }}
                 styles={customSelectStyles}
                 menuPlacement="auto"
                 menuPosition="fixed"
                 menuPortalTarget={menuPortalTarget || undefined}
               />
+
             </div>
           </div>
 
@@ -169,7 +188,10 @@ export default function ManageReturnPage() {
                 className={styles.input}
                 type="text"
                 value={q}
-                onChange={(e) => { setQ(e.target.value); setPage(1); }}
+                onChange={(e) => {
+                  setQ(e.target.value);
+                  setPage(1);
+                }}
                 placeholder="รหัสคำขอ, ชื่อผู้ขอ, แผนก, รายการพัสดุ…"
               />
             </div>
@@ -196,46 +218,60 @@ export default function ManageReturnPage() {
               <div className={styles.headerItem}>รหัสคำขอ</div>
               <div className={styles.headerItem}>ผู้ขอ</div>
               <div className={styles.headerItem}>แผนก</div>
-              <div className={styles.headerItem}>ครบกำหนด</div>
-              <div className={styles.headerItem}>เกินกำหนด (วัน)</div>
+              <div className={styles.headerItem}>ครบกำหนด (เร็วที่สุด)</div>
+              <div className={styles.headerItem}>สถานะกำหนดคืน</div>
+              <div className={styles.headerItem}>คืนแล้ว</div>
               <div className={styles.headerItem}>สถานะ</div>
               <div className={styles.headerItem}>จัดการ</div>
             </div>
 
             <div className={styles.inventory} style={{ '--rows-per-page': 12 }}>
-              {rows.length ? rows.map((r) => {
-                return (
-                  <div key={r.request_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
-                    <div className={styles.tableCell}>{r.request_code}</div>
-                    <div className={styles.tableCell}>{r.requester_name}</div>
-                    <div className={styles.tableCell}>{r.department}</div>
-                    <div className={styles.tableCell}>{fdate(r.earliest_due_date)}</div>
-                    <div className={styles.tableCell}>
-                      {r.max_days_overdue > 0 ? (
-                        <span
-                          className={`${styles.badge} ${
-                            r.max_days_overdue <= 3
-                              ? styles.badgeOver1to3
-                              : r.max_days_overdue <= 7
-                              ? styles.badgeOver4to7
-                              : styles.badgeOver8plus
-                          }`}
+              {rows.length ? (
+                rows.map((r) => {
+                  return (
+                    <div
+                      key={r.request_id}
+                      className={`${styles.tableGrid} ${styles.tableRow}`}
+                    >
+                      <div className={styles.tableCell}>{r.request_code}</div>
+                      <div className={styles.tableCell}>{r.requester_name}</div>
+                      <div className={styles.tableCell}>{r.department}</div>
+                      <div className={styles.tableCell}>
+                        {fdate(r.earliest_due_date)}
+                      </div>
+                      <div className={styles.tableCell}>
+                        {r.items_overdue > 0 ? (
+                          <span className={`${styles.badge} ${styles.badgeOverdue}`}>
+                            เกิน {r.items_overdue} รายการ
+                          </span>
+                        ) : r.items_due_soon > 0 ? (
+                          <span className={`${styles.badge} ${styles.badgeDueSoon}`}>
+                            ใกล้ครบ {r.items_due_soon} รายการ
+                          </span>
+                        ) : (
+                          <span className={`${styles.badge} ${styles.badgeNormal}`}>
+                            0 รายการ
+                          </span>
+                        )}
+                      </div>
+                      <div className={styles.tableCell}>
+                        {r.returned_items ?? 0}/{r.total_items ?? 0}
+                      </div>
+                      <div className={styles.tableCell}>
+                        {statusMap[r.overall_status] || '-'}
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        <Link
+                          href={`/manage/manageReturn/${r.request_id}`}
+                          className={styles.actionBtnLink}
                         >
-                          {r.max_days_overdue} วัน
-                        </span>
-                      ) : "-"}
+                          รายละเอียด
+                        </Link>
+                      </div>
                     </div>
-                    <div className={styles.tableCell}>
-                      {statusMap[r.overall_status] || '-'}
-                    </div>
-                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                      <Link href={`/manage/manageReturn/${r.request_id}`} className={styles.actionBtnLink}>
-                        รายละเอียด
-                      </Link>
-                    </div>
-                  </div>
-                );
-              }) : (
+                  );
+                })
+              ) : (
                 <div className={styles.noDataMessage}>ไม่พบรายการ</div>
               )}
             </div>
@@ -245,7 +281,7 @@ export default function ManageReturnPage() {
                 <li>
                   <button
                     className={styles.pageButton}
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
                     aria-label="หน้าก่อนหน้า"
                   >
@@ -254,11 +290,14 @@ export default function ManageReturnPage() {
                 </li>
                 {getPageNumbers().map((p, idx) =>
                   p === '...' ? (
-                    <li key={idx} className={styles.ellipsis}>…</li>
+                    <li key={idx} className={styles.ellipsis}>
+                      …
+                    </li>
                   ) : (
                     <li key={idx}>
                       <button
-                        className={`${styles.pageButton} ${p === page ? styles.activePage : ''}`}
+                        className={`${styles.pageButton} ${p === page ? styles.activePage : ''
+                          }`}
                         onClick={() => setPage(p)}
                       >
                         {p}
@@ -269,7 +308,7 @@ export default function ManageReturnPage() {
                 <li>
                   <button
                     className={styles.pageButton}
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page >= totalPages}
                     aria-label="หน้าถัดไป"
                   >
