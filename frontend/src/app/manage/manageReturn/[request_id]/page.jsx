@@ -45,7 +45,7 @@ export default function ManageReturnDetailPage() {
   const [qty, setQty] = useState("");
   const [condition, setCondition] = useState("normal");
   const [note, setNote] = useState("");
-  const [submitStatus, setSubmitStatus] = useState(null); // เพิ่มเพื่อแสดงผลลัพธ์หลัง submit
+  const [submitStatus, setSubmitStatus] = useState(null);
 
   const fetchDetail = async () => {
     setLoading(true);
@@ -85,7 +85,6 @@ export default function ManageReturnDetailPage() {
   const combinedItems = useMemo(() => {
     const itemMap = new Map(
       items
-        // ✅ กรองสถานะย่อยออกไปก่อน
         .filter(it => it.borrow_status !== "waiting_borrow")
         .map((item) => [
           item.request_detail_id,
@@ -144,7 +143,7 @@ export default function ManageReturnDetailPage() {
     setQty(String(row.remaining_qty));
     setCondition("normal");
     setNote("");
-    setSubmitStatus(null); // รีเซ็ตสถานะเมื่อเปิด modal ใหม่
+    setSubmitStatus(null);
   };
 
   const submitReceive = async () => {
@@ -189,6 +188,9 @@ export default function ManageReturnDetailPage() {
               ? "บันทึกสูญหาย"
               : "-";
 
+    // Close the modal before showing the confirmation dialog
+    setActiveRow(null);
+
     const confirm = await Swal.fire({
       icon: "question",
       title: "ยืนยันการรับคืน?",
@@ -223,17 +225,17 @@ export default function ManageReturnDetailPage() {
       const payload = {
         request_detail_id: activeRow.request_detail_id,
         qty_return: parseInt(n, 10),
-        condition, // รองรับ expired ด้วย
+        condition,
         note,
         inspected_by: 1,
-        item_id: activeRow.item_id, // เพิ่ม item_id เพื่อใช้ในกรณี fallback
+        item_id: activeRow.item_id,
       };
 
       const res = await axiosInstance.post("/manage/returns/receive", payload);
 
       Swal.close();
-      const status = res?.data?.status || "normal"; // ดึง status จาก backend
-      setSubmitStatus(status); // เก็บสถานะเพื่อแสดงผล
+      const status = res?.data?.status || "normal";
+      setSubmitStatus(status);
       await Swal.fire({
         icon: "success",
         title: "บันทึกสำเร็จ",
@@ -256,7 +258,6 @@ export default function ManageReturnDetailPage() {
         showConfirmButton: false,
       });
 
-      setActiveRow(null);
       setQty("");
       setCondition("normal");
       setNote("");

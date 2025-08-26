@@ -1,6 +1,3 @@
-/* =============================
-   Manage Return Detail — page.module.css
-   ============================= */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
@@ -21,6 +18,7 @@
   --row-h: 56px;
 
   --z-overlay: 2000;
+  --z-swal: 10000; /* Ensure SweetAlert2 is above modal */
 }
 
 .page {
@@ -29,12 +27,10 @@
   background: var(--bg);
   display: flex;
   justify-content: center;
-  /* padding: 24px; */
 }
 
 .shell {
   width: 100%;
-  /* max-width: 1200px; */
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -148,28 +144,31 @@
 
 /* Modal */
 .modalOverlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    /* ✅ เพิ่มค่า z-index ให้สูงกว่าค่า default ของ SweetAlert2 เพื่อความปลอดภัย */
-    z-index: 9999; 
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-overlay);
 }
 
 .modalCard {
-    background: #fff;
-    border-radius: var(--radius);
-    padding: 20px;
-    max-width: 500px;
-    width: 100%;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    /* ✅ เพิ่ม position relative เพื่อให้ z-index ทำงาน */
-    position: relative; 
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 20px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+}
+
+/* Ensure SweetAlert2 has higher z-index */
+.swal2-container {
+  z-index: var(--z-swal) !important;
 }
 
 .modalTitle {

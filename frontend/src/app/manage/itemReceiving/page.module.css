@@ -1,302 +1,442 @@
-/* ===== Base Layout ===== */
-.pageContainer {
-  background: #f9fafb;
-  font-family: 'Kanit', sans-serif;
-  font-size: 1rem;
-  /* ✅ ขนาดตัวหนังสือฐาน */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #f0fbfe;
+  --panel: #ffffff;
+  --muted: #6b7280;
+  --text: #111827;
+  --border: #e5e7eb;
+  --primary: #008dda;
+  --primary-500: #41c9e2;
+  --primary-600: #1685bb;
+  --success: #16a34a;
+  --danger: #ef4444;
+  --radius: 10px;
+  --row-h: 56px;
+  --rows-per-page: 5;
 }
 
-.mainCard {
-  height: 100vh;
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  max-width: 1600px;
-  margin: 0 auto;
-}
-
-.pageBar {
-  margin-bottom: 16px;
-}
-
-.pageTitle {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #111827;
-  margin-bottom: 15px;
-  /* ✅ เพิ่มระยะห่างด้านล่าง */
-}
-
-/* ===== Grid ===== */
-.contentWrapper {
-  display: grid;
-  grid-template-columns: 40% 58.5%;
-  /* ✅ ซ้าย 40 / ขวา 60 */
-  gap: 20px;
+/* Layout */
+.mainHome {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
   align-items: flex-start;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
 }
 
-/* ===== Section ===== */
-.tableSection,
-.detailsFormSection {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 14px;
+.infoContainer {
+  flex: 1;
+  
+  background: var(--panel);
+  padding: 24px;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  height: 100%;
-}
-
-.tableHeader,
-.detailsFormHeader {
-  font-size: 1.4rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-/* ===== Table ===== */
-.tableWrapper {
-  width: 100%;
-  overflow-x: auto;
-  flex: 1;
-  border: 1px solid #d1d5db;
-  /* ✅ กรอบรอบนอกตาราง */
-  border-radius: 10px;
-  background: #fff;
-}
-
-.itemTable {
-  width: 100%;
-  border-collapse: collapse;   /* ✅ รวมเส้น border */
-  font-size: 1rem;
-  table-layout: fixed;
+  gap: 18px;
+  border-radius: var(--radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 /* Header */
-.itemTable th {
-  background: #eef9fc;
-  /* ✅ ฟ้าอ่อน */
-  color: #374151;
-  font-weight: 600;
-  font-size: 1rem;
-  line-height: 1.4;
-  padding: 12px;
-  text-align: center;
-  white-space: nowrap;
-  border-bottom: 1px solid #e5e7eb;
-  height: 56px;
-  /* ✅ ล็อคความสูงแถวหัวตาราง */
-  vertical-align: middle;
+.pageBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
-/* Body */
-.itemTable td {
-  border-bottom: 1px solid #e5e7eb;
-  padding: 10px 12px;
-  text-align: center;
-  /* ✅ จัดให้อยู่ตรงกลาง */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  height: 56px;
-  /* ✅ ล็อคความสูงแถวข้อมูล */
-  vertical-align: middle;
-  /* ✅ ข้อความ + ปุ่มอยู่ตรงกลางแนวตั้ง */
-  color: #111827;
-  font-size: 0.95rem;
+.pageTitle {
+  font-weight: 700;
+  font-size: clamp(1.4rem, 2vw, 1.8rem);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* สลับสีแถว */
-.itemTable tbody tr:nth-child(even) {
-  background: #f9fafb;
-}
-
-/* Hover effect */
-.itemTable tbody tr:hover {
-  background: #f1f9ff;
-}
-
-.emptyMessage {
-  text-align: center;
-  color: #6b7280;
-  padding: 18px;
-  font-size: 1rem;
-}
-
-.textRight {
-  text-align: right;
-}
-
-/* ===== Form ===== */
-.inputGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.titleGroup {
+  display: flex;
+  align-items: center;
   gap: 12px;
 }
 
-.formField {
+/* Table Section */
+.tableSection {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-.formField label {
-  font-size: 1rem;
-  margin-bottom: 4px;
-  color: #374151;
-}
-
-.formField input,
-.formField textarea {
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  padding: 8px 10px;
-  font-size: 1rem;
-}
-
-.notesField {
-  min-height: 80px;
-}
-
-.errorText {
-  font-size: 0.85rem;
-  color: #dc2626;
-  margin-top: 2px;
-}
-
-/* ===== Buttons ===== */
-.formActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.selectItemButton,
-.addItemButton,
-.clearButton,
-.saveButton {
-  border: none;
-  border-radius: 6px;
-  padding: 8px 14px;
-  cursor: pointer;
-  font-size: 1rem;
-  display: inline-flex;
+/* Table Grid for Items (3 columns) */
+.tableGridItems {
+  display: grid;
+  grid-template-columns: 60% 25% 15%;
   align-items: center;
-  gap: 4px;
+  min-height: var(--row-h);
+  padding: 0 12px;
 }
 
-.selectItemButton {
-  background: #e0f2fe;
-  color: #0369a1;
+/* Table Grid for Receiving Items (5 columns) */
+.tableGridReceiving {
+  display: grid;
+  grid-template-columns: 35% 20% 15% 15% 15%;
+  align-items: center;
+  min-height: var(--row-h);
+  padding: 0 12px;
 }
 
-.addItemButton {
-  background: #22c55e;
-  color: #fff;
-}
-
-.clearButton {
-  background: #f3f4f6;
+.tableHeader {
+  background: #eef9fc;
+  font-weight: 600;
   color: #374151;
+  border-bottom: 1px solid var(--border);
 }
 
-.deleteButton {
-  background: #fee2e2;
-  color: #b91c1c;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 1rem;
+.tableRow {
+  border-top: 1px solid #deedf1;
 }
 
-.saveButton {
-  background: #008dda;
-  color: #fff;
+.tableRow:hover {
+  background: #f9fcfd;
 }
 
-/* ===== Pagination Controls ===== */
-.paginationControls {
+.tableCell {
+  padding: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.centerCell {
   display: flex;
   justify-content: center;
-  align-items: center;
+}
+
+/* Inventory wrapper */
+.inventory {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-500) var(--border);
+}
+
+/* Pagination */
+.paginationControls {
+  display: flex;
   gap: 6px;
-  margin-top: 14px;
   list-style: none;
-  padding: 0;
+  justify-content: center;
+  padding: 10px;
+  background: #fff;
 }
 
 .pageButton {
-  border: 1px solid #d1d5db;
   background: #fff;
-  color: #111827;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 1rem;
-  min-width: 38px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  min-width: 34px;
+  padding: 6px 10px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .pageButton:hover:not(:disabled) {
-  background: #f3f4f6;
+  background: #e9f6fb;
+  transform: translateY(-1px);
 }
 
 .pageButton:disabled {
-  background: #f9fafb;
-  color: #9ca3af;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .activePage {
-  background: #008dda;
+  background: var(--primary);
   color: #fff;
-  border-color: #008dda;
-  font-weight: 600;
+  border-color: var(--primary);
 }
 
 .ellipsis {
-  color: #6b7280;
-  font-size: 1.1rem;
-  padding: 0 4px;
-}
-
-/* ===== Bottom Section ===== */
-.bottomSection {
-  margin-top: 20px;
-  width: 100%;
-  max-width: none;
-  margin-left: 0;
-  margin-right: 0;
-  padding: 0px;
-}
-
-.tableSection {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 14px;
-}
-
-.saveArea {
   display: flex;
-  justify-content: flex-end; /* ✅ จัดไปด้านขวา */
-  margin-top: 12px;
+  align-items: center;
+  padding: 0 10px;
+  color: var(--muted);
+}
+
+/* Form Section */
+.subTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  background: #f9fcfd;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.formContainer {
+  background: #fafafa;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  padding: 10px 0;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formField label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.formInput {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  background: #fff;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(65, 201, 226, 0.2);
+}
+
+.formInput:disabled {
+  background: #f3f4f6;
+  cursor: not-allowed;
+}
+
+.quantityWrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quantityWrapper input {
+  flex: 1;
+}
+
+.unitLabel {
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.notesFieldContainer {
+  grid-column: 1 / -1;
+  margin-top: 16px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.notesLabel {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.charCount {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.notesField {
+  min-height: 140px;
+  resize: vertical;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 0.95rem;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.5;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.notesField:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(65, 201, 226, 0.2), 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.notesField:disabled {
+  background: #f3f4f6;
+  cursor: not-allowed;
+}
+
+.notesField::placeholder {
+  color: var(--muted);
+  opacity: 0.8;
+}
+
+.errorText {
+  font-size: 0.85rem;
+  color: var(--danger);
+  margin-top: 4px;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 0 0;
+}
+
+.addItemButton,
+.clearButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.addItemButton {
+  background: var(--success);
+  color: #fff;
+  border: none;
+}
+
+.addItemButton:hover:not(:disabled) {
+  background: #15803d;
+  transform: translateY(-1px);
+}
+
+.addItemButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.clearButton {
+  background: #fff;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.clearButton:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+/* Action buttons */
+.actionButton,
+.saveButton,
+.deleteButton {
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  border: none;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.actionButton {
+  background: var(--primary);
+  color: #fff;
+}
+
+.actionButton:hover {
+  background: var(--primary-600);
 }
 
 .saveButton {
-  background: #008dda;
+  background: var(--primary-600);
   color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 14px;
-  cursor: pointer;
-  font-size: 1rem;
-  display: inline-flex;
+}
+
+.saveButton:hover:not(:disabled) {
+  background: var(--primary);
+  transform: translateY(-1px);
+}
+
+.saveButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.deleteButton {
+  background: var(--danger);
+  color: #fff;
+}
+
+.deleteButton:hover {
+  background: #dc2626;
+}
+
+.saveArea {
+  text-align: right;
+  padding: 12px;
+}
+
+.noDataMessage,
+.errorMessage {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.errorMessage {
+  color: var(--danger);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .infoContainer {
+    padding: 16px;
+  }
+
+  .tableGridItems {
+    grid-template-columns: 50% 25% 25%;
+  }
+
+  .tableGridReceiving {
+    grid-template-columns: 30% 20% 20% 15% 15%;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .formContainer {
+    padding: 16px;
+  }
+
+  .pageTitle {
+    font-size: 1.4rem;
+  }
+
+  .notesField {
+    min-height: 120px;
+  }
 }

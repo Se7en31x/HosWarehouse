@@ -1,47 +1,65 @@
-/* =============================
-   StockOutHistoryPage Styles
-   ============================= */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ---- Variables (aligned with ImportHistory) ---- */
 :root {
+  /* Colors */
   --bg: #f0fbfe;
   --panel: #ffffff;
-  --text: #111827;
   --muted: #6b7280;
+  --text: #111827;
   --border: #e5e7eb;
-
   --primary: #008dda;
   --primary-500: #41c9e2;
   --primary-600: #1685bb;
-
-  --danger: #ef4444;
+  --tint-50: #f0fbfe;
+  --tint-100: #e9f6fb;
+  --tint-200: #ace2e1;
   --success: #16a34a;
-
-  --radius: 12px;
-  --row-h: 56px;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --radius: 10px;
+  --row-h: 60px;
   --rows-per-page: 10;
-  --pad-x: 12px;
+  --table-gap: 12px;
+  --th-font: 1.05rem;
+  --th-min-h: 60px;
+  --th-pad-y: 14px;
+  --th-pad-x: 12px;
+  --th-letter: 0.01em;
+  --th-line: 1.25;
+  --z-header: 10;
+  --z-toolbar: 100;
+  --z-select: 9000;
+  --z-swal: 10000;
+  --z-modal-overlay: 12000;
 }
 
-/* Layout */
+/* ---- Layout ---- */
 .mainHome {
   min-height: 100vh;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--bg);
-  font-family: "Inter", "Sarabun", sans-serif;
 }
 
 .infoContainer {
   width: 100%;
+  max-width: none;
   min-height: 100vh;
   background: var(--panel);
+  color: var(--text);
+  border-radius: 0;
   padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
+  flex: 1 1 auto;
+  align-self: stretch;
 }
 
-/* Header */
+/* ---- Header ---- */
 .pageBar {
   display: flex;
   justify-content: space-between;
@@ -49,32 +67,42 @@
 }
 
 .pageTitle {
-  font-size: 1.6rem;
   font-weight: 700;
-  color: var(--primary);
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* Toolbar (Filters) */
-.toolbar {
+/* ---- Toolbar (filters) ---- */
+.filterBar {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
+  gap: 12px;
+  flex-wrap: wrap;
+  border: 1px solid var(--tint-200);
+  border-radius: 12px;
+  padding: 12px;
   background: #f6fbfd;
+}
+
+.filterLeft {
+  display: flex;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
-.filterGrid {
+.filterRight {
   display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
 }
 
 .filterGroup {
+  position: relative;
+  z-index: var(--z-toolbar);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -82,58 +110,50 @@
 
 .label {
   font-size: 0.85rem;
-  font-weight: 600;
   color: #374151;
-}
-
-.filterSelect {
-  height: 40px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0 12px;
-  font-size: 0.95rem;
-}
-
-/* Search + Clear */
-.searchCluster {
-  display: flex;
-  gap: 10px;
-  margin-left: auto;
-}
-
-.searchBox {
-  position: relative;
-}
-
-.searchIcon {
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #9ca3af;
+  font-weight: 600;
 }
 
 .input {
   height: 40px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--tint-200);
   border-radius: 8px;
-  padding: 0 12px 0 32px;
+  padding: 0 12px;
   font-size: 0.95rem;
-  width: 260px;
 }
 
 .input:focus {
   outline: 2px solid var(--primary-500);
+  outline-offset: 1px;
+}
+
+.searchBox {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 360px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  color: #9ca3af;
+}
+
+.searchBox .input {
+  padding-left: 36px;
+  width: 100%;
 }
 
 .ghostBtn {
   background: #fff;
-  border: 1px solid var(--border);
+  color: #374151;
+  border: 1px solid var(--tint-200);
   border-radius: 8px;
   height: 40px;
   padding: 0 12px;
   cursor: pointer;
-  font-size: 0.9rem;
 }
 
 .ghostBtn:hover {
@@ -143,95 +163,139 @@
 .clearButton {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   color: var(--primary-600);
-  font-weight: 600;
 }
 
-/* Table */
+/* ---- Table ---- */
 .tableSection {
-  border: 1px solid var(--border);
+  border: 1px solid var(--tint-200);
   border-radius: var(--radius);
   background: #fff;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
 .tableGrid {
   display: grid;
   grid-template-columns:
-    minmax(140px, 1fr) minmax(200px, 1.2fr) minmax(160px, 1fr) minmax(180px, 1.2fr) minmax(120px, 0.8fr);
+    minmax(100px, 1fr) /* วันที่ */
+    minmax(120px, 1.2fr) /* เลขที่เอกสาร */
+    minmax(120px, 1.2fr) /* ผู้ดำเนินการ */
+    minmax(150px, 1.5fr) /* ประเภท */
+    minmax(110px, 1.1fr); /* จัดการ */
   align-items: center;
 }
 
 .tableHeader {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
   background: #eef9fc;
+  border-bottom: 1px solid var(--tint-200);
+  padding-block: var(--th-pad-y);
+  padding-inline: var(--th-pad-x);
   font-weight: 700;
   color: #374151;
-  padding: 12px var(--pad-x);
+  font-size: var(--th-font);
+  line-height: var(--th-line);
+  min-height: var(--th-min-h);
 }
 
-.tableRow {
-  border-top: 1px solid var(--border);
-  height: var(--row-h);
-  padding: 0 var(--pad-x);
+.headerItem {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 0;
 }
 
-.tableRow:hover {
-  background: #f9fafb;
+.centerCell {
+  display: flex;
+  justify-content: center;
+  text-align: center;
 }
 
 .inventory {
+  border: 0;
+  border-radius: 0;
+  background: #fff;
   height: calc(var(--row-h) * var(--rows-per-page));
   overflow: hidden;
 }
 
-.noDataRow {
-  grid-column: 1 / -1;
-  text-align: center;
-  color: var(--muted);
-  font-style: italic;
+.tableRow {
+  box-sizing: border-box;
+  height: var(--row-h);
+  padding: 0 var(--th-pad-x);
+  border-top: 1px solid #deedf1;
 }
 
-.centerCell {
-  text-align: center;
+.tableRow:hover {
+  background: var(--tint-100);
+}
+
+.tableRow:first-child {
+  border-top: 0;
+}
+
+.tableCell {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  padding: 4px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Buttons */
-.detailButton {
-  background: var(--primary-500);
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #3b82f6;
   color: #fff;
-  border: none;
   border-radius: 8px;
-  padding: 6px 12px;
-  font-size: 0.85rem;
+  padding: 6px;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+  border: none;
   cursor: pointer;
 }
 
-.detailButton:hover {
-  background: var(--primary-600);
+.actionButton:hover {
+  background: #2563eb;
+  transform: scale(1.05);
 }
 
-/* Pagination */
+.actionButton:active {
+  transform: scale(0.95);
+}
+
+.noDataMessage {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
 .paginationControls {
   display: flex;
   list-style: none;
   padding: 10px;
+  margin: 0;
   gap: 6px;
   justify-content: center;
-  border-top: 1px solid var(--border);
+  align-items: center;
+  background: #fff;
+  border-top: 0;
 }
 
 .pageButton {
   background: #fff;
-  border: 1px solid var(--border);
+  border: 1px solid var(--tint-200);
   border-radius: 8px;
   padding: 6px 10px;
-  cursor: pointer;
   min-width: 34px;
+  cursor: pointer;
 }
 
 .pageButton:hover:not(:disabled) {
@@ -251,122 +315,296 @@
 
 .ellipsis {
   color: var(--muted);
-  padding: 6px 10px;
-  min-width: 34px;
-  text-align: center;
 }
 
-/* Modal */
+/* ---- Modal (enhanced for visual appeal) ---- */
 .modalOverlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-}
-
-/* Table เฉพาะใน Modal */
-.popupTable {
-  display: grid;
-  grid-template-columns:
-    minmax(220px, 2fr)   /* พัสดุ */
-    minmax(120px, 1fr)   /* จำนวน */
-    minmax(140px, 1fr)   /* Lot No */
-    minmax(160px, 1fr);  /* วันหมดอายุ */
-  align-items: center;
-}
-
-.popupTableHeader {
-  background: #eef9fc;
-  font-weight: 700;
-  color: #374151;
-  padding: 12px var(--pad-x);
-}
-
-.popupTableRow {
-   border-top: 1px solid var(--border);
-  height: var(--row-h);
-  padding: 0 var(--pad-x);
-}
-
-.popupTableRow:hover {
-   background: #f9fafb;
+  z-index: var(--z-modal-overlay);
+  /* backdrop-filter: blur(2px); */
 }
 
 .modal {
   background: #fff;
+  border-radius: 12px;
   padding: 24px;
-  border-radius: var(--radius);
-  width: 900px;
-  /* ✅ เพิ่มความกว้าง */
-  max-width: 95%;
-  /* ✅ ยังคง responsive */
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
-  animation: fadeIn 0.3s ease;
+  width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease-out;
 }
 
-.modalHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modalHeader h3 {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: var(--primary);
-}
-
-.closeIcon {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--muted);
-}
-
-.detailGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px 20px;
-  margin: 16px 0;
-  font-size: 0.95rem;
-  color: #374151;
-}
-
-.closeBtn {
-  display: block;
-  margin: 0 auto;
-  background: var(--danger);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 18px;
-  cursor: pointer;
-}
-
-.closeBtn:hover {
-  background: #b91c1c;
-}
-
-/* Anim */
-@keyframes fadeIn {
+@keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-20px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-/* ✅ Wrapper - จำกัด 5 แถว */
-.popupTableWrapper {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--tint-200);
+  padding-bottom: 8px;
 }
 
+.modalTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modalTitle::before {
+  content: "📋";
+  font-size: 1.25rem;
+}
+
+.closeIcon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #374151;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.closeIcon:hover {
+  color: var(--primary-600);
+  background: var(--tint-100);
+}
+
+.detailContent {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 0.9rem;
+  text-align: left;
+  color: #111827;
+  margin-bottom: 16px;
+  background: #f9fafb;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.detailContent p {
+  margin: 0;
+  line-height: 1.6;
+  display: flex;
+  justify-content: space-between;
+}
+
+.detailContent p b {
+  flex: 0 0 150px;
+  color: #374151;
+  font-weight: 600;
+}
+
+.detailTableTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 16px 0 12px;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detailTableTitle::before {
+  content: "📦";
+  font-size: 1rem;
+}
+
+.popupTableWrapper {
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.popupTable {
+  display: grid;
+  grid-template-columns:
+    minmax(150px, 2fr) /* พัสดุ */
+    minmax(100px, 1fr) /* จำนวน */
+    minmax(100px, 1fr) /* Lot No */
+    minmax(100px, 1fr); /* วันหมดอายุ */
+}
+
+.popupTableHeader {
+  background: #eef9fc;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #374151;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--tint-200);
+}
+
+.popupTableHeader > div {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.popupTableRow {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.9rem;
+  color: #111827;
+  transition: background-color 0.2s ease;
+}
+
+.popupTableRow:hover {
+  background: var(--tint-100);
+}
+
+.popupTableRow:last-child {
+  border-bottom: none;
+}
+
+.popupTableRow > div {
+  display: flex;
+  align-items: center;
+}
+
+.noDataRow {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 16px;
+}
+
+.closeBtn {
+  width: 100%;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-top: 16px;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.closeBtn:hover {
+  background: var(--primary-600);
+  transform: translateY(-1px);
+}
+
+.closeBtn:active {
+  transform: translateY(0);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 1024px) {
+  .filterLeft {
+    flex: 1;
+  }
+
+  .filterRight {
+    flex: 1;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 768px) {
+  .filterBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filterLeft,
+  .filterRight {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .searchBox {
+    max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --th-font: 1rem;
+    --th-min-h: 54px;
+    --th-pad-y: 10px;
+    --table-gap: 10px;
+  }
+
+  .mainHome {
+    padding: 12px;
+  }
+
+  .tableGrid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .tableHeader,
+  .tableRow {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .headerItem,
+  .tableCell {
+    padding: 0.5rem;
+    text-align: left;
+  }
+
+  .centerCell {
+    justify-content: flex-start;
+  }
+
+  .modal {
+    width: 95%;
+    padding: 16px;
+  }
+
+  .detailContent p {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .detailContent p b {
+    flex: none;
+  }
+
+  .popupTable {
+    grid-template-columns: 1fr;
+  }
+
+  .popupTableHeader > div,
+  .popupTableRow > div {
+    padding: 8px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .popupTableRow > div:last-child,
+  .popupTableHeader > div:last-child {
+    border-bottom: none;
+  }
+}

@@ -5,31 +5,9 @@ import styles from "./page.module.css";
 import { Trash2, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 import dynamic from "next/dynamic";
 
-// ── react-select ──────────────────────
 const Select = dynamic(() => import("react-select"), { ssr: false });
 
-// ── Options ──────────────────────────
-const statusOptions = [
-  { value: "all", label: "สถานะทั้งหมด" },
-  { value: "waiting", label: "รอดำเนินการ" },
-  { value: "sent_repair", label: "ส่งซ่อม" },
-  { value: "repaired", label: "ซ่อมเสร็จแล้ว" },
-  { value: "discarded", label: "จำหน่ายทิ้ง" },
-  { value: "disposed", label: "เลิกใช้งาน" }, // ✅ เพิ่มใหม่
-];
-
-const typeOptions = [
-  { value: "all", label: "ทุกประเภท" },
-  { value: "damaged", label: "ชำรุด" },
-  { value: "lost", label: "สูญหาย" },
-];
-
-const sourceMap = {
-  borrow_return: "คืนจากการยืม",
-  stock_check: "ตรวจสต็อก",
-};
-
-// ── react-select styles ───────────────
+/* react-select styles (aligned with ImportHistory) */
 const customSelectStyles = {
   control: (base, state) => ({
     ...base,
@@ -38,12 +16,13 @@ const customSelectStyles = {
     borderColor: state.isFocused ? "#2563eb" : "#e5e7eb",
     boxShadow: "none",
     "&:hover": { borderColor: "#2563eb" },
+    fontSize: "0.9rem",
+    width: "250px",
   }),
   menu: (base) => ({
     ...base,
     borderRadius: "0.5rem",
     marginTop: 6,
-    boxShadow: "none",
     border: "1px solid #e5e7eb",
     zIndex: 9000,
   }),
@@ -52,73 +31,118 @@ const customSelectStyles = {
     ...base,
     backgroundColor: state.isFocused ? "#f1f5ff" : "#fff",
     color: "#111827",
-    padding: "8px 12px",
+    padding: "6px 10px",
+    fontSize: "0.9rem",
   }),
-  placeholder: (base) => ({ ...base, color: "#9ca3af" }),
-  clearIndicator: (base) => ({ ...base, padding: 6 }),
-  dropdownIndicator: (base) => ({ ...base, padding: 6 }),
+  placeholder: (base) => ({ ...base, color: "#9ca3af", fontSize: "0.9rem" }),
+  clearIndicator: (base) => ({ ...base, padding: 4 }),
+  dropdownIndicator: (base) => ({ ...base, padding: 4 }),
+};
+
+/* Map สถานะและประเภท */
+const statusMap = {
+  waiting: "รอดำเนินการ",
+  sent_repair: "ส่งซ่อม",
+  repaired: "ซ่อมเสร็จแล้ว",
+  discarded: "จำหน่ายทิ้ง",
+  disposed: "เลิกใช้งาน",
+};
+const STATUS_OPTIONS = [
+  { value: "all", label: "ทุกสถานะ" },
+  ...Object.entries(statusMap).map(([k, v]) => ({ value: k, label: v })),
+];
+const TYPE_OPTIONS = [
+  { value: "all", label: "ทุกประเภท" },
+  { value: "damaged", label: "ชำรุด" },
+  { value: "lost", label: "สูญหาย" },
+];
+const SOURCE_MAP = {
+  borrow_return: "คืนจากการยืม",
+  stock_check: "ตรวจสต็อก",
+};
+
+/* badge class mapping */
+const getStatusBadgeClass = (status) => {
+  switch (status) {
+    case "repaired":
+      return "stAvailable"; // เขียว
+    case "sent_repair":
+      return "stLow"; // เหลือง
+    case "waiting":
+      return "stOut"; // แดง
+    case "discarded":
+    case "disposed":
+      return "stHold"; // เทา
+    default:
+      return "stHold";
+  }
 };
 
 export default function DamagedHistoryPage() {
   const [records, setRecords] = useState([]);
   const [selected, setSelected] = useState(null);
-
-  // filter
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
-
-  // pagination
-  const ROWS_PER_PAGE = 10;
   const [currentPage, setCurrentPage] = useState(1);
-
-  const menuPortalTarget = useMemo(
-    () => (typeof window !== "undefined" ? document.body : null),
-    []
-  );
+  const ROWS_PER_PAGE = 10;
 
   useEffect(() => {
-    axiosInstance
-      .get("/history/damaged")
-      .then((res) => setRecords(res.data || []))
-      .catch((err) =>
-        console.error("❌ Error fetching damaged history:", err)
-      );
+    const fetchData = async () => {
+      try {
+        const res = await axiosInstance.get("/history/damaged");
+        setRecords(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        console.error("Error fetching damaged history:", err);
+      }
+    };
+    fetchData();
   }, []);
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "-";
-    return new Date(dateStr).toLocaleString("th-TH", {
-      day: "2-digit",
-      month: "2-digit",
+  const formatThaiDate = (isoString) => {
+    if (!isoString) return "-";
+    const d = new Date(isoString);
+    return d.toLocaleString("th-TH", {
       year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+      month: "2-digit",
+      day: "2-digit",
+      timeZone: "Asia/Bangkok",
     });
   };
 
-  // ✅ Filter
   const filteredRecords = useMemo(() => {
     return records.filter((r) => {
       const matchesSearch =
         search === "" ||
         r.item_name?.toLowerCase().includes(search.toLowerCase()) ||
         r.reported_by?.toLowerCase().includes(search.toLowerCase());
-
-      const matchesStatus =
-        statusFilter === "all" || r.damaged_status === statusFilter;
-
-      const matchesType =
-        typeFilter === "all" || r.damage_type === typeFilter;
-
+      const matchesStatus = statusFilter === "all" || r.damaged_status === statusFilter;
+      const matchesType = typeFilter === "all" || r.damage_type === typeFilter;
       return matchesSearch && matchesStatus && matchesType;
     });
   }, [records, search, statusFilter, typeFilter]);
 
-  // ✅ Pagination
   const totalPages = Math.max(1, Math.ceil(filteredRecords.length / ROWS_PER_PAGE));
   const start = (currentPage - 1) * ROWS_PER_PAGE;
   const pageRows = filteredRecords.slice(start, start + ROWS_PER_PAGE);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, typeFilter]);
+
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 4) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else if (currentPage <= 4) {
+      pages.push(1, 2, 3, 4, "...", totalPages);
+    } else if (currentPage >= totalPages - 3) {
+      pages.push(1, "...", totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+    } else {
+      pages.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
+    }
+    return pages;
+  };
 
   const clearFilters = () => {
     setSearch("");
@@ -131,154 +155,203 @@ export default function DamagedHistoryPage() {
     <div className={styles.mainHome}>
       <div className={styles.infoContainer}>
         <div className={styles.pageBar}>
-          <h1 className={styles.pageTitle}>⚠️ ประวัติชำรุด / สูญหาย</h1>
+          <h1 className={styles.pageTitle}>
+            ประวัติชำรุด/สูญหาย
+          </h1>
         </div>
 
-        {/* ✅ Filter Bar */}
-        <div className={styles.toolbar}>
-          {/* ซ้าย: สถานะ + ประเภท */}
-          <div className={styles.filterGrid}>
+        {/* Toolbar */}
+        <div className={styles.filterBar}>
+          <div className={styles.filterLeft}>
             <div className={styles.filterGroup}>
               <label className={styles.label}>สถานะ</label>
               <Select
-                options={statusOptions}
-                isClearable={false}
+                isClearable
                 isSearchable={false}
-                placeholder="เลือกสถานะ..."
-                styles={customSelectStyles}
-                value={statusOptions.find((o) => o.value === statusFilter)}
+                options={STATUS_OPTIONS}
+                value={STATUS_OPTIONS.find((o) => o.value === statusFilter) || null}
                 onChange={(opt) => setStatusFilter(opt?.value || "all")}
-                menuPortalTarget={menuPortalTarget}
+                styles={customSelectStyles}
+                placeholder="เลือกสถานะ..."
+                aria-label="กรองตามสถานะ"
+                menuPortalTarget={typeof window !== "undefined" ? document.body : undefined}
               />
             </div>
-
             <div className={styles.filterGroup}>
               <label className={styles.label}>ประเภท</label>
               <Select
-                options={typeOptions}
-                isClearable={false}
+                isClearable
                 isSearchable={false}
-                placeholder="เลือกประเภท..."
-                styles={customSelectStyles}
-                value={typeOptions.find((o) => o.value === typeFilter)}
+                options={TYPE_OPTIONS}
+                value={TYPE_OPTIONS.find((o) => o.value === typeFilter) || null}
                 onChange={(opt) => setTypeFilter(opt?.value || "all")}
-                menuPortalTarget={menuPortalTarget}
+                styles={customSelectStyles}
+                placeholder="เลือกประเภท..."
+                aria-label="กรองตามประเภท"
+                menuPortalTarget={typeof window !== "undefined" ? document.body : undefined}
               />
             </div>
           </div>
-
-          {/* ขวาสุด: ค้นหา + ล้าง */}
-          <div className={styles.searchCluster}>
-            <div className={styles.searchBox}>
-              <Search size={16} className={styles.searchIcon} />
-              <input
-                type="text"
-                className={styles.input}
-                placeholder="ค้นหาพัสดุ หรือผู้รายงาน..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+          <div className={styles.filterRight}>
+            <div className={styles.filterGroup}>
+              <label className={styles.label}>ค้นหา</label>
+              <div className={styles.searchBox}>
+                <Search size={14} className={styles.searchIcon} aria-hidden="true" />
+                <input
+                  type="text"
+                  className={styles.input}
+                  placeholder="พัสดุ / ผู้รายงาน"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  aria-label="ค้นหาพัสดุหรือผู้รายงาน"
+                />
+              </div>
             </div>
             <button
-              onClick={clearFilters}
               className={`${styles.ghostBtn} ${styles.clearButton}`}
+              onClick={clearFilters}
+              aria-label="ล้างตัวกรองทั้งหมด"
             >
-              <Trash2 size={18} /> ล้างตัวกรอง
+              <Trash2 size={16} /> ล้าง
             </button>
           </div>
         </div>
 
-        {/* ✅ Table */}
+        {/* Table */}
         <div className={styles.tableSection}>
           <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
-            <div>วันที่</div>
-            <div>พัสดุ</div>
-            <div>จำนวน</div>
-            <div>ประเภท</div>
-            <div>ที่มา</div>
-            <div className={styles.centerCell}>สถานะ</div>
-            <div>ผู้รายงาน</div>
-            <div className={styles.centerCell}>จัดการ</div>
+            <div className={styles.headerItem}>วันที่</div>
+            <div className={styles.headerItem}>พัสดุ</div>
+            <div className={styles.headerItem}>จำนวน</div>
+            <div className={styles.headerItem}>ประเภท</div>
+            <div className={styles.headerItem}>ที่มา</div>
+            <div className={`${styles.headerItem} ${styles.centerCell}`}>สถานะ</div>
+            <div className={styles.headerItem}>ผู้รายงาน</div>
+            <div className={`${styles.headerItem} ${styles.centerCell}`}>จัดการ</div>
           </div>
 
           <div className={styles.inventory} style={{ "--rows-per-page": ROWS_PER_PAGE }}>
-            {pageRows.length > 0 ? (
+            {filteredRecords.length === 0 ? (
+              <div className={styles.noDataMessage}>ไม่พบข้อมูลชำรุด/สูญหาย</div>
+            ) : (
               pageRows.map((r) => (
                 <div key={r.damaged_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
-                  <div>{formatDate(r.damaged_date)}</div>
-                  <div>{r.item_name}</div>
-                  <div>{r.damaged_qty} {r.item_unit}</div>
-                  <div>{typeOptions.find((t) => t.value === r.damage_type)?.label || r.damage_type}</div>
-                  <div>{sourceMap[r.source_type] || "-"}</div>
-                  <div className={styles.centerCell}>
-                    <span className={styles.statusBadge}>
-                      {statusOptions.find((s) => s.value === r.damaged_status)?.label || r.damaged_status}
+                  <div className={styles.tableCell}>{formatThaiDate(r.damaged_date)}</div>
+                  <div className={styles.tableCell}>{r.item_name || "-"}</div>
+                  <div className={styles.tableCell}>
+                    {r.damaged_qty || 0} {r.item_unit || ""}
+                  </div>
+                  <div className={styles.tableCell}>
+                    {TYPE_OPTIONS.find((t) => t.value === r.damage_type)?.label || "-"}
+                  </div>
+                  <div className={styles.tableCell}>
+                    {SOURCE_MAP[r.source_type] || "-"}
+                  </div>
+                  <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                    <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(r.damaged_status)]}`}>
+                      {STATUS_OPTIONS.find((s) => s.value === r.damaged_status)?.label || "-"}
                     </span>
                   </div>
-                  <div>{r.reported_by}</div>
-                  <div className={styles.centerCell}>
-                    <button className={styles.detailButton} onClick={() => setSelected(r)}>
-                      ดูรายละเอียด
+                  <div className={styles.tableCell}>{r.reported_by || "-"}</div>
+                  <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                    <button
+                      className={styles.actionButton}
+                      onClick={() => setSelected(r)}
+                      aria-label={`ดูรายละเอียดพัสดุ ${r.item_name || "ไม่ระบุ"}`}
+                    >
+                      <Search size={18} />
                     </button>
                   </div>
                 </div>
               ))
-            ) : (
-              <div className={`${styles.tableGrid} ${styles.tableRow} ${styles.noDataRow}`}>
-                ไม่พบข้อมูล
-              </div>
             )}
           </div>
 
-          {/* ✅ Pagination */}
+          {/* Pagination */}
           <ul className={styles.paginationControls}>
             <li>
-              <button className={styles.pageButton} disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}>
+              <button
+                className={styles.pageButton}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                aria-label="หน้าก่อนหน้า"
+              >
                 <ChevronLeft size={16} />
               </button>
             </li>
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <li key={i}>
-                <button className={`${styles.pageButton} ${currentPage === i + 1 ? styles.activePage : ""}`}
-                  onClick={() => setCurrentPage(i + 1)}>
-                  {i + 1}
-                </button>
-              </li>
-            ))}
+            {getPageNumbers().map((p, idx) =>
+              p === "..." ? (
+                <li key={`ellipsis-${idx}`} className={styles.ellipsis}>…</li>
+              ) : (
+                <li key={`page-${p}`}>
+                  <button
+                    className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
+                    onClick={() => setCurrentPage(p)}
+                    aria-label={`หน้า ${p}`}
+                    aria-current={p === currentPage ? "page" : undefined}
+                  >
+                    {p}
+                  </button>
+                </li>
+              )
+            )}
             <li>
-              <button className={styles.pageButton} disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}>
+              <button
+                className={styles.pageButton}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+                aria-label="หน้าถัดไป"
+              >
                 <ChevronRight size={16} />
               </button>
             </li>
           </ul>
         </div>
 
-        {/* ✅ Modal */}
+        {/* Modal */}
         {selected && (
           <div className={styles.modalOverlay}>
             <div className={styles.modal}>
               <div className={styles.modalHeader}>
-                <h3>📋 รายละเอียด</h3>
-                <button className={styles.closeIcon} onClick={() => setSelected(null)}>
+                <h3 className={styles.modalTitle}>
+                  รายละเอียดพัสดุ {selected.item_name || "-"}
+                </h3>
+                <button
+                  className={styles.closeIcon}
+                  onClick={() => setSelected(null)}
+                  aria-label="ปิดหน้าต่างรายละเอียด"
+                >
                   <X size={20} />
                 </button>
               </div>
-              <div className={styles.detailGrid}>
-                <div><b>พัสดุ:</b> {selected.item_name} ({selected.damaged_qty} {selected.item_unit})</div>
-                <div><b>ประเภท:</b> {typeOptions.find((t) => t.value === selected.damage_type)?.label}</div>
-                <div><b>ที่มา:</b> {sourceMap[selected.source_type] || "-"}</div>
-                <div><b>สถานะ:</b> {statusOptions.find((s) => s.value === selected.damaged_status)?.label}</div>
-                <div><b>รายงานโดย:</b> {selected.reported_by}</div>
-                <div><b>หมายเหตุ:</b> {selected.damaged_note || "-"}</div>
+              <div className={styles.detailContent}>
+                <p><b>วันที่:</b> {formatThaiDate(selected.damaged_date)}</p>
+                <p><b>จำนวน:</b> {selected.damaged_qty || 0} {selected.item_unit || ""}</p>
+                <p><b>ประเภท:</b> {TYPE_OPTIONS.find((t) => t.value === selected.damage_type)?.label || "-"}</p>
+                <p><b>ที่มา:</b> {SOURCE_MAP[selected.source_type] || "-"}</p>
+                <p>
+                  <b>สถานะ:</b>{" "}
+                  <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(selected.damaged_status)]}`}>
+                    {STATUS_OPTIONS.find((s) => s.value === selected.damaged_status)?.label || "-"}
+                  </span>
+                </p>
+                <p><b>ผู้รายงาน:</b> {selected.reported_by || "-"}</p>
+                {selected.damaged_note && (
+                  <p><b>หมายเหตุ:</b> {selected.damaged_note}</p>
+                )}
+                {selected.damage_type === "lost" && (
+                  <p className={styles.lostNotice}>
+                    <span aria-hidden="true">❌</span> สูญหาย - ไม่สามารถดำเนินการเพิ่มเติมได้
+                  </p>
+                )}
               </div>
-              {selected.damage_type === "lost" ? (
-                <div className={styles.lostNotice}>❌ สูญหาย - ไม่สามารถดำเนินการเพิ่มเติมได้</div>
-              ) : (
-                <div>📌 (โหลด actions เพิ่มเติม...)</div>
-              )}
-              <button className={styles.closeBtn} onClick={() => setSelected(null)}>ปิด</button>
+              <button
+                className={styles.closeBtn}
+                onClick={() => setSelected(null)}
+                aria-label="ปิดหน้าต่างรายละเอียด"
+              >
+                ปิด
+              </button>
             </div>
           </div>
         )}

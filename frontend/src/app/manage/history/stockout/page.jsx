@@ -5,8 +5,9 @@ import styles from "./page.module.css";
 import { Trash2, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 import dynamic from "next/dynamic";
 
-// ── react-select ─────────────────────
 const Select = dynamic(() => import("react-select"), { ssr: false });
+
+/* react-select styles (aligned with ImportHistory) */
 const customSelectStyles = {
   control: (base, state) => ({
     ...base,
@@ -15,9 +16,8 @@ const customSelectStyles = {
     borderColor: state.isFocused ? "#2563eb" : "#e5e7eb",
     boxShadow: "none",
     "&:hover": { borderColor: "#2563eb" },
-
-    minWidth: "260px",   // ✅ ปรับความยาวขั้นต่ำ
-    width: "100%",       // ✅ ขยายเต็ม container
+    fontSize: "0.9rem",
+    width: "250px",
   }),
   menu: (base) => ({
     ...base,
@@ -31,23 +31,15 @@ const customSelectStyles = {
     ...base,
     backgroundColor: state.isFocused ? "#f1f5ff" : "#fff",
     color: "#111827",
-    padding: "8px 12px",
+    padding: "6px 10px",
+    fontSize: "0.9rem",
   }),
+  placeholder: (base) => ({ ...base, color: "#9ca3af", fontSize: "0.9rem" }),
+  clearIndicator: (base) => ({ ...base, padding: 4 }),
+  dropdownIndicator: (base) => ({ ...base, padding: 4 }),
 };
 
-// ── Options ──────────────────────────
-const categoryOptions = [
-  { value: "all", label: "ทุกประเภท" },
-  { value: "withdraw", label: "เบิกพัสดุ" },
-  { value: "borrow", label: "ยืมออก" },
-  { value: "return_damaged", label: "คืนสภาพชำรุด" },
-  { value: "damaged_dispose", label: "ทำลายชำรุด" },
-  { value: "expired_dispose", label: "ทำลายหมดอายุ" },
-  { value: "adjust_out", label: "ปรับปรุงยอดตัดออก" },
-  { value: "return_lost", label: "สูญหาย (ตรวจนับ)" },
-];
-
-// ── Map ──────────────────────────────
+/* Map ประเภท */
 const typeMap = {
   withdraw: "เบิกพัสดุ",
   borrow: "ยืมออก",
@@ -57,32 +49,46 @@ const typeMap = {
   adjust_out: "ปรับปรุงยอดตัดออก",
   return_lost: "สูญหาย (ตรวจนับ)",
 };
+const CATEGORY_OPTIONS = [
+  { value: "all", label: "ทุกประเภท" },
+  ...Object.entries(typeMap).map(([k, v]) => ({ value: k, label: v })),
+];
 
 export default function StockOutHistoryPage() {
   const [records, setRecords] = useState([]);
   const [selected, setSelected] = useState(null);
   const [details, setDetails] = useState([]);
-
-  // filter
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
-
-  // pagination
-  const ROWS_PER_PAGE = 10;
   const [currentPage, setCurrentPage] = useState(1);
+  const ROWS_PER_PAGE = 10;
 
   useEffect(() => {
-    axiosInstance
-      .get("/history/stockout")
-      .then((res) => setRecords(res.data || []))
-      .catch((err) => console.error("❌ Error fetching stockout history:", err));
+    const fetchData = async () => {
+      try {
+        const res = await axiosInstance.get("/history/stockout");
+        setRecords(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        console.error("Error fetching stockout history:", err);
+      }
+    };
+    fetchData();
   }, []);
 
-  // ✅ Filter
+  const formatThaiDate = (isoString) => {
+    if (!isoString) return "-";
+    const d = new Date(isoString);
+    return d.toLocaleString("th-TH", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      timeZone: "Asia/Bangkok",
+    });
+  };
+
   const filteredRecords = useMemo(() => {
     return records.filter((r) => {
-      const matchesType =
-        typeFilter === "all" || r.stockout_type === typeFilter;
+      const matchesType = typeFilter === "all" || r.stockout_type === typeFilter;
       const matchesSearch =
         search === "" ||
         r.stockout_no?.toLowerCase().includes(search.toLowerCase()) ||
@@ -91,13 +97,27 @@ export default function StockOutHistoryPage() {
     });
   }, [records, typeFilter, search]);
 
-  // ✅ Pagination
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredRecords.length / ROWS_PER_PAGE)
-  );
+  const totalPages = Math.max(1, Math.ceil(filteredRecords.length / ROWS_PER_PAGE));
   const start = (currentPage - 1) * ROWS_PER_PAGE;
   const pageRows = filteredRecords.slice(start, start + ROWS_PER_PAGE);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [typeFilter, search]);
+
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 4) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else if (currentPage <= 4) {
+      pages.push(1, 2, 3, 4, "...", totalPages);
+    } else if (currentPage >= totalPages - 3) {
+      pages.push(1, "...", totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+    } else {
+      pages.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
+    }
+    return pages;
+  };
 
   const clearFilters = () => {
     setSearch("");
@@ -105,16 +125,13 @@ export default function StockOutHistoryPage() {
     setCurrentPage(1);
   };
 
-  // ✅ โหลดรายละเอียดเอกสาร
   const handleShowDetail = async (doc) => {
     setSelected(doc);
     try {
-      const res = await axiosInstance.get(
-        `/history/stockout/${doc.stockout_id}`
-      );
-      setDetails(res.data || []);
+      const res = await axiosInstance.get(`/history/stockout/${doc.stockout_id}`);
+      setDetails(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      console.error("❌ Error fetching stockout detail:", err);
+      console.error("Error fetching stockout detail:", err);
       setDetails([]);
     }
   };
@@ -123,122 +140,124 @@ export default function StockOutHistoryPage() {
     <div className={styles.mainHome}>
       <div className={styles.infoContainer}>
         <div className={styles.pageBar}>
-          <h1 className={styles.pageTitle}>📦 ประวัติการตัดออกจากคลัง</h1>
+          <h1 className={styles.pageTitle}>
+             ประวัติการตัดออกจากคลัง
+          </h1>
         </div>
 
-        {/* ✅ Filter Bar */}
-        <div className={styles.toolbar}>
-          {/* ซ้าย: ประเภท */}
-          <div className={styles.filterGrid}>
+        {/* Toolbar */}
+        <div className={styles.filterBar}>
+          <div className={styles.filterLeft}>
             <div className={styles.filterGroup}>
               <label className={styles.label}>ประเภทเอกสาร</label>
               <Select
-                options={categoryOptions}
-                isClearable={false}
+                isClearable
                 isSearchable={false}
-                placeholder="เลือกประเภท..."
-                styles={customSelectStyles}
-                value={categoryOptions.find((o) => o.value === typeFilter)}
+                options={CATEGORY_OPTIONS}
+                value={CATEGORY_OPTIONS.find((o) => o.value === typeFilter) || null}
                 onChange={(opt) => setTypeFilter(opt?.value || "all")}
+                styles={customSelectStyles}
+                placeholder="เลือกประเภท..."
+                aria-label="กรองตามประเภทเอกสาร"
+                menuPortalTarget={typeof window !== "undefined" ? document.body : undefined}
               />
             </div>
           </div>
-
-          {/* ขวาสุด: ค้นหา + ล้าง */}
-          <div className={styles.searchCluster}>
-            <div className={styles.searchBox}>
-              <Search size={16} className={styles.searchIcon} />
-              <input
-                type="text"
-                className={styles.input}
-                placeholder="ค้นหาเลขที่เอกสาร หรือผู้ดำเนินการ..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+          <div className={styles.filterRight}>
+            <div className={styles.filterGroup}>
+              <label className={styles.label}>ค้นหา</label>
+              <div className={styles.searchBox}>
+                <Search size={14} className={styles.searchIcon} aria-hidden="true" />
+                <input
+                  type="text"
+                  className={styles.input}
+                  placeholder="เลขที่เอกสาร / ผู้ดำเนินการ"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  aria-label="ค้นหาเลขที่เอกสารหรือผู้ดำเนินการ"
+                />
+              </div>
             </div>
             <button
-              onClick={clearFilters}
               className={`${styles.ghostBtn} ${styles.clearButton}`}
+              onClick={clearFilters}
+              aria-label="ล้างตัวกรองทั้งหมด"
             >
-              <Trash2 size={18} /> ล้างตัวกรอง
+              <Trash2 size={16} /> ล้าง
             </button>
           </div>
         </div>
 
-        {/* ✅ Table */}
+        {/* Table */}
         <div className={styles.tableSection}>
           <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
-            <div>วันที่</div>
-            <div>เลขที่เอกสาร</div>
-            <div>ผู้ดำเนินการ</div>
-            <div>ประเภท</div>
-            <div className={styles.centerCell}>จัดการ</div>
+            <div className={styles.headerItem}>วันที่</div>
+            <div className={styles.headerItem}>เลขที่เอกสาร</div>
+            <div className={styles.headerItem}>ผู้ดำเนินการ</div>
+            <div className={styles.headerItem}>ประเภท</div>
+            <div className={`${styles.headerItem} ${styles.centerCell}`}>จัดการ</div>
           </div>
 
-          <div
-            className={styles.inventory}
-            style={{ "--rows-per-page": ROWS_PER_PAGE }}
-          >
-            {pageRows.length > 0 ? (
+          <div className={styles.inventory} style={{ "--rows-per-page": ROWS_PER_PAGE }}>
+            {filteredRecords.length === 0 ? (
+              <div className={styles.noDataMessage}>ไม่พบข้อมูลการตัดออกจากคลัง</div>
+            ) : (
               pageRows.map((r) => (
-                <div
-                  key={r.stockout_id}
-                  className={`${styles.tableGrid} ${styles.tableRow}`}
-                >
-                  <div>
-                    {new Date(r.stockout_date).toLocaleDateString("th-TH")}
+                <div key={r.stockout_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                  <div className={styles.tableCell}>{formatThaiDate(r.stockout_date)}</div>
+                  <div className={styles.tableCell}>{r.stockout_no || "-"}</div>
+                  <div className={styles.tableCell}>{r.user_name || "-"}</div>
+                  <div className={styles.tableCell}>
+                    {typeMap[r.stockout_type] || "อื่น ๆ"}
                   </div>
-                  <div>{r.stockout_no || "-"}</div>
-                  <div>{r.user_name}</div>
-                  <div>{typeMap[r.stockout_type] || "อื่น ๆ"}</div>
-                  <div className={styles.centerCell}>
+                  <div className={`${styles.tableCell} ${styles.centerCell}`}>
                     <button
-                      className={styles.detailButton}
+                      className={styles.actionButton}
                       onClick={() => handleShowDetail(r)}
+                      aria-label={`ดูรายละเอียดเอกสาร ${r.stockout_no || "ไม่ระบุ"}`}
                     >
-                      ดูรายละเอียด
+                      <Search size={18} />
                     </button>
                   </div>
                 </div>
               ))
-            ) : (
-              <div
-                className={`${styles.tableGrid} ${styles.tableRow} ${styles.noDataRow}`}
-              >
-                ไม่พบข้อมูล
-              </div>
             )}
           </div>
 
-          {/* ✅ Pagination */}
+          {/* Pagination */}
           <ul className={styles.paginationControls}>
             <li>
               <button
                 className={styles.pageButton}
-                disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                aria-label="หน้าก่อนหน้า"
               >
                 <ChevronLeft size={16} />
               </button>
             </li>
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <li key={i}>
-                <button
-                  className={`${styles.pageButton} ${currentPage === i + 1 ? styles.activePage : ""
-                    }`}
-                  onClick={() => setCurrentPage(i + 1)}
-                >
-                  {i + 1}
-                </button>
-              </li>
-            ))}
+            {getPageNumbers().map((p, idx) =>
+              p === "..." ? (
+                <li key={`ellipsis-${idx}`} className={styles.ellipsis}>…</li>
+              ) : (
+                <li key={`page-${p}`}>
+                  <button
+                    className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
+                    onClick={() => setCurrentPage(p)}
+                    aria-label={`หน้า ${p}`}
+                    aria-current={p === currentPage ? "page" : undefined}
+                  >
+                    {p}
+                  </button>
+                </li>
+              )
+            )}
             <li>
               <button
                 className={styles.pageButton}
-                disabled={currentPage === totalPages}
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+                aria-label="หน้าถัดไป"
               >
                 <ChevronRight size={16} />
               </button>
@@ -246,41 +265,33 @@ export default function StockOutHistoryPage() {
           </ul>
         </div>
 
-        {/* ✅ Modal */}
+        {/* Modal */}
         {selected && (
           <div className={styles.modalOverlay}>
             <div className={styles.modal}>
               <div className={styles.modalHeader}>
-                <h3>📋 รายละเอียดเอกสาร</h3>
+                <h3 className={styles.modalTitle}>
+                  รายละเอียดเอกสาร {selected.stockout_no || "-"}
+                </h3>
                 <button
                   className={styles.closeIcon}
                   onClick={() => {
                     setSelected(null);
                     setDetails([]);
                   }}
+                  aria-label="ปิดหน้าต่างรายละเอียด"
                 >
                   <X size={20} />
                 </button>
               </div>
-              <div className={styles.detailGrid}>
-                <div>
-                  <b>เลขที่เอกสาร:</b> {selected.stockout_no || "-"}
-                </div>
-                <div>
-                  <b>ตัดออกโดย:</b> {selected.user_name}
-                </div>
-                <div>
-                  <b>ประเภท:</b> {typeMap[selected.stockout_type] || "อื่น ๆ"}
-                </div>
-                <div>
-                  <b>สร้างเมื่อ:</b>{" "}
-                  {selected.created_at
-                    ? new Date(selected.created_at).toLocaleDateString("th-TH")
-                    : "-"}
-                </div>
+              <div className={styles.detailContent}>
+                <p><b>เลขที่เอกสาร:</b> {selected.stockout_no || "-"}</p>
+                <p><b>ผู้ดำเนินการ:</b> {selected.user_name || "-"}</p>
+                <p><b>ประเภท:</b> {typeMap[selected.stockout_type] || "อื่น ๆ"}</p>
+                <p><b>สร้างเมื่อ:</b> {formatThaiDate(selected.created_at)}</p>
               </div>
 
-              <h4 style={{ marginTop: "1rem" }}>📦 รายการพัสดุ</h4>
+              <h4 className={styles.detailTableTitle}>รายการพัสดุ</h4>
               <div className={styles.popupTableWrapper}>
                 {/* Header */}
                 <div className={`${styles.popupTable} ${styles.popupTableHeader}`}>
@@ -290,14 +301,14 @@ export default function StockOutHistoryPage() {
                   <div>วันหมดอายุ</div>
                 </div>
 
-                {/* แถวข้อมูลจริง */}
+                {/* Rows */}
                 {details.length > 0 ? (
                   details.map((d) => (
                     <div key={d.stockout_detail_id} className={`${styles.popupTable} ${styles.popupTableRow}`}>
-                      <div>{d.item_name}</div>
-                      <div>{d.qty} {d.unit}</div>
+                      <div>{d.item_name || "-"}</div>
+                      <div>{d.qty || 0} {d.unit || ""}</div>
                       <div>{d.lot_no || "-"}</div>
-                      <div>{d.exp_date ? new Date(d.exp_date).toLocaleDateString("th-TH") : "-"}</div>
+                      <div>{formatThaiDate(d.exp_date)}</div>
                     </div>
                   ))
                 ) : (
@@ -306,7 +317,7 @@ export default function StockOutHistoryPage() {
                   </div>
                 )}
 
-                {/* ✅ เติมแถวเปล่า */}
+                {/* Empty Rows */}
                 {Array.from({ length: Math.max(0, 5 - details.length) }).map((_, i) => (
                   <div key={`empty-${i}`} className={`${styles.popupTable} ${styles.popupTableRow}`}>
                     <div>&nbsp;</div>
@@ -316,19 +327,20 @@ export default function StockOutHistoryPage() {
                   </div>
                 ))}
               </div>
-            <button
-              className={styles.closeBtn}
-              onClick={() => {
-                setSelected(null);
-                setDetails([]);
-              }}
-            >
-              ปิด
-            </button>
-          </div>
+              <button
+                className={styles.closeBtn}
+                onClick={() => {
+                  setSelected(null);
+                  setDetails([]);
+                }}
+                aria-label="ปิดหน้าต่างรายละเอียด"
+              >
+                ปิด
+              </button>
+            </div>
           </div>
         )}
+      </div>
     </div>
-    </div >
   );
 }
