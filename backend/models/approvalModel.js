@@ -186,7 +186,7 @@ exports.updateRequestOverallStatusByDetails = async (request_id, changed_by) => 
     try {
         await client.query('BEGIN');
 
-        // 1. ดึงสถานะปัจจุบันของคำขอหลักและ lock row
+        // ดึงสถานะปัจจุบัน
         const oldRequestStatusResult = await client.query(
             `SELECT request_status FROM requests WHERE request_id = $1 FOR UPDATE`,
             [request_id]
@@ -196,49 +196,40 @@ exports.updateRequestOverallStatusByDetails = async (request_id, changed_by) => 
         }
         const oldRequestStatus = oldRequestStatusResult.rows[0].request_status;
 
-        // 2. คำนวณสถานะใหม่จากรายการย่อย
-        const { total, approvedCount, rejectedCount, waitingCount } = await exports.calculateOverallApprovalStatus(request_id);
+        // คำนวณสถานะย่อย
+        const { total, approvedCount, rejectedCount } = await exports.calculateOverallApprovalStatus(request_id);
 
         let finalOverallStatus;
-        if (total === 0) {
-            finalOverallStatus = 'waiting_approval';
-        } else if (approvedCount === total) {
+        if (approvedCount === total) {
             finalOverallStatus = 'approved_all';
         } else if (rejectedCount === total) {
             finalOverallStatus = 'rejected_all';
-        } else if (approvedCount > 0 && rejectedCount > 0) {
-            finalOverallStatus = 'approved_partial_and_rejected_partial';
-        } else if (approvedCount > 0) {
-            finalOverallStatus = 'approved_partial';
-        } else if (rejectedCount > 0) {
-            finalOverallStatus = 'rejected_partial';
-        } else if (waitingCount > 0) {
-            finalOverallStatus = 'waiting_approval';
         } else {
-            finalOverallStatus = 'unknown_status';
+            // กรณีผสม (บางอนุมัติ บางปฏิเสธ) หรือยังไม่ครบ → ให้เป็น approved_partial
+            finalOverallStatus = 'approved_partial';
         }
 
-        // 3. อัปเดตสถานะคำขอหลัก หากมีการเปลี่ยนแปลง
+        // อัปเดตเฉพาะถ้าเปลี่ยนจริง
         let updateSuccess = false;
         if (oldRequestStatus !== finalOverallStatus) {
-            // อัปเดตสถานะคำขอหลัก
             const updateResult = await client.query(
                 `UPDATE requests 
-                    SET request_status = $1, 
-                    updated_at = NOW(), 
-                    updated_by = $2, 
-                    approved_by = $2,
-                    approved_at = NOW()
-                WHERE request_id = $3`,
+                 SET request_status = $1, 
+                     updated_at = NOW(), 
+                     updated_by = $2, 
+                     approved_by = $2, 
+                     approved_at = NOW()
+                 WHERE request_id = $3`,
                 [finalOverallStatus, changed_by, request_id]
-            ); uccess = updateSuccess = updateResult.rowCount > 0;
+            );
+            updateSuccess = updateResult.rowCount > 0;
 
-            // 4. บันทึกประวัติสถานะของคำขอหลักทันที
             if (updateSuccess) {
                 await client.query(
                     `INSERT INTO request_status_history
                      (request_id, changed_by, changed_at, old_value_type, old_value, new_value, note, history_type)
-                     VALUES ($1, $2, NOW(), 'request_status', $3, $4, 'อัปเดตสถานะคำขอรวมจากการอนุมัติ/ปฏิเสธรายการย่อย', 'approval_overall_status_change')`,
+                     VALUES ($1, $2, NOW(), 'request_status', $3, $4,
+                             'อัปเดตสถานะคำขอรวมจากการอนุมัติ/ปฏิเสธรายการย่อย', 'approval_overall_status_change')`,
                     [request_id, changed_by, oldRequestStatus, finalOverallStatus]
                 );
             }
@@ -256,6 +247,7 @@ exports.updateRequestOverallStatusByDetails = async (request_id, changed_by) => 
         client.release();
     }
 };
+
 
 // Export the functions for use in controllers
 module.exports = {

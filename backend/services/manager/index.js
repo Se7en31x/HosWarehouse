@@ -9,7 +9,7 @@ const { checkStockOutNotifications } = require('./checkStockOutNotifications'); 
 async function runManagerRules() {
     try {
         // await checkLowStock();
-        // await checkExpiredItems();
+        await checkExpiredItems();
         // await checkDamagedItems();
         // await checkNewRequests();
         // await checkReturnRequests();

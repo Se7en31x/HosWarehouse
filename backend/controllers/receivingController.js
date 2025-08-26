@@ -21,12 +21,16 @@ exports.handleGetAllItems = async (req, res) => {
 exports.handleFindItemByBarcode = async (req, res) => {
     try {
         const { barcode } = req.query; // ดึงค่า barcode จาก query string
+        console.log("📌 Raw barcode from query:", JSON.stringify(barcode));
 
         if (!barcode) {
             return res.status(400).json({ message: 'Barcode is required' });
         }
 
-        const item = await receivingModel.findItemByBarcode(barcode);
+        // 🔥 sanitize barcode ก่อน query
+        const cleanBarcode = barcode.trim();
+
+        const item = await receivingModel.findItemByBarcode(cleanBarcode);
 
         if (!item) {
             return res.status(404).json({ message: 'Item not found' });

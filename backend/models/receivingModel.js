@@ -54,9 +54,19 @@ exports.getAllItems = async () => {
             i.item_purchase_unit,
             i.item_category, 
             i.item_sub_category,
-            i.item_barcode
+            i.item_barcode,
+            i.item_min,
+            i.item_max,
+            COALESCE(SUM(l.qty_remaining),0) AS current_stock
         FROM items AS i
+        LEFT JOIN item_lots l 
+            ON i.item_id = l.item_id
+           AND (l.is_expired = false OR l.is_expired IS NULL)
+           AND (l.exp_date IS NULL OR l.exp_date >= CURRENT_DATE)
+           AND l.qty_remaining > 0
         WHERE i.is_deleted = false
+        GROUP BY i.item_id, i.item_name, i.item_unit, i.item_purchase_unit,
+                 i.item_category, i.item_sub_category, i.item_barcode, i.item_min, i.item_max
         ORDER BY i.item_name ASC;
     `;
     const result = await pool.query(query);
@@ -65,22 +75,27 @@ exports.getAllItems = async () => {
 
 // ===== Model Function: ค้นหาสินค้าด้วย Barcode =====
 exports.findItemByBarcode = async (barcode) => {
+    console.log("🔎 Barcode from scanner:", JSON.stringify(barcode));
+    const cleanBarcode = (barcode || "").trim(); // ตัดช่องว่าง, \r, \n ออก
+
     const query = `
         SELECT
             i.item_id,
             i.item_name,
             i.item_unit,
+            i.item_purchase_unit,
+            i.item_conversion_rate,
             i.item_category,
             i.item_sub_category,
             i.item_barcode
         FROM items AS i
         WHERE i.item_barcode = $1
-        AND i.is_deleted = false;
+          AND i.is_deleted = false
+        LIMIT 1;
     `;
-    const result = await pool.query(query, [barcode]);
-    return result.rows[0]; // คืนค่ารายการแรกที่พบ
+    const result = await pool.query(query, [cleanBarcode]);
+    return result.rows[0] || null;
 };
-
 // ===== Model Function: บันทึกการรับเข้าสินค้า =====
 exports.recordReceiving = async ({ user_id, receiving_note, stockin_type, source_name, receivingItems }) => {
     const client = await pool.connect();
