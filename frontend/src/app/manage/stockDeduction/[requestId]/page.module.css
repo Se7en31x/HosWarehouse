@@ -36,31 +36,51 @@
   background: #fff;
   overflow: hidden;
 }
+
 .tableGrid {
   display: grid;
   grid-template-columns: 60px 2fr 1fr 1fr 1fr 1.2fr 2fr;
   align-items: center;
   padding: 10px 14px;
 }
+
 .tableHeader {
   background: #eef9fc;
   font-weight: 700;
   color: #374151;
+  border-bottom: 1px solid #e5e7eb; /* เส้นใต้ส่วนหัว */
 }
+
+.tableBody {
+  max-height: 600px; /* จำกัดความสูงเพื่อให้เลื่อนได้ */
+  overflow-y: auto; /* เพิ่มการเลื่อนในแนวตั้ง */
+  -webkit-overflow-scrolling: touch; /* ปรับปรุงการเลื่อนในอุปกรณ์สัมผัส */
+}
+
 .tableRow {
-  border-top: 1px solid #e5e7eb;
+  /* ไม่กำหนด border-top ที่นี่ */
 }
-.tableRow:hover {
+
+.tableRow:not(.emptyRow) {
+  border-top: 1px solid #e5e7eb; /* เส้นแนวนอนเฉพาะแถวที่มีข้อมูล */
+}
+
+.tableRow:hover:not(.emptyRow) {
   background: #f9fbfd;
 }
-.emptyRow { height: 50px; background: #fafafa; }
 
-/* Inputs */
+.emptyRow {
+  height: 50px;
+  background: #ffffff;
+  /* ไม่มี border-top สำหรับแถวว่าง */
+}
+/* ส่วนที่เหลือเหมือนเดิม */
 .qtyInput, .reasonInput {
   border: 1px solid #cbd5e1;
   border-radius: 6px;
   padding: 5px 8px;
   font-size: 0.9rem;
+  width: 50px;
 }
 .qtyInput:focus, .reasonInput:focus {
   border-color: #3b82f6;

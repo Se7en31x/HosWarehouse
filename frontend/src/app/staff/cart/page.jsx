@@ -15,7 +15,7 @@ export default function Cart() {
   const [requestDate, setRequestDate] = useState(today);
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const userId = 1; // TODO: replace with logged-in user id
+  const userId = 2; // TODO: replace with logged-in user id
 
   const [minReturnDate, setMinReturnDate] = useState('');
   const [maxReturnDate, setMaxReturnDate] = useState('');
@@ -28,6 +28,23 @@ export default function Cart() {
     maxDate.setMonth(maxDate.getMonth() + 3);
     setMaxReturnDate(maxDate.toISOString().split('T')[0]);
   }, []);
+
+  const translateCategory = (category) => {
+    switch (category) {
+      case 'medicine':
+        return 'ยา';
+      case 'general':
+        return 'ของใช้ทั่วไป';
+      case 'meddevice':
+        return 'อุปกรณ์ทางการแพทย์';
+      case 'equipment':
+        return 'ครุภัณฑ์';
+      case 'medsup':
+        return 'เวชภัณฑ์';
+      default:
+        return category || '-';
+    }
+  };
 
   const handleUrgentChange = (e) => setUrgent(e.target.checked);
 
@@ -238,7 +255,7 @@ export default function Cart() {
               <div className={styles.headerItem}>หมวดหมู่</div>
               <div className={styles.headerItem}>ประเภท</div>
               <div className={styles.headerItem}>วันที่คืน</div>
-              <div className={styles.headerItem}>การจัดการ</div>
+              <div className={styles.headerItem}>การดำเนินการ</div>
             </div>
 
             <div className={styles.inventory} style={{ '--rows-per-page': 10 }}>
@@ -269,7 +286,7 @@ export default function Cart() {
                       />
                     </div>
                     <div className={styles.tableCell}>{item.unit || '-'}</div>
-                    <div className={styles.tableCell}>{item.type || '-'}</div>
+                    <div className={styles.tableCell}>{translateCategory(item.type)}</div>
                     <div className={styles.tableCell}>
                       {item.action === 'borrow' ? 'ยืม' : item.action === 'withdraw' ? 'เบิก' : 'คืน'}
                     </div>

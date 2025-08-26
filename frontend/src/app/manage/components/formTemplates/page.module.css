@@ -1,187 +1,335 @@
-/* ================================================================= */
-/* Layout & Global Styles (สำหรับหน้า additem หลัก) */
-/* ================================================================= */
-.pageLayout {
-  max-width: 1200px;                /* ↑ ขยายความกว้างตามภาพ */
-  margin: 40px auto;
-  padding: 0;
-  font-family: 'Prompt', sans-serif;
-  color: #343a40;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+Thai:wght@400;500;600;700&display=swap');
+
+/* ---- Variables (aligned with RequestDetailClient, EditItem, AddItem, etc.) ---- */
+:root {
+  --bg: #f0fbfe;
+  --panel: #ffffff;
+  --muted: #6b7280;
+  --text: #111827;
+  --border: #e5e7eb;
+  --primary: #008dda;
+  --primary-500: #41c9e2;
+  --primary-600: #1685bb;
+  --tint-50: #f0fbfe;
+  --tint-100: #e9f6fb;
+  --tint-200: #ace2e1;
+  --radius: 10px;
+  --z-swal: 10000;
 }
 
-.header { text-align: center; margin-bottom: 40px; }
+/* ---- Form Container ---- */
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
 
-.title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #007bff;
-  padding-bottom: 15px;
+/* ---- Storage and Image Container ---- */
+.storageImageContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.storageImageContainer .section {
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
+  padding: 16px;
+  background: var(--panel);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* ---- Section ---- */
+.section {
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
+  padding: 16px;
+  background: var(--panel);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+/* ---- Legend ---- */
+.legend {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #374151;
+  padding: 0 8px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend::before {
+  content: '📋';
+  font-size: 1.1rem;
+}
+
+/* ---- Grid ---- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+/* ---- Field ---- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.input,
+.textarea {
+  padding: 8px 12px;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: 'Inter', 'Noto Serif Thai', sans-serif;
+  background: var(--panel);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 2px rgba(65, 201, 226, 0.2);
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: #9ca3af;
+}
+
+.textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* ---- Checkbox ---- */
+.checkboxGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkboxLabel {
+  font-size: 0.95rem;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+}
+
+/* ---- File Input ---- */
+.fileInputWrapper {
+  position: relative;
   display: inline-block;
 }
 
-.mainContent {
-  background-color: #f8f9fa;
-  padding: 30px;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-}
-
-/* ================================================================= */
-/* Form Styles (สำหรับ BasicForm และฟอร์มย่อย) */
-/* ================================================================= */
-
-/* ► กริดหลัก 2 คอลัมน์ (ซ้าย/ขวา) */
-.formGrid {
-  display: grid;
-  grid-template-columns: 1fr;          /* มือถือ: 1 คอลัมน์ */
-  gap: 30px;
-}
-@media (min-width: 992px) {
-  .formGrid { grid-template-columns: 1fr 1fr; } /* เดสก์ท็อป: 2 คอลัมน์ */
-}
-
-.col { display: flex; flex-direction: column; gap: 30px; }
-
-/* ใช้กับบล็อกที่ต้องการกินเต็มความกว้าง (เช่น ฟอร์มเฉพาะหมวด) */
-.fullWidth { grid-column: 1 / -1; }
-
-/* เอาขอบออกหมด */
-.section { border: none; padding: 0; margin-bottom: 20px; }
-
-/* หัวข้อส่วน (legend) */
-.legend {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: #495057;
-  margin-bottom: 25px;
-  position: relative;
-  display: block;
-}
-.legend::after {
-  content: '';
+.fileInput {
+  opacity: 0;
   position: absolute;
-  bottom: -10px;
-  left: 0;
-  width: 50px;
-  height: 2px;
-  background-color: #ced4da;
-}
-
-/* กริดภายในแต่ละ section */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
-}
-
-.field { display: flex; flex-direction: column; }
-
-.field label {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #495057;
-  margin-bottom: 8px;
-}
-
-.field input,
-.field select {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 1rem;
-  color: #495057;
-  transition: all 0.3s ease;
-  background-color: #f8f9fa;
-}
-
-.field input:focus,
-.field select:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: none;
-}
-
-/* ================================================================= */
-/* Image Upload Styles */
-/* ================================================================= */
-
-.field input[type="file"] { padding: 12px 0; }
-
-/* อัปโหลด (ซ้าย) + พรีวิว (ขวา) */
-.imageField {
-  display: grid;
-  grid-template-columns: 1fr 250px;   /* ซ้ายยืด / ขวาคงที่ */
-  align-items: end;
-  gap: 16px;
-}
-@media (max-width: 768px) {
-  .imageField { grid-template-columns: 1fr; }
-}
-
-.imagePreview {
-  width: 250px;
-  height: 200px;
-  margin-top: 15px;
-  border: 1px solid #ced4da;
-  border-radius: 8px;
-  background-color: #e9ecef;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.imagePreview img {
   width: 100%;
   height: 100%;
-  object-fit: contain; /* รักษาสัดส่วนรูป */
+  cursor: pointer;
 }
 
-.imagePreviewPlaceholder {
+.fileInputLabel {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  background: var(--panel);
+  font-size: 0.95rem;
+  color: #374151;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.fileInputLabel:hover {
+  background: var(--tint-100);
+}
+
+/* ---- Image Upload ---- */
+.uploadBox {
+  border: 2px dashed var(--tint-200);
+  border-radius: var(--radius);
+  background: var(--tint-50);
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.uploadBox:hover,
+.uploadBox.dragActive {
+  border-color: var(--primary-500);
+  background: var(--tint-100);
+  box-shadow: 0 6px 16px rgba(0, 141, 218, 0.1);
+}
+
+.uploadBox.dragActive::before {
+  content: 'วางรูปภาพที่นี่';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--primary);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 8px 16px;
+  border-radius: 6px;
+}
+
+.uploadIcon {
+  color: var(--primary);
+  margin-bottom: 12px;
+  transition: transform 0.3s ease;
+}
+
+.uploadBox:hover .uploadIcon,
+.uploadBox.dragActive .uploadIcon {
+  transform: scale(1.2);
+}
+
+.uploadText {
+  font-size: 0.95rem;
+  color: #374151;
+  margin: 0;
+}
+
+.chooseBtn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-right: 8px;
+}
+
+.chooseBtn:hover {
+  background: var(--primary-600);
+}
+
+/* ---- Image Preview ---- */
+.previewWrapper {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.previewContainer {
+  position: relative;
+  display: inline-block;
+}
+
+.previewImage {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 8px;
+  border: 1px solid var(--tint-200);
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.removeBtn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  color: #adb5bd;
-  font-size: 0.9rem;
-  text-align: center;
-}
-.imagePreviewPlaceholder svg { margin-bottom: 10px; }
-
-/* ================================================================= */
-/* Action Buttons */
-/* ================================================================= */
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-top: 40px;
-}
-
-.actions button {
-  padding: 12px 24px;
-  font-size: 1rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.2s ease;
 }
 
-.cancel { background-color: #e9ecef; color: #495057; }
-.cancel:hover { background-color: #ced4da; }
+.removeBtn:hover {
+  background: #dc2626;
+}
 
-.save { background-color: #28a745; color: #fff; }
-.save:hover { background-color: #218838; }
+/* ---- Help Text ---- */
+.helpText {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 8px;
+  display: block;
+}
 
-/* ================================================================= */
-/* Responsive Design */
-/* ================================================================= */
+/* ---- Responsive ---- */
 @media (max-width: 768px) {
-  .pageLayout { margin: 20px; }
-  .mainContent { padding: 20px; }
-  .title { font-size: 2rem; }
-  .grid { grid-template-columns: 1fr; gap: 15px; }
-  .actions { flex-direction: column; align-items: stretch; gap: 10px; }
-  .imagePreview { width: 100%; height: 220px; } /* ให้พอดีหน้าจอเล็ก */
+  .storageImageContainer {
+    grid-template-columns: 1fr;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .previewImage {
+    max-width: 150px;
+    max-height: 150px;
+  }
+}
+
+@media (max-width: 640px) {
+  .section {
+    padding: 12px;
+  }
+
+  .legend {
+    font-size: 1rem;
+  }
+
+  .input,
+  .textarea {
+    font-size: 0.9rem;
+    padding: 6px 10px;
+  }
+
+  .chooseBtn {
+    font-size: 0.85rem;
+    padding: 6px 12px;
+  }
+
+  .previewImage {
+    max-width: 120px;
+    max-height: 120px;
+  }
+
+  .uploadBox {
+    padding: 16px;
+  }
 }

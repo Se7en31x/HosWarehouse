@@ -271,7 +271,7 @@ export default function ImportHistory() {
               className={`${styles.ghostBtn} ${styles.clearButton}`}
               onClick={clearFilters}
             >
-              <Trash2 size={16} /> ล้าง
+              <Trash2 size={16} /> ล้างตัวกรอง
             </button>
           </div>
         </div>

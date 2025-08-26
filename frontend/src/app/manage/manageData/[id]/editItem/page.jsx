@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import styles from './page.module.css';
 import BasicForm from '@/app/manage/components/formTemplates/BasicForm';
 import axiosInstance from '@/app/utils/axiosInstance';
+
 export default function EditItem() {
     const { id } = useParams();
     const router = useRouter();
@@ -25,7 +26,6 @@ export default function EditItem() {
         item_purchase_unit: '',
         item_conversion_rate: '',
         is_borrowable: false,
-        
         // medicine
         med_generic_name: '',
         med_thai_name: '',
@@ -43,20 +43,17 @@ export default function EditItem() {
         med_pregnancy_category: '',
         med_dose_dialogue: '',
         med_replacement: '',
-        
         // medsup
         medsup_category: '',
         medsup_brand: '',
         medsup_serial_no: '',
         medsup_status: '',
         medsup_price: '',
-        
         // equipment
         equip_brand: '',
         equip_model: '',
         equip_maintenance_cycle: '',
         equip_note: '',
-        
         // meddevice
         meddevice_type: '',
         meddevice_brand: '',
@@ -65,19 +62,17 @@ export default function EditItem() {
         meddevice_status: '',
         meddevice_price: '',
         meddevice_note: '',
-        
         // general
         gen_brand: '',
         gen_model: '',
         gen_spec: '',
         gen_price: '',
     };
-    
+
     const [form, setForm] = useState(initialFormState);
-    
+
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        
         setForm(prevForm => ({
             ...prevForm,
             [name]: type === 'checkbox' ? checked : (type === "number" && value === '' ? null : value)
@@ -94,23 +89,18 @@ export default function EditItem() {
             }));
         }
     };
-    
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
         const formData = new FormData();
-        
         for (const key in form) {
             if (key === 'imagePreview') {
                 continue;
             }
-            
             const value = form[key];
-            
             if (value === undefined || value === null || value === '') {
                 if (key !== 'item_img' && value === '') continue;
             }
-
             if (key === 'is_borrowable') {
                 formData.append(key, value);
             }
@@ -121,50 +111,49 @@ export default function EditItem() {
                 formData.append(key, value);
             }
         }
-        
         try {
             await axiosInstance.put(`/manageData/${id}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
-            
             Swal.fire({
                 icon: 'success',
                 title: 'บันทึกสำเร็จ',
                 showConfirmButton: false,
                 timer: 1500,
+                customClass: {
+                    popup: styles.swalPopup,
+                },
             });
-            
             setTimeout(() => {
                 router.push('/manage/manageData');
             }, 1600);
-            
         } catch (error) {
             console.error(error);
-            
             Swal.fire({
                 icon: 'error',
                 title: 'บันทึกไม่สำเร็จ',
                 text: 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล',
-                confirmButtonText: 'ตกลง'
+                confirmButtonText: 'ตกลง',
+                customClass: {
+                    popup: styles.swalPopup,
+                    confirmButton: styles.swalButton,
+                },
             });
         }
     };
-    
+
     useEffect(() => {
         if (!id) return;
-        
         axiosInstance.get(`/manageData/${id}`)
             .then((res) => {
                 const fetchedData = res.data;
                 console.log('✅ fetchedData:', res.data);
-                
                 const cleanedData = {};
                 for (const key in initialFormState) {
                     if (fetchedData.hasOwnProperty(key)) {
                         cleanedData[key] = fetchedData[key];
                     }
                 }
-                
                 setForm({
                     ...initialFormState,
                     ...cleanedData,
@@ -174,31 +163,54 @@ export default function EditItem() {
             })
             .catch((error) => {
                 console.error('Error fetching item data:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'โหลดข้อมูลไม่สำเร็จ',
+                    text: 'เกิดข้อผิดพลาดในการดึงข้อมูลรายการ',
+                    confirmButtonText: 'ตกลง',
+                    customClass: {
+                        popup: styles.swalPopup,
+                        confirmButton: styles.swalButton,
+                    },
+                });
             });
     }, [id]);
-    
+
     return (
-        <div className={styles.container}>
-            <h1 className={styles.title}>แก้ไขรายการ</h1>
-            <form onSubmit={handleSubmit} className={styles.form}>
-                <BasicForm
-                    form={form}
-                    handleChange={handleChange}
-                    handleImageChange={handleImageChange}
-                />
-                <div className={styles.actions}>
-                    <button
-                        type="button"
-                        className={styles.cancel}
-                        onClick={() => router.push('/manage/manageData')}
-                    >
-                        ยกเลิก
-                    </button>
-                    <button type="submit" className={styles.save}>
-                        บันทึก
-                    </button>
+        <div className={styles.mainHome}>
+            <div className={styles.infoContainer}>
+                <div className={styles.pageBar}>
+                    <h1 className={styles.pageTitle}>
+                        <span aria-hidden="true">✏️</span> แก้ไขรายการ #{id}
+                    </h1>
                 </div>
-            </form>
+                <div className={styles.card}>
+                    <form onSubmit={handleSubmit} className={styles.form}>
+                        <BasicForm
+                            form={form}
+                            handleChange={handleChange}
+                            handleImageChange={handleImageChange}
+                        />
+                        <div className={styles.actionButtonContainer}>
+                            <button
+                                type="button"
+                                className={styles.cancelButton}
+                                onClick={() => router.push('/manage/manageData')}
+                                aria-label="ยกเลิกการแก้ไขและกลับไปหน้ารายการ"
+                            >
+                                ยกเลิก
+                            </button>
+                            <button
+                                type="submit"
+                                className={styles.saveButton}
+                                aria-label="บันทึกการแก้ไขรายการ"
+                            >
+                                บันทึก
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     );
 }

@@ -1,284 +1,191 @@
-/* =========================================
-   Palette & Base
-========================================= */
-:root{
-  --bg: #f8fafc;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ---- Variables (aligned with RequestDetailClient, EditItem, StockOutHistoryPage, etc.) ---- */
+:root {
+  --bg: #f0fbfe;
   --panel: #ffffff;
-  --text: #111827;
   --muted: #6b7280;
+  --text: #111827;
   --border: #e5e7eb;
-
-  --primary: #1e40af;  /* navy */
-  --primary-500: #2563eb; /* blue */
-  --success: #16a34a;
-  --danger: #ef4444;
+  --primary: #008dda;
+  --primary-500: #41c9e2;
+  --primary-600: #1685bb;
+  --tint-50: #f0fbfe;
+  --tint-100: #e9f6fb;
+  --tint-200: #ace2e1;
+  --radius: 10px;
+  --z-swal: 10000;
 }
 
-.pageLayout {
-  font-family: 'Sarabun', sans-serif;
-  background-color: #ffffff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+/* ---- Layout ---- */
+.mainHome {
   min-height: 100vh;
-}
-
-.header {
-  width: 100%;
-  padding: 12px 0;
-  background: linear-gradient(90deg, #122c9c, #1e40af);
-  box-shadow: 0 6px 18px rgba(0,0,0,.06);
-}
-
-.title {
-  max-width: 1200px;
-  margin: 0 auto;
-  font-size: 2rem;
-  font-weight: 600;
-  color: #f3f3f3;
-  text-align: center;
-  letter-spacing: .2px;
-}
-
-.mainContent {
-  width: 100%;
-  max-width: 1200px;
-  margin: 1.25rem auto;
-  padding: 0 10px;
-}
-
-/* =========================================
-   Card Container
-========================================= */
-.formCard {
-  background-color: var(--panel);
-  border: 1px solid #eef2f7;
-  border-radius: 14px;
-  box-shadow: 0 12px 32px rgba(2,6,23,.06);
-  padding: 2rem;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
   display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-/* =========================================
-   Main Grid (2 Columns)
-   - รองรับทั้งชื่อเก่า/ใหม่ กันพังจากโค้ดเดิม
-========================================= */
-.formGrid,
-.mainFormGrid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2rem;
-}
-@media (min-width: 992px) {
-  .formGrid,
-  .mainFormGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.col,
-.mainColumn {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-.categoryFormSection { margin-top: 2rem; }
-
-/* =========================================
-   Section
-========================================= */
-.section {
-  border: none;
-  border-bottom: 1px solid #eef2f7;
-  padding: 0 0 1.5rem;
-}
-.section:last-of-type {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-/* หัวข้อ section ให้คมชัดขึ้น */
-.legend {
-  display: inline-flex;
   align-items: center;
-  gap: .6rem;
-  padding-left: .75rem;
-  margin-bottom: 1.1rem;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #1f2937;
-  position: relative;
-}
-.legend::before{
-  content:'';
-  position:absolute;
-  left:0;
-  top: 4px;
-  bottom: 4px;
-  width: 4px;
-  border-radius: 2px;
-  background: linear-gradient(180deg, var(--primary), var(--primary-500));
+  justify-content: center;
+  background: var(--bg);
 }
 
-/* =========================================
-   Fields Grid
-========================================= */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.1rem;
-}
-
-.field {
+.infoContainer {
+  width: 100%;
+  max-width: 1200px;
+  min-height: 100vh;
+  background: var(--panel);
+  color: var(--text);
+  border-radius: 0;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: .4rem;
+  gap: 14px;
+  flex: 1 1 auto;
+  align-self: stretch;
 }
 
-.field label {
-  font-size: .95rem;
-  font-weight: 600;
-  color: #334155;
+/* ---- Header ---- */
+.pageBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.field input,
-.field select,
-.field textarea {
-  width: 100%;
-  padding: .8rem .9rem;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  font-size: 1rem;
-  color: var(--text);
-  background-color: #f9fafb;
-  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+.pageTitle {
+  font-weight: 700;
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.field input::placeholder,
-.field textarea::placeholder{ color:#94a3b8; }
-
-.field input:focus,
-.field select:focus,
-.field textarea:focus {
-  outline: none;
-  border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, .18);
-  background-color: #fff;
+/* ---- Card ---- */
+.card {
+  background: #fff;
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-/* ปุ่มเลือกไฟล์ให้ดูสะอาด */
-.field input[type="file"] {
-  padding: .6rem .7rem;
-  background-color: #f3f4f6;
-  cursor: pointer;
-}
-.field input[type="file"]::-webkit-file-upload-button {
-  background-color: #e5e7eb;
-  color: #374151;
-  border: none;
-  padding: .5rem .9rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: filter .2s;
-}
-.field input[type="file"]::-webkit-file-upload-button:hover {
-  filter: brightness(0.98);
-}
-
-/* =========================================
-   Image Upload (input ซ้าย / preview ขวา)
-========================================= */
-.imageField{
+/* ---- Form ---- */
+.form {
   display: grid;
-  grid-template-columns: 1fr 260px; /* ซ้ายยืด / ขวาคงที่ */
-  align-items: end;
   gap: 16px;
 }
 
-.imagePreview {
-  width: 260px;
-  height: 200px;
-  margin-top: 6px;
-  border: 1px dashed #cbd5e1;
-  border-radius: 12px;
-  background: repeating-linear-gradient(
-    45deg,
-    #f8fafc,
-    #f8fafc 10px,
-    #f1f5f9 10px,
-    #f1f5f9 20px
-  );
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.imagePreview img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  background: #fff;
-}
-
-/* Placeholder ตอนยังไม่มีรูป */
-.imagePreviewPlaceholder {
-  flex-direction: column;
-  color: #94a3b8;
-  font-size: .92rem;
-  gap: .4rem;
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.fileInput { padding: .5rem; background: #e9ecef; border: 1px solid #ced4da; border-radius: 8px; }
-.fileNote { color:#6b7280; font-size: .9rem; }
-
-/* =========================================
-   Actions
-========================================= */
-.actions {
+/* ---- Action Buttons ---- */
+.actionButtonContainer {
   display: flex;
   justify-content: flex-end;
-  gap: .8rem;
-  margin-top: .75rem;
+  gap: 12px;
+  margin-top: 16px;
 }
 
-.actions button {
-  padding: .8rem 1.2rem;
-  font-size: .98rem;
-  font-weight: 700;
-  border: 1px solid transparent;
-  border-radius: 10px;
+.cancelButton,
+.saveButton {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: transform .05s ease, box-shadow .2s ease, background-color .2s ease;
+  transition: background-color 0.2s ease, transform 0.15s ease;
 }
 
-.cancel {
-  background-color: #eef2f7;
+.cancelButton {
+  background: #fff;
   color: #374151;
+  border: 1px solid var(--tint-200);
 }
-.cancel:hover { background-color: #e5e9f0; }
-.cancel:active { transform: translateY(1px); }
 
-.save {
-  background: linear-gradient(180deg, #22c55e, #16a34a);
+.cancelButton:hover {
+  background: var(--tint-100);
+  transform: translateY(-1px);
+}
+
+.cancelButton:active {
+  transform: translateY(0);
+}
+
+.saveButton {
+  background: var(--primary);
   color: #fff;
-  box-shadow: 0 8px 18px rgba(34,197,94,.22);
+  border: none;
 }
-.save:hover { filter: brightness(1.02); }
-.save:active { transform: translateY(1px); }
 
-/* =========================================
-   Responsive
-========================================= */
+.saveButton:hover:not(:disabled) {
+  background: var(--primary-600);
+  transform: translateY(-1px);
+}
+
+.saveButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.saveButton:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+}
+
+/* ---- SweetAlert2 Custom Styles ---- */
+.swalPopup {
+  border-radius: var(--radius);
+  font-family: 'Inter', sans-serif;
+}
+
+.swalButton {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.swalButton:hover {
+  background: var(--primary-600);
+}
+
+.swalCancelButton {
+  background: #fff;
+  color: #374151;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.swalCancelButton:hover {
+  background: var(--tint-100);
+}
+
+/* ---- Responsive ---- */
 @media (max-width: 768px) {
-  .title { font-size: 1.6rem; }
-  .formCard { padding: 1.25rem; }
-  .grid { grid-template-columns: 1fr; gap: .9rem; }
-  .imageField { grid-template-columns: 1fr; }
-  .imagePreview { width: 100%; height: 220px; }
+  .infoContainer {
+    padding: 16px;
+  }
+
+  .pageTitle {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .infoContainer {
+    padding: 12px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .actionButtonContainer {
+    flex-direction: column;
+  }
+
+  .cancelButton,
+  .saveButton {
+    width: 100%;
+  }
 }

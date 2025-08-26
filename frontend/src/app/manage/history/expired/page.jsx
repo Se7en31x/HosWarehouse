@@ -187,7 +187,7 @@ export default function ExpiredHistoryPage() {
               onClick={clearFilters}
               aria-label="ล้างตัวกรองทั้งหมด"
             >
-              <Trash2 size={16} /> ล้าง
+              <Trash2 size={16} /> ล้างตัวกรอง
             </button>
           </div>
         </div>

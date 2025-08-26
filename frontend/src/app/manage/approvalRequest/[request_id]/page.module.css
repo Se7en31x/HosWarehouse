@@ -133,6 +133,9 @@
   /* ✅ ซ่อน scrollbar */
   scrollbar-width: none;
   -ms-overflow-style: none;
+
+  max-height: 600px; /* ✅ สูงสุด 600px */
+  
 }
 
 .tableContainer::-webkit-scrollbar {

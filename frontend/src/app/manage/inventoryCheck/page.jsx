@@ -4,7 +4,7 @@ import styles from "./page.module.css";
 import { connectSocket, disconnectSocket } from "../../utils/socket";
 import axiosInstance from "../../utils/axiosInstance";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Trash2, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trash2, Search, Weight } from "lucide-react";
 import { toast } from "react-toastify";
 
 import dynamic from "next/dynamic";
@@ -36,6 +36,7 @@ const customSelectStyles = {
     borderColor: state.isFocused ? "#2563eb" : "#e5e7eb",
     boxShadow: "none",
     "&:hover": { borderColor: "#2563eb" },
+    width: "250px",
   }),
   menu: (base) => ({
     ...base,
@@ -51,8 +52,10 @@ const customSelectStyles = {
     backgroundColor: state.isFocused ? "#f1f5ff" : "#fff",
     color: "#111827",
     padding: "8px 12px",
+    textAlign: "left", // ✅ บังคับ option ให้ชิดซ้าย
   }),
   placeholder: (base) => ({ ...base, color: "#9ca3af" }),
+  singleValue: (base) => ({ ...base, textAlign: "left" }), // ✅ ค่าที่เลือกแล้วชิดซ้าย
   clearIndicator: (base) => ({ ...base, padding: 6 }),
   dropdownIndicator: (base) => ({ ...base, padding: 6 }),
 };

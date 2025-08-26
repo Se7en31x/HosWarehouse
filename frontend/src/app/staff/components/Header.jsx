@@ -28,9 +28,15 @@ export default function Header() {
             <span className={styles.badge}>{unreadCount}</span>
           )}
         </div>
-
+          
         {/* 👤 User */}
-        <FaUserCircle className={styles.icon} size={32} />
+        <div className={styles.profileWrapper}>
+          <div className={styles.profileText}>
+            <span className={styles.profileName}>พิมใจ ตั้งมั่น</span>
+            <span className={styles.profileRole}>ผู้ดูแลระบบ</span>
+          </div>
+          <FaUserCircle className={styles.profileIcon} size={32} />
+        </div>
       </div>
     </header>
   );

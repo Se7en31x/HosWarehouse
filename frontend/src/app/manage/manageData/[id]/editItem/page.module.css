@@ -1,91 +1,177 @@
-.container {
-    width: 100%;
-    padding: 28px;
-    background-color: #fff;
-    border-radius: 16px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    min-height: 100vh; /* ความสูงขั้นต่ำเท่ากับ viewport */
-  }
-  
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-.title {
-  font-size: 28px;
-  font-weight: bold;
-  margin-bottom: 24px;
-  text-align: center;
-  color: #0070f3;
+/* ---- Variables (aligned with RequestDetailClient, StockOutHistoryPage, etc.) ---- */
+:root {
+  --bg: #f0fbfe;
+  --panel: #ffffff;
+  --muted: #6b7280;
+  --text: #111827;
+  --border: #e5e7eb;
+  --primary: #008dda;
+  --primary-500: #41c9e2;
+  --primary-600: #1685bb;
+  --tint-50: #f0fbfe;
+  --tint-100: #e9f6fb;
+  --tint-200: #ace2e1;
+  --radius: 10px;
+  --z-swal: 10000;
 }
 
-.form {
+/* ---- Layout ---- */
+.mainHome {
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
   display: flex;
-  flex-direction: column;
-  gap: 32px;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
 }
 
-.section {
-  border: 1px solid #ddd;
+.infoContainer {
+  width: 100%;
+  max-width: 1200px;
+  min-height: 100vh;
+  background: var(--panel);
+  color: var(--text);
+  border-radius: 0;
   padding: 24px;
-  border-radius: 12px;
-  background-color: #fafafa;
-}
-
-.section legend {
-  font-size: 18px;
-  font-weight: 600;
-  color: #0070f3;
-  padding: 0 10px;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 20px;
-}
-
-.field {
   display: flex;
   flex-direction: column;
+  gap: 14px;
+  flex: 1 1 auto;
+  align-self: stretch;
 }
 
-.field label {
-  font-weight: 500;
-  margin-bottom: 6px;
-  color: #333;
+/* ---- Header ---- */
+.pageBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.field input {
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-size: 16px;
+.pageTitle {
+  font-weight: 700;
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.actions {
+/* ---- Card ---- */
+.card {
+  background: #fff;
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* ---- Form ---- */
+.form {
+  display: grid;
+  gap: 16px;
+}
+
+/* ---- Action Buttons ---- */
+.actionButtonContainer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+  margin-top: 16px;
 }
 
-.actions button {
-  padding: 10px 20px;
+.cancelButton,
+.saveButton {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.cancelButton {
+  background: #fff;
+  color: #374151;
+  border: 1px solid var(--tint-200);
+}
+
+.cancelButton:hover {
+  background: var(--tint-100);
+  transform: translateY(-1px);
+}
+
+.cancelButton:active {
+  transform: translateY(0);
+}
+
+.saveButton {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+}
+
+.saveButton:hover:not(:disabled) {
+  background: var(--primary-600);
+  transform: translateY(-1px);
+}
+
+.saveButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.saveButton:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+}
+
+/* ---- SweetAlert2 Custom Styles ---- */
+.swalPopup {
+  border-radius: var(--radius);
+  font-family: 'Inter', sans-serif;
+}
+
+.swalButton {
+  background: var(--primary);
+  color: #fff;
   border: none;
   border-radius: 8px;
-  font-weight: 600;
-  font-size: 16px;
-  cursor: pointer;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
-.cancel {
-  background-color: #ccc;
-  color: #333;
+.swalButton:hover {
+  background: var(--primary-600);
 }
 
-.edit {
-  background-color: #f5a623;
-  color: #fff;
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .infoContainer {
+    padding: 16px;
+  }
+
+  .pageTitle {
+    font-size: 1.5rem;
+  }
 }
 
-.save {
-  background-color: #0070f3;
-  color: white;
+@media (max-width: 640px) {
+  .infoContainer {
+    padding: 12px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .actionButtonContainer {
+    flex-direction: column;
+  }
+
+  .cancelButton,
+  .saveButton {
+    width: 100%;
+  }
 }

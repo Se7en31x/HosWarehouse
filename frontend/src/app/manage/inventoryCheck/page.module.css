@@ -111,11 +111,10 @@
 
 /* ใช้โครงเดียวกับ InventoryWithdraw */
 .filterGrid {
-  position: relative;
+   position: relative;
   z-index: var(--z-toolbar);
   display: grid;
-  grid-template-columns: repeat(3, minmax(180px, 1fr));
-  /* category, unit, search */
+  grid-template-columns: auto auto 1fr;  /* ✅ 2 ช่องแรกกว้างตามเนื้อหา ชิดซ้าย */
   gap: 12px;
   flex: 1;
 }

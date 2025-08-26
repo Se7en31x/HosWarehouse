@@ -6,7 +6,7 @@ import Swal from 'sweetalert2';
 import axiosInstance from '@/app/utils/axiosInstance';
 import styles from './page.module.css';
 
-// Map สถานะ
+// Map สถานะและประเภท (เหมือนเดิม)
 const statusMap = {
   approved_all: { text: 'อนุมัติทั้งหมด', class: styles.stApproved },
   approved_partial: { text: 'อนุมัติบางส่วน', class: styles.stPartial },
@@ -14,7 +14,6 @@ const statusMap = {
   completed: { text: 'เสร็จสิ้น', class: styles.stCompleted },
 };
 
-// Map ประเภทคำขอ
 const typeMap = {
   borrow: 'ยืม',
   withdraw: 'เบิก',
@@ -32,7 +31,7 @@ export default function SingleStockDeductionPage() {
   const [deductionSuccess, setDeductionSuccess] = useState(false);
   const [itemQuantities, setItemQuantities] = useState({});
 
-  // โหลดข้อมูล
+  // โหลดข้อมูล (เหมือนเดิม)
   useEffect(() => {
     if (!requestId) return;
     const fetchData = async () => {
@@ -45,7 +44,7 @@ export default function SingleStockDeductionPage() {
 
         const initial = {};
         pendingItems.forEach(i => {
-          initial[i.item_id] = { actual_deducted_qty: i.approved_qty, deduction_reason: '' };
+          initial[i.item_id] = { actual_deducted_qty: '', deduction_reason: '' }; // เริ่มต้นเป็นค่าว่าง
         });
         setItemQuantities(initial);
       } catch (err) {
@@ -59,36 +58,45 @@ export default function SingleStockDeductionPage() {
 
   // จัดการจำนวน
   const handleQtyChange = (id, val) => {
-    const qty = parseInt(val, 10);
     setItemQuantities(prev => ({
       ...prev,
-      [id]: { ...prev[id], actual_deducted_qty: isNaN(qty) ? 0 : Math.max(0, qty) },
+      [id]: {
+        ...prev[id],
+        actual_deducted_qty: val === '' ? '' : Math.max(0, parseInt(val, 10) || 0), // อนุญาตค่าว่าง
+      },
     }));
   };
+
   const handleReasonChange = (id, val) => {
     setItemQuantities(prev => ({ ...prev, [id]: { ...prev[id], deduction_reason: val } }));
   };
 
-  // เบิกสต็อก
+  // เบิกสต็อก (ปรับการตรวจสอบเล็กน้อย)
   const handleDeduct = async () => {
     if (!requestDetail || isProcessing) return;
     const itemsToProcess = requestDetail.details
       .map(it => {
-        const qty = itemQuantities[it.item_id]?.actual_deducted_qty || 0;
+        const qty = itemQuantities[it.item_id]?.actual_deducted_qty;
         const reason = itemQuantities[it.item_id]?.deduction_reason || '';
-        if (qty > it.approved_qty) return null;
-        if (qty > it.current_stock_qty) return null;
-        if (qty < it.approved_qty && !reason.trim()) return null;
+        // ตรวจสอบกรณีค่าว่าง
+        if (qty === '' || qty === undefined) return null;
+        const parsedQty = parseInt(qty, 10);
+        if (parsedQty > it.approved_qty) return null;
+        if (parsedQty > it.current_stock_qty) return null;
+        if (parsedQty < it.approved_qty && !reason.trim()) return null;
         return {
           request_detail_id: it.request_detail_id,
           item_id: it.item_id,
-          actual_deducted_qty: qty,
+          actual_deducted_qty: parsedQty,
           deduction_reason: reason,
         };
       })
       .filter(Boolean);
 
-    if (itemsToProcess.length !== requestDetail.details.length) return;
+    if (itemsToProcess.length !== requestDetail.details.length) {
+      Swal.fire('ผิดพลาด', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง', 'error');
+      return;
+    }
 
     const confirm = await Swal.fire({
       title: 'ยืนยันการเบิก-จ่าย?',
@@ -157,10 +165,15 @@ export default function SingleStockDeductionPage() {
           <div>เหตุผล</div>
         </div>
         <div className={styles.tableBody}>
-          {Array.from({ length: Math.max(8, requestDetail.details.length) }).map((_, idx) => {
+          {Array.from({ length: 10 }).map((_, idx) => {
             const it = requestDetail.details[idx];
             if (!it) {
-              return <div key={`empty-${idx}`} className={`${styles.tableGrid} ${styles.tableRow} ${styles.emptyRow}`} />;
+              return (
+                <div
+                  key={`empty-${idx}`}
+                  className={`${styles.tableGrid} ${styles.tableRow} ${styles.emptyRow}`}
+                />
+              );
             }
             return (
               <div key={it.item_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
@@ -176,7 +189,7 @@ export default function SingleStockDeductionPage() {
                     type="number"
                     min="0"
                     max={it.approved_qty}
-                    value={itemQuantities[it.item_id]?.actual_deducted_qty || 0}
+                    value={itemQuantities[it.item_id]?.actual_deducted_qty ?? ''} // ใช้ ?? เพื่อให้เป็นค่าว่างได้
                     onChange={e => handleQtyChange(it.item_id, e.target.value)}
                     className={styles.qtyInput}
                     disabled={isProcessing}

@@ -1,161 +1,560 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+Thai:wght@400;500;600;700&display=swap');
+
+/* ---- Variables (aligned with RequestDetailClient, EditItem, AddItem, etc.) ---- */
+:root {
+  --bg: #f0fbfe;
+  --panel: #ffffff;
+  --muted: #6b7280;
+  --text: #111827;
+  --border: #e5e7eb;
+  --primary: #008dda;
+  --primary-500: #41c9e2;
+  --primary-600: #1685bb;
+  --tint-50: #f0fbfe;
+  --tint-100: #e9f6fb;
+  --tint-200: #ace2e1;
+  --radius: 10px;
+  --z-swal: 10000;
+}
+
+/* ---- Page Layout ---- */
 .page {
-  background: #f9fafb;
-  padding: 20px;
-  font-family: "Kanit", sans-serif;
+  margin: 0 auto;
+  padding: 24px;
+  background: var(--panel);
+  min-height: 100vh;
+  font-family: 'Inter', 'Noto Serif Thai', sans-serif;
 }
 
-.stateText {
-  text-align: center;
-  color: #6b7280;
-  padding: 40px;
-}
-
-.headerCard {
+/* ---- Containers ---- */
+.detailContainer,
+.formContainer {
   display: flex;
-  justify-content: space-between;
-  background: #fff;
-  padding: 16px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
-  margin-bottom: 20px;
+  flex-direction: column;
+  gap: 24px;
 }
 
-.itemName {
-  font-size: 2.4rem;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-
-.meta {
-  color: #64748b;
-  font-size: 0.9rem;
-}
-
-.imageBox {
-  width: 120px;
-  height: 120px;
-  border-radius: 8px;
-  background: #f1f5f9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.image {
-  max-width: 100%;
-  max-height: 100%;
-  border-radius: 8px;
-}
-
-.imagePlaceholder {
-  color: #94a3b8;
-  font-size: 0.85rem;
-}
-
-.grid {
+/* ---- Storage and Image Container (for BasicForm) ---- */
+.storageImageContainer {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  margin-bottom: 20px;
 }
 
-.card {
-  background: #fff;
-  border-radius: 10px;
+.storageImageContainer .section {
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
   padding: 16px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, .05);
+  background: var(--panel);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.sectionTitle {
+/* ---- Header Card ---- */
+.headerCard {
+  background: var(--panel);
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 10px;
+}
+
+.itemName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.meta {
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin: 4px 0 0;
+}
+
+/* ---- Card ---- */
+.card {
+  margin-top: 16px;
+  background: var(--panel);
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* ---- Section ---- */
+.section {
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
+  padding: 16px;
+  background: var(--panel);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+/* ---- Legend ---- */
+.legend {
   font-size: 1.1rem;
   font-weight: 600;
+  color: #374151;
+  padding: 0 8px;
   margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.tableWrapper {
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
+.legend::before {
+  content: '📋';
+  font-size: 1.1rem;
+}
+
+/* ---- Grid ---- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+/* ---- Field ---- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.input,
+.textarea {
+  padding: 8px 12px;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: 'Inter', 'Noto Serif Thai', sans-serif;
+  background: var(--panel);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 2px rgba(65, 201, 226, 0.2);
+}
+
+.input:disabled,
+.textarea:disabled {
+  background: #f9fafb;
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: #9ca3af;
+}
+
+.textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* ---- Checkbox ---- */
+.checkboxGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkboxLabel {
+  font-size: 0.95rem;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+}
+
+/* ---- File Input ---- */
+.fileInputWrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.fileInput {
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.fileInputLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  background: var(--panel);
+  font-size: 0.95rem;
+  color: #374151;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.fileInputLabel:hover {
+  background: var(--tint-100);
+}
+
+/* ---- Image Upload (for BasicForm) ---- */
+.uploadBox {
+  border: 2px dashed var(--tint-200);
+  border-radius: var(--radius);
+  background: var(--tint-50);
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.uploadBox:hover,
+.uploadBox.dragActive {
+  border-color: var(--primary-500);
+  background: var(--tint-100);
+  box-shadow: 0 6px 16px rgba(0, 141, 218, 0.1);
+}
+
+.uploadBox.dragActive::before {
+  content: 'วางรูปภาพที่นี่';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--primary);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 8px 16px;
+  border-radius: 6px;
+}
+
+.uploadIcon {
+  color: var(--primary);
+  margin-bottom: 12px;
+  transition: transform 0.3s ease;
+}
+
+.uploadBox:hover .uploadIcon,
+.uploadBox.dragActive .uploadIcon {
+  transform: scale(1.2);
+}
+
+.uploadText {
+  font-size: 0.95rem;
+  color: #374151;
+  margin: 0;
+}
+
+.chooseBtn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-right: 8px;
+}
+
+.chooseBtn:hover {
+  background: var(--primary-600);
+}
+
+/* ---- Image Preview ---- */
+.imageField {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.imagePreview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 200px;
+  height: 200px;
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
   overflow: hidden;
-  background: #fff;
-  font-family: "Kanit", sans-serif;
+  margin: 0 auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* ===== Table Base ===== */
+.previewImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.imagePreviewPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #f9fafb;
+  color: var(--muted);
+  font-size: 0.9rem;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- Image Preview (for BasicForm) ---- */
+.previewWrapper {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.previewContainer {
+  position: relative;
+  display: inline-block;
+}
+
+.removeBtn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.removeBtn:hover {
+  background: #dc2626;
+}
+
+/* ---- Help Text ---- */
+.helpText {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 8px;
+  display: block;
+}
+
+/* ---- Table ---- */
+.tableWrapper {
+  overflow-x: auto;
+  margin-top: 16px;
+}
+
 .table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.9rem;
+  background: var(--panel);
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
+  overflow: hidden;
 }
 
-/* Header */
-.table thead th {
-  background: #eef9fc;
-  color: #374151;
+.table th,
+.table td {
+  width: calc(100% / 7);
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--tint-200);
+  line-height: 1.5;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table th {
   font-weight: 600;
-  font-size: 1rem;         /* ✅ เท่ากับ sectionTitle-ish */
-  line-height: 1.4;
-  padding: 12px;
-  text-align: center;
-  white-space: nowrap;
-  border-bottom: 1px solid #e5e7eb;
+  color: #374151;
+  background: var(--tint-100);
 }
 
-/* Body */
-.table tbody td {
-  font-size: 0.95rem;      /* ✅ เล็กกว่า th เล็กน้อย */
-  line-height: 1.45;
-  padding: 12px;
-  text-align: center;
-  border-bottom: 1px solid #e5e7eb;
-  color: #111827;
+.table td {
+  color: var(--text);
 }
 
-/* แถวสลับสี */
-.table tbody tr:nth-child(even) {
-  background: #f9fafb;
-}
-
-/* hover effect */
-.table tbody tr:hover {
-  background: #f1f9ff;
-}
-
-/* ===== Empty State ===== */
 .noLot {
-  padding: 20px;
-  color: #9ca3af;
   text-align: center;
-  font-size: 0.95rem;
+  color: var(--muted);
+  padding: 24px;
 }
 
-/* ===== Buttons ===== */
-.btnBlue, .btnRed {
-  border: none;
+/* ---- Action Buttons ---- */
+.btnGroup {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.btnBlue,
+.btnRed {
   padding: 6px 12px;
+  border: none;
   border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;       /* ✅ ให้ match body text */
+  font-size: 0.9rem;
   font-weight: 500;
-  transition: background 0.2s ease, transform 0.15s ease;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 .btnBlue {
-  background: #3b82f6;
+  background: var(--primary);
   color: #fff;
-  margin-right: 6px;
 }
+
 .btnBlue:hover {
-  background: #2563eb;
-  transform: scale(1.05);
+  background: var(--primary-600);
 }
-.btnBlue:active { transform: scale(0.95); }
 
 .btnRed {
   background: #ef4444;
   color: #fff;
 }
+
 .btnRed:hover {
   background: #dc2626;
-  transform: scale(1.05);
 }
-.btnRed:active { transform: scale(0.95); }
 
+/* ---- State Text ---- */
+.stateText {
+  text-align: center;
+  font-size: 1.1rem;
+  color: var(--muted);
+  padding: 24px;
+}
+
+/* ---- SweetAlert2 Custom ---- */
+.swalPopup {
+  font-family: 'Inter', 'Noto Serif Thai', sans-serif;
+  z-index: var(--z-swal);
+}
+
+.swalInput {
+  font-family: 'Inter', 'Noto Serif Thai', sans-serif;
+  border: 1px solid var(--tint-200) !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  font-size: 0.95rem !important;
+  margin-top: 8px !important;
+}
+
+.swalInput::placeholder {
+  color: #9ca3af;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .page {
+    padding: 16px;
+  }
+
+  .storageImageContainer {
+    grid-template-columns: 1fr;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .imagePreview {
+    width: 150px;
+    height: 150px;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px 12px;
+  }
+
+  .btnGroup {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 640px) {
+  .section,
+  .card,
+  .headerCard {
+    padding: 12px;
+  }
+
+  .legend {
+    font-size: 1rem;
+  }
+
+  .itemName {
+    font-size: 1.25rem;
+  }
+
+  .meta {
+    font-size: 0.9rem;
+  }
+
+  .input,
+  .textarea,
+  .swalInput {
+    font-size: 0.9rem;
+    padding: 6px 10px;
+  }
+
+  .chooseBtn {
+    font-size: 0.85rem;
+    padding: 6px 12px;
+  }
+
+  .imagePreview {
+    width: 120px;
+    height: 120px;
+  }
+
+  .table {
+    font-size: 0.85rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 6px 8px;
+  }
+
+  .uploadBox {
+    padding: 16px;
+  }
+}
