@@ -6,10 +6,8 @@ const toNullOrValue = (v) => (v === '' ? null : v);
 const toNullOrFloat = (v) => (v === '' ? null : parseFloat(v));
 const toNullOrInt = (v) => (v === '' ? null : parseInt(v));
 
-async function generateAutoCode(client, { prefix, tableName, orderBy }) {
-  const { rows } = await client.query(
-    `SELECT COALESCE(MAX(${orderBy}),0) + 1 AS next_id FROM ${tableName}`
-  );
+async function generateAutoCode(client, { prefix, seqName }) {
+  const { rows } = await client.query(`SELECT nextval('${seqName}') AS next_id`);
   const next = rows[0].next_id;
   return `${prefix}${String(next).padStart(6, '0')}`;
 }

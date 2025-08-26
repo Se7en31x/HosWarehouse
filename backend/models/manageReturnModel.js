@@ -32,116 +32,137 @@ const ManageReturnModel = {
    * - remaining > 0 (ยังค้างคืน)
    */
   async getBorrowQueue({ q, status, page, limit }) {
-    const p = Math.max(1, Number(page) || 1);
-    const l = Math.max(1, Math.min(100, Number(limit) || 12));
-    const offset = (p - 1) * l;
+  const p = Math.max(1, Number(page) || 1);
+  const l = Math.max(1, Math.min(100, Number(limit) || 12));
+  const offset = (p - 1) * l;
 
-    const params = [];
-    let idx = 1;
+  const params = [];
+  let idx = 1;
 
-    const baseQuery = `
-      FROM requests r
-      JOIN users u ON u.user_id = r.user_id
-      JOIN request_details rd ON rd.request_id = r.request_id
-      LEFT JOIN (
-        SELECT request_detail_id, COALESCE(SUM(return_qty), 0)::int AS returned_total
-        FROM borrow_returns
-        WHERE return_status IN ('received','accepted','completed')
-        GROUP BY request_detail_id
-      ) AS br ON br.request_detail_id = rd.request_detail_id
-    `;
+  const baseQuery = `
+    FROM requests r
+    JOIN users u ON u.user_id = r.user_id
+    JOIN request_details rd ON rd.request_id = r.request_id
+    LEFT JOIN (
+      SELECT request_detail_id, COALESCE(SUM(return_qty), 0)::int AS returned_total
+      FROM borrow_returns
+      WHERE return_status IN ('received','accepted','completed')
+      GROUP BY request_detail_id
+    ) AS br ON br.request_detail_id = rd.request_detail_id
+  `;
 
-    let where = `
-      WHERE LOWER(COALESCE(r.request_type,'')) = 'borrow'
-      AND rd.processing_status = 'completed'
-      AND COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) > 0
-      AND GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
-    `;
+  let where = `
+    WHERE LOWER(COALESCE(r.request_type,'')) = 'borrow'
+    AND rd.processing_status = 'completed'
+    AND COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) > 0
+    AND GREATEST(
+      COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0),
+      0
+    ) > 0
+  `;
 
-    if (q) {
-      params.push(`%${String(q).toLowerCase()}%`);
-      where += `
-        AND (
-          LOWER(COALESCE(r.request_code,'')) LIKE $${idx}
-          OR LOWER(COALESCE(u.user_fname,'') || ' ' || COALESCE(u.user_lname,'')) LIKE $${idx}
-          OR EXISTS (
-            SELECT 1
-            FROM request_details rd2
-            JOIN items it2 ON it2.item_id = rd2.item_id
-            WHERE rd2.request_id = r.request_id
-              AND LOWER(COALESCE(it2.item_name,'')) LIKE $${idx}
-          )
+  // ✅ ฟิลเตอร์สถานะ
+  if (status === 'overdue') {
+    where += ` AND rd.expected_return_date < CURRENT_DATE`;
+  } else if (status === 'due_soon') {
+    where += ` AND rd.expected_return_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '3 days'`;
+  } else if (status === 'borrowed') {
+    // รอการคืน = ไม่เกินกำหนด + ไม่ใช่ใกล้ครบกำหนด
+    where += ` AND rd.expected_return_date > CURRENT_DATE + INTERVAL '3 days'`;
+  }
+
+  if (q) {
+    params.push(`%${String(q).toLowerCase()}%`);
+    where += `
+      AND (
+        LOWER(COALESCE(r.request_code,'')) LIKE $${idx}
+        OR LOWER(COALESCE(u.user_fname,'') || ' ' || COALESCE(u.user_lname,'')) LIKE $${idx}
+        OR EXISTS (
+          SELECT 1
+          FROM request_details rd2
+          JOIN items it2 ON it2.item_id = rd2.item_id
+          WHERE rd2.request_id = r.request_id
+            AND LOWER(COALESCE(it2.item_name,'')) LIKE $${idx}
         )
-      `;
-      idx++;
-    }
-
-    if (status === 'overdue') {
-      where += ` AND rd.expected_return_date < CURRENT_DATE`;
-    } else if (status === 'due_soon') {
-      where += ` AND rd.expected_return_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '3 days'`;
-    }
-
-    const countSql = `
-      SELECT COUNT(DISTINCT r.request_id)::int AS cnt
-      ${baseQuery}
-      ${where};
+      )
     `;
-    const countRes = await pool.query(countSql, params);
-    const totalCount = Number(countRes.rows[0]?.cnt || 0);
-    const totalPages = Math.max(1, Math.ceil(totalCount / l));
+    idx++;
+  }
 
-    const dataSql = `
-  SELECT
-    r.request_id,
-    r.request_code,
-    (COALESCE(u.user_fname,'') || ' ' || COALESCE(u.user_lname,'')) AS requester_name,
-    u.department,
-    MIN(rd.expected_return_date) FILTER (
-      WHERE GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
-    ) AS earliest_due_date,
-    SUM(
-      CASE WHEN GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
-            AND rd.expected_return_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '3 days'
-           THEN 1 ELSE 0 END
-    ) AS items_due_soon,
-    SUM(
-      CASE WHEN GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
-            AND rd.expected_return_date < CURRENT_DATE
-           THEN 1 ELSE 0 END
-    ) AS items_overdue,
+  const countSql = `
+    SELECT COUNT(DISTINCT r.request_id)::int AS cnt
+    ${baseQuery}
+    ${where};
+  `;
+  const countRes = await pool.query(countSql, params);
+  const totalCount = Number(countRes.rows[0]?.cnt || 0);
+  const totalPages = Math.max(1, Math.ceil(totalCount / l));
 
-    -- ✅ จำนวนวันเกินกำหนดมากที่สุด
-    MAX(
-      GREATEST((CURRENT_DATE - rd.expected_return_date), 0)
-    ) FILTER (
-      WHERE GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
-    )::int AS max_days_overdue,
+  const dataSql = `
+    SELECT
+      r.request_id,
+      r.request_code,
+      (COALESCE(u.user_fname,'') || ' ' || COALESCE(u.user_lname,'')) AS requester_name,
+      u.department,
 
-    CASE
-      WHEN SUM(
-        CASE WHEN GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
-              AND rd.expected_return_date < CURRENT_DATE
-             THEN 1 ELSE 0 END
-      ) > 0 THEN 'overdue'
-      WHEN SUM(
+      MIN(rd.expected_return_date) FILTER (
+        WHERE GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
+      ) AS earliest_due_date,
+
+      COUNT(DISTINCT rd.request_detail_id) AS total_items,
+
+      COUNT(DISTINCT rd.request_detail_id) FILTER (
+        WHERE GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) = 0
+      ) AS returned_items,
+
+      COUNT(DISTINCT rd.request_detail_id) FILTER (
+        WHERE GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
+      ) AS pending_items,
+
+      SUM(
         CASE WHEN GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
               AND rd.expected_return_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '3 days'
              THEN 1 ELSE 0 END
-      ) > 0 THEN 'due_soon'
-      ELSE 'borrowed'
-    END AS overall_status
-  ${baseQuery}
-  ${where}
-  GROUP BY r.request_id, r.request_code, requester_name, u.department
-  ORDER BY earliest_due_date NULLS LAST, r.request_id
-  OFFSET $${idx++} LIMIT $${idx++};
-`;
+      ) AS items_due_soon,
 
-    const dataRes = await pool.query(dataSql, [...params, offset, l]);
+      SUM(
+        CASE WHEN GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
+              AND rd.expected_return_date < CURRENT_DATE
+             THEN 1 ELSE 0 END
+      ) AS items_overdue,
 
-    return { rows: dataRes.rows, totalCount, totalPages, currentPage: p };
-  },
+      MAX(
+        GREATEST((CURRENT_DATE - rd.expected_return_date), 0)
+      ) FILTER (
+        WHERE GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
+      )::int AS max_days_overdue,
+
+      CASE
+        WHEN SUM(
+          CASE WHEN GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
+                AND rd.expected_return_date < CURRENT_DATE
+               THEN 1 ELSE 0 END
+        ) > 0 THEN 'overdue'
+        WHEN SUM(
+          CASE WHEN GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
+                AND rd.expected_return_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '3 days'
+               THEN 1 ELSE 0 END
+        ) > 0 THEN 'due_soon'
+        ELSE 'borrowed'
+      END AS overall_status
+
+    ${baseQuery}
+    ${where}
+    GROUP BY r.request_id, r.request_code, requester_name, u.department
+    ORDER BY earliest_due_date NULLS LAST, r.request_id
+    OFFSET $${idx++} LIMIT $${idx++};
+  `;
+
+  const dataRes = await pool.query(dataSql, [...params, offset, l]);
+
+  return { rows: dataRes.rows, totalCount, totalPages, currentPage: p };
+}
+,
 
   /**
    * รายละเอียดคำขอ (โชว์ทุกบรรทัด; ฝั่ง UI จะฟิลเตอร์ “ยังค้างคืน” ได้)
