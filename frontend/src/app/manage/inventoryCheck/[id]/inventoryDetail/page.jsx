@@ -79,19 +79,38 @@ export default function InventoryDetail() {
   const handleDamaged = async (lot) => {
     Swal.fire({
       title: `แจ้งของชำรุด (Lot ${lot.lot_no || "-"})`,
-      input: "number",
-      inputLabel: "จำนวนที่ชำรุด",
-      inputAttributes: { min: 1, max: lot.remaining_qty },
+      html: `
+      <input id="damagedQty" class="swal2-input" 
+        type="number" 
+        min="1" 
+        max="${lot.remaining_qty}" 
+        placeholder="จำนวน (สูงสุด ${lot.remaining_qty})"
+        oninvalid="this.setCustomValidity('❌ จำนวนต้องไม่เกิน ${lot.remaining_qty} และต้องมากกว่า 0')"
+        oninput="this.setCustomValidity('')"
+      />
+    `,
       showCancelButton: true,
       confirmButtonText: "บันทึก",
       cancelButtonText: "ยกเลิก",
+      preConfirm: () => {
+        const qty = Number(document.getElementById("damagedQty").value);
+        if (!qty || qty <= 0) {
+          Swal.showValidationMessage("❌ ต้องใส่จำนวนที่มากกว่า 0");
+          return false;
+        }
+        if (qty > lot.remaining_qty) {
+          Swal.showValidationMessage(`❌ จำนวนห้ามเกิน ${lot.remaining_qty}`);
+          return false;
+        }
+        return qty;
+      }
     }).then(async (result) => {
-      if (result.isConfirmed && result.value > 0) {
+      if (result.isConfirmed) {
         try {
           await axiosInstance.post(`/damaged`, {
             lot_id: lot.lot_id,
             item_id: lot.item_id,
-            qty: Number(result.value),
+            qty: result.value,
             damage_type: "damaged",
             source_type: "stock_check",
             source_ref_id: lot.lot_id,
@@ -106,34 +125,62 @@ export default function InventoryDetail() {
     });
   };
 
+
   const handleAdjust = (lot) => {
     Swal.fire({
       title: `ปรับปรุงจำนวน (Lot ${lot.lot_no})`,
       html: `
-        <p>คงเหลือปัจจุบัน: <b>${lot.remaining_qty}</b></p>
-        <input id="newQty" class="swal2-input" type="number" value="${lot.remaining_qty}">
-      `,
+      <p>คงเหลือปัจจุบัน: <b>${lot.remaining_qty}</b></p>
+      <input id="newQty" class="swal2-input" 
+        type="number" 
+        value="${lot.remaining_qty}" 
+        min="0" 
+        max="${lot.qty_imported}" 
+        placeholder="จำนวน (สูงสุด ${lot.qty_imported})"
+        oninvalid="this.setCustomValidity('❌ จำนวนต้องไม่เกิน ${lot.qty_imported} และต้องไม่ต่ำกว่า 0')"
+        oninput="this.setCustomValidity('')"
+      />
+      <input id="reason" class="swal2-input" placeholder="เหตุผลในการปรับปรุง">
+    `,
       showCancelButton: true,
       confirmButtonText: "ยืนยัน",
       cancelButtonText: "ยกเลิก",
-      preConfirm: () => Number(document.getElementById("newQty").value),
+      preConfirm: () => {
+        const qty = Number(document.getElementById("newQty").value);
+        const reason = document.getElementById("reason").value || "ปรับปรุงสต็อก";
+
+        if (qty < 0) {
+          Swal.showValidationMessage("❌ จำนวนต้องไม่ต่ำกว่า 0");
+          return false;
+        }
+        if (qty > lot.qty_imported) {
+          Swal.showValidationMessage(`❌ จำนวนต้องไม่มากกว่าที่นำเข้า (${lot.qty_imported})`);
+          return false;
+        }
+        return { actual_qty: qty, reason };
+      }
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await axiosInstance.post(`/adjust`, {
+          await axiosInstance.post(`/inventory/adjust`, {
             lot_id: lot.lot_id,
             item_id: lot.item_id,
-            actual_qty: result.value,
+            actual_qty: result.value.actual_qty,
+            reason: result.value.reason
           });
+
           Swal.fire("สำเร็จ", "ปรับปรุงจำนวนแล้ว", "success");
+
           const res = await axiosInstance.get(`/inventoryCheck/${lot.item_id}`);
           setItem(res.data);
-        } catch {
+
+        } catch (err) {
           Swal.fire("ผิดพลาด", "ไม่สามารถปรับปรุงได้", "error");
         }
       }
     });
   };
+
 
   // ===== Rendering =====
   if (loading) return <p className={styles.stateText}>⏳ กำลังโหลด...</p>;
@@ -177,7 +224,7 @@ export default function InventoryDetail() {
                 <th>ผลิต</th>
                 <th>หมดอายุ</th>
                 <th>นำเข้า</th>
-                <th>นำเข้า</th>
+                <th>จำนวนที่นำเข้า</th>
                 <th>คงเหลือ</th>
                 <th>จัดการ</th>
               </tr>
@@ -205,8 +252,6 @@ export default function InventoryDetail() {
           </table>
         </div>
       </div>
-
-
     </div>
   );
 }
