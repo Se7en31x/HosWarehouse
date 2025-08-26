@@ -243,9 +243,9 @@
 
   /* คุมความกว้างคอลัมน์จากที่เดียว */
   --cols:
-    minmax(140px, 1.2fr)
+    minmax(140px, 1.5fr)
     /* Lot Number */
-    minmax(180px, 2fr)
+    minmax(180px, 1.5fr)
     /* ชื่อพัสดุ */
     minmax(120px, .9fr)
     /* จำนวนทั้งหมด */
@@ -347,13 +347,13 @@
 }
 
 /* ไม่มีข้อมูล */
-.noDataMessage {
+/* .noDataMessage {
   height: calc(var(--row-h) * var(--rows-per-page));
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--muted);
-}
+} */
 
 /* ===== สถานะ & ป้ายครบแล้ว ===== */
 .statusBadge {

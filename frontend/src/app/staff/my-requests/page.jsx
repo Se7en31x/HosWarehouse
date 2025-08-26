@@ -45,13 +45,12 @@ const statusMap = {
   rejected_all: 'ปฏิเสธทั้งหมด',
   approved_partial: 'อนุมัติบางส่วน',
   rejected_partial: 'ปฏิเสธบางส่วน',
-  approved_partial_and_rejected_partial: 'อนุมัติ/ปฏิเสธบางส่วน',
+  approved_partial_and_rejected_partial: 'อนุมัติบางส่วน',
   preparing: 'กำลังจัดเตรียม',
   delivering: 'กำลังนำส่ง',
   completed: 'เสร็จสิ้น',
   canceled: 'ยกเลิกคำขอ',
   approved_in_queue: 'อนุมัติแล้วรอดำเนินการ',
-  in_progress: 'กำลังดำเนินการ',
   pending: 'รอดำเนินการ',
 };
 
@@ -363,26 +362,28 @@ export default function MyRequestsPage() {
 
   const stats = useMemo(() => {
     const total = (requests || []).length;
-    const pending = (requests || []).filter(r => String(r.request_status || '').toLowerCase().includes('รอ') || String(r.request_status || '').toLowerCase().includes('pending')).length;
-    const withdrawApproved = (requests || []).filter(r =>
-      (String(r.request_status || '').toLowerCase().includes('อนุมัติ') ||
-        String(r.request_status || '').toLowerCase().includes('approved') ||
-        String(r.request_status || '').toLowerCase().includes('completed')) &&
+
+    // 👉 นับตามประเภท ไม่สนสถานะ
+    const withdraw = requests.filter(r =>
       parseTypes(r.request_types).includes('withdraw')
     ).length;
-    const borrowApproved = (requests || []).filter(r =>
-      (String(r.request_status || '').toLowerCase().includes('อนุมัติ') ||
-        String(r.request_status || '').toLowerCase().includes('approved') ||
-        String(r.request_status || '').toLowerCase().includes('completed')) &&
+
+    const borrow = requests.filter(r =>
       parseTypes(r.request_types).includes('borrow')
     ).length;
-    const cancelled = (requests || []).filter(r =>
-      String(r.request_status || '').toLowerCase().includes('ยกเลิก') ||
-      String(r.request_status || '').toLowerCase().includes('cancel') ||
-      String(r.request_status || '').toLowerCase().includes('ปฏิเสธ') ||
-      String(r.request_status || '').toLowerCase().includes('reject')
+
+    // 👉 ถ้าอยากแยกสถานะ pending, cancelled ไว้ด้วยก็เพิ่มได้
+    const pending = requests.filter(r =>
+      ["waiting_approval", "waiting_approval_detail", "pending"]
+        .includes(String(r.request_status).toLowerCase())
     ).length;
-    return { total, pending, withdrawApproved, borrowApproved, cancelled };
+
+    const cancelled = requests.filter(r =>
+      ["canceled", "cancelled", "rejected_all", "rejected"]
+        .includes(String(r.request_status).toLowerCase())
+    ).length;
+
+    return { total, withdraw, borrow, pending, cancelled };
   }, [requests]);
 
   const filtered = useMemo(() => {
@@ -440,13 +441,14 @@ export default function MyRequestsPage() {
         </div>
         <div className={`${styles.statCard} ${styles.statWithdraw}`}>
           <div className={styles.statLabel}>เบิก</div>
-          <div className={styles.statValue}>{stats.withdrawApproved}</div>
+          <div className={styles.statValue}>{stats.withdraw}</div>
         </div>
         <div className={`${styles.statCard} ${styles.statBorrow}`}>
           <div className={styles.statLabel}>ยืม</div>
-          <div className={styles.statValue}>{stats.borrowApproved}</div>
+          <div className={styles.statValue}>{stats.borrow}</div>
         </div>
       </div>
+
 
       {/* Toolbar Filters */}
       <div className={styles.toolbar}>

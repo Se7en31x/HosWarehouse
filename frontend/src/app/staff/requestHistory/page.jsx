@@ -26,7 +26,7 @@ const statusOptions = [
   { value: "rejected_all", label: "ถูกปฏิเสธ" },
   { value: "approved_partial", label: "อนุมัติบางส่วน" },
   { value: "rejected_partial", label: "ปฏิเสธบางส่วน" },
-  { value: "approved_partial_and_rejected_partial", label: "อนุมัติ/ปฏิเสธบางส่วน" },
+  { value: "approved_partial_and_rejected_partial", label: "อนุมัติบางส่วน" },
 ];
 
 /* เร่งด่วน */
@@ -121,7 +121,7 @@ export default function RequestHistory() {
     rejected_all: "ปฏิเสธทั้งหมด",
     approved_partial: "อนุมัติบางส่วน",
     rejected_partial: "ปฏิเสธบางส่วน",
-    approved_partial_and_rejected_partial: "อนุมัติ/ปฏิเสธบางส่วน",
+    approved_partial_and_rejected_partial: "อนุมัติบางส่วน",
   };
 
   const getRequestStatusBadge = (status) => {
@@ -142,22 +142,27 @@ export default function RequestHistory() {
     return <span className={urgentClass}>{isUrgent ? "เร่งด่วน" : "ปกติ"}</span>;
   };
 
-  // ✅ แก้ให้แสดงวัน+เวลาได้จริง
+
+  // ✅ ฟอร์แมตวันเวลา: 26/08/2568 13:39
   const formatDate = (dateString) => {
     if (!dateString) return "-";
     try {
-      return new Date(dateString).toLocaleString("th-TH", {
+      const dt = new Date(dateString);
+      if (isNaN(dt.getTime())) return "-";
+      return new Intl.DateTimeFormat("th-TH-u-nu-latn", {
+        timeZone: "Asia/Bangkok",
         year: "numeric",
-        month: "long",
-        day: "numeric",
+        month: "2-digit",
+        day: "2-digit",
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
-      });
+      }).format(dt);
     } catch {
       return "-";
     }
   };
+
 
   // ==== Type chips (新增) ====
   const parseTypes = (types) => {
@@ -210,26 +215,26 @@ export default function RequestHistory() {
   const pageRequests = filteredRequests.slice(startIdx, startIdx + itemsPerPage);
 
   // ===== Pagination =====
-const getPageNumbers = () => {
-  const pages = [];
+  const getPageNumbers = () => {
+    const pages = [];
 
-  if (totalPages <= 5) {
-    for (let i = 1; i <= totalPages; i++) pages.push(i);
-  } else {
-    if (currentPage <= 3) {
-      // ต้น ๆ
-      pages.push(1, 2, 3, 4, '...', totalPages);
-    } else if (currentPage >= totalPages - 2) {
-      // ท้าย ๆ
-      pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
-      // กลาง
-      pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+      if (currentPage <= 3) {
+        // ต้น ๆ
+        pages.push(1, 2, 3, 4, '...', totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        // ท้าย ๆ
+        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        // กลาง
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+      }
     }
-  }
 
-  return pages;
-};
+    return pages;
+  };
 
 
   // Export
@@ -373,7 +378,7 @@ const getPageNumbers = () => {
               <div>ประเภท</div>
               <div>ความเร่งด่วน</div>
               <div>สถานะการอนุมัติ</div>
-              <div>จัดการ</div>
+              <div>การดำเนินการ</div>
             </div>
 
             {/* Body */}

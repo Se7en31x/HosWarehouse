@@ -277,11 +277,11 @@ export default function StockDeductionPage() {
                 <table className={styles.table}>
                   <thead>
                     <tr>
-                      <th>ลำดับ</th>
+                      {/* <th>ลำดับ</th> */}
                       <th>รหัสคำขอ</th>
                       <th>วันที่ขอ</th>
                       <th>พร้อมตัด</th>
-                      <th>ตัดสต็อกแล้ว / ทั้งหมด</th>
+                      <th>ตัดสต็อก / ทั้งหมด</th>
                       <th>ผู้ขอ</th>
                       <th>แผนก</th>
                       <th>ประเภท</th>
@@ -298,7 +298,7 @@ export default function StockDeductionPage() {
 
                         return (
                           <tr key={item?.request_id ?? item?.request_code ?? `${index}`}>
-                            <td className="nowrap">{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                            {/* <td className="nowrap">{(currentPage - 1) * itemsPerPage + index + 1}</td> */}
                             <td className="nowrap">{item?.request_code || '-'}</td>
                             <td className="nowrap">{fmtDate(item?.request_date)}</td>
 

@@ -50,7 +50,7 @@ export default function Sidebar() {
           <li className={`${styles.sidebarItem} ${isActive('/purchasing/prList') ? styles.active : ''}`}>
             <Link href="/purchasing/prList" className={styles.noStyleLink}>
               <FaFileAlt className={styles.sidebarIcon} />
-              <span className={styles.sidebarText}>ใบขอซื้อ (PR)</span>
+              <span className={styles.sidebarText}>รายการขอซื้อ (PR)</span>
             </Link>
           </li>
           {/* <li className={`${styles.sidebarItem} ${isActive('/purchasing/rfq') ? styles.active : ''}`}>

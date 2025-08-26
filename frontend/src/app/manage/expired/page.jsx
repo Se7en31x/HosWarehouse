@@ -213,7 +213,7 @@ export default function ExpiredItemsPage() {
 
         {/* ✅ Table */}
         {loading && <p className={styles.infoMessage}>กำลังโหลดข้อมูล...</p>}
-        {!loading && currentItems.length === 0 && <p className={styles.noDataMessage}>ไม่พบข้อมูล</p>}
+        {!loading && currentItems.length === 0 && <p className={styles.noDataMessage}></p>}
 
         {!loading && (
           <div className={styles.tableFrame}>

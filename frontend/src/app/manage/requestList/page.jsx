@@ -212,15 +212,14 @@ export default function ApprovalRequest() {
         {/* ตาราง */}
         <div className={styles.tableFrame}>
           <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
-            <div className={styles.headerItem}>ลำดับ</div>
-            <div className={styles.headerItem}>วันที่และเวลา</div>
             <div className={styles.headerItem}>รหัสคำขอ</div>
             <div className={styles.headerItem}>ผู้ขอเบิก</div>
             <div className={styles.headerItem}>แผนก</div>
+            <div className={styles.headerItem}>วันที่/เวลา</div>
             <div className={styles.headerItem}>จำนวนรายการ</div>
             <div className={styles.headerItem}>ประเภท</div>
             <div className={styles.headerItem}>สถานะ</div>
-            <div className={styles.headerItem}>ตรวจสอบ</div>
+            <div className={styles.headerItem}>การดำเนินการ</div>
           </div>
 
           <div className={styles.inventory} style={{ "--rows-per-page": itemsPerPage }}>
@@ -233,17 +232,14 @@ export default function ApprovalRequest() {
             ) : (
               currentItems.map((item, index) => (
                 <div className={`${styles.tableGrid} ${styles.tableRow}`} key={item.request_id}>
-                  <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                    {(currentPage - 1) * itemsPerPage + index + 1}
-                  </div>
+                  <div className={styles.tableCell}>{item.request_code || "-"}</div>
+                  <div className={styles.tableCell}>{item.user_name || "-"}</div>
+                  <div className={styles.tableCell}>{item.department || "-"}</div>
                   <div className={styles.tableCell}>
                     {item.request_date
                       ? new Date(item.request_date).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })
                       : "-"}
                   </div>
-                  <div className={styles.tableCell}>{item.request_code || "-"}</div>
-                  <div className={styles.tableCell}>{item.user_name || "-"}</div>
-                  <div className={styles.tableCell}>{item.department || "-"}</div>
                   <div className={styles.tableCell}>{item.item_count ?? "-"}</div>
                   <div className={styles.tableCell}>{item.request_types || "-"}</div>
                   <div className={styles.tableCell}>
@@ -253,7 +249,7 @@ export default function ApprovalRequest() {
                   </div>
                   <div className={`${styles.tableCell} ${styles.centerCell}`}>
                     <Link href={`/manage/approvalRequest/${item.request_id}`}>
-                      <button className={styles.actionButton}>รายละเอียด</button>
+                      <button className={styles.actionButton}>จัดการ</button>
                     </Link>
                   </div>
                 </div>

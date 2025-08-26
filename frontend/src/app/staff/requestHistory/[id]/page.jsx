@@ -76,7 +76,13 @@ export default function RequestDetailPage() {
     completed: "เสร็จสิ้น",
     returned: "คืนแล้ว",
   };
-
+  const categoryMap = {
+    medicine: "ยา",
+    medsup: "เวชภัณฑ์",
+    equipment: "ครุภัณฑ์",
+    meddevice: "อุปกรณ์ทางการแพทย์",
+    general: "ของใช้ทั่วไป",
+  };
   // ===== Badges ของ detail table เท่านั้น =====
   const getApprovalBadge = (st) => {
     let cls = `${styles.badge} `;
@@ -171,7 +177,7 @@ export default function RequestDetailPage() {
                           />
                         </div>
                         <div title={d.item_name}>{d.item_name || "-"}</div>
-                        <div>{d.item_category || "-"}</div>
+                        <div>{categoryMap[d.item_category] || d.item_category || "-"}</div>
                         <div className={styles.mono}>
                           {(d.requested_qty ?? 0)} / {(d.approved_qty ?? 0)}
                         </div>

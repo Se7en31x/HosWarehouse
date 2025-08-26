@@ -246,8 +246,6 @@
 .tableGrid {
   display: grid;
   grid-template-columns:
-    minmax(60px, .6fr)
-    /* ลำดับ */
     minmax(160px, 1.2fr)
     /* วันที่เวลา */
     minmax(140px, 1fr)
@@ -493,9 +491,9 @@
 
 /* mixed: ม่วงอ่อน */
 .stMixed {
-  color: #5B21B6;             /* violet-800 */
-  background: #EDE9FE;        /* violet-100 */
-  border-color: #C4B5FD;      /* violet-300 */
+  color: #1E3A8A;             /* blue-800 */
+  background: #DBEAFE;        /* blue-100 */
+  border-color: #93C5FD;      /* blue-300 */
 }
 
 /* default: เทาอ่อน */

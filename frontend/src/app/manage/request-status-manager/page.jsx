@@ -185,7 +185,7 @@ export default function RequestStatusManagerPage() {
     const pages = [];
     if (totalPages <= 4) for (let i = 1; i <= totalPages; i++) pages.push(i);
     else if (currentPage <= 4) pages.push(1, 2, 3, 4, '...', totalPages);
-    else if (currentPage >= totalPages - 3) pages.push(1, '...',totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+    else if (currentPage >= totalPages - 3) pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
     else pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
     return pages;
   };
@@ -264,6 +264,7 @@ export default function RequestStatusManagerPage() {
         {/* Table */}
         <div className={styles.tableFrame}>
           <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+            {/* <div className={styles.headerItem}>ลำดับ</div>  */}
             <div className={styles.headerItem}>รหัสคำขอ</div>
             <div className={styles.headerItem}>ผู้ขอ</div>
             <div className={styles.headerItem}>แผนก</div>
@@ -271,21 +272,24 @@ export default function RequestStatusManagerPage() {
             <div className={styles.headerItem}>ประเภท</div>
             <div className={styles.headerItem}>สำเร็จ</div>
             <div className={styles.headerItem}>วันที่นำส่ง</div>
-            <div className={styles.headerItem}>สถานะปัจจุบัน</div>
-            <div className={styles.headerItem}>จัดการ</div>
+            <div className={styles.headerItem}>สถานะ</div>
+            <div className={styles.headerItem}>การดำเนินการ</div>
           </div>
 
           <div className={styles.inventory} style={{ '--rows-per-page': itemsPerPage }}>
             {currentItems.length > 0 ? (
-              currentItems.map((r) => {
+              currentItems.map((r, idx) => {
                 const statusKey = r.request_status;
                 const label = statusMap[statusKey] || statusKey || 'ไม่ทราบสถานะ';
                 const badgeClass = styles[statusToClass[statusKey]] || styles[statusToClass.__default];
-
                 const typeLabel = String(r.request_type).toLowerCase() === 'borrow' ? 'ยืม' : 'เบิก';
+
+                // ✅ คำนวณลำดับแถว
+                // const rowNumber = (currentPage - 1) * itemsPerPage + idx + 1;
 
                 return (
                   <div key={r.request_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                    {/* <div className={styles.tableCell}>{rowNumber}</div>  */}
                     <div className={styles.tableCell}>{r.request_code}</div>
                     <div className={styles.tableCell}>{r.user_name}</div>
                     <div className={styles.tableCell}>{r.department}</div>
@@ -310,7 +314,7 @@ export default function RequestStatusManagerPage() {
                           className={`${styles.manageBtn} ${viewOnlyStatuses.includes(statusKey) ? styles.viewOnlyBtn : ''}`}
                           title={viewOnlyStatuses.includes(statusKey) ? 'ดูรายละเอียดคำขอนี้' : 'จัดการสถานะคำขอนี้'}
                         >
-                          {viewOnlyStatuses.includes(statusKey) ? 'ดูรายละเอียด' : 'จัดการสถานะ'}
+                          {viewOnlyStatuses.includes(statusKey) ? 'ดู' : 'จัดการ'}
                         </button>
                       </Link>
                     </div>

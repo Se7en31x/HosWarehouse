@@ -70,22 +70,11 @@ export default function Sidebar() {
                             <span className={styles.sidebarText}>ตรวจสอบยอดคงคลัง</span>
                         </Link>
                     </li>
-                    <li className={`${styles.sidebarItem} ${isActive("/manage/requestList") ? styles.active : ""}`}>
-                        <Link href="/manage/requestList" className={styles.noStyleLink}>
-                            <FaClipboardList className={styles.sidebarIcon} />
-                            <span className={styles.sidebarText}>ตรวจสอบรายการเบิก ยืม</span>
-                        </Link>
-                    </li>
-                    <li className={`${styles.sidebarItem} ${isActive("/manage/stockDeduction") ? styles.active : ""}`}>
-                        <Link href="/manage/stockDeduction" className={styles.noStyleLink}>
-                            <FaWarehouse className={styles.sidebarIcon} />
-                            <span className={styles.sidebarText}>ตัดสต็อก</span>
-                        </Link>
-                    </li>
+
                     <li className={`${styles.sidebarItem} ${isActive("/manage/itemReceiving") ? styles.active : ""}`}>
                         <Link href="/manage/itemReceiving" className={styles.noStyleLink}>
                             <FaTruck className={styles.sidebarIcon} />
-                            <span className={styles.sidebarText}>นำเข้าสินค้า</span>
+                            <span className={styles.sidebarText}>นำเข้าทั่วไป</span>
                         </Link>
                     </li>
                     <li className={`${styles.sidebarItem} ${isActive("/manage/expired") ? styles.active : ""}`}>
@@ -94,10 +83,10 @@ export default function Sidebar() {
                             <span className={styles.sidebarText}>จัดการของหมดอายุ</span>
                         </Link>
                     </li>
-                    <li className={`${styles.sidebarItem} ${isActive("/manage/damaged") ? styles.active : ""}`}>
-                        <Link href="/manage/damaged" className={styles.noStyleLink}>
-                            <FaTools className={styles.sidebarIcon} />
-                            <span className={styles.sidebarText}>จัดการของชำรุด</span>
+                    <li className={`${styles.sidebarItem} ${isActive("/manage/manageData") ? styles.active : ""}`}>
+                        <Link href="/manage/manageData" className={styles.noStyleLink}>
+                            <FaCogs className={styles.sidebarIcon} />
+                            <span className={styles.sidebarText}>จัดการข้อมูลสินค้า</span>
                         </Link>
                     </li>
                     <li className={`${styles.sidebarItem} ${isActive('/manage/history') ? styles.active : ''}`}>
@@ -107,14 +96,38 @@ export default function Sidebar() {
                         </Link>
                     </li>
                     {/* ===== การจัดการ ===== */}
+                    <li className={styles.sidebarSectionTitle}>การจัดการ</li>
 
+                    <li className={`${styles.sidebarItem} ${isActive("/manage/requestList") ? styles.active : ""}`}>
+                        <Link href="/manage/requestList" className={styles.noStyleLink}>
+                            <FaClipboardList className={styles.sidebarIcon} />
+                            <span className={styles.sidebarText}>ตรวจสอบรายการเบิก ยืม</span>
+                        </Link>
+                    </li>
+                    <li className={`${styles.sidebarItem} ${isActive("/manage/request-status-manager") ? styles.active : ""}`}>
+                        <Link href="/manage/request-status-manager" className={styles.noStyleLink}>
+                            <FaTasks className={styles.sidebarIcon} />
+                            <span className={styles.sidebarText}>จัดการสถานะการดำเนินการ</span>
+                        </Link>
+                    </li>
+                    <li className={`${styles.sidebarItem} ${isActive("/manage/stockDeduction") ? styles.active : ""}`}>
+                        <Link href="/manage/stockDeduction" className={styles.noStyleLink}>
+                            <FaWarehouse className={styles.sidebarIcon} />
+                            <span className={styles.sidebarText}>ตัดสต็อก</span>
+                        </Link>
+                    </li>
                     <li className={`${styles.sidebarItem} ${isActive('/manage/manageReturn') ? styles.active : ''}`}>
                         <Link href="/manage/manageReturn" className={styles.noStyleLink}>
                             <FaHistory className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>จัดการการคืน</span>
                         </Link>
                     </li>
-
+                    <li className={`${styles.sidebarItem} ${isActive("/manage/damaged") ? styles.active : ""}`}>
+                        <Link href="/manage/damaged" className={styles.noStyleLink}>
+                            <FaTools className={styles.sidebarIcon} />
+                            <span className={styles.sidebarText}>จัดการของชำรุด</span>
+                        </Link>
+                    </li>
                     <hr className={styles.divider} />
 
                     {/* ===== การจัดซื้อ ===== */}
@@ -142,18 +155,7 @@ export default function Sidebar() {
 
                     {/* ===== รายงาน & การตั้งค่า ===== */}
                     <li className={styles.sidebarSectionTitle}>รายงาน & การตั้งค่า</li>
-                    <li className={`${styles.sidebarItem} ${isActive("/manage/request-status-manager") ? styles.active : ""}`}>
-                        <Link href="/manage/request-status-manager" className={styles.noStyleLink}>
-                            <FaTasks className={styles.sidebarIcon} />
-                            <span className={styles.sidebarText}>จัดการสถานะคำขอทั้งหมด</span>
-                        </Link>
-                    </li>
-                    <li className={`${styles.sidebarItem} ${isActive("/manage/manageData") ? styles.active : ""}`}>
-                        <Link href="/manage/manageData" className={styles.noStyleLink}>
-                            <FaCogs className={styles.sidebarIcon} />
-                            <span className={styles.sidebarText}>จัดการข้อมูล</span>
-                        </Link>
-                    </li>
+
                     <li className={`${styles.sidebarItem} ${isActive("/manage/report") ? styles.active : ""}`}>
                         <Link href="/manage/report" className={styles.noStyleLink}>
                             <FaChartBar className={styles.sidebarIcon} />

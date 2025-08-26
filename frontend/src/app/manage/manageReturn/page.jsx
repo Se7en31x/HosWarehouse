@@ -40,17 +40,19 @@ const customSelectStyles = {
   }),
 };
 
-// helper: format date TH
+// helper: format date TH → ใช้เลขอารบิกทั้งหมด
 const fdate = (d) => {
   if (!d) return '-';
   const dt = new Date(d);
   if (isNaN(dt)) return '-';
-  return dt.toLocaleDateString('th-TH', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  return new Intl.DateTimeFormat("th-TH-u-nu-latn", {
+    timeZone: "Asia/Bangkok",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(dt);
 };
+
 
 const statusMap = {
   borrowed: 'รอการคืน',
@@ -221,8 +223,7 @@ export default function ManageReturnPage() {
               <div className={styles.headerItem}>ครบกำหนด (เร็วที่สุด)</div>
               <div className={styles.headerItem}>สถานะกำหนดคืน</div>
               <div className={styles.headerItem}>คืนแล้ว</div>
-              <div className={styles.headerItem}>สถานะ</div>
-              <div className={styles.headerItem}>จัดการ</div>
+              <div className={styles.headerItem}>การดำเนินการ</div>
             </div>
 
             <div className={styles.inventory} style={{ '--rows-per-page': 12 }}>
@@ -242,7 +243,7 @@ export default function ManageReturnPage() {
                       <div className={styles.tableCell}>
                         {r.items_overdue > 0 ? (
                           <span className={`${styles.badge} ${styles.badgeOverdue}`}>
-                            เกิน {r.items_overdue} รายการ
+                            เกินกำหนด {r.items_overdue} รายการ
                           </span>
                         ) : r.items_due_soon > 0 ? (
                           <span className={`${styles.badge} ${styles.badgeDueSoon}`}>
@@ -250,22 +251,19 @@ export default function ManageReturnPage() {
                           </span>
                         ) : (
                           <span className={`${styles.badge} ${styles.badgeNormal}`}>
-                            0 รายการ
+                            ปกติ 0 รายการ
                           </span>
                         )}
                       </div>
                       <div className={styles.tableCell}>
                         {r.returned_items ?? 0}/{r.total_items ?? 0}
                       </div>
-                      <div className={styles.tableCell}>
-                        {statusMap[r.overall_status] || '-'}
-                      </div>
                       <div className={`${styles.tableCell} ${styles.centerCell}`}>
                         <Link
                           href={`/manage/manageReturn/${r.request_id}`}
                           className={styles.actionBtnLink}
                         >
-                          รายละเอียด
+                          จัดการ
                         </Link>
                       </div>
                     </div>

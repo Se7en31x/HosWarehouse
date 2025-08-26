@@ -22,6 +22,7 @@ export default function Header() {
 
         {/* 👤 ปุ่มโปรไฟล์ */}
         <FaUserCircle className={`${styles.icon} cursor-pointer`} size={32} />
+
       </div>
     </header>
   );
