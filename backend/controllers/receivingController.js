@@ -54,9 +54,9 @@ exports.handleRecordReceiving = async (req, res) => {
 
         // Validation รายการสินค้าแต่ละตัว
         for (const item of receivingItems) {
-            if (!item.item_id || !item.quantity || !item.lotNo) {
+            if (!item.item_id || !item.quantity) {
                 return res.status(400).json({
-                    message: 'Each item must have an item_id, quantity, and a lot number.'
+                    message: 'Each item must have an item_id and quantity.'
                 });
             }
         }
@@ -71,7 +71,8 @@ exports.handleRecordReceiving = async (req, res) => {
 
         res.status(201).json({
             message: 'Items received successfully',
-            receivingId: result.import_id
+            receivingId: result.stockin_id,   // 👈 เปลี่ยนให้ตรงกับ model (ตอนนี้ใช้ stockin_id ไม่ใช่ import_id แล้ว)
+            stockinNo: result.stockin_no
         });
     } catch (error) {
         console.error("Error in handleRecordReceiving:", error);
