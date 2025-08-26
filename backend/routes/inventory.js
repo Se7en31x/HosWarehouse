@@ -24,6 +24,6 @@ router.get('/for-withdrawal', inventoryController.getAllItemsForWithdrawal);
 router.post('/damaged', inventoryController.reportDamaged);
 
 // ✅ เพิ่ม Route ใหม่สำหรับปรับปรุงจำนวน
-router.post('/adjust', inventoryController.adjustInventory);
+router.post('/inventory/adjust', inventoryController.adjustInventory);
 
 module.exports = router;

@@ -13,8 +13,6 @@ router.get('/manageData/:id', manageDataController.getItemById);
 // อัปเดตข้อมูลพัสดุ
 router.put('/manageData/:id', upload.single('item_img'), manageDataController.updateItem);
 
-
-
 // ลบข้อมูลแบบ soft delete
 router.delete('/deleteItem/:id', manageDataController.deleteItem);
 
