@@ -1,56 +1,37 @@
-// backend/controllers/rfqController.js
-const rfqModel = require('../models/rfqModel');
+// controllers/rfqController.js
+const rfqModel = require("../models/rfqModel");
 
-// ✅ ประกาศฟังก์ชันด้วย const
-const handleCreateRfq = async (req, res) => {
-    const { created_by, pr_id, items_to_rfq } = req.body;
-
-    if (!created_by || !pr_id || !items_to_rfq || items_to_rfq.length === 0) {
-        return res.status(400).json({ message: 'ข้อมูลไม่ครบถ้วน' });
+exports.createRFQ = async (req, res) => {
+  try {
+    const { created_by, items } = req.body;
+    if (!items || items.length === 0) {
+      return res.status(400).json({ message: "ต้องมีสินค้าอย่างน้อย 1 รายการ" });
     }
 
-    try {
-        const result = await rfqModel.createRfq(created_by, items_to_rfq, pr_id);
-        res.status(201).json({
-            message: 'สร้างใบขอราคาสำเร็จ',
-            rfqId: result.rfq_id,
-            rfqNo: result.rfq_no
-        });
-    } catch (error) {
-        console.error('Error in handleCreateRfq:', error);
-        res.status(500).json({ message: 'เกิดข้อผิดพลาดในการสร้างใบขอราคา' });
-    }
+    const result = await rfqModel.createRFQ({ created_by, items });
+    res.status(201).json({ message: "สร้างใบขอราคาเรียบร้อย", ...result });
+  } catch (err) {
+    console.error("❌ createRFQ error:", err);
+    res.status(500).json({ message: "เกิดข้อผิดพลาด", error: err.message });
+  }
 };
 
-// ✅ ประกาศฟังก์ชันด้วย const
-const handleGetAllRfq = async (req, res) => {
-    try {
-        const rfqList = await rfqModel.getAllRfq();
-        res.status(200).json(rfqList);
-    } catch (error) {
-        console.error('Error in handleGetAllRfq:', error);
-        res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลรายการ RFQ' });
-    }
+exports.getAllRFQs = async (req, res) => {
+  try {
+    const rfqs = await rfqModel.getAllRFQs();
+    res.json(rfqs);
+  } catch (err) {
+    res.status(500).json({ message: "เกิดข้อผิดพลาด", error: err.message });
+  }
 };
 
-// ✅ ประกาศฟังก์ชันด้วย const
-const handleGetRfqById = async (req, res) => {
-    const { rfq_id } = req.params;
-    try {
-        const rfqDetails = await rfqModel.getRfqById(rfq_id);
-        if (!rfqDetails) {
-            return res.status(404).json({ message: 'ไม่พบรายการ RFQ' });
-        }
-        res.status(200).json(rfqDetails);
-    } catch (error) {
-        console.error('Error in handleGetRfqById:', error);
-        res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงรายละเอียด RFQ' });
-    }
-};
-
-// ✅ ส่วนสำคัญ: ต้อง export ฟังก์ชันทั้งหมดออกมา
-module.exports = {
-    handleCreateRfq,
-    handleGetAllRfq,
-    handleGetRfqById
+exports.getRFQById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const rfq = await rfqModel.getRFQById(id);
+    if (!rfq.header) return res.status(404).json({ message: "ไม่พบ RFQ" });
+    res.json(rfq);
+  } catch (err) {
+    res.status(500).json({ message: "เกิดข้อผิดพลาด", error: err.message });
+  }
 };

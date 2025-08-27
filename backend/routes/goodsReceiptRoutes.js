@@ -1,14 +1,15 @@
-const express = require('express');
+// routes/goodsReceiptRoutes.js
+const express = require("express");
 const router = express.Router();
-const goodsReceiptController = require('../controllers/goodsReceiptController');
+const grController = require("../controllers/goodsReceiptController");
 
-// GET /api/goods-receipts
-router.get('/goods-receipts', goodsReceiptController.getAllGoodsReceipts);
+// GR List
+router.get("/gr", grController.getAllGoodsReceipts);
 
-// POST /api/goods-receipts
-router.post('/goods-receipts', goodsReceiptController.createGoodsReceipt);
+// GR Detail
+router.get("/gr/:id", grController.getGoodsReceiptById);
 
-// GET /api/goods-receipts/:id
-router.get('/goods-receipts/:id', goodsReceiptController.getGoodsReceiptById);
+// Create GR
+router.post("/gr", grController.createGoodsReceipt);
 
 module.exports = router;
