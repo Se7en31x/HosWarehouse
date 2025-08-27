@@ -1,49 +1,51 @@
-const goodsReceiptModel = require('../models/goodsReceiptModel');
+// controllers/goodsReceiptController.js
+const { pool } = require("../config/db");
+const grModel = require("../models/goodsReceiptModel");
 
-// Controller: ดึงรายการนำเข้าสินค้าทั้งหมด
-exports.getAllGoodsReceipts = async (req, res) => {
+// ===== GET: List GR =====
+async function getAllGoodsReceipts(req, res) {
   try {
-    const goodsReceipts = await goodsReceiptModel.getAllGoodsReceipts();
-    res.status(200).json(goodsReceipts);
-  } catch (error) {
-    console.error("Error fetching goods receipts:", error);
-    res.status(500).json({ message: "Internal server error" });
+    const data = await grModel.getAllGoodsReceipts();
+    res.json(data);
+  } catch (err) {
+    console.error("Error getAllGoodsReceipts:", err);
+    res.status(500).json({ message: "ไม่สามารถโหลดรายการ GR ได้" });
   }
-};
+}
 
-// Controller: ดึงรายละเอียดการนำเข้าสินค้าตาม ID
-exports.getGoodsReceiptById = async (req, res) => {
-  const { id } = req.params;
+// ===== GET: GR Detail =====
+async function getGoodsReceiptById(req, res) {
   try {
-    const grDetail = await goodsReceiptModel.getGoodsReceiptDetails(id);
-    if (!grDetail) {
-      return res.status(404).json({ message: "Goods receipt not found" });
-    }
-    res.status(200).json(grDetail);
-  } catch (error) {
-    console.error("Error fetching goods receipt details:", error);
-    res.status(500).json({ message: "Internal server error" });
+    const { id } = req.params;
+    const data = await grModel.getGoodsReceiptById(id);
+    if (!data) return res.status(404).json({ message: "ไม่พบข้อมูล GR" });
+    res.json(data);
+  } catch (err) {
+    console.error("Error getGoodsReceiptById:", err);
+    res.status(500).json({ message: "ไม่สามารถโหลดรายละเอียด GR ได้" });
   }
-};
+}
 
-// Controller: สร้างรายการนำเข้าสินค้าใหม่
-exports.createGoodsReceipt = async (req, res) => {
-  const { userId, poId, supplierId, receivingNote, receivingItems } = req.body;
-  if (!userId || !supplierId || !receivingItems || receivingItems.length === 0) {
-    return res.status(400).json({ message: "Missing required fields: userId, supplierId, or receivingItems." });
-  }
-  
+// ===== POST: Create GR =====
+async function createGoodsReceipt(req, res) {
+  const client = await pool.connect();
   try {
-    const newGr = await goodsReceiptModel.recordReceiving({
-      user_id: userId,
-      po_id: poId,
-      supplier_id: supplierId,
-      receiving_note: receivingNote,
-      receivingItems: receivingItems,
-    });
-    res.status(201).json({ message: "Goods receipt created successfully.", gr_no: newGr.gr_no, import_id: newGr.import_id });
-  } catch (error) {
-    console.error("Error creating goods receipt:", error);
-    res.status(500).json({ message: "Failed to create goods receipt." });
+    await client.query("BEGIN");
+    const grData = req.body;
+    const newGr = await grModel.createGoodsReceipt(client, grData);
+    await client.query("COMMIT");
+    res.status(201).json(newGr);
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("Error createGoodsReceipt:", err);
+    res.status(500).json({ message: "ไม่สามารถสร้าง GR ได้" });
+  } finally {
+    client.release();
   }
+}
+
+module.exports = {
+  getAllGoodsReceipts,
+  getGoodsReceiptById,
+  createGoodsReceipt,
 };
