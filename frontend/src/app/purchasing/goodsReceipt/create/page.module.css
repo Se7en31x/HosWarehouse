@@ -1,0 +1,116 @@
+:root {
+  --bg: #f9fafb;
+  --panel: #ffffff;
+  --border: #e5e7eb;
+  --text: #111827;
+  --primary: #008dda;
+  --primary-hover: #41c9e2;
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+  --radius: 10px;
+  --shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--bg);
+  font-family: 'Inter', sans-serif;
+}
+
+.title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: var(--primary);
+  text-align: center;
+}
+
+.selector {
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.selector select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  min-width: 260px;
+  outline: none;
+}
+
+.detail {
+  background: var(--panel);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.section {
+  margin-bottom: 1.5rem;
+}
+
+.section input {
+  margin: 0.3rem 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  background: white;
+}
+
+.table thead {
+  background: var(--primary);
+  color: white;
+}
+
+.table th,
+.table td {
+  border: 1px solid var(--border);
+  padding: 0.6rem 0.8rem;
+  text-align: left;
+}
+
+.table tr:nth-child(even) {
+  background: #f3f4f6;
+}
+
+.inputItem {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+}
+
+.footer {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.button {
+  background: var(--primary);
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.button:hover {
+  background: var(--primary-hover);
+}

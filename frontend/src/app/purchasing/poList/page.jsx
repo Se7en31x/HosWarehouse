@@ -1,350 +1,435 @@
+// src/app/poList/page.jsx
 "use client";
 
-import { useState } from "react";
-import styles from './page.module.css';
+import { useState, useEffect } from "react";
+import styles from "./page.module.css";
+import axiosInstance from "@/app/utils/axiosInstance";
+import Swal from "sweetalert2";
+import Link from "next/link";
 
-// ข้อมูลตัวอย่างสำหรับคำสั่งซื้อ (Purchase Orders)
-const initialPurchaseOrders = [
-  {
-    id: 'PO-001',
-    date: '2025-08-26',
-    supplier: 'บริษัท A',
-    totalAmount: 0,
-    status: 'รอดำเนินการ',
-    companyInfo: {
-      name: '',
-      address: '',
-      phone: '',
-      email: '',
-      taxId: '',
-    },
-    items: [
-      { id: '001', name: 'ยาแก้ปวด', quantity: 100, unit: 'ขวด', category: 'ยา', spec: 'ขนาด 500mg, ยี่ห้อ XYZ', price: 0 },
-      { id: '002', name: 'ผ้าก๊อซ', quantity: 50, unit: 'ม้วน', category: 'เวชภัณฑ์', spec: 'ขนาด 10cm x 10m', price: 0 },
-    ],
-    attachments: [],
-    notes: '',
-  },
-  {
-    id: 'PO-002',
-    date: '2025-08-27',
-    supplier: 'บริษัท B',
-    totalAmount: 0,
-    status: 'รอดำเนินการ',
-    companyInfo: {
-      name: '',
-      address: '',
-      phone: '',
-      email: '',
-      taxId: '',
-    },
-    items: [
-      { id: '003', name: 'เครื่องวัดความดัน', quantity: 5, unit: 'ชิ้น', category: 'อุปกรณ์ทางการแพทย์', spec: 'ดิจิทัล, ยี่ห้อ Omron', price: 0 },
-    ],
-    attachments: [],
-    notes: '',
-  },
-];
-
-const attachmentTypes = [
-  'ใบขอราคา',
-  'ใบเสนอราคา',
-  'ใบสั่งซื้อ',
-  'ใบกำกับภาษี',
-  'ใบเสร็จรับเงิน',
-  'หลักฐานการจ่ายเงิน',
-  'อื่นๆ',
-];
-
-const PurchaseOrderListPage = () => {
-  const [purchaseOrders, setPurchaseOrders] = useState(initialPurchaseOrders);
-  const [selectedPO, setSelectedPO] = useState(null);
-  const [formData, setFormData] = useState({
-    supplierPrices: {},
-    totalAmount: 0,
-    attachments: [],
-    notes: '',
-    companyInfo: {
-      name: '',
-      address: '',
-      phone: '',
-      email: '',
-      taxId: '',
-    },
+const PoAndRfqPage = () => {
+  const [rfqs, setRfqs] = useState([]);
+  const [selectedRFQ, setSelectedRFQ] = useState(null);
+  const [supplier, setSupplier] = useState({
+    name: "",
+    address: "",
+    phone: "",
+    email: "",
+    taxId: "",
   });
-  const [attachmentType, setAttachmentType] = useState(attachmentTypes[0]);
-  const [errors, setErrors] = useState({});
+  const [prices, setPrices] = useState({});
+  const [discounts, setDiscounts] = useState({});
+  const [attachments, setAttachments] = useState({});
+  const [notes, setNotes] = useState("");
+  const [subtotal, setSubtotal] = useState(0);
+  const [vat, setVat] = useState(0);
+  const [grandTotal, setGrandTotal] = useState(0);
+  const [poList, setPoList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const validateForm = () => {
-    const newErrors = {};
-    if (!formData.companyInfo.name.trim()) {
-      newErrors.name = 'กรุณากรอกชื่อบริษัท';
+  // Load RFQ and PO
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const resRfq = await axiosInstance.get("/rfq");
+        setRfqs(resRfq.data);
+
+        const resPo = await axiosInstance.get("/po");
+        setPoList(resPo.data);
+      } catch (err) {
+        Swal.fire("ผิดพลาด", err.response?.data?.message || err.message, "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Load selected RFQ
+  const handleSelectRFQ = async (id) => {
+    if (!id) {
+      setSelectedRFQ(null);
+      setPrices({});
+      setDiscounts({});
+      setSubtotal(0);
+      setVat(0);
+      setGrandTotal(0);
+      setAttachments({});
+      return;
     }
-    if (formData.companyInfo.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.companyInfo.email)) {
-      newErrors.email = 'กรุณากรอกอีเมลที่ถูกต้อง';
+    try {
+      const res = await axiosInstance.get(`/rfq/${id}`);
+      setSelectedRFQ(res.data);
+      setPrices({});
+      setDiscounts({});
+      setSubtotal(0);
+      setVat(0);
+      setGrandTotal(0);
+      setAttachments({});
+    } catch (err) {
+      Swal.fire("ผิดพลาด", "โหลด RFQ ไม่สำเร็จ", "error");
     }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
-  const handleViewDetails = (po) => {
-    setSelectedPO(po);
-    setFormData({
-      supplierPrices: po.items.reduce((acc, item) => ({ ...acc, [item.id]: item.price }), {}),
-      totalAmount: po.totalAmount,
-      attachments: po.attachments,
-      notes: po.notes,
-      companyInfo: po.companyInfo,
-    });
-    setErrors({});
+  const handlePriceChange = (itemId, value) => {
+    setPrices({ ...prices, [itemId]: parseFloat(value) || 0 });
   };
 
-  const handleInputChange = (itemId, value) => {
-    const newPrices = { ...formData.supplierPrices, [itemId]: parseFloat(value) || 0 };
-    const newTotal = Object.values(newPrices).reduce((sum, price) => sum + price, 0);
-    setFormData({ ...formData, supplierPrices: newPrices, totalAmount: newTotal });
+  const handleDiscountChange = (itemId, value) => {
+    setDiscounts({ ...discounts, [itemId]: parseFloat(value) || 0 });
   };
 
-  const handleCompanyInfoChange = (field, value) => {
-    setFormData({
-      ...formData,
-      companyInfo: { ...formData.companyInfo, [field]: value },
-    });
-    setErrors({ ...errors, [field]: '' });
-  };
+  // Calculate totals
+  useEffect(() => {
+    if (!selectedRFQ) return;
+    let sub = selectedRFQ.items.reduce((sum, item) => {
+      const unitPrice = prices[item.rfq_item_id] || 0;
+      const discount = discounts[item.rfq_item_id] || 0;
+      return sum + (item.qty * unitPrice - discount);
+    }, 0);
 
-  const handleNotesChange = (value) => {
-    setFormData({ ...formData, notes: value });
-  };
+    setSubtotal(sub);
+    const vatCalc = (sub * 0.07).toFixed(2);
+    setVat(parseFloat(vatCalc));
+    setGrandTotal(sub + parseFloat(vatCalc));
+  }, [selectedRFQ, prices, discounts]);
 
-  const handleAttachmentChange = (e) => {
+  // Handle attachments
+  const handleAttachmentChange = (e, type) => {
     const files = Array.from(e.target.files);
-    const newAttachments = files.map(file => ({ name: file.name, type: attachmentType }));
-    setFormData({ ...formData, attachments: [...formData.attachments, ...newAttachments] });
+    setAttachments({
+      ...attachments,
+      [type]: [...(attachments[type] || []), ...files],
+    });
   };
 
-  const handleRemoveAttachment = (index) => {
-    const newAttachments = formData.attachments.filter((_, i) => i !== index);
-    setFormData({ ...formData, attachments: newAttachments });
+  const handleRemoveAttachment = (type, idx) => {
+    setAttachments({
+      ...attachments,
+      [type]: attachments[type].filter((_, i) => i !== idx),
+    });
   };
 
-  const handleSaveDetails = () => {
-    if (!validateForm()) return;
-    const updatedPOs = purchaseOrders.map(po =>
-      po.id === selectedPO.id
-        ? {
-            ...po,
-            totalAmount: formData.totalAmount,
-            items: po.items.map(item => ({ ...item, price: formData.supplierPrices[item.id] || 0 })),
-            attachments: formData.attachments,
-            notes: formData.notes,
-            companyInfo: formData.companyInfo,
-            status: 'บันทึกแล้ว',
-          }
-        : po
-    );
-    setPurchaseOrders(updatedPOs);
-    setSelectedPO(null);
-    console.log('บันทึกข้อมูล:', formData);
+  // Create PO
+  const handleCreatePO = async () => {
+    if (!selectedRFQ) {
+      Swal.fire("แจ้งเตือน", "กรุณาเลือก RFQ ก่อน", "warning");
+      return;
+    }
+    try {
+      const payload = {
+        rfq_id: selectedRFQ?.header?.rfq_id || selectedRFQ?.rfq_id,
+        supplier_name: supplier.name,
+        supplier_address: supplier.address,
+        supplier_phone: supplier.phone,
+        supplier_email: supplier.email,
+        supplier_tax_id: supplier.taxId,
+        created_by: 1,
+        notes,
+        subtotal,
+        vat_amount: vat,
+        grand_total: grandTotal,
+        items: selectedRFQ?.items?.map((item) => ({
+          rfq_item_id: item.rfq_item_id,
+          item_id: item.item_id,
+          qty: item.qty,
+          unit: item.unit,
+          price: prices[item.rfq_item_id] || 0,
+          discount: discounts[item.rfq_item_id] || 0,
+        })),
+      };
+
+      const res = await axiosInstance.post("/po/from-rfq", payload);
+      const newPo = res.data;
+
+      // Handle file uploads after successful PO creation
+      if (Object.keys(attachments).some(type => attachments[type]?.length > 0)) {
+        const formData = new FormData();
+        Object.values(attachments).forEach(filesArray => {
+          filesArray.forEach(file => {
+            formData.append("files", file);
+          });
+        });
+        
+        await axiosInstance.post(`/po/${newPo.po_id}/upload`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+
+      Swal.fire("สำเร็จ", `สร้าง PO เลขที่ ${newPo.po_no} แล้ว`, "success");
+      setPoList((prev) => [{ ...newPo, attachments: newPo.attachments || [] }, ...prev]);
+
+      // Reset form
+      setSelectedRFQ(null);
+      setPrices({});
+      setDiscounts({});
+      setSubtotal(0);
+      setVat(0);
+      setGrandTotal(0);
+      setAttachments({});
+      setSupplier({ name: "", address: "", phone: "", email: "", taxId: "" });
+      setNotes("");
+    } catch (err) {
+      Swal.fire("ผิดพลาด", err.response?.data?.message || err.message, "error");
+    }
   };
+
+  if (loading) {
+    return <div>กำลังโหลด...</div>;
+  }
+
+  // กำหนดประเภทไฟล์
+  const attachmentTypes = [
+    { label: "ใบเสนอราคา", type: "quotation" },
+    { label: "ใบส่งของ / ใบส่งมอบ", type: "delivery_note" },
+    { label: "ใบกำกับภาษี", type: "tax_invoice" },
+    { label: "ใบแจ้งหนี้", type: "invoice" },
+    { label: "หลักฐานการจ่ายเงิน", type: "payment_proof" },
+    { label: "ใบเสร็จรับเงิน", type: "receipt" },
+    { label: "สัญญาซื้อขาย", type: "contract" },
+    { label: "อื่น ๆ", type: "other" },
+  ];
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>หน้ารายการคำสั่งซื้อ</h1>
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th className={styles.th}>ID</th>
-              <th className={styles.th}>วันที่</th>
-              <th className={styles.th}>บริษัทผู้ขาย</th>
-              <th className={styles.th}>จำนวนเงินรวม</th>
-              <th className={styles.th}>สถานะ</th>
-              <th className={styles.th}>การกระทำ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {purchaseOrders.map(po => (
-              <tr key={po.id}>
-                <td className={styles.td}>{po.id}</td>
-                <td className={styles.td}>{po.date}</td>
-                <td className={styles.td}>{po.supplier}</td>
-                <td className={styles.td}>{po.totalAmount.toLocaleString()} บาท</td>
-                <td className={styles.td}>{po.status}</td>
-                <td className={styles.td}>
-                  <button className={styles.button} onClick={() => handleViewDetails(po)}>ดูรายละเอียด</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* ส่วนสำหรับสร้างใบสั่งซื้อจาก RFQ */}
+      <h1 className={styles.title}>สร้างใบสั่งซื้อ (PO) จาก RFQ</h1>
+
+      <div className={styles.selector}>
+        <label>เลือก RFQ: </label>
+        <select 
+          onChange={(e) => handleSelectRFQ(e.target.value)} 
+          value={selectedRFQ?.rfq_id || ""}
+        >
+          <option value="">-- กรุณาเลือก --</option>
+          {rfqs.map((r) => (
+            <option key={r.rfq_id} value={r.rfq_id}>
+              {r.rfq_no} - {r.status}
+            </option>
+          ))}
+        </select>
+
+        {selectedRFQ && (
+          <button 
+            type="button" 
+            className={styles.cancelButton} 
+            onClick={() => handleSelectRFQ("")}
+          >
+            ❌ ปิดฟอร์ม
+          </button>
+        )}
       </div>
 
-      {selectedPO && (
-        <div className={styles.modal}>
-          <div className={styles.modalContent}>
-            <h2 className={styles.modalTitle}>รายละเอียดคำสั่งซื้อ: {selectedPO.id}</h2>
-            <p className={styles.modalText}>บริษัทผู้ขาย: {selectedPO.supplier}</p>
-            <p className={styles.modalText}>วันที่: {selectedPO.date}</p>
-            <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>ข้อมูลบริษัท</h3>
-              <div className={styles.formGroup}>
-                <label className={styles.label}>ชื่อบริษัท:</label>
-                <input
-                  type="text"
-                  value={formData.companyInfo.name}
-                  onChange={(e) => handleCompanyInfoChange('name', e.target.value)}
-                  className={`${styles.input} ${errors.name ? styles.inputError : ''}`}
-                />
-                {errors.name && <span className={styles.errorText}>{errors.name}</span>}
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.label}>ที่อยู่:</label>
-                <input
-                  type="text"
-                  value={formData.companyInfo.address}
-                  onChange={(e) => handleCompanyInfoChange('address', e.target.value)}
-                  placeholder="เช่น 123 ถ.สุขุมวิท กรุงเทพฯ"
-                  className={styles.input}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.label}>เบอร์โทร:</label>
-                <input
-                  type="text"
-                  value={formData.companyInfo.phone}
-                  onChange={(e) => handleCompanyInfoChange('phone', e.target.value)}
-                  className={styles.input}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.label}>อีเมล:</label>
-                <input
-                  type="email"
-                  value={formData.companyInfo.email}
-                  onChange={(e) => handleCompanyInfoChange('email', e.target.value)}
-                  className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
-                />
-                {errors.email && <span className={styles.errorText}>{errors.email}</span>}
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.label}>เลขประจำตัวผู้เสียภาษี:</label>
-                <input
-                  type="text"
-                  value={formData.companyInfo.taxId}
-                  onChange={(e) => handleCompanyInfoChange('taxId', e.target.value)}
-                  className={styles.input}
-                />
-              </div>
-            </div>
-            <div className={styles.tableContainer}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th className={styles.th}>ID</th>
-                    <th className={styles.th}>ชื่อสินค้า</th>
-                    <th className={styles.th}>จำนวน</th>
-                    <th className={styles.th}>หน่วย</th>
-                    <th className={styles.th}>ประเภท</th>
-                    <th className={styles.th}>สเปค</th>
-                    <th className={styles.th}>ราคาจากบริษัท (กรอก)</th>
+      {selectedRFQ && (
+        <div className={styles.detail}>
+          <h2>
+            รายละเอียด RFQ:{" "}
+            {selectedRFQ?.header?.rfq_no || selectedRFQ?.rfq_no || "-"}
+          </h2>
+
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>ชื่อสินค้า</th>
+                <th>จำนวน</th>
+                <th>หน่วย</th>
+                <th>ราคา/หน่วย</th>
+                <th>ส่วนลด</th>
+                <th>จำนวนเงิน</th>
+              </tr>
+            </thead>
+            <tbody>
+              {selectedRFQ?.items?.map((item) => {
+                const unitPrice = prices[item.rfq_item_id] || 0;
+                const discount = discounts[item.rfq_item_id] || 0;
+                const total = (item.qty * unitPrice) - discount;
+
+                return (
+                  <tr key={item.rfq_item_id}>
+                    <td>{item.item_name}</td>
+                    <td>{item.qty}</td>
+                    <td>{item.unit}</td>
+                    <td>
+                      <input
+                        type="number"
+                        className={styles.inputItem}
+                        value={unitPrice}
+                        onChange={(e) =>
+                          handlePriceChange(item.rfq_item_id, e.target.value)
+                        }
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        className={styles.inputItem}
+                        value={discount}
+                        onChange={(e) =>
+                          handleDiscountChange(item.rfq_item_id, e.target.value)
+                        }
+                      />
+                    </td>
+                    <td>{Number(total).toLocaleString()} บาท</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {selectedPO.items.map(item => (
-                    <tr key={item.id}>
-                      <td className={styles.td}>{item.id}</td>
-                      <td className={styles.td}>{item.name}</td>
-                      <td className={styles.td}>{item.quantity}</td>
-                      <td className={styles.td}>{item.unit}</td>
-                      <td className={styles.td}>{item.category}</td>
-                      <td className={styles.td}>{item.spec}</td>
-                      <td className={styles.td}>
-                        <input
-                          type="number"
-                          value={formData.supplierPrices[item.id] || ''}
-                          onChange={(e) => handleInputChange(item.id, e.target.value)}
-                          placeholder="กรอกราคา (บาท)"
-                          className={styles.input}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                );
+              })}
+            </tbody>
+          </table>
+          <div className={styles.summaryContainer}>
+            <div className={styles.summaryRow}>
+              <span>รวม (ก่อนภาษี):</span>
+              <span>{Number(subtotal).toLocaleString()} บาท</span>
             </div>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>
-                จำนวนเงินรวม: {formData.totalAmount.toLocaleString()} บาท
-              </label>
+            <div className={styles.summaryRow}>
+              <span>ภาษีมูลค่าเพิ่ม (7%):</span>
+              <span>{Number(vat).toFixed(2).toLocaleString()} บาท</span>
             </div>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>หมายเหตุ:</label>
-              <textarea
-                value={formData.notes}
-                onChange={(e) => handleNotesChange(e.target.value)}
-                placeholder="หมายเหตุเพิ่มเติม"
-                className={styles.textarea}
-              />
+            <div className={styles.summaryRow + ' ' + styles.grandTotalRow}>
+              <span>ยอดสุทธิ:</span>
+              <span>{Number(grandTotal).toFixed(2).toLocaleString()} บาท</span>
             </div>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>แนบไฟล์เกี่ยวกับการจัดซื้อ:</label>
-              <select
-                value={attachmentType}
-                onChange={(e) => setAttachmentType(e.target.value)}
-                className={styles.select}
-              >
-                {attachmentTypes.map(type => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
+          </div>
+
+          <div className={styles.section}>
+            <h3>ข้อมูลบริษัท/ซัพพลายเออร์</h3>
+            <div className={styles.formGrid}>
               <input
-                type="file"
-                multiple
-                onChange={handleAttachmentChange}
-                className={styles.input}
+                type="text"
+                placeholder="ชื่อบริษัท"
+                value={supplier.name}
+                onChange={(e) =>
+                  setSupplier({ ...supplier, name: e.target.value })
+                }
               />
-              {formData.attachments.length > 0 && (
-                <div className={styles.attachmentTableContainer}>
-                  <table className={styles.attachmentTable}>
-                    <thead>
-                      <tr>
-                        <th className={styles.th}>ชื่อไฟล์</th>
-                        <th className={styles.th}>ประเภท</th>
-                        <th className={styles.th}>การกระทำ</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {formData.attachments.map((attach, index) => (
-                        <tr key={index}>
-                          <td className={styles.td}>{attach.name}</td>
-                          <td className={styles.td}>{attach.type}</td>
-                          <td className={styles.td}>
-                            <button
-                              className={styles.removeButton}
-                              onClick={() => handleRemoveAttachment(index)}
-                            >
-                              ลบ
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              <input
+                type="text"
+                placeholder="ที่อยู่"
+                value={supplier.address}
+                onChange={(e) =>
+                  setSupplier({ ...supplier, address: e.target.value })
+                }
+              />
+              <input
+                type="text"
+                placeholder="เบอร์โทร"
+                value={supplier.phone}
+                onChange={(e) =>
+                  setSupplier({ ...supplier, phone: e.target.value })
+                }
+              />
+              <input
+                type="email"
+                placeholder="อีเมล"
+                value={supplier.email}
+                onChange={(e) =>
+                  setSupplier({ ...supplier, email: e.target.value })
+                }
+              />
+              <input
+                type="text"
+                placeholder="เลขผู้เสียภาษี"
+                value={supplier.taxId}
+                onChange={(e) =>
+                  setSupplier({ ...supplier, taxId: e.target.value })
+                }
+              />
+            </div>
+          </div>
+
+          <div className={styles.section}>
+            <h3>แนบไฟล์ประกอบ</h3>
+            <div className={styles.fileGrid}>
+              {attachmentTypes.map((f, idx) => (
+                <div key={idx} className={styles.fileGroup}>
+                  <label className={styles.fileLabel}>
+                    <div className={styles.uploadBox}>
+                      <span>{f.label}</span>
+                      <input
+                        type="file"
+                        multiple
+                        className={styles.fileInput}
+                        onChange={(e) => handleAttachmentChange(e, f.type)}
+                      />
+                    </div>
+                  </label>
+                  <div className={styles.fileList}>
+                    {(attachments[f.type] || []).map((file, i) => (
+                      <div key={i} className={styles.fileItem}>
+                        <span>{file.name}</span>
+                        <button type="button" className={styles.removeButton} onClick={() => handleRemoveAttachment(f.type, i)}>
+                          ลบ
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
-            <div className={styles.modalFooter}>
-              <div>
-                <button className={styles.button} onClick={handleSaveDetails}>บันทึก</button>
-                <button className={styles.button} onClick={() => setSelectedPO(null)}>ปิด</button>
-              </div>
-            </div>
+          </div>
+          
+          <div className={styles.section}>
+            <textarea
+              className={styles.textarea}
+              placeholder="หมายเหตุ"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </div>
+
+          <div className={styles.footer}>
+            <button className={styles.button} onClick={handleCreatePO}>
+              ✅ สร้างใบสั่งซื้อ
+            </button>
           </div>
         </div>
       )}
+
+      {/* ส่วนสำหรับรายการใบสั่งซื้อ */}
+      <div className={styles.section}>
+        <h2>📑 รายการใบสั่งซื้อ</h2>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>เลขที่ PO</th>
+              <th>ซัพพลายเออร์</th>
+              <th>วันที่สร้าง</th>
+              <th>ยอดรวม (ก่อน VAT)</th>
+              <th>VAT</th>
+              <th>ยอดสุทธิ</th>
+              <th>สถานะ</th>
+              <th>การจัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {poList.length === 0 ? (
+              <tr>
+                <td colSpan="8" style={{ textAlign: "center", color: "#6b7280" }}>
+                  ยังไม่มีใบสั่งซื้อ
+                </td>
+              </tr>
+            ) : (
+              poList.map((po) => (
+                <tr key={po.po_id}>
+                  <td>{po.po_no}</td>
+                  <td>{po.supplier_name}</td>
+                  <td>{new Date(po.created_at).toLocaleDateString("th-TH")}</td>
+                  <td>{Number(po.subtotal).toLocaleString()} บาท</td>
+                  <td>{Number(po.vat_amount).toFixed(2).toLocaleString()} บาท</td>
+                  <td>{Number(po.grand_total).toFixed(2).toLocaleString()} บาท</td>
+                  <td>{po.status}</td>
+                  <td>
+                    <Link href={`/purchasing/poList/${po.po_id}`}>
+                      <button className={styles.viewButton}>ดูรายละเอียด</button>
+                    </Link>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
 
-export default PurchaseOrderListPage;
+export default PoAndRfqPage;

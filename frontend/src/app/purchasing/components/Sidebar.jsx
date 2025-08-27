@@ -53,12 +53,12 @@ export default function Sidebar() {
               <span className={styles.sidebarText}>รายการขอซื้อ (PR)</span>
             </Link>
           </li>
-          {/* <li className={`${styles.sidebarItem} ${isActive('/purchasing/rfq') ? styles.active : ''}`}>
-            <Link href="/purchasing/rfq" className={styles.noStyleLink}>
+          <li className={`${styles.sidebarItem} ${isActive('/purchasing/rfqList') ? styles.active : ''}`}>
+            <Link href="/purchasing/rfqList" className={styles.noStyleLink}>
               <FaListAlt className={styles.sidebarIcon} />
               <span className={styles.sidebarText}>ใบขอราคา (RFQ)</span>
             </Link>
-          </li> */}
+          </li>
           <li className={`${styles.sidebarItem} ${isActive('/purchasing/poList') ? styles.active : ''}`}>
             <Link href="/purchasing/poList" className={styles.noStyleLink}>
               <FaClipboardCheck className={styles.sidebarIcon} />

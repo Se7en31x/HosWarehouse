@@ -1,0 +1,198 @@
+/* src/app/purchasing/poList/[id]/page.module.css */
+
+/* จัดวางคอนเทนเนอร์หลัก */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: Arial, sans-serif;
+}
+
+/* ส่วนหัวเรื่อง */
+.title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #333;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* กล่องรายละเอียด PO */
+.detail {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.detail h2 {
+  font-size: 1.8rem;
+  color: #4a90e2;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.detail p {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.section {
+  margin-top: 2rem;
+}
+
+.section h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 1rem;
+}
+
+/* ตารางรายการสินค้า */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+}
+
+.table th,
+.table td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+/* จัดวางส่วนสรุปยอดเงิน */
+.summaryContainer {
+  margin-top: 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; /* จัดให้อยู่ชิดขวา */
+  padding: 10px;
+  border-top: 1px solid #ccc;
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  width: 300px; /* กำหนดความกว้างเพื่อจัดคอลัมน์ให้ตรงกัน */
+  margin-bottom: 5px;
+}
+
+.summaryRow span:first-child {
+  font-weight: bold;
+}
+
+.grandTotalRow {
+  font-size: 1.2em;
+  font-weight: bold;
+  border-top: 2px solid #333;
+  padding-top: 10px;
+}
+
+/* จัดวางส่วนอัปโหลดไฟล์ */
+.fileGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.fileGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ซ่อน input file เดิมและสร้างปุ่มอัปโหลดใหม่ */
+.fileLabel {
+  cursor: pointer;
+  width: 100%;
+}
+
+.fileInput {
+  display: none;
+}
+
+.uploadBox {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  text-align: center;
+  transition: all 0.3s ease;
+  height: 100%; /* ทำให้กล่องมีความสูงเท่ากัน */
+}
+
+.uploadBox:hover {
+  background-color: #f0f0f0;
+  border-color: #007bff;
+}
+
+.uploadBox span {
+  font-weight: bold;
+  color: #555;
+  margin-top: 5px;
+}
+
+.fileList {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fileItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f9f9f9;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+.fileItem a {
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.removeButton {
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+  margin-left: 10px;
+  font-size: 0.8rem;
+}
+
+.footer {
+  margin-top: 2rem;
+  text-align: right;
+}
+
+.button {
+  padding: 10px 20px;
+  background-color: #4a90e2;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #357bd8;
+}
