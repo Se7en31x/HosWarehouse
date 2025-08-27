@@ -491,7 +491,7 @@ export default function MyRequestsPage() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="..."
+              placeholder="สถานะ, ประเภท"
             />
           </div>
           <button className={`${styles.ghostBtn} ${styles.clearButton}`} onClick={() => { setQuery(''); setTypeFilter(''); setStatusFilter(''); }}>
@@ -509,7 +509,7 @@ export default function MyRequestsPage() {
           <div className={styles.headerItem}>ประเภท</div>
           <div className={styles.headerItem}>จำนวน</div>
           <div className={styles.headerItem}>สถานะ</div>
-          <div className={styles.headerItem}>จัดการ</div>
+          <div className={styles.headerItem}>การดำเนินการ</div>
         </div>
 
         <div className={styles.inventory} style={{ '--rows-per-page': ITEMS_PER_PAGE }}>

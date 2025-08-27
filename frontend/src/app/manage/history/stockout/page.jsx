@@ -195,7 +195,7 @@ export default function StockOutHistoryPage() {
             <div className={styles.headerItem}>เลขที่เอกสาร</div>
             <div className={styles.headerItem}>ผู้ดำเนินการ</div>
             <div className={styles.headerItem}>ประเภท</div>
-            <div className={`${styles.headerItem} ${styles.centerCell}`}>จัดการ</div>
+            <div className={`${styles.headerItem} ${styles.centerCell}`}>ตรวจสอบ</div>
           </div>
 
           <div className={styles.inventory} style={{ "--rows-per-page": ROWS_PER_PAGE }}>

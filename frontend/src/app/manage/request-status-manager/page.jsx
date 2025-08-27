@@ -1,11 +1,10 @@
 'use client';
-
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import axiosInstance from '@/app/utils/axiosInstance';
 import Swal from 'sweetalert2';
 import dynamic from 'next/dynamic';
-import { Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trash2, ChevronLeft, ChevronRight, Settings, Eye } from 'lucide-react';
 import styles from './page.module.css';
 
 const Select = dynamic(() => import('react-select'), { ssr: false });
@@ -40,14 +39,10 @@ export default function RequestStatusManagerPage() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-
-  // ฟิลเตอร์
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-
   const itemsPerPage = 9;
 
-  // แผนที่สถานะ
   const statusMap = {
     waiting_approval: 'รอการอนุมัติ',
     approved_all: 'อนุมัติทั้งหมด',
@@ -134,16 +129,12 @@ export default function RequestStatusManagerPage() {
     try {
       const statusQuery = allowedStatuses.join(',');
       const res = await axiosInstance.get('/requestStatus', { params: { status: statusQuery } });
-
       if (!Array.isArray(res.data)) throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
-
-      // ✅ Normalize ข้อมูล (รองรับทั้ง camelCase / snake_case)
       const normalized = res.data.map(r => ({
         ...r,
         request_type: r.request_type ?? r.requestType ?? '',
         processing_summary: r.processing_summary ?? r.processingSummary ?? '-',
       }));
-
       setRequests(normalized);
       setCurrentPage(1);
     } catch (err) {
@@ -210,14 +201,11 @@ export default function RequestStatusManagerPage() {
   return (
     <div className={styles.mainHome}>
       <div className={styles.infoContainer}>
-        {/* Header */}
         <div className={styles.pageBar}>
           <div className={styles.titleGroup}>
             <h1 className={styles.pageTitle}>จัดการสถานะคำขอทั้งหมด</h1>
           </div>
         </div>
-
-        {/* Toolbar */}
         <div className={styles.toolbar}>
           <div className={`${styles.filterGrid} ${styles.filterGridCompact}`}>
             <div className={styles.filterGroup}>
@@ -237,7 +225,6 @@ export default function RequestStatusManagerPage() {
               />
             </div>
           </div>
-
           <div className={styles.searchCluster}>
             <div className={styles.filterGroup}>
               <label className={styles.label} htmlFor="search">ค้นหา</label>
@@ -260,11 +247,8 @@ export default function RequestStatusManagerPage() {
             </button>
           </div>
         </div>
-
-        {/* Table */}
         <div className={styles.tableFrame}>
           <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
-            {/* <div className={styles.headerItem}>ลำดับ</div>  */}
             <div className={styles.headerItem}>รหัสคำขอ</div>
             <div className={styles.headerItem}>ผู้ขอ</div>
             <div className={styles.headerItem}>แผนก</div>
@@ -272,10 +256,9 @@ export default function RequestStatusManagerPage() {
             <div className={styles.headerItem}>ประเภท</div>
             <div className={styles.headerItem}>สำเร็จ</div>
             <div className={styles.headerItem}>วันที่นำส่ง</div>
-            <div className={styles.headerItem}>สถานะ</div>
-            <div className={styles.headerItem}>การดำเนินการ</div>
+            <div className={`${styles.headerItem} ${styles.centerHeader}`}>สถานะ</div>
+            <div className={`${styles.headerItem} ${styles.centerHeader}`}>การดำเนินการ</div>
           </div>
-
           <div className={styles.inventory} style={{ '--rows-per-page': itemsPerPage }}>
             {currentItems.length > 0 ? (
               currentItems.map((r, idx) => {
@@ -283,29 +266,20 @@ export default function RequestStatusManagerPage() {
                 const label = statusMap[statusKey] || statusKey || 'ไม่ทราบสถานะ';
                 const badgeClass = styles[statusToClass[statusKey]] || styles[statusToClass.__default];
                 const typeLabel = String(r.request_type).toLowerCase() === 'borrow' ? 'ยืม' : 'เบิก';
-
-                // ✅ คำนวณลำดับแถว
-                // const rowNumber = (currentPage - 1) * itemsPerPage + idx + 1;
-
                 return (
                   <div key={r.request_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
-                    {/* <div className={styles.tableCell}>{rowNumber}</div>  */}
                     <div className={styles.tableCell}>{r.request_code}</div>
                     <div className={styles.tableCell}>{r.user_name}</div>
                     <div className={styles.tableCell}>{r.department}</div>
                     <div className={styles.tableCell}>
                       {formatDate(r.request_date)} {formatTime(r.request_date)}
                     </div>
-                    <div className={styles.tableCell}>
-                      <span className={styles.badgeGray}>{typeLabel}</span>
-                    </div>
-                    <div className={styles.tableCell}>
-                      {r.processing_summary}
-                    </div>
+                    <div className={styles.tableCell}>{typeLabel}</div> {/* ลบ badgeGray */}
+                    <div className={styles.tableCell}>{r.processing_summary}</div>
                     <div className={styles.tableCell}>
                       {r.request_due_date ? formatDate(r.request_due_date) : '-'}
                     </div>
-                    <div className={styles.tableCell}>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
                       <span className={`${styles.statusBadge} ${badgeClass}`}>{label}</span>
                     </div>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>
@@ -314,7 +288,15 @@ export default function RequestStatusManagerPage() {
                           className={`${styles.manageBtn} ${viewOnlyStatuses.includes(statusKey) ? styles.viewOnlyBtn : ''}`}
                           title={viewOnlyStatuses.includes(statusKey) ? 'ดูรายละเอียดคำขอนี้' : 'จัดการสถานะคำขอนี้'}
                         >
-                          {viewOnlyStatuses.includes(statusKey) ? 'ดู' : 'จัดการ'}
+                          {viewOnlyStatuses.includes(statusKey) ? (
+                            <>
+                              <Eye size={16} /> ดู
+                            </>
+                          ) : (
+                            <>
+                              <Settings size={16} /> จัดการ
+                            </>
+                          )}
                         </button>
                       </Link>
                     </div>
@@ -327,8 +309,6 @@ export default function RequestStatusManagerPage() {
               </div>
             )}
           </div>
-
-          {/* Pagination */}
           <ul className={styles.paginationControls}>
             <li>
               <button

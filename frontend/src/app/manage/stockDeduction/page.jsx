@@ -6,11 +6,11 @@ import Swal from 'sweetalert2';
 import dynamic from 'next/dynamic';
 import axiosInstance from '@/app/utils/axiosInstance';
 import styles from './page.module.css';
-import { Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trash2, ChevronLeft, ChevronRight, Package, Eye } from 'lucide-react';
 
 const Select = dynamic(() => import('react-select'), { ssr: false });
 
-// react-select styles (เหมือนทุกหน้า)
+// react-select styles, statusMap, typeMap, getStatusTranslation, getTypeTranslation, fmtDate, getBreakdown (เหมือนเดิม)
 const customSelectStyles = {
   control: (base, state) => ({
     ...base,
@@ -36,7 +36,6 @@ const customSelectStyles = {
   }),
 };
 
-// Map สถานะของใบคำขอ
 const statusMap = {
   approved_all: { text: 'อนุมัติทั้งหมด', class: styles.statusApproved },
   approved_partial: { text: 'อนุมัติบางส่วน', class: styles.statusPartial },
@@ -44,8 +43,6 @@ const statusMap = {
   stock_deducted: { text: 'เบิก-จ่ายแล้ว', class: styles.statusDeducted },
   completed: { text: 'เสร็จสิ้น', class: styles.statusCompleted },
   pending_deduction: { text: 'รอเบิก-จ่าย', class: styles.statusPendingDeduction },
-
-  // เผื่อข้อมูลหลุดมาจากฝั่งอื่น
   rejected_all: { text: 'ปฏิเสธทั้งหมด', class: styles.statusRejected },
   canceled: { text: 'ยกเลิก', class: styles.statusCanceled },
 };
@@ -65,7 +62,6 @@ const fmtDate = (d) => {
   return Number.isNaN(dt.getTime()) ? '-' : dt.toLocaleDateString('th-TH');
 };
 
-// ดึง breakdown แบบยืดหยุ่น
 function getBreakdown(row) {
   const toNum = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
   const sc = (row?.status_counts && typeof row.status_counts === 'object') ? row.status_counts : null;
@@ -87,22 +83,15 @@ function getBreakdown(row) {
 
 export default function StockDeductionPage() {
   const router = useRouter();
-
-  // data
   const [requests, setRequests] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // filters
   const [q, setQ] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-
-  // pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
-  // load
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -129,7 +118,6 @@ export default function StockDeductionPage() {
     fetchData();
   }, []);
 
-  // select options (dynamic)
   const statusOptions = useMemo(() => {
     const set = new Set(
       requests.map(r => (r?.status ?? '').toString().trim()).filter(Boolean)
@@ -148,7 +136,6 @@ export default function StockDeductionPage() {
       .map(t => ({ value: t, label: getTypeTranslation(t) }));
   }, [requests]);
 
-  // filter
   const filteredRequests = useMemo(() => {
     const f = q.trim().toLowerCase();
     return requests.filter(item => {
@@ -164,7 +151,6 @@ export default function StockDeductionPage() {
     });
   }, [requests, q, statusFilter, typeFilter]);
 
-  // pagination data
   useEffect(() => { setCurrentPage(1); }, [q, statusFilter, typeFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRequests.length / itemsPerPage));
@@ -182,7 +168,6 @@ export default function StockDeductionPage() {
     return pages;
   };
 
-  // ✅ FIX: คำนวณเลขหน้าไว้ top-level (ไม่เรียก useMemo ใน JSX)
   const pageNumbers = useMemo(getPageNumbers, [currentPage, totalPages]);
 
   const clearFilters = () => {
@@ -209,7 +194,6 @@ export default function StockDeductionPage() {
           </div>
         </div>
         
-        {/* Toolbar ฟิลเตอร์ */}
         <div className={styles.toolbar}>
           <div className={`${styles.filterGrid} ${styles.filterGrid3}`}>
             <div className={styles.filterGroup}>
@@ -227,7 +211,6 @@ export default function StockDeductionPage() {
                 menuPosition="fixed"
               />
             </div>
-
             <div className={`${styles.filterGroup} ${styles.statusGroup}`}>
               <label className={styles.label} htmlFor="status">สถานะ</label>
               <Select
@@ -248,7 +231,6 @@ export default function StockDeductionPage() {
               />
             </div>
           </div>
-
           <div className={styles.searchCluster}>
             <div className={styles.filterGroup}>
               <label className={styles.label} htmlFor="q">ค้นหา</label>
@@ -260,7 +242,6 @@ export default function StockDeductionPage() {
                 onChange={(e) => setQ(e.target.value)}
               />
             </div>
-
             <button className={`${styles.ghostBtn} ${styles.clearButton}`} onClick={clearFilters}>
               <Trash2 size={18} /> ล้างตัวกรอง
             </button>
@@ -277,7 +258,6 @@ export default function StockDeductionPage() {
                 <table className={styles.table}>
                   <thead>
                     <tr>
-                      {/* <th>ลำดับ</th> */}
                       <th>รหัสคำขอ</th>
                       <th>วันที่ขอ</th>
                       <th>พร้อมตัด</th>
@@ -286,7 +266,7 @@ export default function StockDeductionPage() {
                       <th>แผนก</th>
                       <th>ประเภท</th>
                       <th>สถานะ</th>
-                      <th>การจัดการ</th>
+                      <th>การดำเนินการ</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -298,16 +278,13 @@ export default function StockDeductionPage() {
 
                         return (
                           <tr key={item?.request_id ?? item?.request_code ?? `${index}`}>
-                            {/* <td className="nowrap">{(currentPage - 1) * itemsPerPage + index + 1}</td> */}
                             <td className="nowrap">{item?.request_code || '-'}</td>
                             <td className="nowrap">{fmtDate(item?.request_date)}</td>
-
                             <td className="nowrap">
                               <span className={`${styles.badge} ${styles.badgeInfo}`} title="พร้อมตัด (pending)">
                                 {pending} รายการ
                               </span>
                             </td>
-
                             <td className="nowrap">
                               <span className={`${styles.badge} ${styles.badgeNeutral}`} title="ตัดสต็อกแล้ว">
                                 {deductedSoFar}
@@ -317,7 +294,6 @@ export default function StockDeductionPage() {
                                 {total}
                               </span>
                             </td>
-
                             <td>{item?.requester || item?.user_name || '-'}</td>
                             <td>{item?.department || item?.department_name || '-'}</td>
                             <td className="nowrap">{ty}</td>
@@ -326,12 +302,22 @@ export default function StockDeductionPage() {
                             </td>
                             <td className="nowrap">
                               <button
-                                className={`${styles.button} ${styles.primaryButton}`}
+                                className={`${styles.button} ${
+                                  pending > 0 ? styles.actionButton : styles.detailButton
+                                }`}
                                 onClick={() => handleDeductStockClick(item?.request_id)}
                                 disabled={!item?.request_id}
                                 title={pending > 0 ? 'ดำเนินการเบิก-จ่าย' : 'ดูรายละเอียด'}
                               >
-                                {pending > 0 ? '📦 ดำเนินการ' : '🔎 ดูรายละเอียด'}
+                                {pending > 0 ? (
+                                  <>
+                                    <Package size={16} /> ดำเนินการ
+                                  </>
+                                ) : (
+                                  <>
+                                    <Eye size={16} /> รายละเอียด
+                                  </>
+                                )}
                               </button>
                             </td>
                           </tr>
@@ -348,7 +334,6 @@ export default function StockDeductionPage() {
                 </table>
               </div>
 
-              {/* Pagination */}
               <ul className={styles.paginationControls}>
                 <li>
                   <button
@@ -360,7 +345,6 @@ export default function StockDeductionPage() {
                     <ChevronLeft size={16} />
                   </button>
                 </li>
-
                 {pageNumbers.map((p, idx) =>
                   p === '...' ? (
                     <li key={idx} className={styles.ellipsis}>…</li>
@@ -375,7 +359,6 @@ export default function StockDeductionPage() {
                     </li>
                   )
                 )}
-
                 <li>
                   <button
                     className={styles.pageButton}

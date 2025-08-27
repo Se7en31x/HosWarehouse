@@ -4,7 +4,7 @@ import Link from 'next/link';
 import styles from './page.module.css';
 import axiosInstance from '@/app/utils/axiosInstance';
 import dynamic from 'next/dynamic';
-import { Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trash2, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
 
 const Select = dynamic(() => import('react-select'), { ssr: false });
 
@@ -53,7 +53,6 @@ const fdate = (d) => {
   }).format(dt);
 };
 
-
 const statusMap = {
   borrowed: 'รอการคืน',
   due_soon: 'ใกล้ครบกำหนด',
@@ -65,6 +64,19 @@ const statusMap = {
   all: 'ทั้งหมดที่ค้างคืน',
 };
 
+const statusClass = (status) => {
+  switch (status) {
+    case 'overdue': return 'stOverdue';
+    case 'due_soon': return 'stDueSoon';
+    case 'borrowed': return 'stBorrowed';
+    case 'waiting_return': return 'stWaiting';
+    case 'returned_all': return 'stReturnedAll';
+    case 'returned_partial': return 'stReturnedPartial';
+    case 'canceled': return 'stCanceled';
+    default: return 'stNormal';
+  }
+};
+
 export default function ManageReturnPage() {
   const [rows, setRows] = useState([]);
   const [q, setQ] = useState('');
@@ -74,7 +86,7 @@ export default function ManageReturnPage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
 
-  const limit = 12;
+  const limit = 10; // ปรับให้เท่ากับ ApprovalRequest
   const abortRef = useRef(null);
 
   const menuPortalTarget = useMemo(
@@ -115,7 +127,6 @@ export default function ManageReturnPage() {
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedQ, status, page]);
 
   const clearFilters = () => {
@@ -164,10 +175,10 @@ export default function ManageReturnPage() {
               <label className={styles.label} htmlFor="status">สถานะ</label>
               <Select
                 inputId="status"
-                isClearable={false} // ❌ ปิด clear ได้ เพื่อไม่ให้ค่ากลับไปเป็น null
+                isClearable={false}
                 isSearchable={false}
                 placeholder="เลือกสถานะ"
-                options={STATUS_OPTS} // ✅ ไม่ต้อง filter ออก
+                options={STATUS_OPTS}
                 value={STATUS_OPTS.find((o) => o.value === status) || STATUS_OPTS[0]}
                 onChange={(opt) => {
                   setStatus(opt?.value || 'all');
@@ -178,7 +189,6 @@ export default function ManageReturnPage() {
                 menuPosition="fixed"
                 menuPortalTarget={menuPortalTarget || undefined}
               />
-
             </div>
           </div>
 
@@ -213,7 +223,7 @@ export default function ManageReturnPage() {
         {loading ? (
           <div className={styles.loadingContainer}>กำลังโหลด...</div>
         ) : err ? (
-          <div className={styles.errorBox}>{err}</div>
+          <div className={styles.noDataMessage} style={{ color: 'red' }}>{err}</div>
         ) : (
           <div className={styles.tableFrame}>
             <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
@@ -221,14 +231,20 @@ export default function ManageReturnPage() {
               <div className={styles.headerItem}>ผู้ขอ</div>
               <div className={styles.headerItem}>แผนก</div>
               <div className={styles.headerItem}>ครบกำหนด (เร็วที่สุด)</div>
-              <div className={styles.headerItem}>สถานะกำหนดคืน</div>
+              <div className={`${styles.headerItem} ${styles.centerHeader}`}>สถานะกำหนดคืน</div>
               <div className={styles.headerItem}>คืนแล้ว</div>
-              <div className={styles.headerItem}>การดำเนินการ</div>
+              <div className={`${styles.headerItem} ${styles.centerHeader}`}>การดำเนินการ</div>
             </div>
 
-            <div className={styles.inventory} style={{ '--rows-per-page': 12 }}>
+            <div className={styles.inventory} style={{ '--rows-per-page': 10 }}>
               {rows.length ? (
                 rows.map((r) => {
+                  const statusKey = r.items_overdue > 0 ? 'overdue' : r.items_due_soon > 0 ? 'due_soon' : 'borrowed';
+                  const label = r.items_overdue > 0 
+                    ? `เกินกำหนด ${r.items_overdue} รายการ`
+                    : r.items_due_soon > 0 
+                      ? `ใกล้ครบ ${r.items_due_soon} รายการ`
+                      : 'ปกติ';
                   return (
                     <div
                       key={r.request_id}
@@ -240,30 +256,19 @@ export default function ManageReturnPage() {
                       <div className={styles.tableCell}>
                         {fdate(r.earliest_due_date)}
                       </div>
-                      <div className={styles.tableCell}>
-                        {r.items_overdue > 0 ? (
-                          <span className={`${styles.badge} ${styles.badgeOverdue}`}>
-                            เกินกำหนด {r.items_overdue} รายการ
-                          </span>
-                        ) : r.items_due_soon > 0 ? (
-                          <span className={`${styles.badge} ${styles.badgeDueSoon}`}>
-                            ใกล้ครบ {r.items_due_soon} รายการ
-                          </span>
-                        ) : (
-                          <span className={`${styles.badge} ${styles.badgeNormal}`}>
-                            ปกติ 0 รายการ
-                          </span>
-                        )}
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        <span className={`${styles.stBadge} ${styles[statusClass(statusKey)]}`}>
+                          {label}
+                        </span>
                       </div>
                       <div className={styles.tableCell}>
                         {r.returned_items ?? 0}/{r.total_items ?? 0}
                       </div>
                       <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                        <Link
-                          href={`/manage/manageReturn/${r.request_id}`}
-                          className={styles.actionBtnLink}
-                        >
-                          จัดการ
+                        <Link href={`/manage/manageReturn/${r.request_id}`}>
+                          <button className={styles.actionButton}>
+                            <Settings size={16} /> จัดการ
+                          </button>
                         </Link>
                       </div>
                     </div>
@@ -294,8 +299,7 @@ export default function ManageReturnPage() {
                   ) : (
                     <li key={idx}>
                       <button
-                        className={`${styles.pageButton} ${p === page ? styles.activePage : ''
-                          }`}
+                        className={`${styles.pageButton} ${p === page ? styles.activePage : ''}`}
                         onClick={() => setPage(p)}
                       >
                         {p}

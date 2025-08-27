@@ -515,7 +515,7 @@ export default function InventoryWithdraw() {
               <div className={styles.headerItem}>จำนวน</div>
               <div className={styles.headerItem}>หน่วย</div>
               <div className={styles.headerItem}>สถานะ</div>
-              <div className={styles.headerItem}>จัดการ</div>
+              <div className={styles.headerItem}>การดำเนินการ</div>
             </div>
             <div className={styles.inventory} style={{ '--rows-per-page': itemsPerPage }}>
               {currentItems.length > 0 ? (

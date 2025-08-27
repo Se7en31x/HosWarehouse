@@ -278,8 +278,12 @@ export default function DamagedItemsPage() {
                 />
               </div>
             </div>
-            <button className={`${styles.ghostBtn} ${styles.clearButton}`} onClick={clearFilters}>
-              ล้างตัวกรอง
+            <button className={`${styles.ghostBtn} ${styles.clearButton}`} 
+            onClick={clearFilters}
+            title="ล้างตัวกรอง"
+            aria-label="ล้างตัวกรอง"
+            >
+              <Trash2 size={18} /> ล้างตัวกรอง
             </button>
           </div>
         </div>
@@ -299,7 +303,7 @@ export default function DamagedItemsPage() {
               <div className={styles.headerItem}>ผู้แจ้ง</div>
               {/* <div className={styles.headerItem}>หมายเหตุ</div> */}
               <div className={`${styles.headerItem} ${styles.centerCell}`}>สถานะ</div>
-              <div className={`${styles.headerItem} ${styles.centerCell}`}>จัดการ</div>
+              <div className={`${styles.headerItem} ${styles.centerCell}`}>การดำเนินการ</div>
             </div>
 
             {/* Body */}

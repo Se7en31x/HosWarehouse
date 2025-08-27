@@ -281,10 +281,10 @@ export default function BorrowHistory() {
             <div className={styles.headerItem}>สถานะอนุมัติ</div>
             <div className={styles.headerItem}>สถานะการคืน</div>
             <div className={styles.headerItem}>จำนวน</div>
-            <div className={`${styles.headerItem} ${styles.centerCell}`}>จัดการ</div>
+            <div className={`${styles.headerItem} ${styles.centerCell}`}>ตรวจสอบ</div>
           </div>
 
-          <div className={styles.inventory} style={{ "--rows-per-page": rowsPerPage }}>
+          <div className={styles.inventory}>
             {isLoading ? (
               <div className={styles.loadingContainer}>กำลังโหลดข้อมูล...</div>
             ) : pageRows.length === 0 ? (

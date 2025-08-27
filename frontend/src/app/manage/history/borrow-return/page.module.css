@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* ---- Variables (aligned with ImportHistory) ---- */
+/* ---- Variables (aligned with ImportHistory and ManageReturnDetailPage) ---- */
 :root {
   /* Colors */
   --bg: #f0fbfe;
@@ -26,7 +26,7 @@
   --th-font: 1.05rem;
   --th-min-h: 60px;
   --th-pad-y: 14px;
-  --th-pad-x: 12px;
+  --th-pad-x: 14px;
   --th-letter: 0.01em;
   --th-line: 1.25;
   --z-header: 10;
@@ -180,16 +180,16 @@
 .tableGrid {
   display: grid;
   grid-template-columns:
-    minmax(100px, 1fr) /* วันที่ยืม */
-    minmax(120px, 1.2fr) /* เลขที่คำขอ */
-    minmax(120px, 1.2fr) /* ผู้ยืม */
-    minmax(150px, 1.5fr) /* แผนก */
-    minmax(100px, 1fr) /* กำหนดคืน */
-    minmax(80px, 0.8fr) /* ด่วน */
-    minmax(140px, 1.4fr) /* สถานะอนุมัติ */
-    minmax(120px, 1.2fr) /* สถานะการคืน */
-    minmax(80px, 0.8fr) /* จำนวน */
-    minmax(110px, 1.1fr); /* จัดการ */
+    minmax(140px, 1.2fr) /* วันที่ยืม */
+    minmax(140px, 1.3fr) /* เลขที่คำขอ */
+    minmax(160px, 1.5fr) /* ผู้ยืม */
+    minmax(120px, 1fr) /* แผนก */
+    minmax(140px, 1.5fr) /* กำหนดคืน */
+    minmax(80px, 1fr) /* ด่วน */
+    minmax(160px, 1.5fr) /* สถานะอนุมัติ */
+    minmax(140px, 1.3fr) /* สถานะการคืน */
+    minmax(70px, 0.7fr) /* จำนวน */
+    minmax(100px, 1fr); /* จัดการ */
   align-items: center;
 }
 
@@ -212,7 +212,13 @@
   display: flex;
   align-items: center;
   white-space: nowrap;
-  padding: 0;
+  padding: 0 8px;
+}
+
+/* จัดกึ่งกลางหัวตาราง "ด่วน" */
+.tableHeader .headerItem:nth-child(6) {
+  justify-content: center;
+  text-align: center;
 }
 
 .centerCell {
@@ -225,8 +231,8 @@
   border: 0;
   border-radius: 0;
   background: #fff;
-  height: calc(var(--row-h) * var(--rows-per-page));
-  overflow: hidden;
+  height: calc(var(--row-h) * var(--rows-per-page)); /* 600px */
+  overflow-y: auto;
 }
 
 .tableRow {
@@ -247,7 +253,7 @@
 .tableCell {
   display: flex;
   align-items: center;
-  padding: 4px 6px;
+  padding: 4px 8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -279,12 +285,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 10px;
+  padding: 4px 8px;
   border-radius: 999px;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.85rem;
   border: 1px solid transparent;
-  min-width: 92px;
+  min-width: 80px;
   line-height: 1;
 }
 
@@ -293,7 +299,7 @@
   background: #FEF3C7;
   border-color: #FDE68A;
 }
-.approved_all, .completed {
+.approved_all, .completed, .returned {
   color: #166534;
   background: #DCFCE7;
   border-color: #86EFAC;
@@ -302,11 +308,6 @@
   color: #9F1239;
   background: #FFE4E6;
   border-color: #FECDD3;
-}
-.returned {
-  color: #166534;
-  background: #DCFCE7;
-  border-color: #86EFAC;
 }
 .partially_returned {
   color: #92400e;
@@ -325,7 +326,7 @@
 }
 
 .loadingContainer, .noDataMessage {
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(var(--row-h) * var(--rows-per-page)); /* 600px */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -425,11 +426,27 @@
   }
 
   .headerItem, .tableCell {
-    padding: 0.5rem;
+    padding: 0.5rem 8px;
+    text-align: left;
+  }
+
+  /* ปิดการจัดกึ่งกลางสำหรับหัวตาราง "ด่วน" ใน responsive mode */
+  .tableHeader .headerItem:nth-child(6) {
+    justify-content: flex-start;
     text-align: left;
   }
 
   .centerCell {
     justify-content: flex-start;
+  }
+
+  .stBadge {
+    padding: 3px 6px;
+    font-size: 0.8rem;
+    min-width: 70px;
+  }
+
+  .actionButton {
+    padding: 5px;
   }
 }

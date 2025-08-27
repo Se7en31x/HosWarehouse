@@ -227,7 +227,7 @@ export default function DamagedHistoryPage() {
             <div className={styles.headerItem}>ที่มา</div>
             <div className={`${styles.headerItem} ${styles.centerCell}`}>สถานะ</div>
             <div className={styles.headerItem}>ผู้รายงาน</div>
-            <div className={`${styles.headerItem} ${styles.centerCell}`}>จัดการ</div>
+            <div className={`${styles.headerItem} ${styles.centerCell}`}>ตรวจสอบ</div>
           </div>
 
           <div className={styles.inventory} style={{ "--rows-per-page": ROWS_PER_PAGE }}>

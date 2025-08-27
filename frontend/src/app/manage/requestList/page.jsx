@@ -4,7 +4,7 @@ import styles from "./page.module.css";
 import Link from "next/link";
 import { connectSocket, disconnectSocket } from "../../utils/socket";
 import axiosInstance from "../../utils/axiosInstance";
-import { Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Trash2, ChevronLeft, ChevronRight, Settings } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const Select = dynamic(() => import("react-select"), { ssr: false });
@@ -14,7 +14,7 @@ const customSelectStyles = {
   control: (base, state) => ({
     ...base,
     borderRadius: "0.5rem",
-    minHeight: "2.5rem",          // = 40px
+    minHeight: "2.5rem", // = 40px
     borderColor: state.isFocused ? "#2563eb" : "#e5e7eb",
     boxShadow: "none",
     "&:hover": { borderColor: "#2563eb" },
@@ -77,7 +77,7 @@ export default function ApprovalRequest() {
   const [error, setError] = useState(null);
 
   // ✅ คงฟิลเตอร์: status + search
-  const [status, setStatus] = useState("");     // ว่าง = ทุกสถานะ
+  const [status, setStatus] = useState(""); // ว่าง = ทุกสถานะ
   const [search, setSearch] = useState("");
 
   // paging
@@ -166,7 +166,6 @@ export default function ApprovalRequest() {
 
         {/* Toolbar */}
         <div className={styles.toolbar}>
-          {/* ⬇️ เพิ่ม styles.filterGridCompact ตรงนี้ */}
           <div className={`${styles.filterGrid} ${styles.filterGridCompact}`}>
             <div className={styles.filterGroup}>
               <label className={styles.label} htmlFor="status">สถานะ</label>
@@ -218,8 +217,8 @@ export default function ApprovalRequest() {
             <div className={styles.headerItem}>วันที่/เวลา</div>
             <div className={styles.headerItem}>จำนวนรายการ</div>
             <div className={styles.headerItem}>ประเภท</div>
-            <div className={styles.headerItem}>สถานะ</div>
-            <div className={styles.headerItem}>การดำเนินการ</div>
+            <div className={`${styles.headerItem} ${styles.centerHeader}`}>สถานะ</div>
+            <div className={`${styles.headerItem} ${styles.centerHeader}`}>การดำเนินการ</div>
           </div>
 
           <div className={styles.inventory} style={{ "--rows-per-page": itemsPerPage }}>
@@ -230,30 +229,35 @@ export default function ApprovalRequest() {
             ) : currentItems.length === 0 ? (
               <div className={styles.noDataMessage}>ไม่พบข้อมูลที่ตรงกับเงื่อนไข</div>
             ) : (
-              currentItems.map((item, index) => (
-                <div className={`${styles.tableGrid} ${styles.tableRow}`} key={item.request_id}>
-                  <div className={styles.tableCell}>{item.request_code || "-"}</div>
-                  <div className={styles.tableCell}>{item.user_name || "-"}</div>
-                  <div className={styles.tableCell}>{item.department || "-"}</div>
-                  <div className={styles.tableCell}>
-                    {item.request_date
-                      ? new Date(item.request_date).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })
-                      : "-"}
+              currentItems.map((item, index) => {
+                const typeLabel = String(item.request_types).toLowerCase() === 'borrow' ? 'ยืม' : 'เบิก';
+                return (
+                  <div className={`${styles.tableGrid} ${styles.tableRow}`} key={item.request_id}>
+                    <div className={styles.tableCell}>{item.request_code || "-"}</div>
+                    <div className={styles.tableCell}>{item.user_name || "-"}</div>
+                    <div className={styles.tableCell}>{item.department || "-"}</div>
+                    <div className={styles.tableCell}>
+                      {item.request_date
+                        ? new Date(item.request_date).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })
+                        : "-"}
+                    </div>
+                    <div className={styles.tableCell}>{item.item_count ?? "-"}</div>
+                    <div className={styles.tableCell}>{typeLabel}</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      <span className={`${styles.stBadge} ${styles[statusClass(item.request_status)]}`}>
+                        {mapStatusToThai(item.request_status)}
+                      </span>
+                    </div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      <Link href={`/manage/approvalRequest/${item.request_id}`}>
+                        <button className={styles.actionButton}>
+                          <Settings size={16} /> จัดการ
+                        </button>
+                      </Link>
+                    </div>
                   </div>
-                  <div className={styles.tableCell}>{item.item_count ?? "-"}</div>
-                  <div className={styles.tableCell}>{item.request_types || "-"}</div>
-                  <div className={styles.tableCell}>
-                    <span className={`${styles.stBadge} ${styles[statusClass(item.request_status)]}`}>
-                      {mapStatusToThai(item.request_status)}
-                    </span>
-                  </div>
-                  <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                    <Link href={`/manage/approvalRequest/${item.request_id}`}>
-                      <button className={styles.actionButton}>จัดการ</button>
-                    </Link>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 
@@ -268,24 +272,20 @@ export default function ApprovalRequest() {
                 <ChevronLeft size={16} />
               </button>
             </li>
-            {(function () {
-              const nums = getPageNumbers();
-              return nums.map((p, idx) =>
-                p === "..." ? (
-                  <li key={idx} className={styles.ellipsis}>…</li>
-                ) : (
-                  <li key={idx}>
-                    <button
-                      className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
-                      onClick={() => setCurrentPage(p)}
-                    >
-                      {p}
-                    </button>
-                  </li>
-                )
-              );
-            })()
-            }
+            {getPageNumbers().map((p, idx) =>
+              p === "..." ? (
+                <li key={idx} className={styles.ellipsis}>…</li>
+              ) : (
+                <li key={idx}>
+                  <button
+                    className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
+                    onClick={() => setCurrentPage(p)}
+                  >
+                    {p}
+                  </button>
+                </li>
+              )
+            )}
             <li>
               <button
                 className={styles.pageButton}

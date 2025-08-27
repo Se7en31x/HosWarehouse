@@ -350,7 +350,7 @@ export default function InventoryCheck() {
               <div className={styles.headerItem}>คงเหลือ</div>
               <div className={styles.headerItem}>หน่วย</div>
               <div className={styles.headerItem}>สถานะ</div>
-              <div className={styles.headerItem}>ดำเนินการ</div>
+              <div className={styles.headerItem}>การดำเนินการ</div>
             </div>
 
             <div className={styles.inventory} style={{ "--rows-per-page": ITEMS_PER_PAGE }}>

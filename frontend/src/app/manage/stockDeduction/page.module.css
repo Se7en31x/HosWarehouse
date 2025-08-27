@@ -6,14 +6,14 @@
   --muted: #6b7280;
   --text: #111827;
   --border: #e5e7eb;
-  --primary: #008dda;
-  --primary-500: #41c9e2;
-  --primary-600: #1685bb;
+  --primary: #008dda; /* สีน้ำเงินเข้ม สำหรับ actionButton */
+  --primary-500: #41c9e2; /* สีน้ำเงินอ่อน สำหรับ detailButton */
+  --primary-600: #1685bb; /* สีน้ำเงินเข้มสำหรับ hover ของ actionButton */
+  --tint-200: #ace2e1; /* สีฟ้าอ่อนสำหรับ hover ของ detailButton */
   --success: #16a34a;
   --danger: #ef4444;
   --warning: #f59e0b;
   --tint-100: #e9f6fb;
-  --tint-200: #ace2e1;
   --radius: 10px;
   --row-h: 56px;
   --rows-per-page: 12;
@@ -27,6 +27,7 @@
   --z-toolbar: 100;
 }
 
+/* ส่วนอื่นๆ เหมือนเดิม */
 .pageBackground {
   background: var(--bg);
   min-height: 100vh;
@@ -82,7 +83,7 @@
   border: 1px solid #f5c6cb;
 }
 
-/* ===== Toolbar (ฟิลเตอร์) ===== */
+/* Toolbar */
 .toolbar {
   position: relative;
   z-index: var(--z-toolbar);
@@ -103,23 +104,19 @@
   flex: 1;
 }
 
-/* ↓ ปรับให้ "ประเภท" เล็กลง และ "สถานะ" กว้างคงที่ */
 .filterGrid3 {
   grid-template-columns: 180px 230px;
 }
 
-.filterGrid3>.filterGroup:first-child {
+.filterGrid3 > .filterGroup:first-child {
   width: 180px;
   min-width: 160px;
 }
 
-/* ประเภท */
 .statusGroup {
   width: 230px;
   min-width: 200px;
 }
-
-/* สถานะ */
 
 .filterGroup {
   display: flex;
@@ -175,7 +172,7 @@
   color: var(--primary-600);
 }
 
-/* ===== Table ===== */
+/* Table */
 .tableFrame {
   border: 1px solid var(--tint-200);
   border-radius: var(--radius);
@@ -183,7 +180,6 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  /* ให้ pagination อยู่ชิดล่างกรอบ */
 }
 
 .tableWrapper {
@@ -215,7 +211,6 @@
   white-space: nowrap;
 }
 
-/* หัวคอลัมน์ที่ต้องการกึ่งกลาง */
 .table th:nth-child(1),
 .table th:nth-child(4),
 .table th:nth-child(5),
@@ -241,7 +236,6 @@
   background: #e9f6fb;
 }
 
-/* ✅ ให้ td จัดตำแหน่ง “ขนาน” กับ th */
 .table td:nth-child(1),
 .table td:nth-child(4),
 .table td:nth-child(5),
@@ -252,17 +246,12 @@
 }
 
 .table td:nth-child(2),
-/* รหัสคำขอ */
 .table td:nth-child(3),
-/* วันที่ขอ */
 .table td:nth-child(6),
-/* ผู้ขอ */
 .table td:nth-child(7) {
-  /* แผนก */
   text-align: left;
 }
 
-/* เลขให้กว้างเท่ากัน */
 .table td:nth-child(1),
 .table td:nth-child(2),
 .table td:nth-child(3),
@@ -312,58 +301,74 @@
 }
 
 /* Status badge */
-/* Status badge — simple, flat, accessible (same palette across pages) */
-.statusBadge{
-  display:inline-flex;align-items:center;justify-content:center;
-  padding:.35rem .7rem;border-radius:999px;font-weight:700;font-size:.86rem;
-  min-width:108px;white-space:nowrap;line-height:1;border:1px solid transparent;
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .35rem .7rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .86rem;
+  min-width: 108px;
+  white-space: nowrap;
+  line-height: 1;
+  border: 1px solid transparent;
 }
 
-/* อนุมัติทั้งหมด */
-.statusApproved{            /* emerald */
-  color:#166534;background:#DCFCE7;border-color:#86EFAC;
+.statusApproved {
+  color: #166534;
+  background: #DCFCE7;
+  border-color: #86EFAC;
 }
 
-/* อนุมัติ/ปฏิเสธบางส่วน */
-.statusPartial{             /* blue */
-  color:#1E3A8A;background:#DBEAFE;border-color:#93C5FD;
+.statusPartial {
+  color: #1E3A8A;
+  background: #DBEAFE;
+  border-color: #93C5FD;
 }
 
-/* เบิก-จ่ายแล้ว (ตัดสต็อกแล้วบางส่วน/ทั้งหมด) */
-.statusDeducted{            /* violet */
-  color:#5B21B6;background:#EDE9FE;border-color:#C4B5FD;
+.statusDeducted {
+  color: #5B21B6;
+  background: #EDE9FE;
+  border-color: #C4B5FD;
 }
 
-/* เสร็จสิ้น */
-.statusCompleted{           /* gray neutral */
-  color:#374151;background:#F3F4F6;border-color:#E5E7EB;
+.statusCompleted {
+  color: #374151;
+  background: #F3F4F6;
+  border-color: #E5E7EB;
 }
 
-/* รอเบิก-จ่าย */
-.statusPendingDeduction{    /* amber */
-  color:#92400E;background:#FEF3C7;border-color:#FDE68A;
+.statusPendingDeduction {
+  color: #92400E;
+  background: #FEF3C7;
+  border-color: #FDE68A;
 }
 
-/* ปฏิเสธทั้งหมด (เผื่อ) */
-.statusRejected{            /* rose */
-  color:#9F1239;background:#FFE4E6;border-color:#FECDD3;
+.statusRejected {
+  color: #9F1239;
+  background: #FFE4E6;
+  border-color: #FECDD3;
 }
 
-/* ยกเลิก (เผื่อ) */
-.statusCanceled{            /* slate */
-  color:#334155;background:#E2E8F0;border-color:#CBD5E1;
+.statusCanceled {
+  color: #334155;
+  background: #E2E8F0;
+  border-color: #CBD5E1;
 }
 
-/* ดีฟอลต์ */
-.statusDefault{
-  color:#374151;background:#F3F4F6;border-color:#E5E7EB;
+.statusDefault {
+  color: #374151;
+  background: #F3F4F6;
+  border-color: #E5E7EB;
 }
 
-/* Primary button */
+/* Button styles */
 .button {
   border: none;
-  border-radius: 8px;
-  padding: 8px 12px;
+  border-radius: 10px;
+  height: 36px;
+  padding: 0px 14px;
   font-weight: 700;
   cursor: pointer;
   font-size: .9rem;
@@ -372,16 +377,30 @@
   gap: 8px;
 }
 
-.primaryButton {
-  background: #0e86fd;
+.actionButton {
+  background: var(--primary); /* #008dda */
   color: #fff;
 }
 
-.primaryButton:hover {
-  background: #1685bb;
+.actionButton:hover {
+  background: var(--primary-600); /* #1685bb */
 }
 
-/* ===== Pagination ===== */
+.detailButton {
+  background: var(--primary-500); /* #41c9e2 */
+  color: #fff;
+}
+
+.detailButton:hover {
+  background: var(--tint-200); /* #ace2e1 */
+}
+
+.button:disabled {
+  background: #93c5fd;
+  cursor: not-allowed;
+}
+
+/* Pagination */
 .paginationControls {
   display: flex;
   list-style: none;
@@ -391,7 +410,6 @@
   justify-content: center;
   align-items: center;
   background: #fff;
-  /* border-top: 1px solid var(--tint-200); */
 }
 
 .pageButton {
@@ -423,12 +441,12 @@
 }
 
 /* Responsive */
-@media (max-width:1024px) {
+@media (max-width: 1024px) {
   .filterGrid3 {
     grid-template-columns: 1fr;
   }
 
-  .filterGrid3>.filterGroup:first-child,
+  .filterGrid3 > .filterGroup:first-child,
   .statusGroup {
     width: 100%;
     min-width: 0;

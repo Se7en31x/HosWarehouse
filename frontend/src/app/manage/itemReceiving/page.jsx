@@ -317,7 +317,7 @@ export default function ItemReceivingPage() {
           <div className={styles.headerItem}>ขั้นต่ำ</div>
           <div className={styles.headerItem}>สูงสุด</div>
           <div className={styles.headerItem}>คงเหลือ</div>
-          <div className={styles.headerItem}>ดำเนินการ</div>
+          <div className={styles.headerItem}>การดำเนินการ</div>
         </div>
 
         <div className={styles.inventory} style={{ "--rows-per-page": ITEMS_PER_PAGE }}>

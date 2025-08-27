@@ -323,7 +323,7 @@ export default function ApprovalRequestPage() {
                 <th>หน่วย</th>
                 <th>สถานะ</th>
                 <th>จำนวนที่อนุมัติ</th>
-                <th>จัดการ</th>
+                <th>การดำเนินการ</th>
               </tr>
             </thead>
             <tbody>

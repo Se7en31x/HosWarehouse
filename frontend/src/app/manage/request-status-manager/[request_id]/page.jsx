@@ -536,7 +536,7 @@ export default function RequestDetailClient() {
                                 onClick={() => router.push('/manage/request-status-manager')}
                                 aria-label="กลับไปหน้ารายการคำขอทั้งหมด"
                             >
-                                ← กลับหน้ารวม
+                                ยกเลิก
                             </button>
                             <button
                                 className={styles.saveAllButton}
@@ -544,7 +544,7 @@ export default function RequestDetailClient() {
                                 disabled={!hasPendingChanges || isSavingAll}
                                 aria-label="บันทึกการเปลี่ยนแปลงสถานะทั้งหมด"
                             >
-                                {isSavingAll ? 'กำลังบันทึก...' : 'บันทึกรายการที่แก้ไข'}
+                                {isSavingAll ? 'กำลังบันทึก...' : 'บันทึก'}
                             </button>
                         </div>
                     </section>

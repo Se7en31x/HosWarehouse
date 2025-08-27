@@ -1,86 +1,157 @@
 /* ============================= 
    Manage Return — page.module.css
+   Match style with ApprovalRequest, with actionButton color from provided CSS
    ============================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 :root {
+  /* Colors */
   --bg: #f0fbfe;
   --panel: #ffffff;
   --muted: #6b7280;
   --text: #111827;
   --border: #e5e7eb;
 
-  --primary: #008dda;
-  --primary-500: #41c9e2;
-  --primary-600: #1685bb;
+  --primary: #008dda; /* From provided CSS for manageBtn */
+  --primary-500: #41c9e2; /* From provided CSS for viewOnlyBtn */
+  --primary-600: #1685bb; /* From provided CSS for manageBtn hover */
 
   --success: #16a34a;
   --warning: #d97706;
   --danger: #dc2626;
 
+  --tint-50: #f0fbfe;
+  --tint-100: #e9f6fb;
+  --tint-200: #ace2e1; /* From provided CSS for viewOnlyBtn hover */
+
   --radius: 10px;
-  --row-h: 56px;
-  --rows-per-page: 12;
+
+  /* Table */
+  --row-h: 60px;
+  --rows-per-page: 10;
+
+  /* Header sizing */
+  --th-font: 1.05rem;
+  --th-min-h: 60px;
+  --th-pad-y: 14px;
+  --th-pad-x: 12px;
+  --th-letter: 0.01em;
+  --th-line: 1.25;
+
+  /* Z */
+  --z-header: 10;
+  --z-toolbar: 100;
+  --z-modal-overlay: 12000;
+  --z-select: 9000;
+
+  /* Status badge colors */
+  --st-overdue-fg: #dc2626;
+  --st-overdue-bg: #fef2f2;
+  --st-overdue-br: #fecaca;
+
+  --st-due-soon-fg: #d97706;
+  --st-due-soon-bg: #fff7ed;
+  --st-due-soon-br: #fdba74;
+
+  --st-borrowed-fg: #374151;
+  --st-borrowed-bg: #ecfdf5;
+  --st-borrowed-br: #86efac;
+
+  --st-returned-all-fg: #065f46;
+  --st-returned-all-bg: #d9fbe5;
+  --st-returned-all-br: #86efac;
+
+  --st-returned-partial-fg: #1e3a8a;
+  --st-returned-partial-bg: #dbeafe;
+  --st-returned-partial-br: #93c5fd;
+
+  --st-waiting-fg: #374151;
+  --st-waiting-bg: #f3f4f6;
+  --st-waiting-br: #e5e7eb;
+
+  --st-canceled-fg: #374151;
+  --st-canceled-bg: #f3f4f6;
+  --st-canceled-br: #e5e7eb;
+
+  --st-normal-fg: #374151;
+  --st-normal-bg: #ecfdf5;
+  --st-normal-br: #86efac;
 }
 
-/* ===== Layout ===== */
+/* Layout */
 .mainHome {
   min-height: 100vh;
-  background: var(--bg);
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial;
   display: flex;
+  align-items: center;
   justify-content: center;
-  align-items: flex-start;
+  background: var(--bg);
 }
 
 .infoContainer {
   width: 100%;
-  padding: 20px;
-  background: var(--panel);
-  border-radius: var(--radius);
-  color: var(--text);
   min-height: 100vh;
+  background: var(--panel);
+  color: var(--text);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-/* ===== Header ===== */
+/* Header */
 .pageBar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
 }
 
 .titleGroup {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .pageTitle {
-  font-size: 1.5rem;
   font-weight: 700;
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
   margin: 0;
 }
 
-/* ===== Toolbar ===== */
+/* Toolbar */
 .toolbar {
+  position: relative;
+  z-index: var(--z-toolbar);
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  flex-wrap: wrap;
   gap: 12px;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  border: 1px solid var(--tint-200);
+  border-radius: 12px;
   padding: 12px;
   background: #f6fbfd;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  margin-bottom: 16px;
 }
 
 .filterGrid {
+  position: relative;
+  z-index: var(--z-toolbar);
   display: grid;
+  grid-template-columns: repeat(2, minmax(200px, 1fr));
   gap: 12px;
+  flex: 1;
 }
 
 .filterGridCompact {
   grid-template-columns: minmax(220px, 320px);
+  flex: 0 0 auto;
+  width: auto;
+}
+
+.filterGridCompact .filterGroup {
+  width: clamp(220px, 28vw, 320px);
 }
 
 .filterGroup {
@@ -91,13 +162,13 @@
 
 .label {
   font-size: 0.85rem;
-  font-weight: 600;
   color: #374151;
+  font-weight: 600;
 }
 
 .input {
   height: 40px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--tint-200);
   border-radius: 8px;
   padding: 0 12px;
   font-size: 0.95rem;
@@ -119,7 +190,7 @@
 .ghostBtn {
   background: #fff;
   color: #374151;
-  border: 1px solid var(--border);
+  border: 1px solid var(--tint-200);
   border-radius: 8px;
   height: 40px;
   padding: 0 12px;
@@ -131,135 +202,154 @@
 }
 
 .clearButton {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   color: var(--primary-600);
 }
 
-/* ===== Table ===== */
+/* Buttons */
+.actionButton {
+  border: none;
+  border-radius: 8px;
+  height: 36px;
+  padding: 0 14px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  background: var(--primary); /* #008dda */
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.actionButton:hover {
+  background: var(--primary-600); /* #1685bb */
+}
+
+.actionButton:disabled {
+  background: #93c5fd;
+  cursor: not-allowed;
+}
+
+/* Table */
 .tableFrame {
-  border: 1px solid var(--border);
+  border: 1px solid var(--tint-200);
   border-radius: var(--radius);
-  overflow: hidden;
   background: #fff;
+  overflow: hidden;
 }
 
 .tableGrid {
   display: grid;
   grid-template-columns:
-    minmax(120px, 0.7fr)   /* รหัสคำขอ */
-    minmax(160px, 1.3fr) /* ผู้ขอ */
-    minmax(140px, 1fr)   /* แผนก */
-    minmax(160px, 1.2fr) /* ครบกำหนด */
-    minmax(180px, 1.5fr) /* สถานะกำหนดคืน */
+    minmax(160px, 1.2fr) /* รหัสคำขอ */
+    minmax(180px, 1.4fr) /* ผู้ขอ */
+    minmax(160px, 1.2fr) /* แผนก */
+    minmax(140px, 1fr) /* ครบกำหนด */
+    minmax(160px, 1.5fr) /* สถานะกำหนดคืน */
     minmax(120px, 0.8fr) /* คืนแล้ว */
-    minmax(140px, 1fr);  /* จัดการ */
+    minmax(120px, 0.9fr); /* การดำเนินการ */
   align-items: center;
 }
 
 .tableHeader {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
   background: #eef9fc;
+  border-bottom: 1px solid var(--tint-200);
+  padding-block: var(--th-pad-y);
+  padding-inline: var(--th-pad-x);
   font-weight: 700;
-  padding: 12px;
-  border-bottom: 1px solid var(--border);
+  color: #374151;
+  font-size: var(--th-font);
+  line-height: var(--th-line);
+  min-height: var(--th-min-h);
+}
+
+.tableHeader.tableGrid > div,
+.tableHeader .headerItem {
+  font-weight: 700;
+  letter-spacing: var(--th-letter);
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 0;
+}
+
+.centerHeader {
+  justify-content: center;
+}
+
+/* Body */
+.inventory {
+  background: #fff;
+  height: calc(var(--row-h) * var(--rows-per-page));
+  overflow: hidden;
 }
 
 .tableRow {
-  border-top: 1px solid var(--border);
-  padding: 10px 12px;
-}
-
-.tableRow:first-child {
-  border-top: none;
+  height: var(--row-h);
+  padding: 0 var(--th-pad-x);
+  border-top: 1px solid #deedf1;
 }
 
 .tableRow:hover {
-  background: #f9f9f9;
+  background: var(--tint-100);
+}
+
+.tableRow:first-child {
+  border-top: 0;
 }
 
 .tableCell {
-  padding: 6px 0px;
+  padding: 4px 6px;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: left;  /* ✅ บังคับชิดซ้าย */
 }
 
-/* ใช้เฉพาะกับปุ่มจัดการ */
 .centerCell {
   display: flex;
-  /* justify-content: center;   */
-  text-align: center;
+  justify-content: center;
+  align-items: center;
 }
 
-/* ===== Badges ===== */
-.badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  border: 1px solid transparent;
+/* States */
+.noDataMessage,
+.loadingContainer {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
 }
 
-.badgeDueSoon {
-  background-color: #fff7ed;
-  /* พื้นส้มอ่อน */
-  color: var(--warning);
-  border: 1px solid #fdba74;
-}
-
-.badgeOverdue {
-  background-color: #fef2f2;
-  /* พื้นแดงอ่อน */
-  color: var(--danger);
-  border: 1px solid #fecaca;
-}
-
-.badgeNormal {
-  background-color: #ecfdf5;
-  /* พื้นเขียวอ่อน */
-  color: var(--success);
-  border: 1px solid #86efac;
-}
-
-/* ===== Button ===== */
-.actionBtnLink {
-  display: inline-block;
-  background: var(--success);
-  color: #fff;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.actionBtnLink:hover {
-  background: #15803d;
-}
-
-/* ===== Pagination ===== */
+/* Pagination */
 .paginationControls {
   display: flex;
-  justify-content: center;
   list-style: none;
-  padding: 12px;
+  padding: 10px;
   margin: 0;
   gap: 6px;
+  justify-content: center;
+  align-items: center;
+  background: #fff;
 }
 
 .pageButton {
-  padding: 6px 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
   background: #fff;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  padding: 6px 10px;
+  min-width: 34px;
   cursor: pointer;
 }
 
 .pageButton:hover:not(:disabled) {
-  background: #f1f5ff;
+  background: #e9f6fb;
 }
 
 .pageButton:disabled {
@@ -273,19 +363,36 @@
   border-color: var(--primary);
 }
 
-/* ===== Responsive ===== */
+.ellipsis {
+  color: var(--muted);
+}
+
+/* Responsive */
 @media (max-width: 1024px) {
   .filterGrid {
     grid-template-columns: 1fr;
   }
 }
 
+@media (max-width: 640px) {
+  :root {
+    --th-font: 1rem;
+    --th-min-h: 54px;
+    --th-pad-y: 10px;
+  }
+
+  .tableGrid {
+    grid-template-columns: 120px 160px 140px 120px 140px 100px 120px;
+  }
+}
+
 @media (max-width: 768px) {
   .searchCluster {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
     flex-wrap: wrap;
     row-gap: 6px;
-    width: 100%;
-    justify-content: flex-end;
   }
 
   .searchCluster .filterGroup {
@@ -293,8 +400,69 @@
   }
 }
 
+/* Status badge */
+.stBadge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.stOverdue {
+  color: var(--st-overdue-fg);
+  background: var(--st-overdue-bg);
+  border-color: var(--st-overdue-br);
+}
+
+.stDueSoon {
+  color: var(--st-due-soon-fg);
+  background: var(--st-due-soon-bg);
+  border-color: var(--st-due-soon-br);
+}
+
+.stBorrowed {
+  color: var(--st-borrowed-fg);
+  background: var(--st-borrowed-bg);
+  border-color: var(--st-borrowed-br);
+}
+
+.stReturnedAll {
+  color: var(--st-returned-all-fg);
+  background: var(--st-returned-all-bg);
+  border-color: var(--st-returned-all-br);
+}
+
+.stReturnedPartial {
+  color: var(--st-returned-partial-fg);
+  background: var(--st-returned-partial-bg);
+  border-color: var(--st-returned-partial-br);
+}
+
+.stWaiting {
+  color: var(--st-waiting-fg);
+  background: var(--st-waiting-bg);
+  border-color: var(--st-waiting-br);
+}
+
+.stCanceled {
+  color: var(--st-canceled-fg);
+  background: var(--st-canceled-bg);
+  border-color: var(--st-canceled-br);
+}
+
+.stNormal {
+  color: var(--st-normal-fg);
+  background: var(--st-normal-bg);
+  border-color: var(--st-normal-br);
+}
+
 @media (max-width: 640px) {
-  .tableGrid {
-    grid-template-columns: 140px 160px 120px 120px 140px 100px 120px;
+  .stBadge {
+    padding: 4px 8px;
+    font-size: 0.85rem;
   }
 }

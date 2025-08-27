@@ -291,7 +291,7 @@ export default function ImportHistory() {
                 สถานะ
               </div>
               <div className={`${styles.headerItem} ${styles.centerCell}`}>
-                จัดการ
+               ตรวจสอบ
               </div>
             </div>
 

@@ -202,7 +202,7 @@ export default function ExpiredHistoryPage() {
             <div className={styles.headerItem}>หมดอายุ</div>
             <div className={styles.headerItem}>วันหมดอายุ</div>
             <div className={`${styles.headerItem} ${styles.centerCell}`}>สถานะ</div>
-            <div className={`${styles.headerItem} ${styles.centerCell}`}>จัดการ</div>
+            <div className={`${styles.headerItem} ${styles.centerCell}`}>ตรวจสอบ</div>
           </div>
 
           <div className={styles.inventory} style={{ "--rows-per-page": rowsPerPage }}>

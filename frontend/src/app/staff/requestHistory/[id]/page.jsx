@@ -14,8 +14,14 @@ export default function RequestDetailPage() {
 
   // ===== Helpers =====
   const API_BASE = useMemo(() => {
-    const fromAxios = axiosInstance?.defaults?.baseURL?.replace(/\/+$/, "");
-    return fromAxios || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    let fromAxios = axiosInstance?.defaults?.baseURL?.replace(/\/+$/, "");
+    // Remove /api from baseURL if present
+    if (fromAxios && fromAxios.endsWith("/api")) {
+      fromAxios = fromAxios.replace(/\/api$/, "");
+    }
+    const base = fromAxios || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    console.log("API_BASE:", base); // Debug API_BASE
+    return base;
   }, []);
 
   const fmtDate = (v) => {
@@ -26,13 +32,35 @@ export default function RequestDetailPage() {
   };
 
   const imgUrl = (val) => {
-    if (!val) return `${API_BASE}/public/defaults/landscape.png`;
+    console.log("imgUrl input:", val); // Debug input value
+    if (!val) {
+      console.log("imgUrl output: default image (no value)");
+      return `${API_BASE}/public/defaults/landscape.png`;
+    }
     let s = String(val).trim().replace(/\\/g, "/");
-    if (/^https?:\/\//i.test(s)) return s;
+    // Check if the URL is an API endpoint or invalid
+    if (s.includes("/api/my-requests/") || s.includes("/api/")) {
+      console.warn(`Invalid image URL: ${s}, using default image`);
+      return `${API_BASE}/public/defaults/landscape.png`;
+    }
+    if (/^https?:\/\//i.test(s)) {
+      console.log("imgUrl output:", s);
+      return s;
+    }
     s = s.replace(/^\/?public\//i, "");
-    if (/^\/?uploads\//i.test(s)) return `${API_BASE}/${s.replace(/^\/+/, "")}`;
-    if (s.startsWith("/")) return `${API_BASE}${s}`;
-    return `${API_BASE}/uploads/${s}`;
+    if (/^\/?uploads\//i.test(s)) {
+      const url = `${API_BASE}/${s.replace(/^\/+/, "")}`;
+      console.log("imgUrl output:", url);
+      return url;
+    }
+    if (s.startsWith("/")) {
+      const url = `${API_BASE}${s}`;
+      console.log("imgUrl output:", url);
+      return url;
+    }
+    const url = `${API_BASE}/uploads/${s}`;
+    console.log("imgUrl output:", url);
+    return url;
   };
 
   useEffect(() => {
@@ -41,6 +69,7 @@ export default function RequestDetailPage() {
     (async () => {
       try {
         const res = await axiosInstance.get(`/my-requests/${id}`, { signal: ctrl.signal });
+        console.log("API Response - item_img:", res.data?.details?.map(d => d.item_img)); // Debug item_img
         setHeader(res.data?.header ?? null);
         setDetails(res.data?.details ?? []);
       } catch (err) {
@@ -75,6 +104,7 @@ export default function RequestDetailPage() {
     processing: "กำลังดำเนินการ",
     completed: "เสร็จสิ้น",
     returned: "คืนแล้ว",
+    approved_in_queue: "อนุมัติแล้ว รอคิว", // Added for new status
   };
   const categoryMap = {
     medicine: "ยา",
@@ -99,6 +129,7 @@ export default function RequestDetailPage() {
     else if (st === "processing") cls += styles.procProcessing;
     else if (st === "completed") cls += styles.procCompleted;
     else if (st === "returned") cls += styles.procReturned;
+    else if (st === "approved_in_queue") cls += styles.procWaiting; // Reuse waiting style for new status
     else cls += styles.procWaiting;
     return <span className={cls}>{processingStatusMap[st] || "-"}</span>;
   };
@@ -170,6 +201,7 @@ export default function RequestDetailPage() {
                             onError={(e) => {
                               const img = e.currentTarget;
                               if (img.dataset.fallback !== "1") {
+                                console.warn(`Image failed to load: ${img.src}, using default`); // Debug image error
                                 img.src = `${API_BASE}/public/defaults/landscape.png`;
                                 img.dataset.fallback = "1";
                               }

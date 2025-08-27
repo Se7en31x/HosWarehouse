@@ -256,7 +256,7 @@ export default function WithdrawHistory() {
             <div className={styles.headerItem}>รวมจำนวน</div>
             <div className={`${styles.headerItem} ${styles.centerCell}`}>สถานะ</div>
             <div className={`${styles.headerItem} ${styles.centerCell}`}>ด่วน</div>
-            <div className={`${styles.headerItem} ${styles.centerCell}`}>จัดการ</div>
+            <div className={`${styles.headerItem} ${styles.centerCell}`}>ตรวจสอบ</div>
           </div>
 
           <div className={styles.inventory} style={{ "--rows-per-page": rowsPerPage }}>

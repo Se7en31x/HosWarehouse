@@ -393,7 +393,7 @@ export default function ManageDataPage() {
             <div className={styles.headerItem}>หน่วย</div>
             <div className={styles.headerItem}>สถานะ</div>
             <div className={`${styles.headerItem} ${styles.centerCell}`}>
-              การจัดการ
+              การดำเนินการ
             </div>
           </div>
 

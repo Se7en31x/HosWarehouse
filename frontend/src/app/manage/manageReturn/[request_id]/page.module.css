@@ -1,6 +1,12 @@
+/* ============================= 
+   Manage Return Detail — page.module.css
+   Match style with ApprovalRequest and ManageReturnPage, separate tables with fixed height (3 rows for pending, 5 rows for history) with scroll
+   ============================= */
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
+  /* Colors */
   --bg: #f0fbfe;
   --panel: #ffffff;
   --muted: #6b7280;
@@ -12,66 +18,97 @@
   --primary-600: #1685bb;
 
   --success: #16a34a;
-  --danger: #ef4444;
+  --warning: #d97706;
+  --danger: #dc2626;
+
+  --tint-50: #f0fbfe;
+  --tint-100: #e9f6fb;
+  --tint-200: #ace2e1;
 
   --radius: 10px;
-  --row-h: 56px;
 
+  /* Table */
+  --row-h: 60px;
+  --rows-per-page-pending: 3;
+  --rows-per-page-history: 5;
+
+  /* Header sizing */
+  --th-font: 1.05rem;
+  --th-min-h: 60px;
+  --th-pad-y: 14px;
+  --th-pad-x: 12px;
+  --th-letter: 0.01em;
+  --th-line: 1.25;
+
+  /* Z */
+  --z-header: 10;
   --z-overlay: 2000;
-  --z-swal: 10000; /* Ensure SweetAlert2 is above modal */
+  --z-swal: 10000;
+
+  /* Status badge colors */
+  --st-normal-fg: #065f46;
+  --st-normal-bg: #d9fbe5;
+  --st-normal-br: #86efac;
+
+  --st-expired-fg: #d97706;
+  --st-expired-bg: #fff7ed;
+  --st-expired-br: #fdba74;
+
+  --st-damaged-fg: #dc2626;
+  --st-damaged-bg: #fef2f2;
+  --st-damaged-br: #fecaca;
+
+  --st-lost-fg: #374151;
+  --st-lost-bg: #f3f4f6;
+  --st-lost-br: #e5e7eb;
+
+  --st-default-fg: #374151;
+  --st-default-bg: #f3f4f6;
+  --st-default-br: #e5e7eb;
 }
 
-.page {
+/* Layout */
+.mainHome {
   min-height: 100vh;
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial;
-  background: var(--bg);
   display: flex;
+  align-items: center;
   justify-content: center;
+  background: var(--bg);
 }
 
-.shell {
+.infoContainer {
   width: 100%;
+  min-height: 100vh;
+  background: var(--panel);
+  color: var(--text);
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
-.card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
-}
-
-.header {
+/* Header */
+.pageBar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 12px;
-  margin-bottom: 16px;
 }
 
-.title {
-  font-size: 1.4rem;
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.pageTitle {
   font-weight: 700;
-  color: var(--text);
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  margin: 0;
 }
 
-.backBtn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 0.95rem;
-  color: var(--primary-600);
-  font-weight: 600;
-}
-
-.backBtn:hover {
-  text-decoration: underline;
-}
-
+/* Section */
 .sectionTitle {
   margin: 18px 0 8px;
   font-size: 1.1rem;
@@ -79,67 +116,164 @@
   color: var(--primary-600);
 }
 
-.tableWrap {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow-x: auto;
-  background: #fff;
-  margin-bottom: 20px;
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.95rem;
-}
-
-.table th {
-  background: #eef9fc;
-  text-align: left;
-  font-weight: 700;
-  color: #374151;
-  padding: 10px;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-}
-
-.table td {
-  padding: 10px;
-  border-bottom: 1px solid var(--border);
-}
-
-.table tr:hover td {
-  background: #f9fafa;
-}
-
-/* ปุ่ม */
-.btnPrimary {
-  background-color: var(--primary);
-  color: #fff;
+/* Buttons */
+.actionButton {
   border: none;
   border-radius: 8px;
-  padding: 6px 14px;
-  font-size: 0.9rem;
-  font-weight: 600;
+  height: 36px;
+  padding: 0 14px;
+  font-weight: 700;
+  font-size: 0.85rem;
   cursor: pointer;
+  background: var(--primary); /* #008dda */
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.btnPrimary:hover {
-  background-color: var(--primary-600);
+.actionButton:hover {
+  background: var(--primary-600); /* #1685bb */
 }
 
-.btnGhost {
+.actionButton:disabled {
+  background: #93c5fd;
+  cursor: not-allowed;
+}
+
+.ghostBtn {
   background: #fff;
   color: #374151;
-  border: 1px solid var(--border);
+  border: 1px solid var(--tint-200);
   border-radius: 8px;
-  padding: 6px 14px;
-  font-size: 0.9rem;
+  height: 40px;
+  padding: 0 12px;
+  font-size: 0.95rem;
   cursor: pointer;
 }
 
-.btnGhost:hover {
-  background: #f0f9ff;
+.ghostBtn:hover {
+  background: #e9f6fb;
+}
+
+/* Table */
+.tableFrame {
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
+  background: #fff;
+  overflow: hidden;
+}
+
+.tableGrid.pending {
+  display: grid;
+  grid-template-columns:
+    minmax(180px, 1.4fr) /* พัสดุ */
+    minmax(80px, 0.6fr) /* หน่วย */
+    minmax(80px, 0.6fr) /* อนุมัติ */
+    minmax(80px, 0.6fr) /* คืนสะสม */
+    minmax(80px, 0.6fr) /* คงเหลือ */
+    minmax(140px, 1fr) /* กำหนดคืน */
+    minmax(120px, 0.9fr); /* จัดการ */
+  align-items: center;
+}
+
+.tableGrid.history {
+  display: grid;
+  grid-template-columns:
+    minmax(120px, 0.9fr) /* รหัสคืน */
+    minmax(140px, 1fr) /* วันเวลา */
+    minmax(140px, 1fr) /* ผู้ตรวจรับ */
+    minmax(180px, 1.4fr) /* พัสดุ */
+    minmax(80px, 0.6fr) /* อนุมัติ */
+    minmax(80px, 0.6fr) /* คืนครั้งนี้ */
+    minmax(80px, 0.6fr) /* คืนสะสม */
+    minmax(80px, 0.6fr) /* คงเหลือ */
+    minmax(120px, 0.9fr) /* สถานะ */
+    minmax(140px, 1fr); /* ผลการจัดการ */
+  align-items: center;
+}
+
+.tableHeader {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  background: #eef9fc;
+  border-bottom: 1px solid var(--tint-200);
+  padding-block: var(--th-pad-y);
+  padding-inline: var(--th-pad-x);
+  font-weight: 700;
+  color: #374151;
+  font-size: var(--th-font);
+  line-height: var(--th-line);
+  min-height: var(--th-min-h);
+}
+
+.tableHeader.tableGrid > div,
+.tableHeader .headerItem {
+  font-weight: 700;
+  letter-spacing: var(--th-letter);
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 0;
+}
+
+.centerHeader {
+  justify-content: center;
+}
+
+.inventory.pending {
+  background: #fff;
+  height: calc(var(--row-h) * var(--rows-per-page-pending));
+  overflow-y: auto;
+}
+
+.inventory.history {
+  background: #fff;
+  height: calc(var(--row-h) * var(--rows-per-page-history));
+  overflow-y: auto;
+}
+
+.tableRow {
+  height: var(--row-h);
+  padding: 0 var(--th-pad-x);
+  /* border-top: 1px solid #deedf1; */
+  border-bottom: 1px solid #deedf1;
+}
+
+.tableRow:hover {
+  background: var(--tint-100);
+}
+
+.tableRow:first-child {
+  border-top: 0;
+}
+
+.tableCell {
+  padding: 4px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.centerCell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* States */
+.noDataMessage,
+.loadingContainer {
+  height: calc(var(--row-h) * var(--rows-per-page-pending));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.inventory.history .noDataMessage {
+  height: calc(var(--row-h) * var(--rows-per-page-history));
 }
 
 /* Modal */
@@ -156,17 +290,15 @@
 .modalCard {
   background: #fff;
   border-radius: var(--radius);
-  padding: 20px;
+  padding: 24px;
   max-width: 500px;
   width: 100%;
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  position: relative;
+  gap: 16px;
 }
 
-/* Ensure SweetAlert2 has higher z-index */
 .swal2-container {
   z-index: var(--z-swal) !important;
 }
@@ -175,6 +307,7 @@
   font-size: 1.2rem;
   font-weight: 700;
   margin-bottom: 6px;
+  color: var(--text);
 }
 
 .modalActions {
@@ -184,13 +317,25 @@
 }
 
 /* Inputs */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 0.85rem;
+  color: #374151;
+  font-weight: 600;
+}
+
 .input,
 .select,
 .textarea {
   width: 100%;
-  border: 1px solid var(--border);
+  border: 1px solid var(--tint-200);
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: 8px 12px;
   font-size: 0.95rem;
 }
 
@@ -209,4 +354,93 @@
 .helpText {
   font-size: 0.8rem;
   color: var(--muted);
+}
+
+.submitStatus {
+  background: var(--tint-100);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+/* Status badge */
+.stBadge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.stNormal {
+  color: var(--st-normal-fg);
+  background: var(--st-normal-bg);
+  border-color: var(--st-normal-br);
+}
+
+.stExpired {
+  color: var(--st-expired-fg);
+  background: var(--st-expired-bg);
+  border-color: var(--st-expired-br);
+}
+
+.stDamaged {
+  color: var(--st-damaged-fg);
+  background: var(--st-damaged-bg);
+  border-color: var(--st-damaged-br);
+}
+
+.stLost {
+  color: var(--st-lost-fg);
+  background: var(--st-lost-bg);
+  border-color: var(--st-lost-br);
+}
+
+.stDefault {
+  color: var(--st-default-fg);
+  background: var(--st-default-bg);
+  border-color: var(--st-default-br);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .tableGrid.pending {
+    grid-template-columns:
+      140px /* พัสดุ */
+      60px /* หน่วย */
+      60px /* อนุมัติ */
+      60px /* คืนสะสม */
+      60px /* คงเหลือ */
+      100px /* กำหนดคืน */
+      100px; /* จัดการ */
+  }
+
+  .tableGrid.history {
+    grid-template-columns:
+      100px /* รหัสคืน */
+      120px /* วันเวลา */
+      120px /* ผู้ตรวจรับ */
+      140px /* พัสดุ */
+      60px /* อนุมัติ */
+      60px /* คืนครั้งนี้ */
+      60px /* คืนสะสม */
+      60px /* คงเหลือ */
+      100px /* สถานะ */
+      120px; /* ผลการจัดการ */
+  }
+
+  .stBadge {
+    padding: 4px 8px;
+    font-size: 0.85rem;
+  }
+
+  :root {
+    --th-font: 1rem;
+    --th-min-h: 54px;
+    --th-pad-y: 10px;
+  }
 }

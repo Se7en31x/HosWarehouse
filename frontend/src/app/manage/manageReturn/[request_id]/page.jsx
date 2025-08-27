@@ -4,12 +4,22 @@ import { useParams, useRouter } from "next/navigation";
 import axiosInstance from "@/app/utils/axiosInstance";
 import Swal from "sweetalert2";
 import styles from "./page.module.css";
+import { Settings } from "lucide-react";
 
 function formatDate(d) {
   if (!d) return "-";
   const dt = new Date(d);
   if (isNaN(dt)) return "-";
-  return dt.toLocaleString("th-TH", { hour12: false });
+  return new Intl.DateTimeFormat("th-TH-u-nu-latn", {
+    timeZone: "Asia/Bangkok",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(dt);
 }
 
 // 🔹 แปลสถานะคืนจาก DB → ไทย
@@ -30,6 +40,18 @@ function translateCondition(c) {
   if (v === "lost") return "สูญหาย";
   if (v === "expired") return "หมดอายุ";
   return v || "-";
+}
+
+// 🔹 คลาสสถานะสำหรับ badge
+function statusClass(condition) {
+  const v = String(condition || "").toLowerCase();
+  switch (v) {
+    case "normal": return "stNormal";
+    case "expired": return "stExpired";
+    case "damaged": return "stDamaged";
+    case "lost": return "stLost";
+    default: return "stDefault";
+  }
 }
 
 export default function ManageReturnDetailPage() {
@@ -272,18 +294,20 @@ export default function ManageReturnDetailPage() {
 
   if (loading)
     return (
-      <div className={styles.page}>
-        <div className={styles.shell}>กำลังโหลด...</div>
+      <div className={styles.mainHome}>
+        <div className={styles.infoContainer}>
+          <div className={styles.loadingContainer}>กำลังโหลด...</div>
+        </div>
       </div>
     );
 
   if (err || !data)
     return (
-      <div className={styles.page}>
-        <div className={styles.shell}>
+      <div className={styles.mainHome}>
+        <div className={styles.infoContainer}>
           <div className={styles.card} style={{ padding: 22 }}>
-            <div style={{ marginBottom: 12 }}>{err || "ไม่พบข้อมูลใบคำขอนี้"}</div>
-            <button className={styles.btnGhost} onClick={() => router.push("/manage/manageReturn")}>
+            <div className={styles.noDataMessage}>{err || "ไม่พบข้อมูลใบคำขอนี้"}</div>
+            <button className={styles.ghostBtn} onClick={() => router.push("/manage/manageReturn")}>
               กลับรายการรวม
             </button>
           </div>
@@ -292,129 +316,112 @@ export default function ManageReturnDetailPage() {
     );
 
   return (
-    <div className={styles.page}>
-      <div className={styles.shell}>
-        <div className={styles.card}>
-          <div className={styles.header}>
-            <h1 className={styles.title}>
+    <div className={styles.mainHome}>
+      <div className={styles.infoContainer}>
+        <div className={styles.pageBar}>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.pageTitle}>
               ตรวจรับคืน — {summary.request_code} ({summary.user_name})
             </h1>
-            <button className={styles.backBtn} onClick={() => router.push("/manage/manageReturn")}>
-              ← กลับ
-            </button>
           </div>
+          <button className={styles.ghostBtn} onClick={() => router.push("/manage/manageReturn")}>
+            กลับรายการรวม
+          </button>
+        </div>
 
-          {/* ตารางค้างคืน */}
-          <h2 className={styles.sectionTitle}>รายการที่ยังค้างคืน</h2>
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>พัสดุ</th>
-                  <th>หน่วย</th>
-                  <th>อนุมัติ</th>
-                  <th>คืนสะสม</th>
-                  <th>คงเหลือ</th>
-                  <th>กำหนดคืน</th>
-                  <th>จัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isBorrow && pendingItems.length ? (
-                  pendingItems.map((it) => (
-                    <tr key={it.request_detail_id}>
-                      <td>{it.item_name}</td>
-                      <td>{it.item_unit || "-"}</td>
-                      <td>{it.approved_qty ?? 0}</td>
-                      <td>{it.returned_total ?? 0}</td>
-                      <td>{it.remaining_qty ?? 0}</td>
-                      <td>{formatDate(it.expected_return_date)}</td>
-                      <td>
-                        <button className={styles.btnPrimary} onClick={() => openReceive(it)}>
-                          รับคืน
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={7} style={{ textAlign: "center", padding: 16 }}>
-                      {isBorrow ? "ไม่มีรายการค้างคืน" : "ใบนี้ไม่ใช่โหมดยืม"}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        {/* ตารางค้างคืน */}
+        <h2 className={styles.sectionTitle}>รายการที่ยังค้างคืน</h2>
+        <div className={styles.tableFrame}>
+          <div className={`${styles.tableGrid} ${styles.pending} ${styles.tableHeader}`}>
+            <div className={styles.headerItem}>พัสดุ</div>
+            <div className={styles.headerItem}>หน่วย</div>
+            <div className={styles.headerItem}>อนุมัติ</div>
+            <div className={styles.headerItem}>คืนสะสม</div>
+            <div className={styles.headerItem}>คงเหลือ</div>
+            <div className={styles.headerItem}>กำหนดคืน</div>
+            <div className={`${styles.headerItem} ${styles.centerHeader}`}>จัดการ</div>
           </div>
+          <div className={`${styles.inventory} ${styles.pending}`}>
+            {isBorrow && pendingItems.length ? (
+              pendingItems.map((it) => (
+                <div key={it.request_detail_id} className={`${styles.tableGrid} ${styles.pending} ${styles.tableRow}`}>
+                  <div className={styles.tableCell}>{it.item_name}</div>
+                  <div className={styles.tableCell}>{it.item_unit || "-"}</div>
+                  <div className={styles.tableCell}>{it.approved_qty ?? 0}</div>
+                  <div className={styles.tableCell}>{it.returned_total ?? 0}</div>
+                  <div className={styles.tableCell}>{it.remaining_qty ?? 0}</div>
+                  <div className={styles.tableCell}>{formatDate(it.expected_return_date)}</div>
+                  <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                    <button className={styles.actionButton} onClick={() => openReceive(it)}>
+                      <Settings size={16} /> รับคืน
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className={styles.noDataMessage}>
+                {isBorrow ? "ไม่มีรายการค้างคืน" : "ใบนี้ไม่ใช่โหมดยืม"}
+              </div>
+            )}
+          </div>
+        </div>
 
-          {/* ประวัติการคืน */}
-          <h2 className={styles.sectionTitle}>ประวัติการคืน</h2>
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>รหัสคืน</th>
-                  <th>วันเวลา</th>
-                  <th>ผู้ตรวจรับ</th>
-                  <th>พัสดุ</th>
-                  <th>อนุมัติ</th>
-                  <th>คืนครั้งนี้</th>
-                  <th>คืนสะสม</th>
-                  <th>คงเหลือ</th>
-                  <th>สถานะ</th>
-                  <th>ผลการจัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isBorrow && returns.length > 0 ? (
-                  returns.map((r) => {
-                    let actionNote = "";
-                    let actionClass = "";
-                    switch ((r.condition || "").toLowerCase()) {
-                      case "normal":
-                        actionNote = "คืนเข้าคลัง";
-                        actionClass = styles.statusNormal;
-                        break;
-                      case "expired":
-                        actionNote = "ตัดออก (หมดอายุ)";
-                        actionClass = styles.statusExpired;
-                        break;
-                      case "damaged":
-                        actionNote = "บันทึกของชำรุด";
-                        actionClass = styles.statusDamaged;
-                        break;
-                      case "lost":
-                        actionNote = "บันทึกสูญหาย";
-                        actionClass = styles.statusLost;
-                        break;
-                      default:
-                        actionNote = "-";
-                    }
-
-                    return (
-                      <tr key={r.return_code}>
-                        <td>{r.return_code}</td>
-                        <td>{formatDate(r.return_date)}</td>
-                        <td>{r.inspected_by_name || "-"}</td>
-                        <td>{r.item_name || "-"}</td>
-                        <td>{r.approved_qty ?? 0}</td>
-                        <td>{r.returned_this_time ?? 0}</td>
-                        <td>{r.returned_total ?? 0}</td>
-                        <td>{r.remaining_qty ?? 0}</td>
-                        <td>{r._status_thai}</td>
-                        <td className={actionClass}>{actionNote}</td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={10} style={{ textAlign: "center", padding: 16 }}>
-                      {isBorrow ? "ยังไม่มีประวัติการคืน" : "—"}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        {/* ประวัติการคืน */}
+        <h2 className={styles.sectionTitle}>ประวัติการคืน</h2>
+        <div className={styles.tableFrame}>
+          <div className={`${styles.tableGrid} ${styles.history} ${styles.tableHeader}`}>
+            <div className={styles.headerItem}>รหัสคืน</div>
+            <div className={styles.headerItem}>วันเวลา</div>
+            <div className={styles.headerItem}>ผู้ตรวจรับ</div>
+            <div className={styles.headerItem}>พัสดุ</div>
+            <div className={styles.headerItem}>อนุมัติ</div>
+            <div className={styles.headerItem}>คืนครั้งนี้</div>
+            <div className={styles.headerItem}>คืนสะสม</div>
+            <div className={styles.headerItem}>คงเหลือ</div>
+            <div className={`${styles.headerItem} ${styles.centerHeader}`}>สถานะ</div>
+            <div className={`${styles.headerItem} ${styles.centerHeader}`}>ผลการจัดการ</div>
+          </div>
+          <div className={`${styles.inventory} ${styles.history}`}>
+            {isBorrow && returns.length > 0 ? (
+              returns.map((r) => {
+                const actionNote =
+                  r.condition === "normal"
+                    ? "คืนเข้าคลัง"
+                    : r.condition === "expired"
+                      ? "ตัดออก (หมดอายุ)"
+                      : r.condition === "damaged"
+                        ? "บันทึกของชำรุด"
+                        : r.condition === "lost"
+                          ? "บันทึกสูญหาย"
+                          : "-";
+                return (
+                  <div key={r.return_code} className={`${styles.tableGrid} ${styles.history} ${styles.tableRow}`}>
+                    <div className={styles.tableCell}>{r.return_code}</div>
+                    <div className={styles.tableCell}>{formatDate(r.return_date)}</div>
+                    <div className={styles.tableCell}>{r.inspected_by_name || "-"}</div>
+                    <div className={styles.tableCell}>{r.item_name || "-"}</div>
+                    <div className={styles.tableCell}>{r.approved_qty ?? 0}</div>
+                    <div className={styles.tableCell}>{r.returned_this_time ?? 0}</div>
+                    <div className={styles.tableCell}>{r.returned_total ?? 0}</div>
+                    <div className={styles.tableCell}>{r.remaining_qty ?? 0}</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      <span className={`${styles.stBadge} ${styles[statusClass(r.condition)]}`}>
+                        {r._status_thai}
+                      </span>
+                    </div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      <span className={`${styles.stBadge} ${styles[statusClass(r.condition)]}`}>
+                        {actionNote}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className={styles.noDataMessage}>
+                {isBorrow ? "ยังไม่มีประวัติการคืน" : "—"}
+              </div>
+            )}
           </div>
         </div>
 
@@ -430,8 +437,8 @@ export default function ManageReturnDetailPage() {
                   </p>
                 </div>
               )}
-              <div className="field">
-                <label>จำนวนที่รับคืน</label>
+              <div className={styles.field}>
+                <label className={styles.label}>จำนวนที่รับคืน</label>
                 <input
                   className={styles.input}
                   type="number"
@@ -450,8 +457,8 @@ export default function ManageReturnDetailPage() {
                 <small className={styles.helpText}>คงเหลือ: {activeRow.remaining_qty}</small>
               </div>
 
-              <div className="field">
-                <label>สภาพ</label>
+              <div className={styles.field}>
+                <label className={styles.label}>สภาพ</label>
                 <select
                   className={styles.select}
                   value={condition}
@@ -463,8 +470,8 @@ export default function ManageReturnDetailPage() {
                 </select>
               </div>
 
-              <div className="field">
-                <label>หมายเหตุ</label>
+              <div className={styles.field}>
+                <label className={styles.label}>หมายเหตุ</label>
                 <textarea
                   className={styles.textarea}
                   value={note}
@@ -473,11 +480,11 @@ export default function ManageReturnDetailPage() {
               </div>
 
               <div className={styles.modalActions}>
-                <button className={styles.btnGhost} onClick={() => setActiveRow(null)}>
+                <button className={styles.ghostBtn} onClick={() => setActiveRow(null)}>
                   ยกเลิก
                 </button>
-                <button className={styles.btnPrimary} onClick={submitReceive}>
-                  ยืนยันรับคืน
+                <button className={styles.actionButton} onClick={submitReceive}>
+                  <Settings size={16} /> ยืนยันรับคืน
                 </button>
               </div>
             </div>

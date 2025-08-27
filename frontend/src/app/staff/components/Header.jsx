@@ -32,8 +32,8 @@ export default function Header() {
         {/* 👤 User */}
         <div className={styles.profileWrapper}>
           <div className={styles.profileText}>
-            <span className={styles.profileName}>พิมใจ ตั้งมั่น</span>
-            <span className={styles.profileRole}>ผู้ดูแลระบบ</span>
+            <span className={styles.profileName}>วัชรพล อินทร์ทอง</span>
+            <span className={styles.profileRole}>หมอ</span>
           </div>
           <FaUserCircle className={styles.profileIcon} size={32} />
         </div>

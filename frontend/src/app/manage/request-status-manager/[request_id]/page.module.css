@@ -175,20 +175,27 @@
 
 /* ---- Table ---- */
 .tableContainer {
-  max-height: calc(var(--row-h) * 8); /* Limit to 8 rows */
+  max-height: calc(var(--row-h) * 8);
+  /* Limit to 8 rows */
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none; /* Hide scrollbar in Firefox */
+  scrollbar-width: none;
+  /* Hide scrollbar in Firefox */
 }
 
 .tableContainer::-webkit-scrollbar {
-  display: none; /* Hide scrollbar in WebKit browsers */
+  display: none;
+  /* Hide scrollbar in WebKit browsers */
 }
 
 .table {
   width: 100%;
-  border-collapse: collapse;
   background: #fff;
+  border: 1px solid var(--tint-200); /* กรอบด้านนอก */
+  border-radius: 10px; /* มุมโค้ง */
+  border-collapse: separate; /* เปลี่ยนจาก collapse เป็น separate */
+  border-spacing: 0; /* ลบช่องว่างระหว่างเซลล์ */
+  overflow: hidden; /* ป้องกันเนื้อหาล้นกรอบโค้ง */
 }
 
 .table th,
@@ -370,8 +377,13 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loadingText,
@@ -450,8 +462,15 @@
     padding: 12px;
   }
 
+  .tableContainer {
+    border: 2px solid var(--tint-200); /* รักษากรอบในหน้าจอขนาดเล็ก */
+    border-radius: var(--radius);
+    padding: 8px;
+  }
+
   .table {
     display: block;
+    border: none; /* ป้องกันกรอบซ้ำซ้อนในหน้าจอขนาดเล็กถ้าใช้กรอบที่ .tableContainer */
   }
 
   .table thead {
