@@ -1,235 +1,217 @@
 /* src/app/components/Sidebar.module.css */
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap');
 
 .sidebar {
-  flex-basis: 20%;
-  flex-shrink: 1;
-  flex-grow: 1;
-  min-width: 180px;
-  max-width: 280px;
-  height: 100%;
-  background-color: #ffffff;
-  color: #333;
-  border-radius: 12px;
-  box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease-in-out;
-  padding-top: 20px;
-  padding-bottom: 20px;
-  overflow: hidden;
-  position: relative;
+    flex-basis: 20%;
+    flex-shrink: 1;
+    flex-grow: 1;
+    min-width: 180px;
+    max-width: 280px;
+    height: 100%;
+    background-color: #ffffff;
+    color: #333;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-top: 20px;
+    padding-bottom: 20px;
+    overflow: hidden;
+    position: relative;
+
+    font-family: 'Prompt', sans-serif;
 }
 
 .sidebar.collapsed {
-  flex-basis: 70px;
-  min-width: 70px;
-  max-width: 70px;
-  padding-left: 0;
-  padding-right: 0;
+    flex-basis: 70px;
+    min-width: 70px;
+    max-width: 70px;
+    padding-left: 0;
+    padding-right: 0;
 }
 
 /* Header */
 .sidebarHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 20px;
-  margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 18px;
+    /* margin-bottom: 25px; */
 }
 
 .headerIcon {
-  font-size: 20px;
-  color: #555;
+    font-size: 20px;
+    color: #888;
 }
 
 .searchButton,
 .collapseButton {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 6px;
-  transition: color 0.2s ease-in-out, transform 0.15s ease-in-out;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    transition: color 0.2s ease-in-out, transform 0.15s ease-in-out;
 }
 
 .searchButton:hover .headerIcon,
 .collapseButton:hover .headerIcon {
-  color: #008dda;
+    color: #41c9e2;
 }
+
 .collapseButton:active,
 .searchButton:active {
-  transform: scale(0.96);
+    transform: scale(0.96);
 }
 
 .divider {
-  border: none;
-  border-bottom: 1px solid #eee;
-  margin: 8px 0;
-  transition: all 0.3s ease-in-out;
+    border: none;
+    border-bottom: 1px solid #e0e0e0;
+    margin: 8px 0;
+    transition: all 0.3s ease-in-out;
 }
 
 .sidebar.collapsed .divider {
-  margin: 4px 0;
+    margin: 4px 0;
 }
 
-/* ✅ โซนเลื่อน: สูงคงที่ + ซ่อน scrollbar ทุกเบราว์เซอร์ */
+/* ✅ โซนเลื่อน */
 .navContainer {
-  padding: 0 12px 12px;      /* เพิ่ม padding ล่างนิดนึง */
-  overflow-y: auto;
-  max-height: calc(100% - 80px);  /* เดิม 130px → 80px */
-  scrollbar-width: none;          
-  -ms-overflow-style: none; 
+    padding: 0 12px 12px;
+    overflow-y: auto;
+    max-height: calc(100% - 80px);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
-.navContainer::-webkit-scrollbar { /* Chrome/Safari/Edge */
-  width: 0;
-  height: 0;
+.navContainer::-webkit-scrollbar {
+    width: 0;
+    height: 0;
 }
 
 .navLinks {
-  list-style-type: none;
-  padding: 0;
-  margin-top: 6px;
+    list-style-type: none;
+    padding: 0;
+    margin-top: 6px;
 }
 
 /* หัวข้อหมวดหมู่ */
 .sidebarSectionTitle {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: #6b7280;
-  text-transform: uppercase;
-  padding: 10px 8px 4px;
-  margin: 4px 0 2px;
-  user-select: none;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #a0a0a0;
+    text-transform: uppercase;
+    padding: 10px 8px 4px;
+    margin: 4px 0 2px;
+    user-select: none;
 }
 
 .sidebar.collapsed .sidebarSectionTitle {
-  display: none;
+    display: none;
 }
 
 .navLinks li {
-  margin: 5px 0;
+    margin: 5px 0;
 }
 
 .sidebarItem {
-  display: flex;
-  align-items: center;
-  padding: 12px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  color: #333;
-  text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 12px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    color: #555; /* สีข้อความปกติ */
+    text-decoration: none;
 }
 
 .sidebar.collapsed .sidebarItem {
-  justify-content: center;
-  padding: 12px;
+    justify-content: center;
+    padding: 12px;
 }
 
 .sidebarItem:hover {
-  background-color: #ace2e1;
-  color: #008dda;
-  transform: translateX(3px);
-  box-shadow: 2px 2px 5px rgba(0, 137, 218, 0.05);
+    background-color: #ace2e1; /* ใช้สีอ่อนที่ให้มา */
+    color: #008dda;
+    transform: translateX(3px);
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.03);
 }
 
 .sidebarItem.active {
-  background: linear-gradient(to right, #008dda, #41c9e2);
-  color: #ffffff;
-  font-weight: 700;
-  box-shadow: 2px 2px 8px rgba(0, 137, 218, 0.2);
+    /* กลับไปใช้ linear-gradient ตามสีที่ให้มา */
+    background: linear-gradient(to right, #008dda, #41c9e2);
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: 2px 2px 8px rgba(0, 137, 218, 0.2);
 }
+
 .sidebarItem.active .sidebarIcon {
-  color: #ffffff;
+    color: #ffffff;
 }
 
 .sidebarIcon {
-  font-size: 20px;
-  margin-right: 14px;
-  color: #555;
-  transition: margin-right 0.3s ease-in-out, color 0.2s ease-in-out;
+    font-size: 20px;
+    margin-right: 14px;
+    color: #555; /* สีไอคอนปกติ */
+    transition: margin-right 0.3s ease-in-out, color 0.2s ease-in-out;
 }
 
 .sidebar.collapsed .sidebarIcon {
-  margin-right: 0;
+    margin-right: 0;
 }
 
 .sidebarItem:hover .sidebarIcon {
-  color: #008dda;
+    color: #008dda; /* ให้สีไอคอนเปลี่ยนตาม */
 }
 
 .sidebarText {
-  font-size: 15px;
-  font-weight: 500;
-  white-space: nowrap;
-  opacity: 1;
-  transition: opacity 0.3s ease-in-out, width 0.3s ease-in-out;
+    font-size: 15px;
+    font-weight:600;
+    white-space: nowrap;
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out, width 0.3s ease-in-out;
 }
 
 .sidebar.collapsed .sidebarText {
-  opacity: 0;
-  width: 0;
-  overflow: hidden;
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
 }
 
 .noStyleLink {
-  text-decoration: none;
-  color: inherit;
-  display: flex;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  justify-content: flex-start;
-  transition: justify-content 0.3s ease-in-out;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    justify-content: flex-start;
+    transition: justify-content 0.3s ease-in-out;
 }
 .sidebar.collapsed .noStyleLink {
-  justify-content: center;
+    justify-content: center;
 }
-
-/* ✅ ปุ่มเลื่อนล่างขวา */
-.scrollButtons {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  z-index: 5;
-}
-
-.scrollButton {
-  width: 34px;
-  height: 34px;
-  border: none;
-  border-radius: 10px;
-  background: #f3f4f6;
-  box-shadow: 0 2px 6px rgba(17, 24, 39, 0.08);
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  transition: background 0.2s ease-in-out, transform 0.1s ease-in-out;
-}
-.scrollButton:hover { background: #e6f6fb; }
-.scrollButton:active { transform: translateY(1px); }
 
 /* Mobile */
 @media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    z-index: 1000;
-    transform: translateX(-100%);
-    box-shadow: 10px 0 20px rgba(0, 0, 0, 0.15);
-  }
-  .sidebar.open { transform: translateX(0); }
-  .sidebar.collapsed {
-    min-width: 60px;
-    max-width: 60px;
-    flex-basis: 60px;
-  }
-  .navContainer {
-    max-height: calc(100vh - 110px);
-  }
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 1000;
+        transform: translateX(-100%);
+        box-shadow: 10px 0 20px rgba(0, 0, 0, 0.15);
+    }
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    .sidebar.collapsed {
+        min-width: 60px;
+        max-width: 60px;
+        flex-basis: 60px;
+    }
+    .navContainer {
+        max-height: calc(100vh - 110px);
+    }
 }
 
 
@@ -237,10 +219,5 @@
 .sidebar.collapsed .searchButton,
 .sidebar.collapsed .searchWrapper,
 .sidebar.collapsed .searchPopover {
-  display: none !important;
-}
-
-/* เอาปุ่มลูกศรเลื่อนออก */
-.scrollButtons {
-  display: none !important;
+    display: none !important;
 }

@@ -1,17 +1,26 @@
-
 "use client";
 import { useState, useEffect } from "react";
 import styles from "./page.module.css";
 import axiosInstance from "@/app/utils/axiosInstance";
-import { FaSearch } from "react-icons/fa";
+import { FaSearch, FaPlusCircle, FaTimes } from "react-icons/fa";
 import Swal from "sweetalert2";
 import exportPDF from "@/app/components/pdf/PDFExporter";
 
 const categories = ["ทั้งหมด", "ยา", "เวชภัณฑ์", "ครุภัณฑ์", "อุปกรณ์ทางการแพทย์", "ของใช้ทั่วไป"];
 
+// Component สำหรับแสดง Badge สถานะ
+const StatusBadge = ({ status }) => {
+  let badgeStyle = styles.pending;
+  if (status?.toLowerCase() === "approved") badgeStyle = styles.approved;
+  else if (status?.toLowerCase() === "completed") badgeStyle = styles.completed;
+  else if (status?.toLowerCase() === "canceled") badgeStyle = styles.canceled;
+  return <span className={`${styles.badge} ${badgeStyle}`}>{status ? status.charAt(0).toUpperCase() + status.slice(1) : "-"}</span>;
+};
+
 const PurchaseRequestPage = () => {
   const [requests, setRequests] = useState([]);
   const [filterCategory, setFilterCategory] = useState("ทั้งหมด");
+  const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [specs, setSpecs] = useState({});
   const [loading, setLoading] = useState(true);
@@ -20,6 +29,7 @@ const PurchaseRequestPage = () => {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
+        setLoading(true);
         const res = await axiosInstance.get("/pr");
         setRequests(res.data.map((item) => ({ ...item, checked: false })));
       } catch (err) {
@@ -53,6 +63,7 @@ const PurchaseRequestPage = () => {
 
   const handleClearSelection = () => {
     setRequests((prev) => prev.map((item) => ({ ...item, checked: false })));
+    setSpecs({});
   };
 
   const handleSpecChange = (id, value) => {
@@ -76,7 +87,16 @@ const PurchaseRequestPage = () => {
 
   const handleSubmitQuotation = async () => {
     const selectedItems = requests.filter((item) => item.checked);
-    if (selectedItems.length === 0) return;
+    if (selectedItems.length === 0) {
+      Swal.fire({
+        title: "แจ้งเตือน",
+        text: "กรุณาเลือกอย่างน้อยหนึ่งรายการ",
+        icon: "warning",
+        confirmButtonText: "ตกลง",
+        customClass: { confirmButton: styles.swalButton },
+      });
+      return;
+    }
 
     try {
       const res = await axiosInstance.post("/rfq", {
@@ -90,12 +110,25 @@ const PurchaseRequestPage = () => {
         })),
       });
 
-      Swal.fire("สำเร็จ", "สร้างใบขอราคาเรียบร้อย: " + res.data.rfq_no, "success");
-      setShowModal(false);
-      setRequests((prev) => prev.map((item) => ({ ...item, checked: false })));
-      setSpecs({});
+      Swal.fire({
+        title: "สำเร็จ",
+        text: `สร้างใบขอราคาเรียบร้อย: ${res.data.rfq_no}`,
+        icon: "success",
+        confirmButtonText: "ตกลง",
+        customClass: { confirmButton: styles.swalButton },
+      }).then(() => {
+        setShowModal(false);
+        setRequests((prev) => prev.map((item) => ({ ...item, checked: false })));
+        setSpecs({});
+      });
     } catch (err) {
-      Swal.fire("ผิดพลาด", err.response?.data?.message || err.message, "error");
+      Swal.fire({
+        title: "ผิดพลาด",
+        text: err.response?.data?.message || err.message,
+        icon: "error",
+        confirmButtonText: "ตกลง",
+        customClass: { confirmButton: styles.swalButton },
+      });
     }
   };
 
@@ -167,7 +200,7 @@ const PurchaseRequestPage = () => {
           address: "123/45 ถนนสุขภาพ แขวงการแพทย์ เขตเมือง กรุงเทพฯ 10110",
           phone: "02-123-4567",
           email: "purchasing@hospital.com",
-          logoUrl: "/font/Sarabun/logo.png", // Place logo in public/font/Sarabun/
+          logoUrl: "/font/Sarabun/logo.png",
           headerBand: true,
           bandColor: [0, 141, 218],
           logoWidth: 20,
@@ -179,151 +212,207 @@ const PurchaseRequestPage = () => {
         font: { size: { title: 18, body: 11, table: 10, footer: 9 } },
       },
     });
+
+    Swal.fire({
+      title: "สำเร็จ",
+      text: `ดาวน์โหลดใบขอราคา ${rfqNumber} เรียบร้อย`,
+      icon: "success",
+      confirmButtonText: "ตกลง",
+      customClass: { confirmButton: styles.swalButton },
+    });
   };
 
-  const filteredRequests =
-    filterCategory === "ทั้งหมด"
-      ? requests
-      : requests.filter((item) => item.item_category === filterCategory);
+  const filteredRequests = requests.filter(
+    (item) =>
+      (filterCategory === "ทั้งหมด" || item.item_category === filterCategory) &&
+      (item.pr_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.item_name?.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
-  if (loading) return <div className={styles.loading}>กำลังโหลด...</div>;
+  const hasSelectedItems = requests.some((item) => item.checked);
 
   return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>ระบบการสั่งซื้อ - ออกใบขอราคา</h1>
+    <main className={styles.container}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>ระบบการสั่งซื้อ - ออกใบขอราคา</h1>
+        <p className={styles.subtitle}>จัดการคำขอสั่งซื้อและสร้างใบขอราคา (RFQ)</p>
+      </header>
 
-      {/* Filter */}
-      <div className={styles.filter}>
-        <label>ประเภท: </label>
-        <select value={filterCategory} onChange={handleFilterChange}>
-          {categories.map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
-      </div>
+      <section className={styles.toolbar}>
+        <div className={styles.searchBar}>
+          <FaSearch className={styles.searchIcon} />
+          <input
+            className={styles.input}
+            placeholder="ค้นหา: PR NO, ชื่อสินค้า..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className={styles.filter}>
+          <label>ประเภท:</label>
+          <select value={filterCategory} onChange={handleFilterChange}>
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className={styles.spacer} />
+        <div className={styles.actionButtons}>
+          <button
+            className={styles.secondaryButton}
+            onClick={handleSelectAll}
+            disabled={filteredRequests.length === 0}
+          >
+            <FaPlusCircle className={styles.buttonIcon} /> เลือกทั้งหมด
+          </button>
+          <button
+            className={styles.secondaryButton}
+            onClick={handleClearSelection}
+            disabled={!hasSelectedItems}
+          >
+            <FaTimes className={styles.buttonIcon} /> ล้างการเลือก
+          </button>
+          <button
+            className={styles.primaryButton}
+            onClick={handleGenerateQuotation}
+            disabled={!hasSelectedItems}
+          >
+            <FaPlusCircle className={styles.buttonIcon} /> ออกใบขอราคา
+          </button>
+        </div>
+      </section>
 
-      {/* Table */}
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>เลือก</th>
-              <th>PR NO</th>
-              <th>ชื่อสินค้า</th>
-              <th>จำนวน</th>
-              <th>หน่วย</th>
-              <th>ประเภท</th>
-              <th>ผู้ขอ</th>
-              <th>สถานะ</th>
-              <th>วันที่</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredRequests.map((item) => {
-              const rowKey = item.pr_item_id || item.pr_id;
-              return (
-                <tr key={rowKey}>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={item.checked || false}
-                      onChange={() => handleCheckboxChange(rowKey)}
-                    />
-                  </td>
-                  <td>{item.pr_no || "-"}</td>
-                  <td>{item.item_name || "-"}</td>
-                  <td>{item.qty_requested || 0}</td>
-                  <td>{item.unit || "-"}</td>
-                  <td>{item.item_category || "-"}</td>
-                  <td>
-                    {item.user_fname || ""} {item.user_lname || ""}
-                  </td>
-                  <td>{item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : "-"}</td>
-                  <td>
-                    {item.created_at ? new Date(item.created_at).toLocaleDateString("th-TH") : "-"}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Buttons */}
-      <div className={styles.buttonGroup}>
-        <button className={styles.button} onClick={handleSelectAll}>
-          เลือกทั้งหมด
-        </button>
-        <button className={styles.button} onClick={handleClearSelection}>
-          ล้างการเลือก
-        </button>
-        <button
-          className={styles.button}
-          onClick={handleGenerateQuotation}
-          disabled={!requests.some((item) => item.checked)}
-        >
-          ออกใบขอราคา
-        </button>
-      </div>
-
-      {/* Modal */}
-      {showModal && (
-        <div className={styles.modal}>
-          <div className={styles.modalContent}>
-            <h2>ใบขอราคา</h2>
+      <div className={styles.tableCard}>
+        <div className={styles.tableWrap} role="region" aria-label="ตารางคำขอสั่งซื้อ">
+          {loading ? (
+            <div className={styles.empty}>กำลังโหลด...</div>
+          ) : filteredRequests.length === 0 ? (
+            <div className={styles.empty}>ไม่พบรายการคำขอสั่งซื้อ</div>
+          ) : (
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>PR No</th>
+                  <th style={{ width: "50px" }}></th>
+                  <th>PR NO</th>
                   <th>ชื่อสินค้า</th>
                   <th>จำนวน</th>
                   <th>หน่วย</th>
-                  <th>คุณลักษณะ (ระบุเพิ่มเติม)</th>
+                  <th>ประเภท</th>
+                  <th>ผู้ขอ</th>
+                  <th>สถานะ</th>
+                  <th>วันที่</th>
                 </tr>
               </thead>
               <tbody>
-                {requests
-                  .filter((item) => item.checked)
-                  .map((item) => {
-                    const rowKey = item.pr_item_id || item.pr_id;
-                    return (
-                      <tr key={rowKey}>
-                        <td>{item.pr_no || "-"}</td>
-                        <td>{item.item_name || "-"}</td>
-                        <td>{item.qty_requested || 0}</td>
-                        <td>{item.unit || "-"}</td>
-                        <td>
-                          <input
-                            type="text"
-                            value={specs[rowKey] || ""}
-                            onChange={(e) => handleSpecChange(rowKey, e.target.value)}
-                            placeholder="ระบุคุณลักษณะ เช่น ขนาด, สี, รุ่น"
-                            className={styles.input}
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })}
+                {filteredRequests.map((item) => {
+                  const rowKey = item.pr_item_id || item.pr_id;
+                  return (
+                    <tr key={rowKey} className={item.checked ? styles.rowSelected : ""}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={item.checked || false}
+                          onChange={() => handleCheckboxChange(rowKey)}
+                        />
+                      </td>
+                      <td className={styles.mono}>{item.pr_no || "-"}</td>
+                      <td>{item.item_name || "-"}</td>
+                      <td>{item.qty_requested || 0}</td>
+                      <td>{item.unit || "-"}</td>
+                      <td>{item.item_category || "-"}</td>
+                      <td>
+                        {item.user_fname || ""} {item.user_lname || ""}
+                      </td>
+                      <td><StatusBadge status={item.status} /></td>
+                      <td>
+                        {item.created_at
+                          ? new Date(item.created_at).toLocaleDateString("th-TH")
+                          : "-"}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
+          )}
+        </div>
+      </div>
 
-            <div className={styles.modalFooter}>
-              <button className={styles.button} onClick={handleExportPDF}>
-                ⬇️ ดาวน์โหลด PDF
+      {showModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <header className={styles.modalHeader}>
+              <h2>สร้างใบขอราคา (RFQ)</h2>
+              <button className={styles.closeButton} onClick={() => setShowModal(false)}>
+                <FaTimes />
               </button>
-              <button className={styles.button} onClick={handleSubmitQuotation}>
-                บันทึกและส่ง
+            </header>
+            <section className={styles.modalBody}>
+              <h3>รายการสินค้า</h3>
+              <table className={styles.itemTable}>
+                <thead>
+                  <tr>
+                    <th>PR NO</th>
+                    <th>ชื่อสินค้า</th>
+                    <th>จำนวน</th>
+                    <th>หน่วย</th>
+                    <th>คุณลักษณะ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {requests
+                    .filter((item) => item.checked)
+                    .map((item) => {
+                      const rowKey = item.pr_item_id || item.pr_id;
+                      return (
+                        <tr key={rowKey}>
+                          <td>{item.pr_no || "-"}</td>
+                          <td>{item.item_name || "-"}</td>
+                          <td>{item.qty_requested || 0}</td>
+                          <td>{item.unit || "-"}</td>
+                          <td>
+                            <input
+                              type="text"
+                              value={specs[rowKey] || ""}
+                              onChange={(e) => handleSpecChange(rowKey, e.target.value)}
+                              placeholder="ระบุคุณลักษณะ เช่น ขนาด, สี, รุ่น"
+                              className={styles.input}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </section>
+            <footer className={styles.modalFooter}>
+              <button
+                className={styles.secondaryButton}
+                onClick={handleExportPDF}
+                disabled={!hasSelectedItems}
+              >
+                <FaPlusCircle className={styles.buttonIcon} /> ดาวน์โหลด PDF
               </button>
-              <button className={styles.buttonDanger} onClick={() => setShowModal(false)}>
-                ยกเลิก
+              <button
+                className={styles.primaryButton}
+                onClick={handleSubmitQuotation}
+                disabled={!hasSelectedItems}
+              >
+                <FaPlusCircle className={styles.buttonIcon} /> บันทึกและส่ง
               </button>
-            </div>
+              <button
+                className={styles.secondaryButton}
+                onClick={() => setShowModal(false)}
+              >
+                <FaTimes className={styles.buttonIcon} /> ยกเลิก
+              </button>
+            </footer>
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 };
 

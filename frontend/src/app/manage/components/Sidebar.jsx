@@ -5,12 +5,27 @@ import { useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "./Sidebar.module.css";
-import { FaUndo, FaTools, FaCalendarTimes, FaCaretUp, FaCaretDown } from "react-icons/fa";
 import {
-    FaHome, FaBox, FaListAlt, FaClipboardCheck, FaCogs, FaWarehouse, FaHistory,
-    FaChartBar, FaBell, FaCog, FaTruck, FaBars, FaSearch, FaShoppingCart,
-    FaClipboardList, FaTasks // ✅ เพิ่มตัวนี้
-} from "react-icons/fa";
+    Home,
+    Package,
+    Settings,
+    Warehouse,
+    History,
+    BarChart,
+    Truck,
+    Menu,
+    Search,
+    ShoppingCart,
+    ClipboardList,
+    CheckSquare,
+    Calendar,
+    Wrench,
+    ListChecks,
+    // ✅ ไอคอนที่เพิ่มเข้ามา
+    ArrowDownFromLine,
+    Database,
+    Clock
+} from "lucide-react";
 
 
 export default function Sidebar() {
@@ -20,9 +35,8 @@ export default function Sidebar() {
 
     const toggleCollapse = () => setIsCollapsed(!isCollapsed);
 
-    // ✅ active ได้ทั้ง path ตรงเป๊ะและ path ลูก (เช่น /manage/xxx/yyy)
     const isActive = (path, { exact = false } = {}) => {
-        const p = (pathname || "").replace(/\/+$/, ""); // ตัด / ท้าย
+        const p = (pathname || "").replace(/\/+$/, "");
         const t = (path || "").replace(/\/+$/, "");
         return exact ? p === t : (p === t || p.startsWith(t + "/"));
     };
@@ -41,21 +55,20 @@ export default function Sidebar() {
                     onClick={toggleCollapse}
                     aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                 >
-                    <FaBars className={styles.headerIcon} />
+                    <Menu className={styles.headerIcon} />
                 </button>
-                <button className={styles.searchButton} aria-label="Search">
-                    <FaSearch className={styles.headerIcon} />
-                </button>
+                {/* <button className={styles.searchButton} aria-label="Search">
+                    <Search className={styles.headerIcon} />
+                </button> */}
             </div>
 
-            {/* ✅ โซนเลื่อน (ซ่อน scrollbar) */}
             <nav ref={navRef} className={styles.navContainer}>
                 <ul className={styles.navLinks}>
                     {/* ===== ภาพรวม ===== */}
                     <li className={styles.sidebarSectionTitle}>ภาพรวม</li>
                     <li className={`${styles.sidebarItem} ${isActive("/manage", { exact: true }) ? styles.active : ""}`}>
                         <Link href="/manage" className={styles.noStyleLink}>
-                            <FaHome className={styles.sidebarIcon} />
+                            <Home className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>หน้าแรก</span>
                         </Link>
                     </li>
@@ -66,65 +79,62 @@ export default function Sidebar() {
                     <li className={styles.sidebarSectionTitle}>คลัง & สต็อก</li>
                     <li className={`${styles.sidebarItem} ${isActive("/manage/inventoryCheck") ? styles.active : ""}`}>
                         <Link href="/manage/inventoryCheck" className={styles.noStyleLink}>
-                            <FaBox className={styles.sidebarIcon} />
+                            <Package className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>ตรวจสอบยอดคงคลัง</span>
                         </Link>
                     </li>
 
                     <li className={`${styles.sidebarItem} ${isActive("/manage/itemReceiving") ? styles.active : ""}`}>
                         <Link href="/manage/itemReceiving" className={styles.noStyleLink}>
-                            <FaTruck className={styles.sidebarIcon} />
+                            {/* ✅ เปลี่ยนไอคอน */}
+                            <Truck className={styles.sidebarIcon} /> 
                             <span className={styles.sidebarText}>นำเข้าทั่วไป</span>
                         </Link>
                     </li>
                     <li className={`${styles.sidebarItem} ${isActive("/manage/expired") ? styles.active : ""}`}>
                         <Link href="/manage/expired" className={styles.noStyleLink}>
-                            <FaCalendarTimes className={styles.sidebarIcon} />
+                            <Calendar className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>จัดการของหมดอายุ</span>
                         </Link>
                     </li>
                     <li className={`${styles.sidebarItem} ${isActive("/manage/manageData") ? styles.active : ""}`}>
                         <Link href="/manage/manageData" className={styles.noStyleLink}>
-                            <FaCogs className={styles.sidebarIcon} />
+                            {/* ✅ เปลี่ยนไอคอน */}
+                            <Database className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>จัดการข้อมูลสินค้า</span>
                         </Link>
                     </li>
-                    <li className={`${styles.sidebarItem} ${isActive('/manage/history') ? styles.active : ''}`}>
-                        <Link href="/manage/history" className={styles.noStyleLink}>
-                            <FaHistory className={styles.sidebarIcon} />
-                            <span className={styles.sidebarText}>ประวัติการทำรายการ</span>
-                        </Link>
-                    </li>
+
                     {/* ===== การจัดการ ===== */}
-                    <li className={styles.sidebarSectionTitle}>การจัดการ</li>
+                    <li className={styles.sidebarSectionTitle}>การดำเนินการ</li>
 
                     <li className={`${styles.sidebarItem} ${isActive("/manage/requestList") ? styles.active : ""}`}>
                         <Link href="/manage/requestList" className={styles.noStyleLink}>
-                            <FaClipboardList className={styles.sidebarIcon} />
+                            <ClipboardList className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>ตรวจสอบรายการเบิก ยืม</span>
                         </Link>
                     </li>
                     <li className={`${styles.sidebarItem} ${isActive("/manage/request-status-manager") ? styles.active : ""}`}>
                         <Link href="/manage/request-status-manager" className={styles.noStyleLink}>
-                            <FaTasks className={styles.sidebarIcon} />
+                            <CheckSquare className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>จัดการสถานะการดำเนินการ</span>
                         </Link>
                     </li>
                     <li className={`${styles.sidebarItem} ${isActive("/manage/stockDeduction") ? styles.active : ""}`}>
                         <Link href="/manage/stockDeduction" className={styles.noStyleLink}>
-                            <FaWarehouse className={styles.sidebarIcon} />
+                            <Warehouse className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>ตัดสต็อก</span>
                         </Link>
                     </li>
                     <li className={`${styles.sidebarItem} ${isActive('/manage/manageReturn') ? styles.active : ''}`}>
                         <Link href="/manage/manageReturn" className={styles.noStyleLink}>
-                            <FaHistory className={styles.sidebarIcon} />
+                            <History className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>จัดการการคืน</span>
                         </Link>
                     </li>
                     <li className={`${styles.sidebarItem} ${isActive("/manage/damaged") ? styles.active : ""}`}>
                         <Link href="/manage/damaged" className={styles.noStyleLink}>
-                            <FaTools className={styles.sidebarIcon} />
+                            <Wrench className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>จัดการของชำรุด</span>
                         </Link>
                     </li>
@@ -134,55 +144,50 @@ export default function Sidebar() {
                     <li className={styles.sidebarSectionTitle}>การจัดซื้อ</li>
                     <li className={`${styles.sidebarItem} ${isActive("/manage/request-purchase") ? styles.active : ""}`}>
                         <Link href="/manage/request-purchase" className={styles.noStyleLink}>
-                            <FaShoppingCart className={styles.sidebarIcon} />
+                            <ShoppingCart className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>รายการสั่งซื้อใหม่</span>
                         </Link>
                     </li>
                     <li className={`${styles.sidebarItem} ${isActive("/manage/purchase-status") ? styles.active : ""}`}>
                         <Link href="/manage/purchase-status" className={styles.noStyleLink}>
-                            <FaHistory className={styles.sidebarIcon} />
+                            {/* ✅ เปลี่ยนไอคอน */}
+                            <Clock className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>ตรวจสอบสถานะการสั่งซื้อ</span>
                         </Link>
                     </li>
-                    <li className={`${styles.sidebarItem} ${isActive("/manage/goods-receipt") ? styles.active : ""}`}>
+                    {/* <li className={`${styles.sidebarItem} ${isActive("/manage/goods-receipt") ? styles.active : ""}`}>
                         <Link href="/manage/goods-receipt" className={styles.noStyleLink}>
-                            <FaTruck className={styles.sidebarIcon} />
+                            <Truck className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>รับสินค้าจากการสั่งซื้อ</span>
                         </Link>
-                    </li>
+                    </li> */}
 
                     <hr className={styles.divider} />
 
                     {/* ===== รายงาน & การตั้งค่า ===== */}
-                    <li className={styles.sidebarSectionTitle}>รายงาน & การตั้งค่า</li>
-
+                    <li className={styles.sidebarSectionTitle}>อื่น ๆ </li>
+                    <li className={`${styles.sidebarItem} ${isActive('/manage/history') ? styles.active : ''}`}>
+                        <Link href="/manage/history" className={styles.noStyleLink}>
+                            <History className={styles.sidebarIcon} />
+                            <span className={styles.sidebarText}>ประวัติการทำรายการ</span>
+                        </Link>
+                    </li>
                     <li className={`${styles.sidebarItem} ${isActive("/manage/report") ? styles.active : ""}`}>
                         <Link href="/manage/report" className={styles.noStyleLink}>
-                            <FaChartBar className={styles.sidebarIcon} />
+                            <BarChart className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>ออกรายงาน</span>
                         </Link>
                     </li>
                     <li className={`${styles.sidebarItem} ${isActive("/manage/settings") ? styles.active : ""}`}>
                         <Link href="/manage/settings" className={styles.noStyleLink}>
-                            <FaCog className={styles.sidebarIcon} />
+                            <Settings className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>ตั้งค่า</span>
                         </Link>
                     </li>
 
-                    {/* padding ด้านล่างกันโดนปุ่มบัง */}
                     <li aria-hidden="true" style={{ height: 16 }} />
                 </ul>
             </nav>
-
-            {/* ปุ่มเลื่อน (ยังอยู่)
-            <div className={styles.scrollButtons}>
-                <button className={styles.scrollButton} onClick={() => handleScroll("up")} aria-label="Scroll Up">
-                    <FaCaretUp />
-                </button>
-                <button className={styles.scrollButton} onClick={() => handleScroll("down")} aria-label="Scroll Down">
-                    <FaCaretDown />
-                </button>
-            </div> */}
         </aside>
     );
 }

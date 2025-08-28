@@ -218,11 +218,11 @@
 }
 
 .btnRepair {
-  background: #38a169;
+  background: linear-gradient(135deg, #16a34a, #15803d);
 }
 
 .btnRepair:hover {
-  background: #2f855a;
+  background: linear-gradient(135deg, #23cc61, #147a39);
 }
 
 .btnDispose {
@@ -356,10 +356,11 @@
 }
 
 .typeNeutral {
-  color: #374151;
-  background: #F3F4F6;
+  color: #374151;       /* เทาเข้ม */
+  background: #F3F4F6;  /* เทาอ่อน */
   border-color: #E5E7EB;
 }
+
 
 /* มือถือ: ย่อ badge เล็กน้อย */
 @media (max-width:640px) {

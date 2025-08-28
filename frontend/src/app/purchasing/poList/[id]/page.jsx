@@ -112,7 +112,7 @@ const PoDetailsPage = ({ params }) => {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>รายละเอียดใบสั่งซื้อ</h1>
+      <h1 className={styles.title}>รายละเอียดการสั่งซื้อ</h1>
 
       <div className={styles.detail}>
         <h2>รายละเอียด PO: {poData.po_no}</h2>

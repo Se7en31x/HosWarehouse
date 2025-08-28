@@ -1,88 +1,269 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-:root {
-  --bg: #f9fafb;
-  --panel: #ffffff;
-  --border: #e5e7eb;
-  --text: #111827;
-  --muted: #6b7280;
-  --primary: #008dda;
-  --primary-hover: #41c9e2;
-  --radius: 10px;
-  --shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
 .container {
+  padding: 20px;
+  background: #f9fafb;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
-  font-family: 'Inter', sans-serif;
-  background: var(--bg);
-  min-height: 100vh;
-  color: var(--text);
+}
+
+/* Header */
+.header {
+  margin-bottom: 16px;
 }
 
 .title {
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  color: var(--primary);
-  text-align: center;
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #111827;
 }
 
-.actions {
-  margin-bottom: 1.5rem;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.button {
-  background: var(--primary);
-  color: white;
-  padding: 0.6rem 1.2rem;
-  border: none;
-  border-radius: var(--radius);
+.subtitle {
+  color: #6b7280;
   font-size: 0.95rem;
-  cursor: pointer;
 }
 
-.button:hover {
-  background: var(--primary-hover);
+/* Toolbar */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+  align-items: center;
 }
 
-.viewButton {
-  background: #4b5563;
-  color: white;
-  padding: 0.4rem 0.8rem;
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+.searchIcon {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.input {
   border: none;
-  border-radius: var(--radius);
-  cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
+  width: 200px;
+  color: #111827;
 }
 
-.viewButton:hover {
-  background: #374151;
+.input:focus {
+  outline: none;
+}
+
+.input:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter label {
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.filter select {
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: #fff;
+  color: #111827;
+  cursor: pointer;
+}
+
+.filter select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.filter select:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 12px;
+}
+
+/* Buttons */
+.primaryButton {
+  padding: 8px 12px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s;
+}
+
+.primaryButton:hover {
+  background: #1d4ed8;
+}
+
+.primaryButton:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+}
+
+.buttonIcon {
+  font-size: 0.9rem;
+}
+
+/* Status Badge */
+.badge {
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.pending {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.partial {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.completed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.canceled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Table */
+.tableCard {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px #00000014;
+  overflow: hidden;
+}
+
+.tableWrap {
+  overflow-x: auto;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
-  background: white;
-}
-
-.table thead {
-  background: var(--primary);
-  color: white;
+  font-size: 0.95rem;
 }
 
 .table th,
 .table td {
-  border: 1px solid var(--border);
-  padding: 0.6rem 0.8rem;
+  padding: 10px 16px;
+  border-bottom: 1px solid #e5e7eb;
   text-align: left;
 }
 
-.table tr:nth-child(even) {
+.table th {
   background: #f3f4f6;
+  font-weight: 600;
+  color: #374151;
+}
+
+.table td {
+  color: #111827;
+}
+
+.table td:last-child {
+  display: flex;
+  gap: 8px;
+}
+
+.mono {
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+/* Empty and Loading States */
+.empty {
+  text-align: center;
+  color: #6b7280;
+  padding: 16px;
+}
+
+/* SweetAlert2 Custom Button */
+.swalButton {
+  background: #2563eb !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  padding: 10px 20px !important;
+}
+
+.swalButton:hover {
+  background: #1d4ed8 !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .searchBar {
+    width: 100%;
+  }
+
+  .input {
+    width: 100%;
+  }
+
+  .actionButtons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .primaryButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px;
+    font-size: 0.9rem;
+  }
+
+  .table td:last-child {
+    flex-direction: column;
+    gap: 8px;
+  }
 }

@@ -10,8 +10,8 @@ export default function Header() {
       <Image
         src="/logos/logo.png"
         alt="Hospital Logo"
-        width={65}
-        height={65}
+        width={70}
+        height={70}
         className={styles.logo}
       />
       <h1 className={styles.headerTitle}>ระบบคลังโรงพยาบาล</h1>
@@ -19,9 +19,14 @@ export default function Header() {
       <div className={styles.iconGroup}>
         {/* 🔔 ปุ่มแจ้งเตือน */}
         <NotificationBell />
-
-        {/* 👤 ปุ่มโปรไฟล์ */}
-        <FaUserCircle className={`${styles.icon} cursor-pointer`} size={32} />
+        {/* เพิ่ม profileWrapper เพื่อห่อหุ้ม profileText และ profileIcon */}
+        <div className={styles.profileWrapper}>
+          <div className={styles.profileText}>
+            <span className={styles.profileName}>พงศ์เทพ ศรีสุข</span>
+            <span className={styles.profileRole}>ผู้จัดการคลังคลัง</span>
+          </div>
+          <FaUserCircle className={styles.profileIcon} size={32} />
+        </div>
       </div>
     </header>
   );

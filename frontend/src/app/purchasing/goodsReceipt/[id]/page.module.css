@@ -1,65 +1,283 @@
-:root {
-  --bg: #f9fafb;
-  --panel: #ffffff;
-  --border: #e5e7eb;
-  --text: #111827;
-  --primary: #008dda;
-  --primary-hover: #41c9e2;
-  --radius: 10px;
-  --shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+/* ฐานสำหรับหน้า GoodsReceiptDetailPage */
+.container {
+  padding: 20px;
+  background: #f9fafb;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  margin: 0 auto;
 }
 
-.container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-family: 'Inter', sans-serif;
-  background: var(--bg);
-  min-height: 100vh;
+/* Header */
+.header {
+  margin-bottom: 16px;
 }
 
 .title {
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  color: var(--primary);
-  text-align: center;
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #111827;
 }
 
+.subtitle {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+/* Detail Card */
+.detailCard {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px #00000014;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+/* ✅ ปรับตรงนี้ให้แสดงแนวนอน */
 .detail {
-  background: var(--panel);
-  padding: 1.5rem;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  margin-bottom: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Responsive */
+  gap: 12px 24px; /* row-gap, col-gap */
 }
 
 .detail p {
-  margin: 0.3rem 0;
+  margin: 0;
   font-size: 0.95rem;
-  color: var(--text);
+  color: #4b5563;
+  white-space: nowrap; /* กันข้อความยาวขึ้นบรรทัดใหม่ */
+}
+
+.detail p strong {
+  color: #111827;
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+.mono {
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+/* Section */
+.section {
+  margin-bottom: 24px;
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 16px;
+}
+
+/* Table */
+.tableCard {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px #00000014;
+  overflow: hidden;
+}
+
+.tableWrap {
+  overflow-x: auto;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
-  font-size: 0.9rem;
-  background: white;
-}
-
-.table thead {
-  background: var(--primary);
-  color: white;
+  font-size: 0.95rem;
 }
 
 .table th,
 .table td {
-  border: 1px solid var(--border);
-  padding: 0.6rem 0.8rem;
+  padding: 10px 16px;
+  border-bottom: 1px solid #e5e7eb;
   text-align: left;
 }
 
-.table tr:nth-child(even) {
+.table th {
   background: #f3f4f6;
+  font-weight: 600;
+  color: #374151;
+}
+
+.table td {
+  color: #111827;
+}
+
+/* Status Badge */
+.badge {
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.pending {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.partial {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.completed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.canceled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Input */
+.receiveInput {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.input {
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  width: 80px;
+  color: #111827;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.input:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.remainText {
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+
+/* Buttons */
+.primaryButton {
+  padding: 10px 16px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+}
+
+.primaryButton:hover {
+  background: #1d4ed8;
+}
+
+.primaryButton:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+}
+
+.secondaryButton {
+  padding: 10px 16px;
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+}
+
+.secondaryButton:hover {
+  background: #e5e7eb;
+}
+
+.secondaryButton:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+  cursor: not-allowed;
+}
+
+.buttonIcon {
+  font-size: 1rem;
+}
+
+/* Footer */
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+}
+
+/* Empty and Loading States */
+.empty {
+  text-align: center;
+  color: #6b7280;
+  padding: 16px;
+}
+
+/* SweetAlert2 Custom Button */
+.swalButton {
+  background: #2563eb !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  padding: 10px 20px !important;
+}
+
+.swalButton:hover {
+  background: #1d4ed8 !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .detailCard {
+    padding: 16px;
+  }
+
+  .detail {
+    grid-template-columns: 1fr; /* จอเล็ก → 1 คอลัมน์ */
+  }
+
+  .table th,
+  .table td {
+    padding: 8px;
+    font-size: 0.9rem;
+  }
+
+  .input {
+    width: 100%;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .footer {
+    flex-direction: column;
+  }
 }

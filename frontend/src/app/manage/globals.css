@@ -42,7 +42,6 @@ html, body {
   overflow-y: auto; /* ✨ สำคัญ: ให้ Scrollbar อยู่แค่ใน Content Area เท่านั้น */
   min-width: 320px;
 }
-
 /* --- Header Component (ถ้ามี) --- */
 /* สมมติว่ามี Header Component อยู่ด้านบนสุด */
 /* ถ้า Header มีความสูงคงที่ (เช่น 60px) คุณอาจจะต้องปรับ main-content-wrapper */

@@ -1,11 +1,6 @@
-/* =============================
-   InventoryCheck — page.module.css
-   Palette: #008dda #41c9e2 #ace2e1 #1685bb
-   ============================= */
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* ---- Variables (single source of truth) ---- */
+/* ---- Variables (aligned with InventoryCheck) ---- */
 :root {
   /* Colors */
   --bg: #f0fbfe;
@@ -47,6 +42,11 @@
   --z-select: 9000;
   --z-swal: 10000;
   --z-modal-overlay: 12000;
+
+  /* Status colors */
+  --completed-color: #2e8b57;
+  --processing-color: #ffa500;
+  --pending-color: #dc143c;
 }
 
 /* ---- Layout ---- */
@@ -85,10 +85,7 @@
   font-weight: 700;
   font-size: clamp(1.4rem, 2.2vw, 2rem);
   margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 12px; /* ระยะห่างระหว่างไอคอนกับข้อความ */
-  color: #111827;
+  /* color: var(--primary); */
 }
 
 .titleGroup {
@@ -113,12 +110,11 @@
   background: #f6fbfd;
 }
 
-/* ใช้โครงเดียวกับ InventoryWithdraw */
 .filterGrid {
-   position: relative;
+  position: relative;
   z-index: var(--z-toolbar);
   display: grid;
-  grid-template-columns: auto auto 1fr;  /* ✅ 2 ช่องแรกกว้างตามเนื้อหา ชิดซ้าย */
+  grid-template-columns: auto auto 1fr;
   gap: 12px;
   flex: 1;
 }
@@ -150,14 +146,12 @@
   outline-offset: 1px;
 }
 
-/* ให้ช่องค้นหา (กลุ่มสุดท้าย) ชิดขวาแบบดีไซน์ใหม่ */
 .filterGrid>.filterGroup:last-child {
   justify-self: end;
   width: 100%;
   max-width: 360px;
 }
 
-/* cluster ขวา: ปุ่มล้าง */
 .searchCluster {
   display: flex;
   align-items: flex-end;
@@ -187,7 +181,6 @@
 }
 
 /* ---- Table ---- */
-/* ใช้กรอบเดียวครอบ header+body ตาม InventoryWithdraw */
 .tableSection {
   border: 1px solid var(--tint-200);
   border-radius: var(--radius);
@@ -196,43 +189,28 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  /* รวมกรอบเดียว ไม่ต้องเว้น */
 }
 
-/* grid เดียวกันทั้ง header และ body */
 .tableGrid {
   display: grid;
   grid-template-columns:
-    minmax(44px, .5fr)
-    /* ลำดับ */
-    minmax(100px, 1fr)
-    /* รหัส */
-    minmax(70px, .8fr)
-    /* รูปภาพ */
-    minmax(180px, 2fr)
-    /* รายการ */
-    minmax(120px, 1.2fr)
-    /* หมวดหมู่ */
-    minmax(90px, .8fr)
-    /* คงเหลือ */
-    minmax(90px, .1fr)
-    /* หน่วย */
-    minmax(100px, 1.5fr)
-    /* สถานะ */
-    minmax(110px, 1fr);
-  /* ดำเนินการ */
+    minmax(100px, 1fr) /* วันที่ขอ */
+    minmax(100px, 1fr) /* PR No */
+    minmax(180px, 2fr) /* สินค้า */
+    minmax(120px, 1.2fr) /* หมวดหมู่ */
+    minmax(90px, 0.8fr) /* จำนวน */
+    minmax(90px, 0.8fr) /* หน่วย */
+    minmax(90px, 0.8fr) /* รับแล้ว */
+    minmax(90px, 0.8fr) /* คงเหลือ */
+    minmax(100px, 1fr); /* สถานะ */
   align-items: center;
 }
 
-/* Header เป็นส่วนหนึ่งของกรอบ */
 .tableHeader {
   position: sticky;
   top: 0;
   z-index: var(--z-header);
   background: #eef9fc;
-  margin: 0;
-  border: 0;
-  border-radius: 0;
   border-bottom: 1px solid var(--tint-200);
   padding-block: var(--th-pad-y);
   padding-inline: var(--th-pad-x);
@@ -243,50 +221,33 @@
   min-height: var(--th-min-h);
 }
 
-.tableHeader .headerItem,
-.tableHeader>div {
-  font-weight: 700;
-  letter-spacing: var(--th-letter);
+.tableHeader .headerItem {
   display: flex;
   align-items: center;
   white-space: nowrap;
   padding: 0;
 }
 
-.tableHeader>div:last-child,
-.tableHeader .headerItem:last-child {
+.tableHeader .headerItem:nth-child(5),
+.tableHeader .headerItem:nth-child(6),
+.tableHeader .headerItem:nth-child(7),
+.tableHeader .headerItem:nth-child(8) {
   justify-content: center;
   text-align: center;
 }
 
-/* จัดหัวตารางบางคอลัมน์ให้อยู่กลาง */
-.tableHeader .headerItem:nth-child(1),  /* ลำดับ */
-.tableHeader .headerItem:nth-child(3),  /* รูปภาพ */
-.tableHeader .headerItem:nth-child(6),  /* คงเหลือ */
-.tableHeader .headerItem:nth-child(7),  /* หน่วย */
-.tableHeader .headerItem:nth-child(8),  /* สถานะ */
-.tableHeader .headerItem:nth-child(10)  /* ดำเนินการ */
-{
-  justify-content: center;
-  text-align: center;
-}
-
-/* Body */
 .inventory {
+  min-height: calc(var(--row-h) * var(--rows-per-page));
   border: 0;
   border-radius: 0;
   background: #fff;
-  height: calc(var(--row-h) * var(--rows-per-page));
   overflow: hidden;
 }
 
-/* (แนะนำ) จัดเซลล์บอดี้คอลัมน์เดียวกันให้กลางด้วย เพื่อให้ alignment ตรงกับหัวตาราง */
-.inventory .tableRow > .tableCell:nth-child(1),
-.inventory .tableRow > .tableCell:nth-child(3),
+.inventory .tableRow > .tableCell:nth-child(5),
 .inventory .tableRow > .tableCell:nth-child(6),
 .inventory .tableRow > .tableCell:nth-child(7),
-.inventory .tableRow > .tableCell:nth-child(8),
-.inventory .tableRow > .tableCell:nth-child(10) {
+.inventory .tableRow > .tableCell:nth-child(8) {
   display: flex;
   justify-content: center;
   text-align: center;
@@ -297,6 +258,7 @@
   height: var(--row-h);
   padding: 0 var(--th-pad-x);
   border-top: 1px solid #deedf1;
+  transition: background-color 0.2s ease;
 }
 
 .tableRow:hover {
@@ -307,22 +269,10 @@
   border-top: 0;
 }
 
-.inventory .tableRow:last-child {
-  border-bottom: 0;
-}
-
-/* map class เดิมให้ใช้งานได้เหมือน InventoryWithdraw */
-.tableCell,
-.cell {
+.tableCell {
   display: flex;
   align-items: center;
   padding: 4px 6px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.cellName {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -333,27 +283,14 @@
   justify-content: center;
 }
 
-.imageCell img {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  display: block;
-  margin: 0 auto;
-}
-
-/* No data */
-.noDataMessage,
-.noData {
-  height: calc(var(--row-h) * var(--rows-per-page));
+.noDataMessage {
+  min-height: calc(var(--row-h) * var(--rows-per-page));
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--muted);
 }
 
-/* Action button (ปุ่มไปหน้ารายละเอียด) */
 .actionButton {
   display: inline-flex;
   align-items: center;
@@ -362,7 +299,7 @@
   color: #fff;
   border-radius: 8px;
   padding: 6px;
-  transition: background-color .2s ease, transform .15s ease;
+  transition: background-color 0.2s ease, transform 0.15s ease;
 }
 
 .actionButton:hover {
@@ -371,7 +308,7 @@
 }
 
 .actionButton:active {
-  transform: scale(.95);
+  transform: scale(0.95);
 }
 
 /* Pagination */
@@ -401,7 +338,7 @@
 }
 
 .pageButton:disabled {
-  opacity: .5;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -415,13 +352,76 @@
   color: var(--muted);
 }
 
-/* ---- Responsive ---- */
+/* Loading and Error States */
+.loadingContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(var(--row-h) * var(--rows-per-page));
+  gap: 8px;
+  color: var(--muted);
+}
+
+.errorContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(var(--row-h) * var(--rows-per-page));
+  gap: 12px;
+  color: var(--danger);
+}
+
+.retryButton {
+  background: var(--primary);
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.retryButton:hover {
+  background: var(--primary-600);
+}
+
+/* Status Badges */
+.stBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 1px solid transparent;
+  min-width: 92px;
+  line-height: 1;
+}
+
+.stCompleted {
+  color: var(--completed-color);
+  background: #d1fae5;
+  border-color: #86efac;
+}
+
+.stProcessing {
+  color: var(--processing-color);
+  background: #fffacd;
+  border-color: #f4e4a4;
+}
+
+.stPending {
+  color: var(--pending-color);
+  background: #ffe4e1;
+  border-color: #fecdd3;
+}
+
+/* Responsive Design */
 @media (max-width: 1024px) {
   .filterGrid {
     grid-template-columns: repeat(2, minmax(180px, 1fr));
   }
 
-  .filterGrid>.filterGroup:last-child {
+  .filterGrid > .filterGroup:last-child {
     justify-self: stretch;
     max-width: none;
   }
@@ -440,7 +440,7 @@
     grid-template-columns: 1fr;
   }
 
-  .filterGrid>.filterGroup:last-child {
+  .filterGrid > .filterGroup:last-child {
     justify-self: stretch;
   }
 }
@@ -459,23 +459,6 @@
 
   .tableGrid {
     grid-template-columns:
-      40px 100px 60px 180px 120px 90px 90px 120px 120px 90px;
+      100px 100px 180px 120px 90px 90px 90px 90px 100px ;
   }
-}
-
-/* ---- Stock status badge ---- */
-.stBadge{
-  display:inline-flex;align-items:center;justify-content:center;
-  padding:6px 10px;border-radius:999px;font-weight:700;font-size:.85rem;
-  border:1px solid transparent;min-width:92px;line-height:1;
-}
-.stAvailable{ color:#166534; background:#DCFCE7; border-color:#86EFAC; }  /* เขียว */
-.stLow{       color:#92400e; background:#FEF3C7; border-color:#FDE68A; }  /* เหลือง */
-.stOut{       color:#9F1239; background:#FFE4E6; border-color:#FECDD3; }  /* แดง */
-.stHold{      color:#334155; background:#E2E8F0; border-color:#CBD5E1; }  /* เทา */
-
-/* จัดคอลัมน์ “สถานะ” ให้อยู่กลาง (คอลัมน์ที่ 8) */
-.tableHeader .headerItem:nth-child(8),
-.inventory .tableRow > .tableCell:nth-child(8){
-  display:flex;justify-content:center;
 }

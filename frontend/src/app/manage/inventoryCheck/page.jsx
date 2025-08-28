@@ -4,7 +4,8 @@ import styles from "./page.module.css";
 import { connectSocket, disconnectSocket } from "../../utils/socket";
 import axiosInstance from "../../utils/axiosInstance";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Trash2, Search, Weight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trash2, Search, Weight, PackageCheck } from "lucide-react";
+// หรืออาจจะเป็น ClipboardCheck, Warehouse, BoxSelect หรือไอคอนอื่นๆ ที่คุณเลือก
 import { toast } from "react-toastify";
 
 import dynamic from "next/dynamic";
@@ -278,7 +279,10 @@ export default function InventoryCheck() {
         {/* Header */}
         <div className={styles.pageBar}>
           <div className={styles.titleGroup}>
-            <h1 className={styles.pageTitle}>ตรวจสอบยอดคงคลัง</h1>
+            <h1 className={styles.pageTitle}>
+              <PackageCheck size={28} /> {/* เปลี่ยนไอคอนตรงนี้ */}
+              ตรวจสอบยอดคงคลัง
+            </h1>
           </div>
         </div>
 

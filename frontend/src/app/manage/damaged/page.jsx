@@ -298,8 +298,8 @@ export default function DamagedItemsPage() {
               <div className={styles.headerItem}>ชื่อพัสดุ</div>
               <div className={styles.headerItem}>ประเภท</div>
               <div className={`${styles.headerItem} ${styles.centerCell}`}>จำนวนที่ชำรุด</div>
-              <div className={`${styles.headerItem} ${styles.centerCell}`}>เหลือให้ดำเนินการ</div>
-              <div className={styles.headerItem}>วันที่ชำรุด</div>
+              <div className={`${styles.headerItem} ${styles.centerCell}`}>คงเหลือ</div>
+              <div className={styles.headerItem}>วันที่แจ้งชำรุด</div>
               <div className={styles.headerItem}>ผู้แจ้ง</div>
               {/* <div className={styles.headerItem}>หมายเหตุ</div> */}
               <div className={`${styles.headerItem} ${styles.centerCell}`}>สถานะ</div>
