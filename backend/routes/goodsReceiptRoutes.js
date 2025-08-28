@@ -11,5 +11,7 @@ router.get("/gr/:id", grController.getGoodsReceiptById);
 
 // Create GR
 router.post("/gr", grController.createGoodsReceipt);
+// Receive more
+router.post("/gr/:id/receive-more", grController.receiveMore);
 
 module.exports = router;

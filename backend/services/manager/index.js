@@ -8,11 +8,11 @@ const { checkStockOutNotifications } = require('./checkStockOutNotifications'); 
 
 async function runManagerRules() {
     try {
-        // await checkLowStock();
+        await checkLowStock();
         await checkExpiredItems();
-        // await checkDamagedItems();
-        // await checkNewRequests();
-        // await checkReturnRequests();
+        await checkDamagedItems();
+        await checkNewRequests();
+        await checkReturnRequests();
         await checkStockOutNotifications(); // เพิ่มการตรวจสอบตัดสต็อก
         console.log("✅ All manager rules executed successfully");
     } catch (err) {

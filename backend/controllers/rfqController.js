@@ -35,3 +35,14 @@ exports.getRFQById = async (req, res) => {
     res.status(500).json({ message: "เกิดข้อผิดพลาด", error: err.message });
   }
 };
+
+exports.getPendingRFQs = async (req, res) => {   // ✅ เปลี่ยนเป็น exports ตรงนี้เลย
+  try {
+    const data = await rfqModel.getPendingRFQs();
+    res.json(data);
+  } catch (err) {
+    console.error("❌ Controller getPendingRFQs error:", err.message);
+    res.status(500).json({ message: "ไม่สามารถโหลด RFQ ที่รอดำเนินการได้", error: err.message });
+  }
+};
+

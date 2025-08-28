@@ -103,4 +103,38 @@ async function getAllRFQs() {
     );
     return rows;
 }
-module.exports = { createRFQ, getAllRFQs, getRFQById };
+
+async function getPendingRFQs() {
+  try {
+    const { rows } = await pool.query(`
+      SELECT 
+        r.rfq_id,
+        r.rfq_no,
+        r.status,
+        r.created_at,
+        COALESCE(
+          json_agg(
+            DISTINCT jsonb_build_object(
+              'rfq_item_id', ri.rfq_item_id,
+              'pr_id', ri.pr_id,
+              'pr_item_id', ri.pr_item_id,
+              'spec', ri.spec,
+              'qty', ri.qty,
+              'unit', ri.unit
+            )
+          ) FILTER (WHERE ri.rfq_item_id IS NOT NULL), '[]'
+        ) AS items
+      FROM request_for_quotations r
+      LEFT JOIN rfq_items ri ON r.rfq_id = ri.rfq_id
+      WHERE r.status = 'รอดำเนินการ'   -- ✅ string ชัดเจน
+      GROUP BY r.rfq_id
+      ORDER BY r.created_at DESC
+    `);
+    return rows;
+  } catch (err) {
+    console.error("❌ getPendingRFQs error:", err.message);
+    throw new Error(`Failed to fetch pending RFQs: ${err.message}`);
+  }
+}
+
+module.exports = { createRFQ, getAllRFQs, getRFQById ,getPendingRFQs};

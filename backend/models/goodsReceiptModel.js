@@ -1,4 +1,5 @@
 // models/goodsReceiptModel.js
+const { pool } = require('../config/db');
 const { generateStockinCode } = require("../utils/stockinCounter");
 
 // ===== Helper: Generate Lot No =====
@@ -81,10 +82,10 @@ async function createGoodsReceipt(client, grData) {
   try {
     const grNo = `GR-${Date.now()}`;
 
-    // insert GR header
+    // insert GR header (status คำนวณทีหลัง)
     const grRes = await client.query(
       `INSERT INTO goods_receipts (gr_no, po_id, gr_date, delivery_no, invoice_no, status, created_by, created_at)
-       VALUES ($1,$2,$3,$4,$5,'completed',$6,NOW())
+       VALUES ($1,$2,$3,$4,$5,'pending',$6,NOW())
        RETURNING gr_id, gr_no`,
       [
         grNo,
@@ -92,7 +93,7 @@ async function createGoodsReceipt(client, grData) {
         grData.receipt_date,
         grData.delivery_no,
         grData.invoice_no,
-        grData.user_id || 1
+        grData.user_id || 1,
       ]
     );
 
@@ -101,10 +102,10 @@ async function createGoodsReceipt(client, grData) {
     // ✅ สร้าง stock_in header
     const stockinNo = await generateStockinCode(client);
     const stockInRes = await client.query(
-      `INSERT INTO stock_ins (stockin_no, stockin_date, stockin_type, po_id, note, user_id, created_at)
-       VALUES ($1, NOW(), 'purchase', $2, $3, $4, NOW())
+      `INSERT INTO stock_ins (stockin_no, stockin_date, stockin_type, po_id, note, user_id, created_at, gr_id)
+       VALUES ($1, NOW(), 'purchase', $2, $3, $4, NOW(), $5)
        RETURNING stockin_id`,
-      [stockinNo, grData.po_id, grData.note || "", grData.user_id || 1]
+      [stockinNo, grData.po_id, grData.note || "", grData.user_id || 1, gr_id]
     );
     const stockin_id = stockInRes.rows[0].stockin_id;
 
@@ -125,7 +126,6 @@ async function createGoodsReceipt(client, grData) {
 
         let lot_id;
         if (existLot.length > 0) {
-          // 👉 ถ้ามี lot เดิม → update qty
           await client.query(
             `UPDATE item_lots 
              SET qty_imported = qty_imported + $1,
@@ -135,7 +135,6 @@ async function createGoodsReceipt(client, grData) {
           );
           lot_id = existLot[0].lot_id;
         } else {
-          // 👉 ถ้าไม่มี lot เดิม → insert ใหม่
           const lotRes = await client.query(
             `INSERT INTO item_lots (item_id, lot_no, qty_imported, qty_remaining, mfg_date, exp_date, import_date, created_by, document_no, unit_cost)
              VALUES ($1,$2,$3,$3,$4,$5,NOW(),$6,$7,$8)
@@ -154,12 +153,36 @@ async function createGoodsReceipt(client, grData) {
           lot_id = lotRes.rows[0].lot_id;
         }
 
+        // เอา quantity จาก PO
+        const { rows: poRow } = await client.query(
+          `SELECT quantity FROM purchase_order_items WHERE po_item_id=$1`,
+          [item.po_item_id]
+        );
+        const orderedQty = poRow[0].quantity;
+
+        // คำนวณสถานะย่อยของ GR item
+        let itemStatus = "pending";
+        if (item.qty_received > 0 && item.qty_received < orderedQty) {
+          itemStatus = "partial";
+        } else if (item.qty_received >= orderedQty) {
+          itemStatus = "completed";
+        }
+
         // insert goods_receipt_items
         await client.query(
-          `INSERT INTO goods_receipt_items (gr_id, po_item_id, item_id, qty_ordered, qty_received, lot_id, status, note)
-           SELECT $1, poi.po_item_id, poi.item_id, poi.quantity, $2, $3, 'received', $4
-           FROM purchase_order_items poi WHERE poi.po_item_id=$5`,
-          [gr_id, item.qty_received, lot_id, item.note || "", item.po_item_id]
+          `INSERT INTO goods_receipt_items 
+             (gr_id, po_item_id, item_id, qty_ordered, qty_received, lot_id, note, status)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+          [
+            gr_id,
+            item.po_item_id,
+            item.item_id,
+            orderedQty,
+            item.qty_received,
+            lot_id,
+            item.note || "",
+            itemStatus
+          ]
         );
 
         // insert stock_in_details
@@ -168,10 +191,181 @@ async function createGoodsReceipt(client, grData) {
            VALUES ($1, $2, $3, $4, $5, $6)`,
           [stockin_id, item.item_id, lot_id, item.qty_received, item.unit, item.note || ""]
         );
+
+        // update PO item qty_received_total
+        await client.query(
+          `UPDATE purchase_order_items
+           SET qty_received_total = qty_received_total + $1
+           WHERE po_item_id=$2`,
+          [item.qty_received, item.po_item_id]
+        );
       }
     }
 
+    // ✅ update GR header status ตาม items
+    const { rows: grItems } = await client.query(
+      `SELECT qty_ordered, qty_received FROM goods_receipt_items WHERE gr_id=$1`,
+      [gr_id]
+    );
+
+    let allComplete = true;
+    let anyReceived = false;
+    for (const it of grItems) {
+      if (it.qty_received > 0) anyReceived = true;
+      if (it.qty_received < it.qty_ordered) allComplete = false;
+    }
+
+    let grStatus = "pending";
+    if (allComplete && anyReceived) grStatus = "completed";
+    else if (!allComplete && anyReceived) grStatus = "partial";
+
+    await client.query(
+      `UPDATE goods_receipts SET status=$2 WHERE gr_id=$1`,
+      [gr_id, grStatus]
+    );
+
+    // ✅ update PO header status
+    const { rows: poItems } = await client.query(
+      `SELECT quantity, qty_received_total FROM purchase_order_items WHERE po_id=$1`,
+      [grData.po_id]
+    );
+    let poAllComplete = true;
+    let poAnyReceived = false;
+    for (const it of poItems) {
+      if ((it.qty_received_total || 0) > 0) poAnyReceived = true;
+      if ((it.qty_received_total || 0) < it.quantity) poAllComplete = false;
+    }
+
+    let poStatus = "รอดำเนินการ";
+    if (poAllComplete) poStatus = "เสร็จสิ้น";
+    else if (poAnyReceived) poStatus = "รอรับเพิ่ม";
+
+    await client.query(
+      `UPDATE purchase_orders SET status=$2 WHERE po_id=$1`,
+      [grData.po_id, poStatus]
+    );
+
     return grRes.rows[0];
+  } catch (err) {
+    throw err;
+  }
+}
+
+// ===== Receive More (Partial GR) =====
+async function receiveMoreGoods(client, grId, items, userId = 1) {
+  try {
+    const { rows: grRows } = await client.query(
+      `SELECT * FROM goods_receipts WHERE gr_id=$1`,
+      [grId]
+    );
+    if (!grRows.length) throw new Error("GR not found");
+    const gr = grRows[0];
+
+    const stockinNo = await generateStockinCode(client);
+    const stockInRes = await client.query(
+      `INSERT INTO stock_ins (stockin_no, stockin_date, stockin_type, po_id, note, user_id, created_at, gr_id)
+       VALUES ($1, NOW(), 'purchase-extra', $2, $3, $4, NOW(), $5)
+       RETURNING stockin_id`,
+      [stockinNo, gr.po_id, "รับเพิ่มจาก GR", userId, grId]
+    );
+    const stockin_id = stockInRes.rows[0].stockin_id;
+
+    for (const item of items) {
+      const { rows: grItem } = await client.query(
+        `SELECT gri.*, poi.quantity, poi.qty_received_total
+         FROM goods_receipt_items gri
+         JOIN purchase_order_items poi ON gri.po_item_id = poi.po_item_id
+         WHERE gri.gr_item_id=$1`,
+        [item.gr_item_id]
+      );
+      if (!grItem.length) throw new Error(`GR Item ${item.gr_item_id} not found`);
+
+      const base = grItem[0];
+      const qtyToReceive = parseInt(item.qty_received, 10);
+      const remaining = base.quantity - (base.qty_received_total || 0);
+      if (qtyToReceive > remaining) {
+        throw new Error(`รับเกินจำนวนที่เหลือได้ (คงเหลือ ${remaining})`);
+      }
+
+      const newTotal = base.qty_received + qtyToReceive;
+      let newStatus = "pending";
+      if (newTotal > 0 && newTotal < base.quantity) {
+        newStatus = "partial";
+      } else if (newTotal >= base.quantity) {
+        newStatus = "completed";
+      }
+
+      await client.query(
+        `UPDATE goods_receipt_items
+         SET qty_received = $1, status=$3
+         WHERE gr_item_id=$2`,
+        [newTotal, item.gr_item_id, newStatus]
+      );
+
+      await client.query(
+        `UPDATE item_lots
+         SET qty_imported = qty_imported + $1,
+             qty_remaining = qty_remaining + $1
+         WHERE lot_id=$2`,
+        [qtyToReceive, base.lot_id]
+      );
+
+      await client.query(
+        `INSERT INTO stock_in_details (stockin_id, item_id, lot_id, qty, unit, note)
+         VALUES ($1,$2,$3,$4,$5,$6)`,
+        [stockin_id, base.item_id, base.lot_id, qtyToReceive, base.unit || "-", "รับเพิ่ม"]
+      );
+
+      await client.query(
+        `UPDATE purchase_order_items
+         SET qty_received_total = qty_received_total + $1
+         WHERE po_item_id=$2`,
+        [qtyToReceive, base.po_item_id]
+      );
+    }
+
+    // ✅ update GR header status
+    const { rows: grItems } = await client.query(
+      `SELECT qty_ordered, qty_received FROM goods_receipt_items WHERE gr_id=$1`,
+      [grId]
+    );
+    let allComplete = true;
+    let anyReceived = false;
+    for (const it of grItems) {
+      if (it.qty_received > 0) anyReceived = true;
+      if (it.qty_received < it.qty_ordered) allComplete = false;
+    }
+    let grStatus = "pending";
+    if (allComplete && anyReceived) grStatus = "completed";
+    else if (!allComplete && anyReceived) grStatus = "partial";
+
+    await client.query(
+      `UPDATE goods_receipts SET status=$2 WHERE gr_id=$1`,
+      [grId, grStatus]
+    );
+
+    // ✅ update PO header status
+    const { rows: poItems } = await client.query(
+      `SELECT quantity, qty_received_total FROM purchase_order_items WHERE po_id=$1`,
+      [gr.po_id]
+    );
+    let poAllComplete = true;
+    let poAnyReceived = false;
+    for (const it of poItems) {
+      if ((it.qty_received_total || 0) > 0) poAnyReceived = true;
+      if ((it.qty_received_total || 0) < it.quantity) poAllComplete = false;
+    }
+
+    let poStatus = "รอดำเนินการ";
+    if (poAllComplete) poStatus = "เสร็จสิ้น";
+    else if (poAnyReceived) poStatus = "รอรับเพิ่ม";
+
+    await client.query(
+      `UPDATE purchase_orders SET status=$2 WHERE po_id=$1`,
+      [gr.po_id, poStatus]
+    );
+
+    return { message: "บันทึกรับเพิ่มเรียบร้อย", stockin_id };
   } catch (err) {
     throw err;
   }
@@ -181,4 +375,5 @@ module.exports = {
   getAllGoodsReceipts,
   getGoodsReceiptById,
   createGoodsReceipt,
+  receiveMoreGoods,
 };

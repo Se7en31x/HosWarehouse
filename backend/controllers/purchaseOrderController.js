@@ -3,13 +3,15 @@ const purchaseOrderModel = require("../models/purchaseOrderModel");
 // ✅ GET /po
 exports.getAllPOs = async (req, res) => {
   try {
-    const pos = await purchaseOrderModel.getAllPOs();
+    const { status } = req.query;  // ✅ รับ query param
+    const pos = await purchaseOrderModel.getAllPOs(status);
     res.json(pos);
   } catch (err) {
     console.error("❌ getAllPOs error:", err);
     res.status(500).json({ message: "เกิดข้อผิดพลาด", error: err.message });
   }
 };
+
 
 // ✅ GET /po/:id
 exports.getPOById = async (req, res) => {
@@ -106,6 +108,17 @@ exports.updatePOAttachments = async (req, res) => {
 
   } catch (err) {
     console.error("❌ updatePOAttachments error:", err);
+    res.status(500).json({ message: "เกิดข้อผิดพลาด", error: err.message });
+  }
+};
+
+exports.markPOAsUsed = async (req, res) => {
+  try {
+    const po_id = req.params.id;
+    const result = await purchaseOrderModel.markPOAsUsed(po_id);
+    res.json({ message: "อัปเดต PO ว่าใช้ใน GR แล้ว", ...result });
+  } catch (err) {
+    console.error("❌ markPOAsUsed error:", err);
     res.status(500).json({ message: "เกิดข้อผิดพลาด", error: err.message });
   }
 };

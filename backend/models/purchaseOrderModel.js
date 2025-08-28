@@ -2,9 +2,9 @@ const { pool } = require("../config/db");
 const { generateDocNo } = require("../utils/docCounter");
 
 // ✅ ดึง PO ทั้งหมด (รวม items + files)
-async function getAllPOs() {
+async function getAllPOs(status) {
   try {
-    const { rows } = await pool.query(`
+    let query = `
       SELECT 
         po.po_id,
         po.po_no,
@@ -27,7 +27,8 @@ async function getAllPOs() {
             DISTINCT jsonb_build_object(
               'po_item_id', poi.po_item_id,
               'item_id', poi.item_id,
-              'item_name', i.item_name,  -- ✅ เพิ่ม: ดึงชื่อสินค้าจากตาราง items
+              'item_name', i.item_name,
+              'item_category', i.item_category,   -- ✅ เพิ่ม category
               'quantity', poi.quantity,
               'unit', poi.unit,
               'price', poi.price,
@@ -35,27 +36,27 @@ async function getAllPOs() {
               'note', poi.note
             )
           ) FILTER (WHERE poi.po_item_id IS NOT NULL), '[]'
-        ) AS items,
-        COALESCE(
-          json_agg(
-            DISTINCT jsonb_build_object(
-              'file_id', pf.file_id,
-              'file_name', pf.file_name,
-              'file_type', pf.file_type,
-              'file_path', pf.file_path,
-              'file_url', pf.file_url,
-              'uploaded_at', pf.uploaded_at
-            )
-          ) FILTER (WHERE pf.file_id IS NOT NULL), '[]'
-        ) AS attachments
+        ) AS items
       FROM purchase_orders po
       LEFT JOIN purchase_order_items poi ON po.po_id = poi.po_id
-      LEFT JOIN items i ON poi.item_id = i.item_id  -- ✅ เพิ่ม: JOIN กับตาราง items
-      LEFT JOIN po_files pf ON po.po_id = pf.po_id
+      LEFT JOIN items i ON poi.item_id = i.item_id
       GROUP BY po.po_id
       ORDER BY po.created_at DESC
-    `);
-    return rows;
+    `;
+
+    if (status) {
+      query = `
+        SELECT * FROM (
+          ${query}
+        ) sub
+        WHERE sub.po_status = $1
+      `;
+      const { rows } = await pool.query(query, [status]);
+      return rows;
+    } else {
+      const { rows } = await pool.query(query);
+      return rows;
+    }
   } catch (err) {
     console.error("Error in getAllPOs:", err);
     throw new Error(`Failed to fetch POs: ${err.message}`);
@@ -89,7 +90,8 @@ async function getPOById(id) {
             DISTINCT jsonb_build_object(
               'po_item_id', poi.po_item_id,
               'item_id', poi.item_id,
-              'item_name', i.item_name,  -- ✅ เพิ่ม: ดึงชื่อสินค้าจากตาราง items
+              'item_name', i.item_name,
+              'item_category', i.item_category,   -- ✅ เพิ่ม category
               'quantity', poi.quantity,
               'unit', poi.unit,
               'price', poi.price,
@@ -112,7 +114,7 @@ async function getPOById(id) {
         ) AS attachments
       FROM purchase_orders po
       LEFT JOIN purchase_order_items poi ON po.po_id = poi.po_id
-      LEFT JOIN items i ON poi.item_id = i.item_id  -- ✅ เพิ่ม: JOIN กับตาราง items
+      LEFT JOIN items i ON poi.item_id = i.item_id
       LEFT JOIN po_files pf ON po.po_id = pf.po_id
       WHERE po.po_id = $1
       GROUP BY po.po_id
@@ -168,7 +170,7 @@ async function createPO({ supplier_name, supplier_address, supplier_phone, suppl
 }
 
 // ✅ อัปเดต PO
-async function updatePO(id, { items, attachments, notes, status }) { // ✅ แก้ไข: เพิ่ม attachments กลับเข้ามาใน parameter
+async function updatePO(id, { items, attachments, notes, status }) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -177,14 +179,23 @@ async function updatePO(id, { items, attachments, notes, status }) { // ✅ แ�
     const vat_amount = subtotal * 0.07;
     const grand_total = subtotal + vat_amount;
 
-    await client.query(
-      `UPDATE purchase_orders 
-        SET subtotal = $1, vat_amount = $2, grand_total = $3, notes = $4, status = $5, updated_at = NOW()
-        WHERE po_id = $6`,
-      [subtotal, vat_amount, grand_total, notes, status || "รอดำเนินการ", id]
-    );
+    if (status !== undefined) {
+      await client.query(
+        `UPDATE purchase_orders 
+          SET subtotal=$1, vat_amount=$2, grand_total=$3, notes=$4, status=$5, updated_at=NOW()
+          WHERE po_id=$6`,
+        [subtotal, vat_amount, grand_total, notes, status, id]
+      );
+    } else {
+      await client.query(
+        `UPDATE purchase_orders 
+          SET subtotal=$1, vat_amount=$2, grand_total=$3, notes=$4, updated_at=NOW()
+          WHERE po_id=$5`,
+        [subtotal, vat_amount, grand_total, notes, id]
+      );
+    }
 
-    await client.query(`DELETE FROM purchase_order_items WHERE po_id = $1`, [id]);
+    await client.query(`DELETE FROM purchase_order_items WHERE po_id=$1`, [id]);
     for (const item of items || []) {
       await client.query(
         `INSERT INTO purchase_order_items (po_id, item_id, quantity, unit, price, note)
@@ -193,8 +204,7 @@ async function updatePO(id, { items, attachments, notes, status }) { // ✅ แ�
       );
     }
 
-    // ✅ ส่วนนี้คือโค้ดจัดการไฟล์ที่คุณต้องการและเคยมีอยู่ในโค้ดเดิม
-    await client.query(`DELETE FROM po_files WHERE po_id = $1`, [id]);
+    await client.query(`DELETE FROM po_files WHERE po_id=$1`, [id]);
     for (const file of attachments || []) {
       await client.query(
         `INSERT INTO po_files (po_id, file_name, file_type, file_path, file_url, uploaded_by, uploaded_at)
@@ -219,6 +229,109 @@ async function updatePO(id, { items, attachments, notes, status }) { // ✅ แ�
     client.release();
   }
 }
+
+// ✅ สร้าง PO ใหม่
+async function createPO({ supplier_name, supplier_address, supplier_phone, supplier_email, supplier_tax_id, items, notes, created_by }) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const po_no = await generateDocNo(client, "purchase_order");
+
+    const subtotal = items?.reduce((s, it) => s + (it.quantity * it.price), 0) || 0;
+    const vat_amount = subtotal * 0.07;
+    const grand_total = subtotal + vat_amount;
+
+    const { rows } = await client.query(
+      `INSERT INTO purchase_orders 
+        (po_no, po_date, supplier_name, supplier_address, supplier_phone, supplier_email, supplier_tax_id, status, notes, subtotal, vat_amount, grand_total, is_vat_included, created_by, created_at)
+        VALUES ($1, NOW(), $2,$3,$4,$5,$6,'รอดำเนินการ',$7,$8,$9,$10,false,$11,NOW())
+        RETURNING po_id`,
+      [po_no, supplier_name, supplier_address, supplier_phone, supplier_email, supplier_tax_id, notes, subtotal, vat_amount, grand_total, created_by]
+    );
+
+    const po_id = rows[0].po_id;
+
+    for (const item of items || []) {
+      await client.query(
+        `INSERT INTO purchase_order_items (po_id, item_id, quantity, unit, price, note)
+          VALUES ($1,$2,$3,$4,$5,$6)`,
+        [po_id, item.item_id, item.quantity, item.unit, item.price, item.note || ""]
+      );
+    }
+
+    await client.query("COMMIT");
+    return await getPOById(po_id);
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw new Error(`Failed to create PO: ${err.message}`);
+  } finally {
+    client.release();
+  }
+}
+// ✅ อัปเดต PO
+async function updatePO(id, { items, attachments, notes, status }) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const subtotal = items?.reduce((s, it) => s + (it.quantity * it.price), 0) || 0;
+    const vat_amount = subtotal * 0.07;
+    const grand_total = subtotal + vat_amount;
+
+    if (status !== undefined) {
+      // 👉 ถ้ามีการส่ง status มา → อัปเดตด้วย
+      await client.query(
+        `UPDATE purchase_orders 
+          SET subtotal=$1, vat_amount=$2, grand_total=$3, notes=$4, status=$5, updated_at=NOW()
+          WHERE po_id=$6`,
+        [subtotal, vat_amount, grand_total, notes, status, id]
+      );
+    } else {
+      // 👉 ถ้าไม่ได้ส่ง status มา → ไม่แตะต้องสถานะ
+      await client.query(
+        `UPDATE purchase_orders 
+          SET subtotal=$1, vat_amount=$2, grand_total=$3, notes=$4, updated_at=NOW()
+          WHERE po_id=$5`,
+        [subtotal, vat_amount, grand_total, notes, id]
+      );
+    }
+
+    await client.query(`DELETE FROM purchase_order_items WHERE po_id=$1`, [id]);
+    for (const item of items || []) {
+      await client.query(
+        `INSERT INTO purchase_order_items (po_id, item_id, quantity, unit, price, note)
+          VALUES ($1,$2,$3,$4,$5,$6)`,
+        [id, item.item_id, item.quantity, item.unit, item.price, item.note || ""]
+      );
+    }
+
+    await client.query(`DELETE FROM po_files WHERE po_id=$1`, [id]);
+    for (const file of attachments || []) {
+      await client.query(
+        `INSERT INTO po_files (po_id, file_name, file_type, file_path, file_url, uploaded_by, uploaded_at)
+          VALUES ($1,$2,$3,$4,$5,$6,NOW())`,
+        [
+          id,
+          file.name,
+          file.type,
+          `/uploads/po/${file.name}`,
+          `http://localhost:5000/uploads/po/${file.name}`,
+          file.uploaded_by || 1
+        ]
+      );
+    }
+
+    await client.query("COMMIT");
+    return await getPOById(id);
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw new Error(`Failed to update PO ${id}: ${err.message}`);
+  } finally {
+    client.release();
+  }
+}
+
 
 // ✅ สร้าง PO จาก RFQ
 async function createPOFromRFQ({
@@ -373,6 +486,19 @@ async function updatePOFiles(po_id, newFiles, existingFileIdsToKeep) {
     client.release();
   }
 }
+async function markPOAsUsed(po_id) {
+  try {
+    await pool.query(
+      `UPDATE purchase_orders 
+       SET is_used_in_gr = true, updated_at = NOW() 
+       WHERE po_id = $1`,
+      [po_id]
+    );
+    return { message: `PO ${po_id} ถูกทำเครื่องหมายว่าใช้แล้ว` };
+  } catch (err) {
+    console.error("Error in markPOAsUsed:", err);
+    throw new Error(`Failed to mark PO as used: ${err.message}`);
+  }
+}
 
-
-module.exports = { getAllPOs, getPOById, createPO, updatePO, createPOFromRFQ ,addPOFiles ,updatePOFiles} ;
+module.exports = { getAllPOs, getPOById, createPO, updatePO, createPOFromRFQ ,addPOFiles ,updatePOFiles ,markPOAsUsed} ;

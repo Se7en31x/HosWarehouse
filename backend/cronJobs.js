@@ -8,17 +8,17 @@ const { runManagerRules } = require("./services/manager");
 //   await runManagerRules();
 // })();
 
-// cron.schedule("*/10 * * * * *", async () => {
-//   console.log("🚀 Running Manager Rules (every 5 seconds)...");
-//   await runManagerRules();
-// });
+cron.schedule("*/10 * * * * *", async () => {
+  console.log("🚀 Running Manager Rules (every 5 seconds)...");
+  await runManagerRules();
+});
 
 
-// // 🟢 โหมด Production → ทุกวัน 00:05
-// cron.schedule("5 0 * * *", async () => {
-//   console.log("🕛 Running Manager Rules (daily 00:05)...");
-//   await runManagerRules();
-// });
+// 🟢 โหมด Production → ทุกวัน 00:05
+cron.schedule("5 0 * * *", async () => {
+  console.log("🕛 Running Manager Rules (daily 00:05)...");
+  await runManagerRules();
+});
 
 // 🟡 โหมด Dev/Test → ทุก 10 วินาที (ปรับได้)
 // if (process.env.NODE_ENV !== "production") {
