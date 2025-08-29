@@ -334,7 +334,7 @@ const ManageReturnModel = {
             `INSERT INTO stock_in_details (stockin_id, item_id, lot_id, qty, unit, note)
              VALUES ($1, $2, $3, $4, $5, $6)`,
             [stockinId, lotInfo.item_id, lot.lot_id, useQty, lotInfo.item_unit,
-             `คืนจาก REQ: ${requestCode}, RTN: ${returnCode}, STI: ${stockinNo}`]
+             `คืนจาก ${requestCode}`]
           );
         } else {
           // damaged/lost
