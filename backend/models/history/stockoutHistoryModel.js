@@ -1,7 +1,7 @@
 const { pool } = require("../../config/db");
 
 const StockOutModel = {
-  // ✅ ดึงประวัติ Stock Out ทั้งหมด (เฉพาะเอกสารหลัก)
+  // ✅ ดึงประวัติ Stock Out ทั้งหมด (เฉพาะเอกสารหลัก พร้อมนับจำนวนรายการ)
   async getAllStockoutHeaders() {
     try {
       const result = await pool.query(`
@@ -12,9 +12,12 @@ const StockOutModel = {
           so.stockout_type,
           so.note AS header_note,
           u.user_fname || ' ' || u.user_lname AS user_name,
-          so.created_at
+          so.created_at,
+          COUNT(sod.stockout_detail_id) AS total_items
         FROM stock_outs so
         LEFT JOIN users u ON so.user_id = u.user_id
+        LEFT JOIN stock_out_details sod ON so.stockout_id = sod.stockout_id
+        GROUP BY so.stockout_id, u.user_id
         ORDER BY so.stockout_date DESC, so.stockout_id DESC;
       `);
       return result.rows;
@@ -24,7 +27,7 @@ const StockOutModel = {
     }
   },
 
-  // ✅ ดึง Stock Out ตามช่วงเวลา (เฉพาะเอกสารหลัก)
+  // ✅ ดึง Stock Out ตามช่วงเวลา (เฉพาะเอกสารหลัก พร้อมนับจำนวนรายการ)
   async getHeadersByDateRange(startDate, endDate) {
     try {
       const result = await pool.query(`
@@ -35,10 +38,13 @@ const StockOutModel = {
           so.stockout_type,
           so.note AS header_note,
           u.user_fname || ' ' || u.user_lname AS user_name,
-          so.created_at
+          so.created_at,
+          COUNT(sod.stockout_detail_id) AS total_items
         FROM stock_outs so
         LEFT JOIN users u ON so.user_id = u.user_id
+        LEFT JOIN stock_out_details sod ON so.stockout_id = sod.stockout_id
         WHERE so.stockout_date BETWEEN $1 AND $2
+        GROUP BY so.stockout_id, u.user_id
         ORDER BY so.stockout_date DESC, so.stockout_id DESC;
       `, [startDate, endDate]);
       return result.rows;

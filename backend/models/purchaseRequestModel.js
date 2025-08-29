@@ -3,7 +3,7 @@ const { generateDocNo } = require("../utils/docCounter");
 // ✅ ดึงรายการสินค้า (ใช้ในหน้าเลือกสั่งซื้อ)
 async function getItems() {
   const { rows } = await pool.query(
-    `SELECT i.item_id, i.item_name, i.item_category, i.item_unit, i.item_min, i.item_max,
+    `SELECT i.item_id, i.item_name, i.item_category, i.item_unit, i.item_min, i.item_max,item_img,
             COALESCE(SUM(il.qty_remaining), 0) AS current_stock
      FROM items i
      LEFT JOIN item_lots il ON i.item_id = il.item_id

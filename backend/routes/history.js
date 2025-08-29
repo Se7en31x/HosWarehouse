@@ -8,8 +8,8 @@ router.get("/history/withdraw", historyCtrl.getWithdrawHistory);
 // Borrow
 router.get("/history/borrow", historyCtrl.getBorrowHistory);
 
-// Import
-router.get("/history/import", historyCtrl.getImportHistory);
+// ✅ Stock In (เปลี่ยนจาก Import)
+router.get("/history/stockin", historyCtrl.getStockinHistory);
 
 // Expired
 router.get("/history/expired", historyCtrl.getExpiredHistory);

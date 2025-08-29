@@ -1,5 +1,6 @@
+// models/DamagedModel.js
 const { pool } = require('../config/db');
-const { generateImportNo } = require('../utils/docCounter');
+const { generateStockinNo } = require('../utils/docCounter'); // ต้องมีฟังก์ชันนี้
 
 const DamagedModel = {
   // ดึงรายการของชำรุดทั้งหมด
@@ -30,7 +31,6 @@ const DamagedModel = {
         br.condition AS return_condition,
         br.return_status,
         iu.user_fname || ' ' || iu.user_lname AS inspected_by_name,
-
         -- 🔹 ดึง actions ทั้งหมดแบบ array
         COALESCE(
           json_agg(
@@ -46,11 +46,10 @@ const DamagedModel = {
           ) FILTER (WHERE a.action_id IS NOT NULL),
           '[]'
         ) AS actions
-
       FROM damaged_items di
       JOIN items i ON di.item_id = i.item_id
       LEFT JOIN users u ON di.reported_by = u.user_id
-      LEFT JOIN borrow_returns br 
+      LEFT JOIN borrow_returns br
         ON di.source_type = 'borrow_return' AND di.source_ref_id = br.return_id
       LEFT JOIN users iu ON br.inspected_by = iu.user_id
       LEFT JOIN damaged_actions a ON di.damaged_id = a.damaged_id
@@ -59,8 +58,7 @@ const DamagedModel = {
       GROUP BY di.damaged_id, i.item_name, i.item_unit, u.user_fname, u.user_lname,
                br.return_date, br.condition, br.return_status, iu.user_fname, iu.user_lname
       ORDER BY di.damaged_date DESC
-    `);
-
+      `);
       return result.rows;
     } catch (err) {
       console.error('getDamagedItems error:', err);
@@ -108,48 +106,42 @@ const DamagedModel = {
           );
         }
 
-        // 3. ✅ Generate import_no สำหรับ repair_return
-        const import_no = await generateImportNo(client, 'repair_return');
+        // 3. ✅ สร้างเอกสาร Stock In สำหรับของที่ซ่อมเสร็จ
+        const stockinNo = await generateStockinNo(client, 'repair_return');
 
-        // 4. ✅ บันทึกเข้า imports
-        const { rows: importRows } = await client.query(
-          `INSERT INTO imports (
-             import_date, user_id, import_status, import_type,
-             source_name, source_type, source_ref_id, import_note, import_no
+        // 4. ✅ บันทึก Header ใน stock_ins
+        const { rows: stockinRows } = await client.query(
+          `INSERT INTO stock_ins (
+            stockin_no, stockin_date, stockin_type, note, user_id, created_at
            )
-           VALUES (NOW(), $1, 'posted', 'repair_return',
-                   'ศูนย์ซ่อม', 'damaged_items', $2, $3, $4)
-           RETURNING import_id`,
-          [action_by, damaged_id, note || 'ซ่อมแล้วคืนคลัง', import_no]
+           VALUES (
+            $1, NOW(), 'repair_return', $2, $3, NOW()
+           )
+           RETURNING stockin_id`,
+          [stockinNo, `ของซ่อมเสร็จจาก Damaged ID: ${damaged_id}`, action_by]
         );
-        const import_id = importRows[0].import_id;
+        const stockin_id = stockinRows[0].stockin_id;
 
-        // 5. ✅ บันทึก import_details
+        // 5. ✅ บันทึกรายละเอียดใน stock_in_details
+        // ดึงหน่วยสินค้ามาด้วย
+        const { rows: [itemInfo] } = await client.query(`
+          SELECT item_unit FROM items WHERE item_id = $1
+        `, [item_id]);
+
         await client.query(
-          `INSERT INTO import_details (import_id, item_id, quantity, import_note)
-           VALUES ($1, $2, $3, $4)`,
-          [import_id, item_id, action_qty, 'ซ่อมแล้วคืนเข้าคลัง']
+          `INSERT INTO stock_in_details (stockin_id, item_id, lot_id, qty, unit, note)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [stockin_id, item_id, lot_id, action_qty, itemInfo.item_unit, 'ซ่อมแล้วคืนเข้าคลัง']
         );
-
-        // 6. อัปเดตให้ lot เชื่อมกับ import นี้ (ถ้าอยาก track)
-        if (lot_id) {
-          await client.query(
-            `UPDATE item_lots
-             SET import_id = $1
-             WHERE lot_id = $2`,
-            [import_id, lot_id]
-          );
-        }
 
       } else if (action_type === 'disposed') {
-        // ของถูกทิ้ง → update disposed
+        // ของถูกทิ้ง -> update disposed quantity
         await client.query(
           `UPDATE damaged_items
            SET disposed_qty = COALESCE(disposed_qty,0) + $1
            WHERE damaged_id = $2`,
           [action_qty, damaged_id]
         );
-        // ไม่คืนเข้าคลัง
       }
 
       await client.query('COMMIT');

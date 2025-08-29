@@ -1,8 +1,8 @@
-//models/history/index.js
+// models/history/index.js
 
 const withdrawHistoryModel = require("./withdrawHistoryModel");
 const returnHistoryModel = require("./returnHistoryModel");
-const importHistoryModel = require("./importHistoryModel");
+const stockinHistoryModel = require("./stockinHistoryModel"); // ✅ Renamed
 const damagedHistoryModel = require("./damagedHistoryModel");
 const expiredHistoryModel = require("./expiredHistoryModel");
 const stockoutHistoryModel = require("./stockoutHistoryModel");
@@ -11,7 +11,7 @@ const borrowHistoryModel = require("./borrowHistoryModel")
 module.exports = {
     withdrawHistoryModel,
     returnHistoryModel,
-    importHistoryModel,
+    stockinHistoryModel, // ✅ Renamed
     expiredHistoryModel,
     damagedHistoryModel,
     stockoutHistoryModel,
