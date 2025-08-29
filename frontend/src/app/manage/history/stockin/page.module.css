@@ -238,7 +238,6 @@
     minmax(100px, 1fr) /* วันที่ */
     minmax(120px, 1.2fr) /* เลขที่เอกสาร */
     minmax(120px, 1.2fr) /* ประเภท */
-    minmax(150px, 1.5fr) /* แหล่งที่มา */
     minmax(120px, 1.2fr) /* ผู้นำเข้า */
     minmax(100px, 1fr) /* สถานะ */
     minmax(110px, 1fr); /* จัดการ */

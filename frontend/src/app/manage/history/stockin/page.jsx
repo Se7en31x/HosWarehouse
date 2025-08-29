@@ -322,7 +322,6 @@ export default function ImportHistory() {
               <div className={styles.headerItem}>วันที่</div>
               <div className={styles.headerItem}>เลขที่เอกสาร</div>
               <div className={styles.headerItem}>ประเภท</div>
-              <div className={styles.headerItem}>แหล่งที่มา</div>
               <div className={styles.headerItem}>ผู้นำเข้า</div>
               <div className={`${styles.headerItem} ${styles.centerCell}`}>
                 สถานะ
@@ -346,7 +345,6 @@ export default function ImportHistory() {
                     <div className={styles.tableCell}>
                       {stockinTypeMap[row.stockin_type] || row.stockin_type}
                     </div>
-                    <div className={styles.tableCell}>{row.source_name || "-"}</div>
                     <div className={styles.tableCell}>{row.user_name || "-"}</div>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>
                       <span
