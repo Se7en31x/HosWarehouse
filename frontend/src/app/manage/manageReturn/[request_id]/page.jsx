@@ -134,18 +134,22 @@ export default function ManageReturnDetailPage() {
   const returns = useMemo(() => {
     return rawReturns.map((r) => {
       const base = detailMap.get(r.request_detail_id) || {};
-      const baseline = Number(base.baseline_qty ?? base.delivered_qty ?? base.approved_qty ?? 0);
+      const baseline = Number(
+        base.baseline_qty ?? base.delivered_qty ?? base.approved_qty ?? r.approved_qty ?? 0
+      );
       const remain = Math.max(0, baseline - Number(r.returned_total ?? 0));
       return {
         ...r,
-        item_name: base?.item_name,
-        approved_qty: base?.approved_qty ?? 0,
+        item_name: base?.item_name || r.item_name,   // ✅ ใช้ข้อมูลจาก backend ถ้า lineItems ไม่มี
+        approved_qty: base?.approved_qty ?? r.approved_qty ?? 0,
         baseline_qty: baseline,
         remaining_qty: remain,
+        return_code: r.return_code || `RTN-${r.return_id}`,
         _status_thai: translateConditionFromDB(r.condition),
       };
     });
   }, [rawReturns, detailMap]);
+
 
   const pendingItems = useMemo(() => {
     if (!isBorrow) return [];
@@ -210,7 +214,6 @@ export default function ManageReturnDetailPage() {
               ? "บันทึกสูญหาย"
               : "-";
 
-    // Close the modal before showing the confirmation dialog
     setActiveRow(null);
 
     const confirm = await Swal.fire({
@@ -223,7 +226,7 @@ export default function ManageReturnDetailPage() {
           <div><b>สภาพ:</b> ${translateCondition(condition)}</div>
           <div><b>ผลการจัดการ:</b> ${actionNote}</div>
           <div><b>หมายเหตุ:</b> ${note ? note : "-"}</div>
-          ${condition === "expired" || condition === "damaged" || condition === "lost"
+          ${["expired", "damaged", "lost"].includes(condition)
           ? "<div style='color: orange'><b>คำเตือน:</b> ของจะไม่ถูกคืนเข้าคลังและถูกบันทึกเป็นสถานะนี้</div>"
           : ""
         }
@@ -263,7 +266,7 @@ export default function ManageReturnDetailPage() {
         title: "บันทึกสำเร็จ",
         html: `
           <div style="text-align:left">
-            <div>รหัสรับคืน: RET-${res?.data?.data?.return_id ?? "-"}</div>
+            <div>รหัสรับคืน: ${res?.data?.returnCode ?? "-"}</div>
             <div>ผลการจัดการ: ${status === "normal"
             ? "คืนเข้าคลังสำเร็จ"
             : status === "expired"
@@ -333,7 +336,7 @@ export default function ManageReturnDetailPage() {
         <h2 className={styles.sectionTitle}>รายการที่ยังค้างคืน</h2>
         <div className={styles.tableFrame}>
           <div className={`${styles.tableGrid} ${styles.pending} ${styles.tableHeader}`}>
-            <div className={styles.headerItem}>พัสดุ</div>
+            <div className={styles.headerItem}>รายการ</div>
             <div className={styles.headerItem}>หน่วย</div>
             <div className={styles.headerItem}>อนุมัติ</div>
             <div className={styles.headerItem}>คืนสะสม</div>
@@ -373,7 +376,7 @@ export default function ManageReturnDetailPage() {
             <div className={styles.headerItem}>รหัสคืน</div>
             <div className={styles.headerItem}>วันเวลา</div>
             <div className={styles.headerItem}>ผู้ตรวจรับ</div>
-            <div className={styles.headerItem}>พัสดุ</div>
+            <div className={styles.headerItem}>รายการ</div>
             <div className={styles.headerItem}>อนุมัติ</div>
             <div className={styles.headerItem}>คืนครั้งนี้</div>
             <div className={styles.headerItem}>คืนสะสม</div>
@@ -395,7 +398,7 @@ export default function ManageReturnDetailPage() {
                           ? "บันทึกสูญหาย"
                           : "-";
                 return (
-                  <div key={r.return_code} className={`${styles.tableGrid} ${styles.history} ${styles.tableRow}`}>
+                  <div key={r.return_id} className={`${styles.tableGrid} ${styles.history} ${styles.tableRow}`}>
                     <div className={styles.tableCell}>{r.return_code}</div>
                     <div className={styles.tableCell}>{formatDate(r.return_date)}</div>
                     <div className={styles.tableCell}>{r.inspected_by_name || "-"}</div>
@@ -433,7 +436,15 @@ export default function ManageReturnDetailPage() {
               {submitStatus && (
                 <div className={styles.submitStatus}>
                   <p>
-                    ผลลัพธ์: {submitStatus === "normal" ? "คืนเข้าคลังสำเร็จ" : submitStatus === "expired" ? "บันทึกเป็นของหมดอายุ" : submitStatus === "damaged" ? "บันทึกเป็นของชำรุด" : submitStatus === "lost" ? "บันทึกเป็นของสูญหาย" : "เสร็จสิ้น"}
+                    ผลลัพธ์: {submitStatus === "normal"
+                      ? "คืนเข้าคลังสำเร็จ"
+                      : submitStatus === "expired"
+                        ? "บันทึกเป็นของหมดอายุ"
+                        : submitStatus === "damaged"
+                          ? "บันทึกเป็นของชำรุด"
+                          : submitStatus === "lost"
+                            ? "บันทึกเป็นของสูญหาย"
+                            : "เสร็จสิ้น"}
                   </p>
                 </div>
               )}
@@ -467,6 +478,7 @@ export default function ManageReturnDetailPage() {
                   <option value="normal">ปกติ</option>
                   <option value="damaged">ชำรุด</option>
                   <option value="lost">สูญหาย</option>
+                  <option value="expired">หมดอายุ</option>
                 </select>
               </div>
 

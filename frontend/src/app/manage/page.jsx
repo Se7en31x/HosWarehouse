@@ -1,170 +1,191 @@
-// Dashboard.jsx
-'use client';
+"use client";
+import { useEffect, useState } from "react";
+import axiosInstance from "@/app/utils/axiosInstance";
+import ReactECharts from "echarts-for-react";
+import {
+  Package,
+  ClipboardList,
+  RefreshCcw,
+  AlertTriangle,
+} from "lucide-react";
+import styles from "./page.module.css";
 
-import React from 'react';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import styles from './page.module.css';
+export default function Dashboard() {
+  const [summary, setSummary] = useState({});
+  const [monthlyData, setMonthlyData] = useState([]);
+  const [categoryData, setCategoryData] = useState([]);
+  const [movements, setMovements] = useState([]);
 
-// --- ข้อมูลจำลอง (Mock Data) ---
-const kpiData = {
-  totalValue: '฿25,500,000',
-  lowStock: 210,
-  outOfStock: 15,
-  loanedItems: 45,
-};
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const resSummary = await axiosInstance.get("/dashboard/summary");
+        setSummary(resSummary.data);
 
-const stockByCategoryData = [
-  { name: 'ยา', value: 12000000, color: '#4CAF50' },
-  { name: 'เวชภัณฑ์', value: 8500000, color: '#2196F3' },
-  { name: 'ครุภัณฑ์', value: 4000000, color: '#FFC107' },
-  { name: 'ของใช้ทั่วไป', value: 1000000, color: '#F44336' },
-];
+        const resMonthly = await axiosInstance.get("/dashboard/monthly");
+        setMonthlyData(resMonthly.data);
 
-const transactionLogData = [
-  { date: '2025-08-05', time: '10:30', type: 'นำเข้า', item: 'Surgical Gloves', amount: '+500 กล่อง', user: 'สมชาย' },
-  { date: '2025-08-05', time: '09:45', type: 'เบิก', item: 'Paracetamol 500mg', amount: '-100 แผง', user: 'แผนก OPD' },
-  { date: '2025-08-04', time: '16:20', type: 'คืน', item: 'Wheelchair', amount: '+1 คัน', user: 'แผนกผู้ป่วยใน' },
-  { date: '2025-08-04', time: '14:00', type: 'ยืม', item: 'Defibrillator', amount: '-1 เครื่อง', user: 'แผนก ER' },
-  { date: '2025-08-04', time: '11:10', type: 'นำออก', item: 'ผ้าห่ม (เก่า)', amount: '-10 ผืน', user: 'จัดการทรัพย์สิน' },
-];
+        const resCategory = await axiosInstance.get("/dashboard/category");
+        setCategoryData(resCategory.data);
 
-const loanedEquipmentData = [
-  { id: 'C001', name: 'Ultrasound Portable', borrowedDate: '2025-08-01', dueDate: '2025-08-08', status: 'กำลังใช้งาน', borrower: 'คุณหมอสมศรี', dept: 'ศัลยกรรม' },
-  { id: 'C005', name: 'Patient Monitor', borrowedDate: '2025-07-28', dueDate: '2025-08-04', status: 'เลยกำหนด', borrower: 'คุณพยาบาลวันดี', dept: 'ICU' },
-  { id: 'C012', name: 'Infusion Pump', borrowedDate: '2025-08-04', dueDate: '2025-08-11', status: 'กำลังใช้งาน', borrower: 'คุณพยาบาลฟ้าใส', dept: 'ผู้ป่วยใน' },
-];
+        const resMovements = await axiosInstance.get("/dashboard/movements");
+        setMovements(resMovements.data);
+      } catch (err) {
+        console.error("โหลดข้อมูล Dashboard ล้มเหลว:", err);
+      }
+    };
 
-const KPIHeader = ({ data }) => (
-  <div className={styles.kpiContainer}>
-    <div className={styles.kpiCard}>
-      <p className={styles.kpiValue}>{data.totalValue}</p>
-      <p className={styles.kpiLabel}>มูลค่าสต็อกรวม</p>
-    </div>
-    <div className={styles.kpiCard}>
-      <p className={`${styles.kpiValue} ${styles.warning}`}>{data.lowStock}</p>
-      <p className={styles.kpiLabel}>รายการต่ำกว่าเกณฑ์</p>
-    </div>
-    <div className={styles.kpiCard}>
-      <p className={`${styles.kpiValue} ${styles.danger}`}>{data.outOfStock}</p>
-      <p className={styles.kpiLabel}>รายการหมดสต็อก</p>
-    </div>
-    <div className={styles.kpiCard}>
-      <p className={styles.kpiValue}>{data.loanedItems}</p>
-      <p className={styles.kpiLabel}>รายการที่ถูกยืม</p>
-    </div>
-  </div>
-);
+    fetchData();
+  }, []);
 
-// --- เปลี่ยนเป็น Pie Chart ---
-const StockByCategoryChart = ({ data }) => (
-  <ResponsiveContainer width="100%" height={300}>
-    <PieChart>
-      <Pie
-        data={data}
-        cx="50%"
-        cy="50%"
-        labelLine={false}
-        outerRadius={100} // ขนาดของวงกลม
-        fill="#8884d8"
-        dataKey="value"
-        nameKey="name"
-        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} // แสดงชื่อและเปอร์เซ็นต์
-      >
-        {data.map((entry, index) => (
-          <Cell key={`cell-${index}`} fill={entry.color} />
-        ))}
-      </Pie>
-      <Tooltip formatter={(value) => `฿${value.toLocaleString()}`} /> {/* แสดงมูลค่าเมื่อชี้เมาส์ */}
-      <Legend /> {/* แสดงคำอธิบายสี */}
-    </PieChart>
-  </ResponsiveContainer>
-);
+  // 🔹 Bar Chart (เบิก/ยืม)
+  const barOptions = {
+    title: { text: "จำนวนการเบิก-ยืม รายเดือน", left: "center" },
+    tooltip: { trigger: "axis" },
+    legend: { data: ["เบิก", "ยืม"], bottom: 0 },
+    grid: { top: 50, left: "3%", right: "3%", bottom: 50, containLabel: true },
+    xAxis: { type: "category", data: monthlyData.map((d) => d.month) },
+    yAxis: { type: "value" },
+    series: [
+      {
+        name: "เบิก",
+        type: "bar",
+        data: monthlyData.map((d) => d.withdraw),
+        barWidth: 20,
+        itemStyle: {
+          borderRadius: [6, 6, 0, 0],
+          color: {
+            type: "linear",
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: "#3b82f6" },
+              { offset: 1, color: "#93c5fd" },
+            ],
+          },
+        },
+      },
+      {
+        name: "ยืม",
+        type: "bar",
+        data: monthlyData.map((d) => d.borrow),
+        barWidth: 20,
+        itemStyle: {
+          borderRadius: [6, 6, 0, 0],
+          color: {
+            type: "linear",
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: "#22c55e" },
+              { offset: 1, color: "#bbf7d0" },
+            ],
+          },
+        },
+      },
+    ],
+  };
 
-const TransactionTable = ({ data }) => (
-  <div className={styles.tableContainer}>
-    <table className={styles.table}>
-      <thead>
-        <tr>
-          <th className={styles.th}>วันที่</th>
-          <th className={styles.th}>ประเภท</th>
-          <th className={styles.th}>ชื่อสินค้า</th>
-          <th className={styles.th}>จำนวน</th>
-          <th className={styles.th}>ผู้ดำเนินการ</th>
-        </tr>
-      </thead>
-      <tbody>
-        {data.map((item, index) => (
-          <tr key={index}>
-            <td className={styles.td}>{item.date}</td>
-            <td className={styles.td}>
-              <span className={`${styles.statusBadge} ${styles[item.type]}`}>{item.type}</span>
-            </td>
-            <td className={styles.td}>{item.item}</td>
-            <td className={styles.td}>{item.amount}</td>
-            <td className={styles.td}>{item.user}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
+  // 🔹 Pie Chart (หมวดหมู่)
+  const pieOptions = {
+    tooltip: { trigger: "item", formatter: "{b}<br/>จำนวน: {c} ({d}%)" },
+    legend: { bottom: 0, orient: "horizontal" },
+    series: [
+      {
+        type: "pie",
+        radius: ["45%", "65%"],
+        avoidLabelOverlap: true,
+        label: { show: false },
+        labelLine: { show: false },
+        emphasis: {
+          scale: true,
+          scaleSize: 10,
+          label: {
+            show: true,
+            fontSize: 14,
+            fontWeight: "bold",
+            formatter: "{b}\n{c} ({d}%)",
+          },
+        },
+        data: categoryData.map((d, i) => ({
+          name: d.name,
+          value: d.value,
+          itemStyle: {
+            color: ["#3b82f6", "#22c55e", "#f59e0b", "#a855f7", "#ef4444"][
+              i % 5
+            ],
+          },
+        })),
+      },
+    ],
+  };
 
-const LoanedTable = ({ data }) => (
-  <div className={styles.tableContainer}>
-    <table className={styles.table}>
-      <thead>
-        <tr>
-          <th className={styles.th}>รหัส</th>
-          <th className={styles.th}>ชื่อครุภัณฑ์</th>
-          <th className={styles.th}>วันที่ยืม</th>
-          <th className={styles.th}>กำหนดคืน</th>
-          <th className={styles.th}>สถานะ</th>
-          <th className={styles.th}>ผู้ยืม</th>
-        </tr>
-      </thead>
-      <tbody>
-        {data.map((item, index) => (
-          <tr key={index}>
-            <td className={styles.td}>{item.id}</td>
-            <td className={styles.td}>{item.name}</td>
-            <td className={styles.td}>{item.borrowedDate}</td>
-            <td className={styles.td}>{item.dueDate}</td>
-            <td className={styles.td}>
-              <span className={`${styles.statusBadge} ${item.status === 'เลยกำหนด' ? styles.statusDanger : styles.statusSuccess}`}>{item.status}</span>
-            </td>
-            <td className={styles.td}>{item.borrower}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
-
-const Dashboard = () => {
   return (
-    <div className={styles.dashboardContainer}>
-      <h1 className={styles.dashboardTitle}>Dashboard </h1>
-      <KPIHeader data={kpiData} />
-
-      <div className={styles.sectionGrid}>
-        <div className={styles.sectionCard}>
-          <h2>ภาพรวมสต็อกตามหมวดหมู่</h2>
-          <StockByCategoryChart data={stockByCategoryData} />
+    <div className={styles.container}>
+      {/* 🔹 Top Summary */}
+      <div className={styles.topCards}>
+        <div className={`${styles.card} ${styles.cardBlue}`}>
+          <Package className={styles.icon} />
+          <h3>พัสดุทั้งหมด</h3>
+          <p>{summary.total_items ?? "-"}</p>
         </div>
-        <div className={styles.sectionCard}>
-          <h2>การเคลื่อนไหวล่าสุดในคลัง</h2>
-          <TransactionTable data={transactionLogData} />
+        <div className={`${styles.card} ${styles.cardPurple}`}>
+          <ClipboardList className={styles.icon} />
+          <h3>คำขอเบิก</h3>
+          <p>{summary.total_requests ?? "-"}</p>
+        </div>
+        <div className={`${styles.card} ${styles.cardGreen}`}>
+          <RefreshCcw className={styles.icon} />
+          <h3>ยืม-คืน</h3>
+          <p>{summary.total_borrow ?? "-"}</p>
+        </div>
+        <div className={`${styles.card} ${styles.cardOrange}`}>
+          <AlertTriangle className={styles.icon} />
+          <h3>ใกล้หมด / หมดอายุ</h3>
+          <p>{summary.expiring ?? "-"}</p>
         </div>
       </div>
 
-      <div className={styles.sectionGridFull}>
-        <div className={styles.sectionCard}>
-          <h2>สถานะครุภัณฑ์และอุปกรณ์</h2>
-          <LoanedTable data={loanedEquipmentData} />
+      {/* 🔹 Graph Section */}
+      <div className={styles.graphSection}>
+        <div className={styles.section}>
+          <ReactECharts option={barOptions} style={{ height: "350px" }} />
         </div>
+        <div className={styles.section}>
+          <ReactECharts option={pieOptions} style={{ height: "350px" }} />
+        </div>
+      </div>
+
+      {/* 🔹 Movements Table */}
+      <div className={styles.section}>
+        <h2>การเคลื่อนไหวคลังล่าสุด</h2>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>ชื่อพัสดุ</th>
+              <th>วันที่</th>
+              <th>จำนวน</th>
+              <th>ประเภท</th>
+              <th>สถานะ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {movements.map((m, i) => (
+              <tr key={i}>
+                <td>{m.item_name}</td>
+                <td>{new Date(m.move_date).toLocaleString("th-TH")}</td>
+                <td>{m.move_qty}</td>
+                <td>{m.move_type}</td>
+                <td>{m.move_status}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
-};
-
-export default Dashboard;
+}

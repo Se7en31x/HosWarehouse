@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* ---- Variables (aligned with ImportHistory) ---- */
 :root {
   /* Colors */
   --bg: #f0fbfe;
@@ -32,6 +31,16 @@
   --z-select: 9000;
   --z-swal: 10000;
   --z-modal-overlay: 12000;
+
+  /* Badge colors */
+  --st-available-bg: #dcfce7;
+  --st-available-text: #166534;
+  --st-low-bg: #fef3c7;
+  --st-low-text: #92400e;
+  --st-out-bg: #fee2e2;
+  --st-out-text: #b91c1c;
+  --st-hold-bg: #e5e7eb;
+  --st-hold-text: #4b5563;
 }
 
 /* ---- Layout ---- */
@@ -98,6 +107,7 @@
   display: flex;
   align-items: flex-end;
   gap: 10px;
+  margin-left: auto;
 }
 
 .filterGroup {
@@ -154,6 +164,11 @@
   height: 40px;
   padding: 0 12px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .ghostBtn:hover {
@@ -161,10 +176,8 @@
 }
 
 .clearButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--primary-600);
+  color: var(--danger);
+  border-color: #fca5a5;
 }
 
 /* ---- Table ---- */
@@ -180,9 +193,10 @@
   grid-template-columns:
     minmax(100px, 1fr) /* วันที่ */
     minmax(120px, 1.2fr) /* เลขที่เอกสาร */
-    minmax(120px, 1.2fr) /* ผู้ดำเนินการ */
-    minmax(150px, 1.5fr) /* ประเภท */
-    minmax(110px, 1.1fr); /* จัดการ */
+    minmax(150px, 1.5fr) /* ผู้ดำเนินการ */
+    minmax(120px, 1.2fr) /* ประเภท */
+    minmax(120px, 1fr) /* จำนวนรายการ (เพิ่มใหม่) */
+    minmax(110px, 1.1fr); /* ตรวจสอบ */
   align-items: center;
 }
 
@@ -215,11 +229,9 @@
 }
 
 .inventory {
-  border: 0;
-  border-radius: 0;
-  background: #fff;
   height: calc(var(--row-h) * var(--rows-per-page));
-  overflow: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tableRow {
@@ -227,6 +239,7 @@
   height: var(--row-h);
   padding: 0 var(--th-pad-x);
   border-top: 1px solid #deedf1;
+  transition: background-color 0.2s ease;
 }
 
 .tableRow:hover {
@@ -244,13 +257,14 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 0.95rem;
 }
 
 .actionButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #3b82f6;
+  background: var(--primary);
   color: #fff;
   border-radius: 8px;
   padding: 6px;
@@ -260,12 +274,25 @@
 }
 
 .actionButton:hover {
-  background: #2563eb;
+  background: var(--primary-600);
   transform: scale(1.05);
 }
 
 .actionButton:active {
   transform: scale(0.95);
+}
+
+.stBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 1px solid transparent;
+  min-width: 92px;
+  line-height: 1;
 }
 
 .noDataMessage {
@@ -317,40 +344,50 @@
   color: var(--muted);
 }
 
-/* ---- Modal (enhanced for visual appeal) ---- */
+/* ---- Modal ---- */
 .modalOverlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: var(--z-modal-overlay);
-  /* backdrop-filter: blur(2px); */
+  animation: fadeIn 0.3s ease-out;
 }
 
 .modal {
-  background: #fff;
-  border-radius: 12px;
-  padding: 24px;
-  width: 600px;
+  position: relative;
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 2.5rem 2rem;
+  width: 900px;
+  max-width: 95%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.08);
+  font-family: 'Inter', system-ui, sans-serif;
+  animation: fadeInScale 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  display: flex;
+  flex-direction: column;
   max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  animation: slideIn 0.3s ease-out;
 }
 
-@keyframes slideIn {
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInScale {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: scale(0.95) translateY(10px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1) translateY(0);
   }
 }
 
@@ -358,253 +395,169 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  border-bottom: 1px solid var(--tint-200);
-  padding-bottom: 8px;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1rem;
 }
 
 .modalTitle {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a202c;
   margin: 0;
-  color: #374151;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.modalTitle::before {
-  content: "📋";
-  font-size: 1.25rem;
 }
 
 .closeIcon {
   background: none;
   border: none;
   cursor: pointer;
-  color: #374151;
-  padding: 4px;
-  border-radius: 6px;
-  transition: color 0.2s ease, background-color 0.2s ease;
+  color: var(--muted);
+  transition: color 0.2s, transform 0.2s;
+  padding: 0;
 }
 
 .closeIcon:hover {
-  color: var(--primary-600);
-  background: var(--tint-100);
+  color: var(--danger);
+  transform: rotate(90deg);
 }
 
-.detailContent {
+.detailInfoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  background-color: var(--tint-50);
+  padding: 1rem;
+  border-radius: var(--radius);
+}
+
+.detailInfoItem {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  font-size: 0.9rem;
-  text-align: left;
-  color: #111827;
-  margin-bottom: 16px;
-  background: #f9fafb;
-  padding: 12px;
-  border-radius: 8px;
 }
 
-.detailContent p {
-  margin: 0;
-  line-height: 1.6;
-  display: flex;
-  justify-content: space-between;
-}
-
-.detailContent p b {
-  flex: 0 0 150px;
-  color: #374151;
+.detailLabel {
+  font-size: 0.875rem;
+  color: var(--primary-600);
   font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.detailValue {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text);
 }
 
 .detailTableTitle {
-  font-size: 1rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  margin: 16px 0 12px;
-  color: #374151;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.detailTableTitle::before {
-  content: "📦";
-  font-size: 1rem;
+  color: #1a202c;
+  margin: 0 0 1rem;
 }
 
 .popupTableWrapper {
-  border: 1px solid var(--tint-200);
-  border-radius: 8px;
-  overflow: hidden;
-  background: #fff;
+  flex-grow: 1;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
 }
 
 .popupTable {
   display: grid;
-  grid-template-columns:
-    minmax(150px, 2fr) /* พัสดุ */
-    minmax(100px, 1fr) /* จำนวน */
-    minmax(100px, 1fr) /* Lot No */
-    minmax(100px, 1fr); /* วันหมดอายุ */
+  grid-template-columns: 
+    50px /* ลำดับ */
+    minmax(200px, 2fr) /* พัสดุ */
+    minmax(120px, 1.2fr) /* Lot No. */
+    80px /* จำนวน */
+    100px /* หน่วยนับ */
+    minmax(120px, 1.2fr); /* วันหมดอายุ */
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  align-items: center;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.9rem;
 }
 
 .popupTableHeader {
-  background: #eef9fc;
+  position: sticky;
+  top: 0;
+  background-color: var(--tint-100);
   font-weight: 600;
-  font-size: 0.9rem;
-  color: #374151;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--tint-200);
-}
-
-.popupTableHeader > div {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
+  color: var(--primary-600);
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem;
 }
 
 .popupTableRow {
-  padding: 10px 12px;
-  border-bottom: 1px solid #e5e7eb;
-  font-size: 0.9rem;
-  color: #111827;
-  transition: background-color 0.2s ease;
+  background-color: #fff;
+  transition: background-color 0.2s;
 }
 
 .popupTableRow:hover {
-  background: var(--tint-100);
-}
-
-.popupTableRow:last-child {
-  border-bottom: none;
-}
-
-.popupTableRow > div {
-  display: flex;
-  align-items: center;
+  background-color: #f6fafd;
 }
 
 .noDataRow {
-  text-align: center;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--muted);
-  font-size: 0.9rem;
-  padding: 16px;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.noDataCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 
 .closeBtn {
-  width: 100%;
   background: var(--primary);
   color: #fff;
   border: none;
+  padding: 10px 24px;
   border-radius: 8px;
-  padding: 10px 16px;
   cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 500;
-  margin-top: 16px;
-  transition: background-color 0.2s ease, transform 0.15s ease;
+  font-weight: 600;
+  transition: background-color 0.2s, transform 0.1s;
+  align-self: flex-end;
 }
 
 .closeBtn:hover {
   background: var(--primary-600);
-  transform: translateY(-1px);
 }
 
 .closeBtn:active {
-  transform: translateY(0);
+  transform: scale(0.98);
 }
 
 /* ---- Responsive ---- */
 @media (max-width: 1024px) {
-  .filterLeft {
-    flex: 1;
-  }
-
-  .filterRight {
-    flex: 1;
-    justify-content: flex-end;
+  .modal {
+    width: 95%;
   }
 }
 
 @media (max-width: 768px) {
-  .filterBar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .filterLeft,
-  .filterRight {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .searchBox {
-    max-width: none;
-  }
-}
-
-@media (max-width: 640px) {
-  :root {
-    --th-font: 1rem;
-    --th-min-h: 54px;
-    --th-pad-y: 10px;
-    --table-gap: 10px;
-  }
-
-  .mainHome {
-    padding: 12px;
-  }
-
-  .tableGrid {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-  }
-
-  .tableHeader,
-  .tableRow {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .headerItem,
-  .tableCell {
-    padding: 0.5rem;
-    text-align: left;
-  }
-
-  .centerCell {
-    justify-content: flex-start;
-  }
-
-  .modal {
-    width: 95%;
-    padding: 16px;
-  }
-
-  .detailContent p {
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .detailContent p b {
-    flex: none;
-  }
-
   .popupTable {
+    grid-template-columns: 
+      40px /* ลำดับ */
+      minmax(150px, 2fr) /* พัสดุ */
+      minmax(100px, 1.2fr) /* Lot No. */
+      60px /* จำนวน */
+      80px /* หน่วยนับ */
+      minmax(100px, 1.2fr); /* วันหมดอายุ */
+  }
+  .modal {
+    padding: 1.5rem;
+  }
+  .detailInfoGrid {
     grid-template-columns: 1fr;
-  }
-
-  .popupTableHeader > div,
-  .popupTableRow > div {
-    padding: 8px;
-    border-bottom: 1px solid #e5e7eb;
-  }
-
-  .popupTableRow > div:last-child,
-  .popupTableHeader > div:last-child {
-    border-bottom: none;
+    gap: 0.75rem;
   }
 }

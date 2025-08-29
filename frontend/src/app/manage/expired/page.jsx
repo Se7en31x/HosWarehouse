@@ -2,9 +2,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import axios from '@/app/utils/axiosInstance';
 import styles from './page.module.css';
-import { ChevronLeft, ChevronRight, Trash2, Clock, CheckCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Clock, CheckCircle, X } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import Swal from "sweetalert2";
 
 const Select = dynamic(() => import('react-select'), { ssr: false });
 
@@ -42,6 +41,131 @@ const STATUS_OPTIONS = [
   { value: 'complete', label: 'ทำลายครบ' },
 ];
 
+// Alert Modal Component
+const AlertModal = ({ show, title, message, type, onClose }) => {
+  if (!show) return null;
+
+  const icon = type === 'success' ? <CheckCircle size={48} className={styles.alertIconSuccess} /> : <X size={48} className={styles.alertIconError} />;
+
+  return (
+    <div className={styles.modalOverlay}>
+      <div className={`${styles.modal} ${styles.alertModal}`}>
+        <div className={styles.alertIcon}>{icon}</div>
+        <h2 className={styles.alertTitle}>{title}</h2>
+        <p className={styles.alertMessage}>{message}</p>
+        <div className={styles.modalActions}>
+          <button className={styles.btnPrimary} onClick={onClose}>
+            ตกลง
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Dispose Modal Component
+const DisposeModal = ({ show, onClose, disposeData, setDisposeData, onConfirm }) => {
+  if (!show) return null;
+
+  return (
+    <div className={styles.modalOverlay}>
+      <div className={styles.modal}>
+        <div className={styles.modalHeader}>
+          <h2>ทำลายพัสดุ</h2>
+          <button className={styles.modalClose} onClick={onClose}>
+            <X size={24} />
+          </button>
+        </div>
+        <div className={styles.disposeBody}>
+          <div className={styles.disposeInfoGroup}>
+            <div className={styles.disposeInfoItem}>
+              <span className={styles.disposeLabel}>Lot Number</span>
+              <span className={styles.disposeValue}>{disposeData.lotNo}</span>
+            </div>
+            <div className={styles.disposeInfoItem}>
+              <span className={styles.disposeLabel}>ชื่อพัสดุ</span>
+              <span className={styles.disposeValue}>{disposeData.itemName}</span>
+            </div>
+          </div>
+          <div className={styles.disposeInfoItem}>
+            <span className={styles.disposeLabel}>จำนวนเหลือที่ต้องทำลาย</span>
+            <span className={styles.disposeValue}>{disposeData.qty}</span>
+          </div>
+          <div className={styles.disposeInputGroup}>
+            <label htmlFor="actionQty" className={styles.disposeLabel}>จำนวนที่ต้องการทำลาย</label>
+            <input
+              id="actionQty"
+              type="number"
+              min="1"
+              max={disposeData.qty}
+              value={disposeData.actionQty}
+              onChange={(e) =>
+                setDisposeData({ ...disposeData, actionQty: Math.max(1, Math.min(disposeData.qty, Number(e.target.value))) })
+              }
+              className={styles.disposeInput}
+            />
+          </div>
+        </div>
+        <div className={styles.modalActions}>
+          <button className={styles.btnSecondary} onClick={onClose}>
+            ยกเลิก
+          </button>
+          <button className={styles.btnPrimary} onClick={onConfirm}>
+            ยืนยันการทำลาย
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// History Modal Component
+const HistoryModal = ({ show, onClose, historyData }) => {
+  if (!show) return null;
+
+  return (
+    <div className={styles.modalOverlay}>
+      <div className={styles.modal}>
+        <div className={styles.modalHeader}>
+          <h2>ประวัติการทำลาย</h2>
+          <button className={styles.modalClose} onClick={onClose}>
+            <X size={24} />
+          </button>
+        </div>
+        {historyData.length === 0 ? (
+          <p className={styles.noHistoryMessage}>ไม่มีข้อมูลประวัติการทำลาย</p>
+        ) : (
+          <div className={styles.historyTableContainer}>
+            <table className={styles.historyTable}>
+              <thead>
+                <tr>
+                  <th className={styles.historyTh}>วันที่</th>
+                  <th className={styles.historyTh}>จำนวน</th>
+                  <th className={styles.historyTh}>ผู้ทำรายการ</th>
+                  <th className={styles.historyTh}>หมายเหตุ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {historyData.map((a, idx) => (
+                  <tr key={idx} className={styles.historyTr}>
+                    <td className={styles.historyTd}>{new Date(a.action_date).toLocaleDateString('th-TH')}</td>
+                    <td className={styles.historyTd}>{a.action_qty}</td>
+                    <td className={styles.historyTd}>{a.action_by_name || '-'}</td>
+                    <td className={styles.historyTd}>{a.note || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <div className={styles.modalActions}>
+          <button className={styles.btnSecondary} onClick={onClose}>ปิด</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function ExpiredItemsPage() {
   const [expiredList, setExpiredList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,12 +177,14 @@ export default function ExpiredItemsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
-  // ✅ modal states
   const [showDisposeModal, setShowDisposeModal] = useState(false);
   const [disposeData, setDisposeData] = useState(null);
 
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
+
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  const [alertInfo, setAlertInfo] = useState({ title: '', message: '', type: '' });
 
   // โหลดข้อมูล
   const fetchExpired = async () => {
@@ -75,12 +201,13 @@ export default function ExpiredItemsPage() {
 
   useEffect(() => { fetchExpired(); }, []);
 
-  // 👉 เปิด modal ทำลาย
+  // เปิด modal ทำลาย
   const openDisposeModal = (lotId, itemId, itemName, lotNo, qty) => {
     setDisposeData({ lotId, itemId, itemName, lotNo, qty, actionQty: qty });
     setShowDisposeModal(true);
   };
-  // 👉 บันทึกทำลาย
+
+  // บันทึกทำลาย
   const confirmDispose = async () => {
     try {
       await axios.post(`/expired/action`, {
@@ -91,36 +218,39 @@ export default function ExpiredItemsPage() {
         action_by: 999
       });
 
-      // ✅ ใช้ Swal แจ้งเตือนสำเร็จ
-      Swal.fire({
-        icon: 'success',
+      setAlertInfo({
         title: 'บันทึกสำเร็จ',
-        text: `ทำลาย Lot ${disposeData.lotId} จำนวน ${disposeData.actionQty} ชิ้นแล้ว`,
-        confirmButtonText: 'ตกลง'
+        message: `ทำลาย Lot ${disposeData.lotNo} จำนวน ${disposeData.actionQty} ชิ้นแล้ว`,
+        type: 'success'
       });
-
-      setShowDisposeModal(false); // ปิด modal
-      fetchExpired(); // reload ข้อมูล
+      setShowAlertModal(true);
+      setShowDisposeModal(false);
+      fetchExpired();
     } catch (err) {
       console.error("confirmDispose error:", err);
 
-      Swal.fire({
-        icon: 'error',
+      setAlertInfo({
         title: 'เกิดข้อผิดพลาด',
-        text: 'ไม่สามารถบันทึกการทำลายได้',
-        confirmButtonText: 'ปิด'
+        message: 'ไม่สามารถบันทึกการทำลายได้',
+        type: 'error'
       });
+      setShowAlertModal(true);
     }
   };
 
-  // 👉 เปิด modal ประวัติ
+  // เปิด modal ประวัติ
   const openHistoryModal = async (lotId) => {
     try {
       const res = await axios.get(`/expired/actions/${lotId}`);
       setHistoryData(Array.isArray(res.data) ? res.data : []);
       setShowHistoryModal(true);
     } catch (err) {
-      alert('❌ ไม่สามารถดึงข้อมูลประวัติได้');
+      setAlertInfo({
+        title: 'ข้อผิดพลาด',
+        message: 'ไม่สามารถดึงข้อมูลประวัติได้',
+        type: 'error'
+      });
+      setShowAlertModal(true);
     }
   };
 
@@ -174,7 +304,7 @@ export default function ExpiredItemsPage() {
           <h1 className={styles.pageTitle}>จัดการของหมดอายุ</h1>
         </div>
 
-        {/* ✅ Toolbar */}
+        {/* Toolbar */}
         <div className={styles.toolbar}>
           <div className={styles.filterGroup}>
             <label className={styles.label} htmlFor="status">สถานะ</label>
@@ -211,9 +341,9 @@ export default function ExpiredItemsPage() {
           </div>
         </div>
 
-        {/* ✅ Table */}
+        {/* Table */}
         {loading && <p className={styles.infoMessage}>กำลังโหลดข้อมูล...</p>}
-        {!loading && currentItems.length === 0 && <p className={styles.noDataMessage}></p>}
+        {!loading && currentItems.length === 0 && <p className={styles.noDataMessage}>ไม่พบข้อมูลที่ตรงกับตัวกรอง</p>}
 
         {!loading && (
           <div className={styles.tableFrame}>
@@ -296,7 +426,6 @@ export default function ExpiredItemsPage() {
               })}
             </div>
 
-
             {/* Pagination */}
             <ul className={styles.paginationControls}>
               <li>
@@ -327,76 +456,30 @@ export default function ExpiredItemsPage() {
           </div>
         )}
 
-        {/* ✅ Modal ทำลาย */}
-        {showDisposeModal && (
-          <div className={styles.modalOverlay}>
-            <div className={styles.modal}>
-              <h2>ทำลาย Lot {disposeData.lotNo}</h2>   {/* 👈 ใช้ lotNo */}
-              <p>ชื่อพัสดุ: {disposeData.itemName}</p>
-              <p>เหลือให้ทำลาย: {disposeData.qty} ชิ้น</p>
-              <input
-                type="number"
-                min="1"
-                max={disposeData.qty}
-                value={disposeData.actionQty}
-                onChange={(e) =>
-                  setDisposeData({ ...disposeData, actionQty: Number(e.target.value) })
-                }
-                className={styles.input}
-              />
-              <div className={styles.modalActions}>
-                <button className={styles.btnPrimary} onClick={confirmDispose}>
-                  ยืนยัน
-                </button>
-                <button
-                  className={styles.btnSecondary}
-                  onClick={() => setShowDisposeModal(false)}
-                >
-                  ยกเลิก
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Modal ทำลาย */}
+        <DisposeModal
+          show={showDisposeModal}
+          onClose={() => setShowDisposeModal(false)}
+          disposeData={disposeData}
+          setDisposeData={setDisposeData}
+          onConfirm={confirmDispose}
+        />
 
-        {/* ✅ Modal ประวัติ (ปรับแก้ส่วนนี้) */}
-        {showHistoryModal && (
-          <div className={styles.modalOverlay}>
-            <div className={styles.modal}>
-              <h2>ประวัติการทำลาย</h2>
-              {historyData.length === 0 ? (
-                <p>ไม่มีข้อมูลประวัติ</p>
-              ) : (
-                // ✅ เพิ่ม div ใหม่เพื่อจัดการ overflow
-                <div className={styles.historyTableContainer}>
-                  <table className={styles.historyTable}>
-                    <thead>
-                      <tr>
-                        <th>วันที่</th>
-                        <th>จำนวน</th>
-                        <th>ผู้ทำรายการ</th>
-                        <th>หมายเหตุ</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {historyData.map((a, idx) => (
-                        <tr key={idx}>
-                          <td>{new Date(a.action_date).toLocaleDateString('th-TH')}</td>
-                          <td>{a.action_qty}</td>
-                          <td>{a.action_by_name || '-'}</td>
-                          <td>{a.note || '-'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-              <div className={styles.modalActions}>
-                <button className={styles.btnPrimary} onClick={() => setShowHistoryModal(false)}>ปิด</button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Modal ประวัติ */}
+        <HistoryModal
+          show={showHistoryModal}
+          onClose={() => setShowHistoryModal(false)}
+          historyData={historyData}
+        />
+
+        {/* Modal แจ้งเตือน */}
+        <AlertModal
+          show={showAlertModal}
+          title={alertInfo.title}
+          message={alertInfo.message}
+          type={alertInfo.type}
+          onClose={() => setShowAlertModal(false)}
+        />
       </div>
     </div>
   );

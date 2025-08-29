@@ -1,6 +1,17 @@
+/* File: page.module.css */
+
+/*
+ * File: page.module.css
+ * Description: Styles for the Withdraw History page.
+ *
+ * This CSS file uses modern CSS Grid for table layouts,
+ * custom properties (variables) for consistent theming,
+ * and a modular approach for better organization.
+ */
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* ---- Variables (aligned with ImportHistory) ---- */
+/* ---- Variables ---- */
 :root {
   /* Colors */
   --bg: #f0fbfe;
@@ -18,6 +29,8 @@
   --danger: #ef4444;
   --warning: #f59e0b;
   --radius: 10px;
+  
+  /* Table & Layout */
   --row-h: 60px;
   --rows-per-page: 10;
   --table-gap: 12px;
@@ -27,6 +40,8 @@
   --th-pad-x: 12px;
   --th-letter: 0.01em;
   --th-line: 1.25;
+
+  /* Z-Index */
   --z-header: 10;
   --z-toolbar: 100;
   --z-select: 9000;
@@ -34,7 +49,7 @@
   --z-modal-overlay: 12000;
 }
 
-/* ---- Layout ---- */
+/* ---- Base Layout ---- */
 .mainHome {
   min-height: 100vh;
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
@@ -59,7 +74,7 @@
   align-self: stretch;
 }
 
-/* ---- Header ---- */
+/* ---- Page Header ---- */
 .pageBar {
   display: flex;
   justify-content: space-between;
@@ -164,7 +179,7 @@
   color: var(--primary-600);
 }
 
-/* ---- Table ---- */
+/* ---- Main Table ---- */
 .tableSection {
   border: 1px solid var(--tint-200);
   border-radius: var(--radius);
@@ -175,15 +190,15 @@
 .tableGrid {
   display: grid;
   grid-template-columns:
-    minmax(100px, 1fr) /* วันที่ */
-    minmax(120px, 1.2fr) /* เลขที่คำขอ */
-    minmax(150px, 1.5fr) /* แผนก */
-    minmax(120px, 1.2fr) /* ผู้ขอ */
-    minmax(100px, 1fr) /* จำนวนรายการ */
-    minmax(100px, 1fr) /* รวมจำนวน */
-    minmax(100px, 1fr) /* สถานะ */
-    minmax(80px, 0.8fr) /* ด่วน */
-    minmax(110px, 1.1fr); /* จัดการ */
+    minmax(100px, 1fr)    /* วันที่ */
+    minmax(120px, 1.2fr)  /* เลขที่คำขอ */
+    minmax(150px, 1.5fr)  /* แผนก */
+    minmax(120px, 1.2fr)  /* ผู้ขอ */
+    minmax(100px, 1fr)    /* จำนวนรายการ */
+    minmax(100px, 1fr)    /* รวมจำนวน */
+    minmax(100px, 1fr)    /* สถานะ */
+    minmax(80px, 0.8fr)   /* ด่วน */
+    minmax(110px, 1.1fr); /* ตรวจสอบ */
   align-items: center;
 }
 
@@ -269,6 +284,7 @@
   transform: scale(0.95);
 }
 
+/* ---- Status Badges ---- */
 .stBadge {
   display: inline-flex;
   align-items: center;
@@ -303,6 +319,7 @@
   border-color: #CBD5E1;
 }
 
+/* ---- Table State Messages ---- */
 .loadingContainer,
 .noDataMessage {
   height: calc(var(--row-h) * var(--rows-per-page));
@@ -313,6 +330,7 @@
   font-size: 0.95rem;
 }
 
+/* ---- Pagination ---- */
 .paginationControls {
   display: flex;
   list-style: none;
@@ -353,12 +371,149 @@
   color: var(--muted);
 }
 
+/* ---- Modal ---- */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal-overlay);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.modalContent {
+  background: #fff;
+  padding: 24px;
+  border-radius: var(--radius);
+  max-width: 1200px; 
+  width: 90%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+  margin-bottom: 16px;
+}
+
+.modalTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.modalCloseBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  transition: color 0.2s;
+}
+
+.modalCloseBtn:hover {
+  color: var(--text);
+}
+
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.modalSectionTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--primary-600);
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid var(--primary-500);
+}
+
+.modalGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.modalItem {
+  line-height: 1.4;
+  font-size: 0.95rem;
+}
+
+/* Styles for the detail table inside the modal */
+.tableContainer {
+  max-height: 350px;
+  overflow-y: auto;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.detailTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.detailTable th,
+.detailTable td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e9f6fb;
+}
+
+.detailTable th {
+  background-color: #f6fbfd;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #374151;
+  position: sticky;
+  top: 0;
+}
+
+.detailTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.detailTable tbody tr:hover {
+  background-color: #f0f7f9;
+}
+
+.textCenter {
+  text-align: center;
+}
+
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
 /* ---- Responsive ---- */
 @media (max-width: 1024px) {
   .filterLeft {
     flex: 1;
   }
-
   .filterRight {
     flex: 1;
     justify-content: flex-end;
@@ -370,15 +525,17 @@
     flex-direction: column;
     align-items: stretch;
   }
-
   .filterLeft,
   .filterRight {
     flex-direction: column;
     align-items: stretch;
   }
-
   .searchBox {
     max-width: none;
+  }
+  .modalContent {
+    padding: 16px;
+    width: 95%;
   }
 }
 
@@ -389,30 +546,35 @@
     --th-pad-y: 10px;
     --table-gap: 10px;
   }
-
   .mainHome {
     padding: 12px;
   }
-
   .tableGrid {
     grid-template-columns: 1fr;
     gap: 0.5rem;
   }
-
   .tableHeader,
   .tableRow {
     display: flex;
     flex-direction: column;
     align-items: stretch;
   }
-
   .headerItem,
   .tableCell {
     padding: 0.5rem;
     text-align: left;
   }
-
   .centerCell {
     justify-content: flex-start;
+  }
+  .modalGrid {
+    grid-template-columns: 1fr;
+  }
+  .detailTable {
+    font-size: 0.8rem;
+  }
+  .detailTable th,
+  .detailTable td {
+    padding: 8px;
   }
 }

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import { useEffect, useState, useMemo } from "react";
 import axiosInstance from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
@@ -141,7 +141,7 @@ export default function StockOutHistoryPage() {
       <div className={styles.infoContainer}>
         <div className={styles.pageBar}>
           <h1 className={styles.pageTitle}>
-             ประวัติการตัดออกจากคลัง
+            ประวัติการตัดออกจากคลัง
           </h1>
         </div>
 
@@ -195,6 +195,7 @@ export default function StockOutHistoryPage() {
             <div className={styles.headerItem}>เลขที่เอกสาร</div>
             <div className={styles.headerItem}>ผู้ดำเนินการ</div>
             <div className={styles.headerItem}>ประเภท</div>
+            <div className={`${styles.headerItem} ${styles.centerCell}`}>จำนวนรายการ</div>
             <div className={`${styles.headerItem} ${styles.centerCell}`}>ตรวจสอบ</div>
           </div>
 
@@ -209,6 +210,9 @@ export default function StockOutHistoryPage() {
                   <div className={styles.tableCell}>{r.user_name || "-"}</div>
                   <div className={styles.tableCell}>
                     {typeMap[r.stockout_type] || "อื่น ๆ"}
+                  </div>
+                  <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                    {r.total_items || 0} รายการ
                   </div>
                   <div className={`${styles.tableCell} ${styles.centerCell}`}>
                     <button
@@ -284,48 +288,55 @@ export default function StockOutHistoryPage() {
                   <X size={20} />
                 </button>
               </div>
-              <div className={styles.detailContent}>
-                <p><b>เลขที่เอกสาร:</b> {selected.stockout_no || "-"}</p>
-                <p><b>ผู้ดำเนินการ:</b> {selected.user_name || "-"}</p>
-                <p><b>ประเภท:</b> {typeMap[selected.stockout_type] || "อื่น ๆ"}</p>
-                <p><b>สร้างเมื่อ:</b> {formatThaiDate(selected.created_at)}</p>
+
+              <div className={styles.detailInfoGrid}>
+                <div className={styles.detailInfoItem}>
+                  <div className={styles.detailLabel}>เลขที่เอกสาร:</div>
+                  <div className={styles.detailValue}>{selected.stockout_no || "-"}</div>
+                </div>
+                <div className={styles.detailInfoItem}>
+                  <div className={styles.detailLabel}>ผู้ดำเนินการ:</div>
+                  <div className={styles.detailValue}>{selected.user_name || "-"}</div>
+                </div>
+                <div className={styles.detailInfoItem}>
+                  <div className={styles.detailLabel}>ประเภท:</div>
+                  <div className={styles.detailValue}>{typeMap[selected.stockout_type] || "อื่น ๆ"}</div>
+                </div>
+                <div className={styles.detailInfoItem}>
+                  <div className={styles.detailLabel}>สร้างเมื่อ:</div>
+                  <div className={styles.detailValue}>{formatThaiDate(selected.created_at)}</div>
+                </div>
               </div>
 
               <h4 className={styles.detailTableTitle}>รายการพัสดุ</h4>
               <div className={styles.popupTableWrapper}>
                 {/* Header */}
                 <div className={`${styles.popupTable} ${styles.popupTableHeader}`}>
+                  <div className={styles.tableColNo}>ลำดับ</div>
                   <div>พัสดุ</div>
+                  <div>Lot No.</div>
                   <div>จำนวน</div>
-                  <div>Lot No</div>
+                  <div>หน่วยนับ</div>
                   <div>วันหมดอายุ</div>
                 </div>
 
                 {/* Rows */}
                 {details.length > 0 ? (
-                  details.map((d) => (
+                  details.map((d, index) => (
                     <div key={d.stockout_detail_id} className={`${styles.popupTable} ${styles.popupTableRow}`}>
+                      <div className={styles.tableColNo}>{index + 1}</div>
                       <div>{d.item_name || "-"}</div>
-                      <div>{d.qty || 0} {d.unit || ""}</div>
                       <div>{d.lot_no || "-"}</div>
+                      <div>{d.qty || 0}</div>
+                      <div>{d.unit || ""}</div>
                       <div>{formatThaiDate(d.exp_date)}</div>
                     </div>
                   ))
                 ) : (
                   <div className={`${styles.popupTable} ${styles.popupTableRow} ${styles.noDataRow}`}>
-                    ไม่มีข้อมูลรายการพัสดุ
+                    <div className={styles.noDataCell}>ไม่มีข้อมูลรายการพัสดุ</div>
                   </div>
                 )}
-
-                {/* Empty Rows */}
-                {Array.from({ length: Math.max(0, 5 - details.length) }).map((_, i) => (
-                  <div key={`empty-${i}`} className={`${styles.popupTable} ${styles.popupTableRow}`}>
-                    <div>&nbsp;</div>
-                    <div>&nbsp;</div>
-                    <div>&nbsp;</div>
-                    <div>&nbsp;</div>
-                  </div>
-                ))}
               </div>
               <button
                 className={styles.closeBtn}

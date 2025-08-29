@@ -18,7 +18,7 @@ const customSelectStyles = {
     boxShadow: "none",
     "&:hover": { borderColor: "#2563eb" },
     fontSize: "0.9rem", /* ลดขนาดฟอนต์ */
-    width: "250px",     /* ✅ เพิ่มตรงนี้ */
+    width: "250px",
   }),
   menu: (base) => ({
     ...base,
@@ -42,27 +42,29 @@ const customSelectStyles = {
 };
 
 /* mapping */
-const importTypeMap = {
+const stockinTypeMap = {
   purchase: "จัดซื้อ",
+  "purchase-extra": "รับเพิ่มเติมจากการสั่งซื้อ",  // ✅ ใส่ quote
   general: "รับเข้าทั่วไป",
   return: "คืนพัสดุ",
   repair_return: "คืนจากซ่อม",
   adjustment: "ปรับปรุงยอด",
 };
-const importStatusMap = {
+
+const stockinStatusMap = {
+  posted: "บันทึกแล้ว",
   draft: "ร่าง",
   waiting_approval: "รอการอนุมัติ",
-  posted: "บันทึกแล้ว",
   canceled: "ยกเลิก",
 };
 
 const TYPE_OPTIONS = [
   { value: "all", label: "ทุกประเภท" },
-  ...Object.entries(importTypeMap).map(([k, v]) => ({ value: k, label: v })),
+  ...Object.entries(stockinTypeMap).map(([k, v]) => ({ value: k, label: v })),
 ];
 const STATUS_OPTIONS = [
   { value: "all", label: "ทุกสถานะ" },
-  ...Object.entries(importStatusMap).map(([k, v]) => ({ value: k, label: v })),
+  ...Object.entries(stockinStatusMap).map(([k, v]) => ({ value: k, label: v })),
 ];
 
 // สถานะ badge
@@ -99,12 +101,12 @@ export default function ImportHistory() {
     let isMounted = true;
     const fetchData = async () => {
       try {
-        const res = await axiosInstance.get("/history/import");
+        const res = await axiosInstance.get("/history/stockin");
         if (isMounted) {
           setData(Array.isArray(res.data) ? res.data.filter(Boolean) : []);
         }
       } catch (err) {
-        console.error("Error fetching import history:", err);
+        console.error("Error fetching stockin history:", err);
         Swal.fire({
           icon: "error",
           title: "ข้อผิดพลาด",
@@ -124,24 +126,23 @@ export default function ImportHistory() {
   const formatDate = (dateStr) =>
     dateStr
       ? new Date(dateStr).toLocaleString("th-TH", {
-        timeZone: "Asia/Bangkok",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      })
+          timeZone: "Asia/Bangkok",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        })
       : "-";
 
   // กรองข้อมูล
   const filtered = useMemo(() => {
     return data.filter((row) => {
-      const okType = typeFilter === "all" || row.import_type === typeFilter;
-      const okStatus =
-        statusFilter === "all" || row.import_status === statusFilter;
+      const okType = typeFilter === "all" || row.stockin_type === typeFilter;
+      const okStatus = statusFilter === "all" || row.stockin_status === statusFilter;
       const okSearch =
         search === "" ||
-        row.import_no?.toLowerCase().includes(search.toLowerCase()) ||
+        row.stockin_no?.toLowerCase().includes(search.toLowerCase()) ||
         row.source_name?.toLowerCase().includes(search.toLowerCase()) ||
-        row.imported_by?.toLowerCase().includes(search.toLowerCase());
+        row.user_name?.toLowerCase().includes(search.toLowerCase());
       return okType && okStatus && okSearch;
     });
   }, [data, typeFilter, statusFilter, search]);
@@ -195,16 +196,52 @@ export default function ImportHistory() {
 
   // Popup detail
   const showDetail = (row) => {
+    const detailsHtml = row.details
+      ?.map((item, index) => {
+        return `
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 12px 8px; text-align: left;">${index + 1}</td>
+              <td style="padding: 12px 8px; text-align: left;">${item.item_name || '-'}</td>
+              <td style="padding: 12px 8px; text-align: right;">${item.qty || 0} ${item.item_unit || '-'}</td>
+              <td style="padding: 12px 8px; text-align: left;">${item.lot_no ? `Lot: ${item.lot_no}` : '-'}</td>
+              <td style="padding: 12px 8px; text-align: left;">${item.note || '-'}</td>
+            </tr>
+        `;
+      })
+      .join('');
+
     Swal.fire({
-      title: `รายละเอียดการนำเข้า (${importTypeMap[row.import_type] || row.import_type})`,
+      title: `<h2 style="font-size: 1.5rem; color: #1f2937; margin-bottom: 0.5rem;">รายละเอียดการนำเข้า</h2>`,
       html: `
-        <p><b>เลขที่เอกสาร:</b> ${row.import_no || "-"}</p>
-        <p><b>วันที่นำเข้า:</b> ${formatDate(row.import_date)}</p>
-        <p><b>ผู้นำเข้า:</b> ${row.imported_by || "-"}</p>
-        <p><b>แหล่งที่มา:</b> ${row.source_name || "-"}</p>
-        <p><b>สถานะ:</b> ${importStatusMap[row.import_status] || row.import_status}</p>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; text-align: left; padding: 1rem; border-radius: 0.5rem; background-color: #f9fafb; margin-bottom: 1.5rem;">
+            <p><b>เลขที่เอกสาร:</b> ${row.stockin_no || "-"}</p>
+            <p><b>วันที่นำเข้า:</b> ${formatDate(row.stockin_date)}</p>
+            <p><b>ประเภท:</b> ${stockinTypeMap[row.stockin_type] || row.stockin_type}</p>
+            <p><b>แหล่งที่มา:</b> ${row.source_name || "-"}</p>
+            <p><b>ผู้นำเข้า:</b> ${row.user_name || "-"}</p>
+            <p><b>สถานะ:</b> ${stockinStatusMap[row.stockin_status] || row.stockin_status}</p>
+            <div style="grid-column: 1 / span 2;"><p><b>หมายเหตุ:</b> ${row.stockin_note || "-"}</p></div>
+        </div>
+        
+        <h3 style="font-size: 1.25rem; color: #1f2937; margin-bottom: 1rem;">รายการพัสดุที่นำเข้า</h3>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                <thead style="background-color: #f3f4f6;">
+                    <tr>
+                        <th style="border-bottom: 2px solid #e5e7eb; padding: 12px 8px; text-align: left;">#</th>
+                        <th style="border-bottom: 2px solid #e5e7eb; padding: 12px 8px; text-align: left;">ชื่อพัสดุ</th>
+                        <th style="border-bottom: 2px solid #e5e7eb; padding: 12px 8px; text-align: right;">จำนวน</th>
+                        <th style="border-bottom: 2px solid #e5e7eb; padding: 12px 8px; text-align: left;">Lot</th>
+                        <th style="border-bottom: 2px solid #e5e7eb; padding: 12px 8px; text-align: left;">หมายเหตุ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${detailsHtml || '<tr><td colspan="5" style="padding: 12px; text-align: center; color: #6b7280;">ไม่พบรายการพัสดุ</td></tr>'}
+                </tbody>
+            </table>
+        </div>
       `,
-      width: "450px",
+      width: "800px",
       confirmButtonColor: "#008dda",
     });
   };
@@ -291,7 +328,7 @@ export default function ImportHistory() {
                 สถานะ
               </div>
               <div className={`${styles.headerItem} ${styles.centerCell}`}>
-               ตรวจสอบ
+                ตรวจสอบ
               </div>
             </div>
 
@@ -301,21 +338,21 @@ export default function ImportHistory() {
               ) : (
                 paginatedRows.map((row) => (
                   <div
-                    key={row.import_id}
+                    key={row.stockin_id}
                     className={`${styles.tableGrid} ${styles.tableRow}`}
                   >
-                    <div className={styles.tableCell}>{formatDate(row.import_date)}</div>
-                    <div className={styles.tableCell}>{row.import_no || "-"}</div>
+                    <div className={styles.tableCell}>{formatDate(row.stockin_date)}</div>
+                    <div className={styles.tableCell}>{row.stockin_no || "-"}</div>
                     <div className={styles.tableCell}>
-                      {importTypeMap[row.import_type] || row.import_type}
+                      {stockinTypeMap[row.stockin_type] || row.stockin_type}
                     </div>
                     <div className={styles.tableCell}>{row.source_name || "-"}</div>
-                    <div className={styles.tableCell}>{row.imported_by || "-"}</div>
+                    <div className={styles.tableCell}>{row.user_name || "-"}</div>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>
                       <span
-                        className={`${styles.stBadge} ${styles[getStatusBadgeClass(row.import_status)]}`}
+                        className={`${styles.stBadge} ${styles[getStatusBadgeClass(row.stockin_status)]}`}
                       >
-                        {importStatusMap[row.import_status] || row.import_status}
+                        {stockinStatusMap[row.stockin_status] || row.stockin_status}
                       </span>
                     </div>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>

@@ -1,13 +1,13 @@
-"use client";
+'use client';
 import { useEffect, useState, useMemo } from "react";
 import axiosInstance from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
-import { Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Trash2, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const Select = dynamic(() => import("react-select"), { ssr: false });
 
-/* react-select styles (identical to ImportHistory) */
+/* react-select styles */
 const customSelectStyles = {
   control: (base, state) => ({
     ...base,
@@ -290,33 +290,89 @@ export default function ExpiredHistoryPage() {
         {selected && (
           <div className={styles.modalOverlay}>
             <div className={styles.modal}>
-              <h3 className={styles.modalTitle}>
-                รายละเอียด Lot {selected.lot_no || "-"}
-              </h3>
-              <div className={styles.detailContent}>
-                <p><b>วันที่บันทึก:</b> {formatThaiDate(selected.expired_date)}</p>
-                <p><b>พัสดุ:</b> {selected.item_name || "-"}</p>
-                <p><b>จำนวนรับเข้า:</b> {selected.qty_imported || 0} {selected.item_unit || ""}</p>
-                <p><b>จำนวนหมดอายุ:</b> {selected.expired_qty || 0} {selected.item_unit || ""}</p>
-                <p><b>ทำลายแล้ว:</b> {selected.disposed_qty || 0} {selected.item_unit || ""}</p>
-                <p><b>คงเหลือ:</b> {(selected.expired_qty || 0) - (selected.disposed_qty || 0)} {selected.item_unit || ""}</p>
-                <p><b>วันหมดอายุ:</b> {formatThaiDate(selected.exp_date)}</p>
-                <p><b>สถานะ:</b> <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(getStatusKey(selected.expired_qty, selected.disposed_qty))]}`}>
-                  {statusMap[getStatusKey(selected.expired_qty, selected.disposed_qty)]}
-                </span></p>
-                <p><b>รายงานโดย:</b> {selected.user_name || "ระบบ"}</p>
-                <p><b>จัดการโดย:</b> {selected.last_disposed_by || "ยังไม่มีข้อมูล"}</p>
-                {selected.note && (
-                  <p><b>หมายเหตุ:</b> {selected.note}</p>
-                )}
+              <div className={styles.modalHeader}>
+                <h3 className={styles.modalTitle}>รายละเอียด Lot {selected.lot_no || "-"}</h3>
+                <button className={styles.modalClose} onClick={() => setSelected(null)}>
+                  <X size={24} />
+                </button>
               </div>
-              <button
-                className={styles.closeBtn}
-                onClick={() => setSelected(null)}
-                aria-label="ปิดหน้าต่างรายละเอียด"
-              >
-                ปิด
-              </button>
+              <div className={styles.modalContent}>
+                <table className={styles.detailTable}>
+                  <tbody>
+                    <tr className={styles.detailRow}>
+                      <td className={styles.detailLabel}>วันที่บันทึก:</td>
+                      <td className={styles.detailValue}>{formatThaiDate(selected.expired_date)}</td>
+                    </tr>
+                    <tr className={styles.detailRow}>
+                      <td className={styles.detailLabel}>Lot No:</td>
+                      <td className={styles.detailValue}>{selected.lot_no || "-"}</td>
+                    </tr>
+                    <tr className={styles.detailRow}>
+                      <td className={styles.detailLabel}>พัสดุ:</td>
+                      <td className={styles.detailValue}>{selected.item_name || "-"}</td>
+                    </tr>
+                    <tr className={styles.detailRow}>
+                      <td className={styles.detailLabel}>จำนวนรับเข้า:</td>
+                      <td className={styles.detailValue}>
+                        {selected.qty_imported || 0} {selected.item_unit || ""}
+                      </td>
+                    </tr>
+                    <tr className={styles.detailRow}>
+                      <td className={styles.detailLabel}>จำนวนหมดอายุ:</td>
+                      <td className={styles.detailValue}>
+                        {selected.expired_qty || 0} {selected.item_unit || ""}
+                      </td>
+                    </tr>
+                    <tr className={styles.detailRow}>
+                      <td className={styles.detailLabel}>ทำลายแล้ว:</td>
+                      <td className={styles.detailValue}>
+                        {selected.disposed_qty || 0} {selected.item_unit || ""}
+                      </td>
+                    </tr>
+                    <tr className={styles.detailRow}>
+                      <td className={styles.detailLabel}>คงเหลือ:</td>
+                      <td className={styles.detailValue}>
+                        {(selected.expired_qty || 0) - (selected.disposed_qty || 0)} {selected.item_unit || ""}
+                      </td>
+                    </tr>
+                    <tr className={styles.detailRow}>
+                      <td className={styles.detailLabel}>วันหมดอายุ:</td>
+                      <td className={styles.detailValue}>{formatThaiDate(selected.exp_date)}</td>
+                    </tr>
+                    <tr className={styles.detailRow}>
+                      <td className={styles.detailLabel}>สถานะ:</td>
+                      <td className={styles.detailValue}>
+                        <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(getStatusKey(selected.expired_qty, selected.disposed_qty))]}`}>
+                          {statusMap[getStatusKey(selected.expired_qty, selected.disposed_qty)]}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr className={styles.detailRow}>
+                      <td className={styles.detailLabel}>รายงานโดย:</td>
+                      <td className={styles.detailValue}>{selected.user_name || "ระบบ"}</td>
+                    </tr>
+                    <tr className={styles.detailRow}>
+                      <td className={styles.detailLabel}>จัดการโดย:</td>
+                      <td className={styles.detailValue}>{selected.last_disposed_by || "ยังไม่มีข้อมูล"}</td>
+                    </tr>
+                    {selected.note && (
+                      <tr className={styles.detailRow}>
+                        <td className={styles.detailLabel}>หมายเหตุ:</td>
+                        <td className={styles.detailValue}>{selected.note}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <div className={styles.modalActions}>
+                <button
+                  className={`${styles.btnSecondary} ${styles.closeBtn}`}
+                  onClick={() => setSelected(null)}
+                  aria-label="ปิดหน้าต่างรายละเอียด"
+                >
+                  ปิด
+                </button>
+              </div>
             </div>
           </div>
         )}

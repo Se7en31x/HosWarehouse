@@ -179,6 +179,7 @@
   display: grid;
   grid-template-columns:
     minmax(180px, 2fr)  /* ชื่อสินค้า */
+    minmax(80px, 0.7fr)  /* ปุ่มเพิ่ม */
     minmax(120px, 1fr)    /* ประเภท */
     minmax(100px, 1.2fr)   /* คงเหลือ */
     minmax(90px, 0.8fr)   /* หน่วย */
@@ -564,4 +565,19 @@
   .inputGroupInline {
     min-width: 100%;
   }
+}
+/* เพิ่ม styles สำหรับ cell ที่มีรูปภาพและข้อความ */
+.itemCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* styles สำหรับรูปภาพสินค้า */
+.itemImage {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
 }

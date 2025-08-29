@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 /* ---- Variables (aligned with ImportHistory and ManageReturnDetailPage) ---- */
 :root {
   /* Colors */
@@ -90,14 +88,14 @@
   background: #f6fbfd;
 }
 
-.filterLeft {
+.filterLeft,
+.filterRight {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
 }
 
 .filterRight {
-  display: flex;
   align-items: flex-end;
   gap: 10px;
 }
@@ -216,7 +214,8 @@
 }
 
 /* จัดกึ่งกลางหัวตาราง "ด่วน" */
-.tableHeader .headerItem:nth-child(6) {
+.tableHeader .headerItem:nth-child(6),
+.tableHeader .headerItem:nth-child(10) {
   justify-content: center;
   text-align: center;
 }
@@ -294,35 +293,34 @@
   line-height: 1;
 }
 
-.waiting_approval, .approved_partial, .approved_partial_and_rejected_partial {
-  color: #92400e;
-  background: #FEF3C7;
-  border-color: #FDE68A;
-}
-.approved_all, .completed, .returned {
+/* Badge specific styles */
+.st-approved,
+.st-condition-normal {
   color: #166534;
-  background: #DCFCE7;
-  border-color: #86EFAC;
+  background: #dcfce7;
+  border-color: #86efac;
 }
-.rejected, .canceled, .not_returned {
-  color: #9F1239;
-  background: #FFE4E6;
-  border-color: #FECDD3;
-}
-.partially_returned {
+.st-warning,
+.st-condition-damaged {
   color: #92400e;
-  background: #FEF3C7;
-  border-color: #FDE68A;
+  background: #fef3c7;
+  border-color: #fde68a;
 }
-.stUrgent {
-  color: #9F1239;
-  background: #FFE4E6;
-  border-color: #FECDD3;
+.st-rejected,
+.st-condition-lost {
+  color: #9f1239;
+  background: #ffe4e6;
+  border-color: #fecdd3;
 }
-.stNormal {
+.st-urgent {
+  color: #9f1239;
+  background: #ffe4e6;
+  border-color: #fecdd3;
+}
+.st-default {
   color: #334155;
-  background: #E2E8F0;
-  border-color: #CBD5E1;
+  background: #e2e8f0;
+  border-color: #cbd5e1;
 }
 
 .loadingContainer, .noDataMessage {
@@ -374,7 +372,214 @@
   color: var(--muted);
 }
 
+
+/* ---- Modal Styles (New) ---- */
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: var(--z-modal-overlay); /* ควรมีค่าสูงกว่าทุกอย่างในหน้า */
+  padding: 1rem;
+}
+
+.modalContent {
+  background: var(--panel);
+  border-radius: var(--radius);
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh; /* จำกัดความสูงไม่ให้ล้นจอ */
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  transform: scale(0.95);
+  animation: modal-fade-in 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.modalTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text);
+}
+
+.modalCloseBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  transition: color 0.2s ease;
+  padding: 0.5rem;
+}
+
+.modalCloseBtn:hover {
+  color: var(--danger);
+}
+
+.modalBody {
+  padding: 1rem 1.5rem 1.5rem;
+  overflow-y: auto; /* ทำให้เนื้อหาเลื่อนได้เมื่อมีจำนวนมาก */
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.modalSection {
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.modalSectionTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--primary-600);
+  margin-top: 0;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modalGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.modalItem {
+  font-size: 0.95rem;
+  color: #334155;
+  line-height: 1.4;
+}
+
+.itemDetailCard {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.itemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.itemName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin: 0;
+}
+
+.itemInfoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.subDetailSection {
+  margin-top: 0.5rem;
+}
+
+.subDetailHeader {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 0.5rem;
+  display: block; /* Ensures it takes full width */
+}
+
+.subDetailList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background: #fbfdff;
+  border: 1px solid #eef2f6;
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.subDetailList li {
+  font-size: 0.85rem;
+  color: #4b5563;
+  line-height: 1.5;
+  margin-bottom: 0.25rem;
+}
+
+.noSubData {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #9ca3af;
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
+/* Responsive adjustments for modal */
+@media (max-width: 768px) {
+  .modalHeader {
+    padding: 1rem;
+  }
+  
+  .modalBody {
+    padding: 1rem;
+  }
+  
+  .modalContent {
+    max-height: 95vh;
+  }
+}
+
 /* ---- Responsive ---- */
+@media (min-width: 768px) {
+  /* สำหรับหน้าจอขนาดใหญ่ ยังคงให้แสดงเนื้อหาหลักเป็น 2 คอลัมน์ได้ */
+  .modal-content-container {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+  }
+
+  /* ปรับให้รายการในส่วนย่อยเรียงแนวตั้งเหมือนเดิม */
+  .modal-sub-details {
+    flex-direction: column;
+  }
+}
+
 @media (max-width: 1024px) {
   .filterLeft {
     flex: 1;

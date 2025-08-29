@@ -307,11 +307,10 @@ export default function RequestPurchasePage() {
           }
         </style>
         <div class="cart-container">
-          ${
-            selectedItems.length
-              ? selectedItems
-                  .map(
-                    (item) => `
+          ${selectedItems.length
+          ? selectedItems
+            .map(
+              (item) => `
                     <div class="cart-item">
                       <div class="item-details">
                         <h3 class="item-name">${item.item_name || "-"}</h3>
@@ -344,12 +343,12 @@ export default function RequestPurchasePage() {
                       </button>
                     </div>
                   `
-                  )
-                  .join("")
-              : `<div class="no-items">
+            )
+            .join("")
+          : `<div class="no-items">
                   <span role="img" aria-label="ตะกร้าว่างเปล่า">🛒</span> ยังไม่มีสินค้าในตะกร้า
                 </div>`
-          }
+        }
         </div>
         <div class="submit-row">
           <button class="submit-btn" id="submit-cart">ส่งคำขอสั่งซื้อ</button>
@@ -491,6 +490,7 @@ export default function RequestPurchasePage() {
             {/* Header */}
             <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
               <div className={styles.headerItem}>ชื่อสินค้า</div>
+              <div className={styles.headerItem}>รูปภาพ</div>
               <div className={styles.headerItem}>ประเภท</div>
               <div className={styles.headerItem}>คงเหลือ</div>
               <div className={styles.headerItem}>หน่วย</div>
@@ -505,6 +505,19 @@ export default function RequestPurchasePage() {
                 paginatedItems.map((item) => (
                   <div key={item.item_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
                     <div className={styles.tableCell}>{item.item_name}</div>
+                    <div className={`${styles.tableCell} ${styles.itemCell}`}>
+                      <img
+                        src={
+                          item.item_img
+                            ? (String(item.item_img).startsWith("http")
+                              ? item.item_img
+                              : `http://localhost:5000/uploads/${item.item_img}`)
+                            : "http://localhost:5000/public/defaults/landscape.png"
+                        }
+                        alt={item.item_name || "ไม่มีคำอธิบายภาพ"}
+                        className={styles.itemImage}
+                      />
+                    </div>
                     <div className={styles.tableCell}>{mapCategoryToThai(item.item_category)}</div>
                     <div className={styles.tableCell}>
                       <span
@@ -514,8 +527,8 @@ export default function RequestPurchasePage() {
                             : item.item_min &&
                               item.current_stock >= item.item_min &&
                               item.current_stock <= item.item_min + 10
-                            ? styles.nearLowStock
-                            : ""
+                              ? styles.nearLowStock
+                              : ""
                         }
                       >
                         {item.current_stock ?? 0}

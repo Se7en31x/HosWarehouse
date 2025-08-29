@@ -14,8 +14,8 @@ export default function Header() {
                 <Image
                     src="/logos/logo.png"
                     alt="Hospital Logo"
-                    width={60}
-                    height={60}
+                    width={69}
+                    height={69}
                     className={styles.logo}
                 />
             </div>

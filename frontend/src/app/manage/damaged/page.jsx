@@ -219,7 +219,7 @@ export default function DamagedItemsPage() {
       <div className={styles.container}>
         <div className={styles.pageBar}>
           <div className={styles.titleGroup}>
-            <h1 className={styles.pageTitle}>จัดการพัสดุชำรุด</h1>
+            <h1 className={styles.pageTitle}>จัดการของชำรุด</h1>
           </div>
         </div>
 
@@ -295,7 +295,7 @@ export default function DamagedItemsPage() {
             {/* ==== ตาราง (คงเดิม ไม่แก้) ==== */}
             {/* Header */}
             <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
-              <div className={styles.headerItem}>ชื่อพัสดุ</div>
+              <div className={styles.headerItem}>รายการ</div>
               <div className={styles.headerItem}>ประเภท</div>
               <div className={`${styles.headerItem} ${styles.centerCell}`}>จำนวนที่ชำรุด</div>
               <div className={`${styles.headerItem} ${styles.centerCell}`}>คงเหลือ</div>

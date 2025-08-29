@@ -1,9 +1,11 @@
+// BorrowHistory.js
+
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import axiosInstance from "@/app/utils/axiosInstance";
 import Swal from "sweetalert2";
 import styles from "./page.module.css";
-import { Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Trash2, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const Select = dynamic(() => import("react-select"), { ssr: false });
@@ -47,7 +49,7 @@ const approvalStatusMap = {
   approved_all: "อนุมัติทั้งหมด",
   approved_partial: "อนุมัติบางส่วน",
   approved_partial_and_rejected_partial: "อนุมัติบางส่วน",
-  rejected: "ปฏิเสธ",
+  rejected: "ถูกปฏิเสธ",
   canceled: "ยกเลิก",
   completed: "เสร็จสิ้น",
 };
@@ -55,40 +57,28 @@ const approvalStatusMap = {
 const borrowStatusMap = {
   not_returned: "ยังไม่คืน",
   partially_returned: "คืนบางส่วน",
-  returned: "คืนครบแล้ว",
+  returned_complete: "คืนครบแล้ว",
 };
+
 const urgentMap = { true: "ด่วน", false: "ปกติ" };
-const returnStatusMap = {
+const returnConditionMap = {
   normal: "คืนปกติ",
   damaged: "ชำรุด",
   lost: "สูญหาย",
 };
 
-/* options */
-const STATUS_OPTIONS = [
-  { value: "all", label: "ทุกสถานะ" },
-  { value: "waiting_approval", label: "รอการอนุมัติ" },
-  { value: "approved_all", label: "อนุมัติทั้งหมด" },
-  { value: "approved_partial", label: "อนุมัติบางส่วน" },
-  { value: "rejected", label: "ถูกปฏิเสธ" },
-  { value: "canceled", label: "ยกเลิก" },
-];
-const RETURN_OPTIONS = [
-  { value: "all", label: "การคืนทั้งหมด" },
-  { value: "normal", label: "คืนปกติ" },
-  { value: "damaged", label: "คืนชำรุด" },
-  { value: "lost", label: "สูญหาย" },
-];
-const URGENT_OPTIONS = [
-  { value: "all", label: "เร่งด่วน/ปกติ" },
-  { value: "urgent", label: "เฉพาะเร่งด่วน" },
-  { value: "normal", label: "เฉพาะปกติ" },
-];
-
 /* helper */
 const formatThaiDate = (isoString) => {
   if (!isoString) return "-";
   const d = new Date(isoString);
+  try {
+    const parts = new Date(isoString).toISOString().split('T')[0].split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parseInt(parts[0]) + 543}`;
+    }
+  } catch (e) {
+    // Fallback
+  }
   return d.toLocaleString("th-TH", {
     year: "numeric",
     month: "2-digit",
@@ -99,6 +89,173 @@ const formatThaiDate = (isoString) => {
   });
 };
 
+/* options */
+const STATUS_OPTIONS = [
+  { value: "all", label: "ทุกสถานะ" },
+  { value: "waiting_approval", label: "รอการอนุมัติ" },
+  { value: "approved_all", label: "อนุมัติทั้งหมด" },
+  { value: "approved_partial", label: "อนุมัติบางส่วน" },
+  { value: "rejected", label: "ถูกปฏิเสธ" },
+  { value: "canceled", label: "ยกเลิก" },
+  { value: "completed", label: "เสร็จสิ้น" },
+];
+const RETURN_OPTIONS = [
+  { value: "all", label: "การคืนทั้งหมด" },
+  { value: "not_returned", label: "ยังไม่คืน" },
+  { value: "partially_returned", label: "คืนบางส่วน" },
+  { value: "returned_complete", label: "คืนครบแล้ว" },
+];
+const URGENT_OPTIONS = [
+  { value: "all", label: "เร่งด่วน/ปกติ" },
+  { value: "urgent", label: "เฉพาะเร่งด่วน" },
+  { value: "normal", label: "เฉพาะปกติ" },
+];
+
+/* badge class mapping */
+const getStatusBadgeClass = (status) => {
+  switch (status) {
+    case "approved_all":
+    case "returned_complete":
+    case "completed":
+      return "st-approved";
+    case "approved_partial":
+    case "approved_partial_and_rejected_partial":
+    case "waiting_approval":
+    case "partially_returned":
+      return "st-warning";
+    case "rejected":
+    case "canceled":
+      return "st-rejected";
+    case "not_returned":
+    default:
+      return "st-default";
+  }
+};
+const getUrgentBadgeClass = (isUrgent) => (isUrgent ? "st-urgent" : "st-default");
+const getConditionBadgeClass = (condition) => {
+  switch (condition) {
+    case "normal":
+      return "st-approved";
+    case "damaged":
+    case "lost":
+      return "st-rejected";
+    default:
+      return "st-default";
+  }
+};
+
+// Modal Component
+const DetailModal = ({ show, onClose, data }) => {
+  if (!show || !data) return null;
+
+  const getReturnStatus = (detail) => {
+    const approvedQty = detail.approved_qty ?? 0;
+    const returnedQty = detail.returned_total ?? 0;
+    
+    if (returnedQty === 0) return "not_returned";
+    if (returnedQty < approvedQty) return "partially_returned";
+    return "returned_complete";
+  }
+
+  return (
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContent}>
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle}>รายละเอียดคำขอ {data.request_code}</h2>
+          <button onClick={onClose} className={styles.modalCloseBtn}>
+            <X size={24} />
+          </button>
+        </div>
+        <div className={styles.modalBody}>
+          <div className={styles.modalSection}>
+            <h4 className={styles.modalSectionTitle}>ข้อมูลคำขอ</h4>
+            <div className={styles.modalGrid}>
+              <div className={styles.modalItem}><b>วันที่ยืม:</b> {formatThaiDate(data.request_date) || '-'}</div>
+              <div className={styles.modalItem}><b>กำหนดคืน:</b> {formatThaiDate(data.request_due_date) || '-'}</div>
+              <div className={styles.modalItem}><b>ผู้ยืม:</b> {data.requester_name || '-'}</div>
+              <div className={styles.modalItem}><b>แผนก:</b> {data.department || '-'}</div>
+              <div className={styles.modalItem}><b>ผู้อนุมัติ:</b> {data.approved_by_name || '-'}</div>
+              <div className={styles.modalItem}><b>วันที่อนุมัติ:</b> {formatThaiDate(data.approved_at) || '-'}</div>
+              <div className={styles.modalItem}>
+                <b>ความเร่งด่วน:</b> 
+                <span className={`${styles.stBadge} ${styles[getUrgentBadgeClass(data.is_urgent)]}`}>
+                  {data.is_urgent ? urgentMap.true : urgentMap.false}
+                </span>
+              </div>
+              <div className={styles.modalItem}>
+                <b>สถานะอนุมัติ:</b> 
+                <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(data.request_status)]}`}>
+                  {approvalStatusMap[data.request_status] || data.request_status}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className={styles.modalSection}>
+            <h4 className={styles.modalSectionTitle}>รายการสินค้าที่ยืม</h4>
+            <div className={styles.itemListContainer}>
+              {(data.details || []).map((detail, index) => {
+                const returnStatus = getReturnStatus(detail);
+                const returnStatusText = borrowStatusMap[returnStatus] || returnStatus;
+
+                return (
+                  <div key={index} className={styles.itemDetailCard}>
+                    <div className={styles.itemHeader}>
+                      <h5 className={styles.itemName}>{detail.item_name}</h5>
+                      <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(returnStatus)]}`}>
+                        {returnStatusText}
+                      </span>
+                    </div>
+                    <div className={styles.itemInfoGrid}>
+                      <p><b>จำนวนที่อนุมัติ:</b> {detail.approved_qty ?? '-'} {detail.item_unit}</p>
+                      <p><b>จำนวนที่คืนแล้ว:</b> {detail.returned_total ?? 0} {detail.item_unit}</p>
+                      <p><b>จำนวนคงเหลือ:</b> {(detail.approved_qty ?? 0) - (detail.returned_total ?? 0)} {detail.item_unit}</p>
+                    </div>
+
+                    <div className={styles.subDetailSection}>
+                      <h6 className={styles.subDetailHeader}>ล็อตที่ถูกตัด</h6>
+                      {(detail.lots || []).length > 0 ? (
+                        <ul className={styles.subDetailList}>
+                          {detail.lots.map((lot, lotIndex) => (
+                            <li key={lotIndex}>
+                              <b>ล็อต:</b> {lot.lot_no} | <b>จำนวน:</b> {lot.qty} {detail.item_unit}
+                              {lot.exp_date && ` | <b>หมดอายุ:</b> ${formatThaiDate(lot.exp_date)}`}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className={styles.noSubData}>ไม่มีข้อมูลล็อต</p>
+                      )}
+                    </div>
+                    <div className={styles.subDetailSection}>
+                      <h6 className={styles.subDetailHeader}>ประวัติการคืน</h6>
+                      {(detail.returns || []).length > 0 ? (
+                        <ul className={styles.subDetailList}>
+                          {detail.returns.map((ret, retIndex) => (
+                            <li key={retIndex}>
+                              <b>วันที่:</b> {formatThaiDate(ret.return_date)} | <b>จำนวน:</b> {ret.qty} {detail.item_unit}
+                              <span className={`${styles.stBadge} ${styles[getConditionBadgeClass(ret.condition)]}`}>
+                                {returnConditionMap[ret.condition] || ret.condition}
+                              </span>
+                              {ret.return_note && ` | <b>หมายเหตุ:</b> ${ret.return_note}`}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className={styles.noSubData}>ยังไม่มีการคืน</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 export default function BorrowHistory() {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -108,13 +265,17 @@ export default function BorrowHistory() {
   const [searchText, setSearchText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
+  
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await axiosInstance.get("/history/borrow");
         setData(Array.isArray(res.data) ? res.data : []);
-      } catch {
+      } catch (error) {
+        console.error("Failed to fetch borrow history:", error);
         Swal.fire({
           icon: "error",
           title: "ข้อผิดพลาด",
@@ -129,27 +290,54 @@ export default function BorrowHistory() {
   }, []);
 
   const filteredData = useMemo(() => {
-    return data.filter((req) => {
-      const okStatus = filterStatus === "all" || req.request_status === filterStatus;
-      const okReturn =
-        filterReturn === "all" ||
-        req.details?.some((d) => d.returns?.some((r) => r.condition === filterReturn));
-      const okUrgent =
-        filterUrgent === "all" ||
-        (filterUrgent === "urgent" && req.is_urgent) ||
-        (filterUrgent === "normal" && !req.is_urgent);
-      const okSearch =
-        searchText === "" ||
-        req.request_code?.toLowerCase().includes(searchText.toLowerCase()) ||
-        req.department?.toLowerCase().includes(searchText.toLowerCase()) ||
-        req.requester_name?.toLowerCase().includes(searchText.toLowerCase());
-      return okStatus && okReturn && okUrgent && okSearch;
-    });
+    return data
+      .map((req) => {
+        const allReturned = req.details?.every((d) => {
+          const approvedQty = d.approved_qty ?? 0;
+          const returnedQty = d.returned_total ?? 0;
+          return approvedQty > 0 && returnedQty >= approvedQty;
+        });
+
+        const hasReturns = req.details?.some((d) => d.returned_total > 0);
+        
+        let overallReturnStatus = "not_returned";
+        if (allReturned) {
+          overallReturnStatus = "returned_complete";
+        } else if (hasReturns) {
+          overallReturnStatus = "partially_returned";
+        }
+
+        return {
+          ...req,
+          overall_return_status: overallReturnStatus,
+        };
+      })
+      .filter((req) => {
+        const okStatus = filterStatus === "all" || req.request_status === filterStatus;
+        const okReturn = filterReturn === "all" || req.overall_return_status === filterReturn;
+        const okUrgent =
+          filterUrgent === "all" ||
+          (filterUrgent === "urgent" && req.is_urgent) ||
+          (filterUrgent === "normal" && !req.is_urgent);
+        const okSearch =
+          searchText === "" ||
+          req.request_code?.toLowerCase().includes(searchText.toLowerCase()) ||
+          req.department?.toLowerCase().includes(searchText.toLowerCase()) ||
+          req.requester_name?.toLowerCase().includes(searchText.toLowerCase()) ||
+          (req.details || []).some((d) =>
+            d.item_name?.toLowerCase().includes(searchText.toLowerCase())
+          );
+        return okStatus && okReturn && okUrgent && okSearch;
+      });
   }, [data, filterStatus, filterReturn, filterUrgent, searchText]);
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / rowsPerPage));
   const start = (currentPage - 1) * rowsPerPage;
   const pageRows = filteredData.slice(start, start + rowsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus, filterReturn, filterUrgent, searchText]);
 
   const getPageNumbers = () => {
     const pages = [];
@@ -172,26 +360,12 @@ export default function BorrowHistory() {
     setSearchText("");
     setCurrentPage(1);
   };
-
-  const showDetail = (req) => {
-    Swal.fire({
-      title: `รายละเอียดคำขอ ${req.request_code}`,
-      html: `
-        <div style="text-align: left; font-size: 0.9rem;">
-          <p><b>วันที่ยืม:</b> ${formatThaiDate(req.request_date)}</p>
-          <p><b>ผู้ยืม:</b> ${req.requester_name || "-"}</p>
-          <p><b>แผนก:</b> ${req.department || "-"}</p>
-          <p><b>กำหนดคืน:</b> ${formatThaiDate(req.request_due_date)}</p>
-          <p><b>สถานะอนุมัติ:</b> ${approvalStatusMap[req.request_status] || req.request_status}</p>
-          <p><b>ความเร่งด่วน:</b> ${req.is_urgent ? urgentMap.true : urgentMap.false}</p>
-        </div>
-      `,
-      width: "450px",
-      confirmButtonText: "ปิด",
-      confirmButtonColor: "#008dda",
-    });
+  
+  const handleShowDetail = (request) => {
+    setSelectedRequest(request);
+    setShowDetailModal(true);
   };
-
+  
   return (
     <div className={styles.mainHome}>
       <div className={styles.infoContainer}>
@@ -291,13 +465,7 @@ export default function BorrowHistory() {
               <div className={styles.noDataMessage}>ไม่พบข้อมูลการยืม</div>
             ) : (
               pageRows.map((req, idx) => {
-                const overallBorrow = req.details?.length
-                  ? req.details.every((d) => d.borrow_status === "returned")
-                    ? "returned"
-                    : req.details.some((d) => d.borrow_status === "returned" || d.borrow_status === "partially_returned")
-                    ? "partially_returned"
-                    : "not_returned"
-                  : "not_returned";
+                const overallBorrow = req.overall_return_status;
                 return (
                   <div key={req.request_id || `row-${idx}`} className={`${styles.tableGrid} ${styles.tableRow}`}>
                     <div className={styles.tableCell}>{formatThaiDate(req.request_date)}</div>
@@ -306,25 +474,25 @@ export default function BorrowHistory() {
                     <div className={styles.tableCell}>{req.department || "-"}</div>
                     <div className={styles.tableCell}>{formatThaiDate(req.request_due_date)}</div>
                     <div className={styles.tableCell}>
-                      <span className={`${styles.stBadge} ${styles[req.is_urgent ? "stUrgent" : "stNormal"]}`}>
+                      <span className={`${styles.stBadge} ${styles[getUrgentBadgeClass(req.is_urgent)]}`}>
                         {req.is_urgent ? urgentMap.true : urgentMap.false}
                       </span>
                     </div>
                     <div className={styles.tableCell}>
-                      <span className={`${styles.stBadge} ${styles[req.request_status]}`}>
+                      <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(req.request_status)]}`}>
                         {approvalStatusMap[req.request_status] || req.request_status}
                       </span>
                     </div>
                     <div className={styles.tableCell}>
-                      <span className={`${styles.stBadge} ${styles[overallBorrow]}`}>
-                        {borrowStatusMap[overallBorrow]}
+                      <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(overallBorrow)]}`}>
+                        {borrowStatusMap[overallBorrow] || overallBorrow}
                       </span>
                     </div>
                     <div className={styles.tableCell}>{req.details?.length ?? 0}</div>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>
                       <button
                         className={styles.actionButton}
-                        onClick={() => showDetail(req)}
+                        onClick={() => handleShowDetail(req)}
                         aria-label={`ดูรายละเอียดคำขอ ${req.request_code}`}
                       >
                         <Search size={18} />
@@ -377,6 +545,11 @@ export default function BorrowHistory() {
           </ul>
         </div>
       </div>
+      <DetailModal
+        show={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        data={selectedRequest}
+      />
     </div>
   );
 }

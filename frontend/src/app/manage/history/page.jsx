@@ -19,7 +19,7 @@ const historyItems = [
     description: "ดูประวัติการนำเข้าสินค้าทั้งหมด",
     icon: Truck,
     color: "blue",
-    link: "/manage/history/import",
+    link: "/manage/history/stockin",
   },
   {
     id: "withdraw",
