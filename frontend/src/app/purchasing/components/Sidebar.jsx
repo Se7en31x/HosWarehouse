@@ -1,15 +1,12 @@
 // src/app/components/Sidebar.jsx
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import styles from './Sidebar.module.css';
-
-// ✅ เปลี่ยนมาใช้ Lucide React Icons
+import { useState, useRef } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import styles from "./Sidebar.module.css";
 import {
     Menu,
-    Search,
     FileText,
     ClipboardList,
     CheckCircle,
@@ -17,85 +14,93 @@ import {
     History,
     BarChart2,
     Settings,
-} from 'lucide-react';
-
+} from "lucide-react";
 
 export default function Sidebar() {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const pathname = usePathname();
+    const navRef = useRef(null);
 
     const toggleCollapse = () => setIsCollapsed(!isCollapsed);
 
-    // ✅ ปรับการตรวจสอบให้แม่นยำขึ้นสำหรับ exact match
-    const isActive = (path) => {
-        const normalizedPathname = pathname.replace(/\/+$/, '');
-        const normalizedPath = path.replace(/\/+$/, '');
-        return normalizedPathname.startsWith(normalizedPath);
+    const isActive = (path, { exact = false } = {}) => {
+        const p = (pathname || "").replace(/\/+$/, "");
+        const t = (path || "").replace(/\/+$/, "");
+        return exact ? p === t : (p === t || p.startsWith(t + "/"));
+    };
+
+    const handleScroll = (direction) => {
+        if (!navRef.current) return;
+        const scrollAmount = 80;
+        navRef.current.scrollTop += direction === "up" ? -scrollAmount : scrollAmount;
     };
 
     return (
-        <aside className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ''}`}>
+        <aside className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ""}`}>
             {/* Header */}
             <div className={styles.sidebarHeader}>
                 <button
                     className={styles.collapseButton}
                     onClick={toggleCollapse}
-                    aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                    aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                 >
                     <Menu className={styles.headerIcon} />
                 </button>
             </div>
 
-            <nav>
+            <nav ref={navRef} className={styles.navContainer}>
                 <ul className={styles.navLinks}>
-                    {/* 🔹 การจัดซื้อ */}
+                    {/* ===== การจัดซื้อ ===== */}
                     <li className={styles.sidebarSectionTitle}>การจัดซื้อ</li>
-                    <li className={`${styles.sidebarItem} ${isActive('/purchasing/prList') ? styles.active : ''}`}>
+                    <li className={`${styles.sidebarItem} ${isActive("/purchasing/prList") ? styles.active : ""}`}>
                         <Link href="/purchasing/prList" className={styles.noStyleLink}>
                             <FileText className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>รายการขอซื้อ (PR)</span>
                         </Link>
                     </li>
-                    <li className={`${styles.sidebarItem} ${isActive('/purchasing/rfqList') ? styles.active : ''}`}>
+                    <li className={`${styles.sidebarItem} ${isActive("/purchasing/rfqList") ? styles.active : ""}`}>
                         <Link href="/purchasing/rfqList" className={styles.noStyleLink}>
                             <ClipboardList className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>ใบขอราคา (RFQ)</span>
                         </Link>
                     </li>
-                    <li className={`${styles.sidebarItem} ${isActive('/purchasing/poList') ? styles.active : ''}`}>
+                    <li className={`${styles.sidebarItem} ${isActive("/purchasing/poList") ? styles.active : ""}`}>
                         <Link href="/purchasing/poList" className={styles.noStyleLink}>
                             <CheckCircle className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>ใบสั่งซื้อ (PO)</span>
                         </Link>
                     </li>
-                    <li className={`${styles.sidebarItem} ${isActive('/purchasing/goodsReceipt') ? styles.active : ''}`}>
+                    <li className={`${styles.sidebarItem} ${isActive("/purchasing/goodsReceipt") ? styles.active : ""}`}>
                         <Link href="/purchasing/goodsReceipt" className={styles.noStyleLink}>
                             <Truck className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>รับสินค้า (GR)</span>
                         </Link>
                     </li>
-                    <li className={`${styles.sidebarItem} ${isActive('/purchasing/historyPurchasing') ? styles.active : ''}`}>
+                    <li className={`${styles.sidebarItem} ${isActive("/purchasing/historyPurchasing") ? styles.active : ""}`}>
                         <Link href="/purchasing/historyPurchasing" className={styles.noStyleLink}>
                             <History className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>ประวัติการสั่งซื้อ</span>
                         </Link>
                     </li>
-                    <li className={`${styles.sidebarItem} ${isActive('/purchasing/reportpo') ? styles.active : ''}`}>
+                    <li className={`${styles.sidebarItem} ${isActive("/purchasing/reportpo") ? styles.active : ""}`}>
                         <Link href="/purchasing/reportpo" className={styles.noStyleLink}>
                             <BarChart2 className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>ออกรายการ (Report PO)</span>
                         </Link>
                     </li>
 
-                    {/* 🔹 อื่นๆ */}
                     <hr className={styles.divider} />
-                    <li className={styles.sidebarSectionTitle}>อื่นๆ</li>
-                    <li className={`${styles.sidebarItem} ${isActive('/purchasing/settings') ? styles.active : ''}`}>
+
+                    {/* ===== อื่น ๆ ===== */}
+                    <li className={styles.sidebarSectionTitle}>อื่น ๆ</li>
+                    <li className={`${styles.sidebarItem} ${isActive("/purchasing/settings") ? styles.active : ""}`}>
                         <Link href="/purchasing/settings" className={styles.noStyleLink}>
                             <Settings className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>ตั้งค่า</span>
                         </Link>
                     </li>
+
+                    <li aria-hidden="true" style={{ height: 16 }} />
                 </ul>
             </nav>
         </aside>

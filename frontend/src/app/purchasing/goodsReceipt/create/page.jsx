@@ -1,10 +1,10 @@
-// src/app/purchasing/goodsReceipt/create/page.jsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/app/utils/axiosInstance";
 import { FaSave, FaTimes } from "react-icons/fa";
+import { PackageCheck } from "lucide-react";
 import Swal from "sweetalert2";
 import styles from "./page.module.css";
 
@@ -22,7 +22,6 @@ const GoodsReceiptCreatePage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Load pending POs
   useEffect(() => {
     const fetchPOs = async () => {
       try {
@@ -44,7 +43,6 @@ const GoodsReceiptCreatePage = () => {
     fetchPOs();
   }, []);
 
-  // Select PO
   const handleSelectPO = async (id) => {
     if (!id) {
       setSelectedPO(null);
@@ -76,7 +74,6 @@ const GoodsReceiptCreatePage = () => {
     }
   };
 
-  // Update received item fields
   const handleItemChange = (id, field, value) => {
     setReceivedItems({
       ...receivedItems,
@@ -84,86 +81,81 @@ const GoodsReceiptCreatePage = () => {
     });
   };
 
-  // Update receipt data
   const handleReceiptChange = (field, value) => {
     setReceiptData({ ...receiptData, [field]: value });
   };
 
-  // Validate before saving
   const validateBeforeSave = async () => {
-  if (!selectedPO) {
-    await Swal.fire({
-      title: "แจ้งเตือน",
-      text: "กรุณาเลือก PO ก่อน",
-      icon: "warning",
-      confirmButtonText: "ตกลง",
-      customClass: { confirmButton: styles.swalButton },
-    });
-    return false;
-  }
+    if (!selectedPO) {
+      await Swal.fire({
+        title: "แจ้งเตือน",
+        text: "กรุณาเลือก PO ก่อน",
+        icon: "warning",
+        confirmButtonText: "ตกลง",
+        customClass: { confirmButton: styles.swalButton },
+      });
+      return false;
+    }
 
-  let hasQty = false;
+    let hasQty = false;
 
-  for (const item of selectedPO.items) {
-    const val = receivedItems[item.po_item_id];
-    const qty = parseInt(val?.qty_received) || 0;
+    for (const item of selectedPO.items) {
+      const val = receivedItems[item.po_item_id];
+      const qty = parseInt(val?.qty_received) || 0;
 
-    if (qty > 0) {
-      hasQty = true;
+      if (qty > 0) {
+        hasQty = true;
 
-      if (qty > item.quantity) {
-        await Swal.fire({
-          title: "แจ้งเตือน",
-          text: `ห้ามรับเกินจำนวนสั่งซื้อ (${item.quantity} ${item.unit}) สำหรับ ${item.item_name}`,
-          icon: "warning",
-          confirmButtonText: "ตกลง",
-          customClass: { confirmButton: styles.swalButton },
-        });
-        return false;
-      }
-
-      // ✅ ตรวจสอบเฉพาะ "ยา" และ "เวชภัณฑ์"
-      if (["medicine", "medsup"].includes(item.item_category)) {
-        if (!val.mfg) {
+        if (qty > item.quantity) {
           await Swal.fire({
-            title: "ข้อมูลไม่ครบถ้วน",
-            text: `กรุณากรอกวันผลิตของ ${item.item_name}`,
+            title: "แจ้งเตือน",
+            text: `ห้ามรับเกินจำนวนสั่งซื้อ (${item.quantity} ${item.unit}) สำหรับ ${item.item_name}`,
             icon: "warning",
             confirmButtonText: "ตกลง",
             customClass: { confirmButton: styles.swalButton },
           });
           return false;
         }
-        if (!val.expiry) {
-          await Swal.fire({
-            title: "ข้อมูลไม่ครบถ้วน",
-            text: `กรุณากรอกวันหมดอายุของ ${item.item_name}`,
-            icon: "warning",
-            confirmButtonText: "ตกลง",
-            customClass: { confirmButton: styles.swalButton },
-          });
-          return false;
+
+        if (["medicine", "medsup"].includes(item.item_category)) {
+          if (!val.mfg) {
+            await Swal.fire({
+              title: "ข้อมูลไม่ครบถ้วน",
+              text: `กรุณากรอกวันผลิตของ ${item.item_name}`,
+              icon: "warning",
+              confirmButtonText: "ตกลง",
+              customClass: { confirmButton: styles.swalButton },
+            });
+            return false;
+          }
+          if (!val.expiry) {
+            await Swal.fire({
+              title: "ข้อมูลไม่ครบถ้วน",
+              text: `กรุณากรอกวันหมดอายุของ ${item.item_name}`,
+              icon: "warning",
+              confirmButtonText: "ตกลง",
+              customClass: { confirmButton: styles.swalButton },
+            });
+            return false;
+          }
         }
       }
     }
-  }
 
-  if (!hasQty) {
-    await Swal.fire({
-      title: "แจ้งเตือน",
-      text: "กรุณากรอกจำนวนที่รับอย่างน้อย 1 รายการ",
-      icon: "warning",
-      confirmButtonText: "ตกลง",
-      customClass: { confirmButton: styles.swalButton },
-    });
-    return false;
-  }
+    if (!hasQty) {
+      await Swal.fire({
+        title: "แจ้งเตือน",
+        text: "กรุณากรอกจำนวนที่รับอย่างน้อย 1 รายการ",
+        icon: "warning",
+        confirmButtonText: "ตกลง",
+        customClass: { confirmButton: styles.swalButton },
+      });
+      return false;
+    }
 
-  return true;
-};
+    return true;
+  };
 
-
-  // Save GR
   const handleSaveReceipt = async () => {
     if (saving) return;
     if (!(await validateBeforeSave())) return;
@@ -178,7 +170,7 @@ const GoodsReceiptCreatePage = () => {
         receipt_date: receiptData.receipt_date,
         note: receiptData.note,
         items: selectedPO.items
-          .filter(item => (parseInt(receivedItems[item.po_item_id]?.qty_received) || 0) > 0)
+          .filter((item) => (parseInt(receivedItems[item.po_item_id]?.qty_received) || 0) > 0)
           .map((item) => ({
             po_item_id: item.po_item_id,
             item_id: item.item_id,
@@ -213,109 +205,155 @@ const GoodsReceiptCreatePage = () => {
     }
   };
 
-  // Cancel form
   const handleCancel = () => {
     router.push("/purchasing/goodsReceipt");
   };
 
-  if (loading) return <div className={styles.empty}>กำลังโหลด...</div>;
+  const sortedItems = useMemo(() => {
+    if (!selectedPO?.items) return [];
+    return [...selectedPO.items].sort((a, b) => a.item_name.localeCompare(b.item_name));
+  }, [selectedPO]);
+
+  if (loading) {
+    return (
+      <div className={styles.mainHome}>
+        <div className={styles.infoContainer}>
+          <div className={styles.loadingContainer}>
+            <div className={styles.spinner}>กำลังโหลด...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <main className={styles.container}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>บันทึกรับสินค้าใหม่</h1>
-        <p className={styles.subtitle}>สร้างรายการรับสินค้าจากใบสั่งซื้อ (PO)</p>
-      </header>
-
-      <section className={styles.formSection}>
-        <div className={styles.selector}>
-          <label>เลือก PO:</label>
-          <select
-            value={selectedPO?.po_id || ""}
-            onChange={(e) => handleSelectPO(e.target.value)}
+    <div className={styles.mainHome}>
+      <div className={styles.infoContainer}>
+        <div className={styles.pageBar}>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.pageTitle}>
+              <PackageCheck size={28} /> บันทึกรับสินค้าใหม่
+            </h1>
+            <p className={styles.subtitle}>สร้างรายการรับสินค้าจากใบสั่งซื้อ (PO)</p>
+          </div>
+          <button
+            className={`${styles.ghostBtn} ${styles.actionButton}`}
+            onClick={handleCancel}
+            aria-label="ยกเลิกและกลับไปยังรายการรับสินค้า"
           >
-            <option value="">-- กรุณาเลือก --</option>
-            {poList.map((po) => (
-              <option key={po.po_id} value={po.po_id}>
-                {po.po_no} - {po.supplier_name}
-              </option>
-            ))}
-          </select>
-          {selectedPO && (
-            <button className={styles.dangerButton} onClick={() => handleSelectPO("")}>
-              <FaTimes className={styles.buttonIcon} /> ปิดฟอร์ม
-            </button>
-          )}
+            <FaTimes size={18} /> ยกเลิก
+          </button>
         </div>
 
-        {selectedPO && (
-          <div className={styles.detail}>
-            <h2 className={styles.sectionTitle}>
-              รายละเอียด PO: <span className={styles.mono}>{selectedPO.po_no}</span>
-            </h2>
-
-            <div className={styles.formGrid}>
-              <div className={styles.formGroup}>
-                <label>เลขที่ใบส่งของ</label>
-                <input
-                  type="text"
-                  placeholder="ระบุเลขที่ใบส่งของ"
-                  value={receiptData.delivery_no}
-                  onChange={(e) => handleReceiptChange("delivery_no", e.target.value)}
-                  className={styles.input}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>เลขที่ใบกำกับภาษี</label>
-                <input
-                  type="text"
-                  placeholder="ระบุเลขที่ใบกำกับภาษี"
-                  value={receiptData.invoice_no}
-                  onChange={(e) => handleReceiptChange("invoice_no", e.target.value)}
-                  className={styles.input}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>วันที่รับ</label>
-                <input
-                  type="date"
-                  value={receiptData.receipt_date}
-                  onChange={(e) => handleReceiptChange("receipt_date", e.target.value)}
-                  className={styles.input}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>หมายเหตุ</label>
-                <textarea
-                  placeholder="ระบุหมายเหตุเพิ่มเติม..."
-                  value={receiptData.note}
-                  onChange={(e) => handleReceiptChange("note", e.target.value)}
-                  className={styles.textarea}
-                />
-              </div>
+        <section className={styles.formSection}>
+          <div className={styles.selector}>
+            <div className={styles.formGroup}>
+              <label className={styles.label} id="po-select-label">เลือก PO:</label>
+              <select
+                value={selectedPO?.po_id || ""}
+                onChange={(e) => handleSelectPO(e.target.value)}
+                className={styles.input}
+                aria-label="เลือกใบสั่งซื้อ"
+                aria-describedby="po-select-label"
+              >
+                <option value="">-- กรุณาเลือก --</option>
+                {poList.map((po) => (
+                  <option key={po.po_id} value={po.po_id}>
+                    {po.po_no} - {po.supplier_name}
+                  </option>
+                ))}
+              </select>
             </div>
+            {selectedPO && (
+              <button
+                className={`${styles.dangerButton} ${styles.actionButton}`}
+                onClick={() => handleSelectPO("")}
+                aria-label="ปิดฟอร์มใบสั่งซื้อ"
+              >
+                <FaTimes size={18} /> ปิดฟอร์ม
+              </button>
+            )}
+          </div>
 
-            <div className={styles.tableCard}>
-              <div className={styles.tableWrap} role="region" aria-label="ตารางรายการสินค้า">
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>สินค้า</th>
-                      <th>จำนวนสั่งซื้อ</th>
-                      <th>จำนวนที่รับจริง</th>
-                      <th>Lot</th>
-                      <th>วันผลิต</th>
-                      <th>วันหมดอายุ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedPO.items.map((item) => (
-                      <tr key={item.po_item_id}>
-                        <td>{item.item_name || "-"}</td>
-                        <td>
+          {selectedPO && (
+            <div className={styles.detail}>
+              <h2 className={styles.sectionTitle}>
+                รายละเอียด PO: <span className={styles.mono}>{selectedPO.po_no}</span>
+              </h2>
+
+              <div className={styles.formGrid}>
+                <div className={styles.formGroup}>
+                  <label className={styles.label} id="delivery-no-label">เลขที่ใบส่งของ</label>
+                  <input
+                    type="text"
+                    placeholder="ระบุเลขที่ใบส่งของ"
+                    value={receiptData.delivery_no}
+                    onChange={(e) => handleReceiptChange("delivery_no", e.target.value)}
+                    className={styles.input}
+                    aria-describedby="delivery-no-label"
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.label} id="invoice-no-label">เลขที่ใบกำกับภาษี</label>
+                  <input
+                    type="text"
+                    placeholder="ระบุเลขที่ใบกำกับภาษี"
+                    value={receiptData.invoice_no}
+                    onChange={(e) => handleReceiptChange("invoice_no", e.target.value)}
+                    className={styles.input}
+                    aria-describedby="invoice-no-label"
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.label} id="receipt-date-label">วันที่รับ</label>
+                  <input
+                    type="date"
+                    value={receiptData.receipt_date}
+                    onChange={(e) => handleReceiptChange("receipt_date", e.target.value)}
+                    className={styles.input}
+                    aria-describedby="receipt-date-label"
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.label} id="note-label">หมายเหตุ</label>
+                  <textarea
+                    placeholder="ระบุหมายเหตุเพิ่มเติม..."
+                    value={receiptData.note}
+                    onChange={(e) => handleReceiptChange("note", e.target.value)}
+                    className={styles.textarea}
+                    aria-describedby="note-label"
+                  />
+                </div>
+              </div>
+
+              <div className={styles.tableSection}>
+                <h3 className={styles.sectionTitle}>📦 รายการสินค้า</h3>
+                <div
+                  className={`${styles.tableGrid} ${styles.tableHeader}`}
+                  role="region"
+                  aria-label="ตารางรายการสินค้า"
+                >
+                  <div className={styles.headerItem}>สินค้า</div>
+                  <div className={styles.headerItem}>จำนวนสั่งซื้อ</div>
+                  <div className={styles.headerItem}>จำนวนที่รับจริง</div>
+                  <div className={styles.headerItem}>Lot</div>
+                  <div className={styles.headerItem}>วันผลิต</div>
+                  <div className={styles.headerItem}>วันหมดอายุ</div>
+                </div>
+                <div className={styles.inventory}>
+                  {sortedItems.length > 0 ? (
+                    sortedItems.map((item) => (
+                      <div
+                        key={item.po_item_id}
+                        className={`${styles.tableGrid} ${styles.tableRow}`}
+                      >
+                        <div className={`${styles.tableCell} ${styles.textWrap}`} title={item.item_name || "-"}>
+                          {item.item_name || "-"}
+                        </div>
+                        <div className={`${styles.tableCell} ${styles.centerCell}`}>
                           {item.quantity} {item.unit || "-"}
-                        </td>
-                        <td>
+                        </div>
+                        <div className={`${styles.tableCell} ${styles.centerCell}`}>
                           <input
                             type="number"
                             min="0"
@@ -326,26 +364,29 @@ const GoodsReceiptCreatePage = () => {
                             }
                             className={styles.inputItem}
                             placeholder="0"
+                            aria-label={`จำนวนที่รับจริงสำหรับ ${item.item_name}`}
                           />
-                        </td>
-                        <td>
+                        </div>
+                        <div className={`${styles.tableCell} ${styles.centerCell}`}>
                           <input
                             type="text"
                             placeholder="Lot No."
                             value={receivedItems[item.po_item_id]?.lot || ""}
                             onChange={(e) => handleItemChange(item.po_item_id, "lot", e.target.value)}
                             className={styles.input}
+                            aria-label={`Lot No. สำหรับ ${item.item_name}`}
                           />
-                        </td>
-                        <td>
+                        </div>
+                        <div className={`${styles.tableCell} ${styles.centerCell}`}>
                           <input
                             type="date"
                             value={receivedItems[item.po_item_id]?.mfg || ""}
                             onChange={(e) => handleItemChange(item.po_item_id, "mfg", e.target.value)}
                             className={styles.input}
+                            aria-label={`วันผลิตสำหรับ ${item.item_name}`}
                           />
-                        </td>
-                        <td>
+                        </div>
+                        <div className={`${styles.tableCell} ${styles.centerCell}`}>
                           <input
                             type="date"
                             value={receivedItems[item.po_item_id]?.expiry || ""}
@@ -353,32 +394,39 @@ const GoodsReceiptCreatePage = () => {
                               handleItemChange(item.po_item_id, "expiry", e.target.value)
                             }
                             className={styles.input}
+                            aria-label={`วันหมดอายุสำหรับ ${item.item_name}`}
                           />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className={styles.noDataMessage}>ไม่มีรายการสินค้า</div>
+                  )}
+                </div>
+              </div>
+
+              <div className={styles.footer}>
+                <button
+                  className={`${styles.primaryButton} ${styles.actionButton}`}
+                  onClick={handleSaveReceipt}
+                  disabled={saving}
+                  aria-label="บันทึกรับสินค้า"
+                >
+                  <FaSave size={18} /> {saving ? "กำลังบันทึก..." : "บันทึกรับสินค้า"}
+                </button>
+                <button
+                  className={`${styles.dangerButton} ${styles.actionButton}`}
+                  onClick={handleCancel}
+                  aria-label="ยกเลิกและกลับไปยังรายการรับสินค้า"
+                >
+                  <FaTimes size={18} /> ยกเลิก
+                </button>
               </div>
             </div>
-
-            <div className={styles.footer}>
-              <button
-                className={styles.primaryButton}
-                onClick={handleSaveReceipt}
-                disabled={saving}
-              >
-                <FaSave className={styles.buttonIcon} />{" "}
-                {saving ? "กำลังบันทึก..." : "บันทึกรับสินค้า"}
-              </button>
-              <button className={styles.dangerButton} onClick={handleCancel}>
-                <FaTimes className={styles.buttonIcon} /> ยกเลิก
-              </button>
-            </div>
-          </div>
-        )}
-      </section>
-    </main>
+          )}
+        </section>
+      </div>
+    </div>
   );
 };
 

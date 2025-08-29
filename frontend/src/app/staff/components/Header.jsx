@@ -2,42 +2,47 @@
 
 import styles from './Header.module.css';
 import Image from 'next/image';
-import { FaUserCircle, FaBell } from 'react-icons/fa';
-import { useNotifications } from '@/app/context/NotificationContextUser';
+import { CircleUser } from 'lucide-react';
+import NotificationBell from './NotificationBell';
+
 
 export default function Header() {
-  const { notifications = [], unreadCount = 0 } = useNotifications() || {};
 
   return (
     <header className={styles.header}>
-      <Image
-        src="/logos/logo.png"
-        alt="Hospital Logo"
-        width={65}
-        height={65}
-        className={styles.logo}
-      />
+      <div className={styles.logoWrapper}>
+        <Image
+          src="/logos/logo.png"
+          alt="Hospital Logo"
+          width={65}
+          height={65}
+          className={styles.logo}
+        />
+      </div>
       <h1 className={styles.headerTitle}>ระบบคลังโรงพยาบาล</h1>
 
       {/* ไอคอนอยู่ชิดขวา */}
       <div className={styles.iconGroup}>
         {/* 🔔 Notification */}
-        <div className={styles.notiWrapper}>
-          <FaBell className={styles.icon} size={24} />
-          {unreadCount > 0 && (
-            <span className={styles.badge}>{unreadCount}</span>
-          )}
-        </div>
-          
+        <NotificationBell />
         {/* 👤 User */}
         <div className={styles.profileWrapper}>
           <div className={styles.profileText}>
-            <span className={styles.profileName}>วัชรพล อินทร์ทอง</span>
+            <span className={styles.profileName}>วัชรพล อินทร์</span>
             <span className={styles.profileRole}>หมอ</span>
           </div>
-          <FaUserCircle className={styles.profileIcon} size={32} />
+           <div className={styles.profileImageWrapper}>
+            <Image
+              src="/Profiletest/หมอ.png"   // 👉 ใส่ path ของไฟล์รูปโปรไฟล์
+              alt="Profile"
+              width={40}
+              height={40}
+              className={styles.profileImage}
+            />
+          </div>
         </div>
       </div>
+
     </header>
   );
 }

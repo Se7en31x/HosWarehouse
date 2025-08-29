@@ -1,10 +1,24 @@
-// src/app/purchasing/poList/[id]/page.jsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import axiosInstance from "@/app/utils/axiosInstance";
 import Swal from "sweetalert2";
 import styles from "./page.module.css";
+import { PackageCheck } from "lucide-react";
+import { FaTimes } from "react-icons/fa";
+import Link from "next/link";
+
+const StatusBadge = ({ status }) => {
+  let badgeStyle = styles.pending;
+  if (status?.toLowerCase() === "approved") badgeStyle = styles.approved;
+  else if (status?.toLowerCase() === "completed") badgeStyle = styles.completed;
+  else if (status?.toLowerCase() === "canceled") badgeStyle = styles.canceled;
+  return (
+    <span className={`${styles.stBadge} ${badgeStyle}`}>
+      {status ? status.charAt(0).toUpperCase() + status.slice(1) : "รอดำเนินการ"}
+    </span>
+  );
+};
 
 const PoDetailsPage = ({ params }) => {
   const { id } = params;
@@ -14,7 +28,6 @@ const PoDetailsPage = ({ params }) => {
   const [newAttachments, setNewAttachments] = useState({});
   const [deletedFileIds, setDeletedFileIds] = useState([]);
 
-  // โหลดรายละเอียด PO เมื่อหน้าโหลด
   useEffect(() => {
     const fetchPoDetails = async () => {
       if (!id) return;
@@ -23,7 +36,13 @@ const PoDetailsPage = ({ params }) => {
         const res = await axiosInstance.get(`/po/${id}`);
         setPoData(res.data);
       } catch (err) {
-        Swal.fire("ผิดพลาด", err.response?.data?.message || err.message, "error");
+        Swal.fire({
+          title: "ผิดพลาด",
+          text: err.response?.data?.message || err.message,
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          customClass: { confirmButton: styles.swalButton },
+        });
       } finally {
         setLoading(false);
       }
@@ -31,7 +50,6 @@ const PoDetailsPage = ({ params }) => {
     fetchPoDetails();
   }, [id]);
 
-  // จัดการการเพิ่มไฟล์ใหม่
   const handleNewAttachmentChange = (e, type) => {
     const files = Array.from(e.target.files);
     setNewAttachments({
@@ -40,7 +58,6 @@ const PoDetailsPage = ({ params }) => {
     });
   };
 
-  // จัดการการลบไฟล์ใหม่
   const handleRemoveNewAttachment = (type, idx) => {
     setNewAttachments({
       ...newAttachments,
@@ -48,24 +65,22 @@ const PoDetailsPage = ({ params }) => {
     });
   };
 
-  // จัดการการลบไฟล์ที่มีอยู่แล้ว
   const handleRemoveExistingAttachment = (fileId) => {
     setDeletedFileIds([...deletedFileIds, fileId]);
   };
 
-  // จัดการการอัปเดตไฟล์ทั้งหมด
   const handleUpdateAttachments = async () => {
     try {
       const formData = new FormData();
-      Object.values(newAttachments).forEach(filesArray => {
-        filesArray.forEach(file => {
+      Object.values(newAttachments).forEach((filesArray) => {
+        filesArray.forEach((file) => {
           formData.append("files", file);
         });
       });
-      
+
       const existingFileIdsToKeep = poData.attachments
-        .filter(file => !deletedFileIds.includes(file.file_id))
-        .map(file => file.file_id);
+        .filter((file) => !deletedFileIds.includes(file.file_id))
+        .map((file) => file.file_id);
 
       formData.append("existingAttachments", JSON.stringify(existingFileIdsToKeep));
 
@@ -73,32 +88,27 @@ const PoDetailsPage = ({ params }) => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      Swal.fire("สำเร็จ", "อัปเดตไฟล์แนบเรียบร้อย", "success");
+      Swal.fire({
+        title: "สำเร็จ",
+        text: "อัปเดตไฟล์แนบเรียบร้อย",
+        icon: "success",
+        confirmButtonText: "ตกลง",
+        customClass: { confirmButton: styles.swalButton },
+      });
       setPoData(res.data);
       setNewAttachments({});
       setDeletedFileIds([]);
     } catch (err) {
-      Swal.fire("ผิดพลาด", err.response?.data?.message || err.message, "error");
+      Swal.fire({
+        title: "ผิดพลาด",
+        text: err.response?.data?.message || err.message,
+        icon: "error",
+        confirmButtonText: "ตกลง",
+        customClass: { confirmButton: styles.swalButton },
+      });
     }
   };
 
-  if (loading) {
-    return <div>กำลังโหลด...</div>;
-  }
-
-  if (!poData) {
-    return <div>ไม่พบข้อมูลใบสั่งซื้อ</div>;
-  }
-  
-  // จัดกลุ่มไฟล์ที่มีอยู่เพื่อแสดงผล
-  const groupedExistingFiles = poData.attachments
-    .filter(file => !deletedFileIds.includes(file.file_id))
-    .reduce((acc, file) => {
-      acc[file.file_type] = [...(acc[file.file_type] || []), file];
-      return acc;
-    }, {});
-
-  // กำหนดประเภทไฟล์
   const attachmentTypes = [
     { label: "ใบเสนอราคา", type: "quotation" },
     { label: "ใบส่งของ / ใบส่งมอบ", type: "delivery_note" },
@@ -110,118 +120,231 @@ const PoDetailsPage = ({ params }) => {
     { label: "อื่น ๆ", type: "other" },
   ];
 
-  return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>รายละเอียดการสั่งซื้อ</h1>
+  const groupedExistingFiles = useMemo(() => {
+    return poData?.attachments
+      ?.filter((file) => !deletedFileIds.includes(file.file_id))
+      ?.reduce((acc, file) => {
+        acc[file.file_type] = [...(acc[file.file_type] || []), file];
+        return acc;
+      }, {}) || {};
+  }, [poData, deletedFileIds]);
 
-      <div className={styles.detail}>
-        <h2>รายละเอียด PO: {poData.po_no}</h2>
-
-        <p><b>สถานะ:</b> {poData.status}</p>
-        <p><b>วันที่สร้าง:</b> {new Date(poData.created_at).toLocaleDateString("th-TH")}</p>
-        <p><b>ซัพพลายเออร์:</b> {poData.supplier_name || "-"}</p>
-        <p><b>หมายเหตุ:</b> {poData.notes || "-"}</p>
-
-        <div className={styles.section}>
-          <h3>📦 รายการสินค้า</h3>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>ชื่อสินค้า</th>
-                <th>จำนวน</th>
-                <th>หน่วย</th>
-                <th>ราคา/หน่วย</th>
-                <th>ส่วนลด</th>
-                <th>จำนวนเงิน</th>
-              </tr>
-            </thead>
-            <tbody>
-              {poData.items.map((item) => {
-                const total = (item.quantity * item.price) - (item.discount || 0);
-                return (
-                  <tr key={item.po_item_id}>
-                    <td>{item.item_name}</td>
-                    <td>{item.quantity}</td>
-                    <td>{item.unit}</td>
-                    <td>{Number(item.price).toLocaleString()}</td>
-                    <td>{Number(item.discount || 0).toLocaleString()}</td>
-                    <td>{total.toLocaleString()} บาท</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <div className={styles.summaryContainer}>
-            <div className={styles.summaryRow}>
-              <span>รวม (ก่อนภาษี):</span>
-              <span>{Number(poData.subtotal).toLocaleString()} บาท</span>
-            </div>
-            <div className={styles.summaryRow}>
-              <span>ภาษีมูลค่าเพิ่ม (7%):</span>
-              <span>{Number(poData.vat_amount).toFixed(2).toLocaleString()} บาท</span>
-            </div>
-            <div className={styles.summaryRow + ' ' + styles.grandTotalRow}>
-              <span>ยอดสุทธิ:</span>
-              <span>{Number(poData.grand_total).toFixed(2).toLocaleString()} บาท</span>
-            </div>
+  if (loading) {
+    return (
+      <div className={styles.mainHome}>
+        <div className={styles.infoContainer}>
+          <div className={styles.loadingContainer}>
+            <div className={styles.spinner}>กำลังโหลด...</div>
           </div>
         </div>
+      </div>
+    );
+  }
 
-        <div className={styles.section}>
-          <h3>📎 เอกสารแนบ</h3>
-          
-          <div className={styles.fileGrid}>
-            {attachmentTypes.map((fileType, idx) => (
-              <div key={idx} className={styles.fileGroup}>
-                <label className={styles.fileLabel}>
-                  <div className={styles.uploadBox}>
-                    <span>{fileType.label}</span>
-                    <input
-                      type="file"
-                      multiple
-                      className={styles.fileInput}
-                      onChange={(e) => handleNewAttachmentChange(e, fileType.type)}
-                    />
-                  </div>
-                </label>
+  if (!poData) {
+    return (
+      <div className={styles.mainHome}>
+        <div className={styles.infoContainer}>
+          <div className={styles.noDataMessage}>ไม่พบข้อมูลใบสั่งซื้อ</div>
+        </div>
+      </div>
+    );
+  }
 
-                <div className={styles.fileList}>
-                  {/* แสดงไฟล์ที่มีอยู่ */}
-                  {(groupedExistingFiles[fileType.type] || []).map((file) => (
-                    <div key={file.file_id} className={styles.fileItem}>
-                      <a href={file.file_url} target="_blank" rel="noopener noreferrer">
-                        {file.file_name}
-                      </a>
-                      <button 
-                        className={styles.removeButton} 
-                        onClick={() => handleRemoveExistingAttachment(file.file_id)}
-                      >
-                        ลบ
-                      </button>
-                    </div>
-                  ))}
-
-                  {/* แสดงไฟล์ที่เพิ่งเพิ่มเข้ามาใหม่ */}
-                  {(newAttachments[fileType.type] || []).map((file, i) => (
-                    <div key={i} className={styles.fileItem}>
-                      <span>{file.name}</span>
-                      <button 
-                        className={styles.removeButton} 
-                        onClick={() => handleRemoveNewAttachment(fileType.type, i)}
-                      >
-                        ลบ
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+  return (
+    <div className={styles.mainHome}>
+      <div className={styles.infoContainer}>
+        <div className={styles.pageBar}>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.pageTitle}>
+              <PackageCheck size={28} /> รายละเอียดการสั่งซื้อ
+            </h1>
+            <p className={styles.subtitle}>
+              ดูและจัดการข้อมูลใบสั่งซื้อเลขที่ {poData.po_no}
+            </p>
           </div>
-          
-          <div className={styles.footer}>
-            <button className={styles.button} onClick={handleUpdateAttachments}>
-              บันทึกการเปลี่ยนแปลง
+          <Link href="/purchasing/poList">
+            <button className={`${styles.ghostBtn} ${styles.actionButton}`}>
+              <FaTimes size={18} /> กลับไปยังรายการ
             </button>
+          </Link>
+        </div>
+
+        <div className={styles.detail}>
+          <h2 className={styles.sectionTitle}>รายละเอียด PO: {poData.po_no}</h2>
+
+          <div className={styles.infoGrid}>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel} id="status-label">สถานะ:</span>
+              <StatusBadge status={poData.status} aria-describedby="status-label" />
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel} id="date-label">วันที่สร้าง:</span>
+              <span aria-describedby="date-label">
+                {new Date(poData.created_at).toLocaleDateString("th-TH")}
+              </span>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel} id="supplier-label">ซัพพลายเออร์:</span>
+              <span className={styles.textWrap} aria-describedby="supplier-label">
+                {poData.supplier_name || "-"}
+              </span>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel} id="notes-label">หมายเหตุ:</span>
+              <span className={styles.textWrap} aria-describedby="notes-label">
+                {poData.notes || "-"}
+              </span>
+            </div>
+          </div>
+
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>📦 รายการสินค้า</h3>
+            <div className={styles.tableSection}>
+              <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+                <div className={styles.headerItem}>ชื่อสินค้า</div>
+                <div className={styles.headerItem}>จำนวน</div>
+                <div className={styles.headerItem}>หน่วย</div>
+                <div className={styles.headerItem}>ราคา/หน่วย</div>
+                <div className={styles.headerItem}>ส่วนลด</div>
+                <div className={styles.headerItem}>จำนวนเงิน</div>
+              </div>
+              <div className={styles.inventory}>
+                {poData.items.map((item) => {
+                  const total = (item.quantity * item.price) - (item.discount || 0);
+                  return (
+                    <div
+                      key={item.po_item_id}
+                      className={`${styles.tableGrid} ${styles.tableRow}`}
+                    >
+                      <div className={`${styles.tableCell} ${styles.textWrap}`}>
+                        {item.item_name || "-"}
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        {item.quantity || 0}
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        {item.unit || "-"}
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        {Number(item.price).toLocaleString("th-TH", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })} บาท
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        {Number(item.discount || 0).toLocaleString("th-TH", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })} บาท
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        {Number(total).toLocaleString("th-TH", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })} บาท
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div className={styles.summaryContainer}>
+              <div className={styles.summaryRow}>
+                <span>รวม (ก่อนภาษี):</span>
+                <span>
+                  {Number(poData.subtotal).toLocaleString("th-TH", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })} บาท
+                </span>
+              </div>
+              <div className={styles.summaryRow}>
+                <span>ภาษีมูลค่าเพิ่ม (7%):</span>
+                <span>
+                  {Number(poData.vat_amount).toLocaleString("th-TH", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })} บาท
+                </span>
+              </div>
+              <div className={`${styles.summaryRow} ${styles.grandTotalRow}`}>
+                <span>ยอดสุทธิ:</span>
+                <span>
+                  {Number(poData.grand_total).toLocaleString("th-TH", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })} บาท
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>📎 เอกสารแนบ</h3>
+            <div className={styles.fileGrid}>
+              {attachmentTypes.map((fileType) => (
+                <div key={fileType.type} className={styles.fileGroup}>
+                  <label className={styles.fileLabel}>
+                    <div className={styles.uploadBox}>
+                      <span>{fileType.label}</span>
+                      <input
+                        type="file"
+                        multiple
+                        className={styles.fileInput}
+                        onChange={(e) => handleNewAttachmentChange(e, fileType.type)}
+                        aria-label={`อัปโหลดไฟล์ ${fileType.label}`}
+                      />
+                    </div>
+                  </label>
+                  <div className={styles.fileList}>
+                    {(groupedExistingFiles[fileType.type] || []).map((file) => (
+                      <div key={file.file_id} className={styles.fileItem}>
+                        <a
+                          href={file.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.textWrap}
+                          title={file.file_name}
+                        >
+                          {file.file_name}
+                        </a>
+                        <button
+                          className={`${styles.ghostBtn} ${styles.actionButton}`}
+                          onClick={() => handleRemoveExistingAttachment(file.file_id)}
+                          aria-label={`ลบไฟล์ ${file.file_name}`}
+                        >
+                          <FaTimes size={18} /> ลบ
+                        </button>
+                      </div>
+                    ))}
+                    {(newAttachments[fileType.type] || []).map((file, i) => (
+                      <div key={i} className={styles.fileItem}>
+                        <span className={styles.textWrap} title={file.name}>
+                          {file.name}
+                        </span>
+                        <button
+                          className={`${styles.ghostBtn} ${styles.actionButton}`}
+                          onClick={() => handleRemoveNewAttachment(fileType.type, i)}
+                          aria-label={`ลบไฟล์ ${file.name}`}
+                        >
+                          <FaTimes size={18} /> ลบ
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className={styles.footer}>
+              <button
+                className={`${styles.primaryButton} ${styles.actionButton}`}
+                onClick={handleUpdateAttachments}
+                aria-label="บันทึกการเปลี่ยนแปลงไฟล์แนบ"
+              >
+                บันทึกการเปลี่ยนแปลง
+              </button>
+            </div>
           </div>
         </div>
       </div>

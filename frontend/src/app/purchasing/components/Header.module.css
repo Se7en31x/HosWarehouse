@@ -1,203 +1,208 @@
+/* src/app/components/Header.module.css */
 :root {
-  --primary-600: #008dda;
-  --primary-400: #41c9e2;
-  --hover: #007bff;
-  --text-on-primary: #ffffff;
-  --divider: #e0e0e0;
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    --primary-600: #0079bb;
+    --primary-400: #41c9e2;
+    --hover: #e6f4ff; /* เปลี่ยนสี hover ให้เข้ากับพื้นหลังสีฟ้า */
+    --text-on-primary: #ffffff;
+    --divider: #e0e0e0;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 /* Header */
 .header {
-  margin: 0;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  width: 100%;
-  background: linear-gradient(to right, var(--primary-600), var(--primary-400));
-  transition: background 0.25s ease-in-out;
+   height: 90px;   /* กำหนดให้เท่ากันทุกฝั่ง */
+  min-height: 90px;
+  max-height: 90px;
+    margin: 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+    background: linear-gradient(to right, var(--primary-600), var(--primary-400));
+    transition: background 0.25s ease-in-out;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    height: 105px;
+    padding: 0 30px;
+    border-bottom: 1px solid var(--divider);
+    box-shadow: var(--shadow);
+    border-radius: 0 0 2px 2px;
+}
+
+/* ✅ กรอบโลโก้ */
+.logoWrapper {
+  width: 65px;
+  height: 65px;
+  margin-right: 20px;
   display: flex;
-  justify-content: flex-start;
   align-items: center;
-  height: 88px;
-  padding: 0 30px;
-  border-bottom: 1px solid var(--divider);
-  box-shadow: var(--shadow);
-  border-radius: 0 0 2 2;
+  justify-content: center;
+  background: transparent; /* เอาพื้นหลังออก */
 }
 
 /* โลโก้ */
 .logo {
-  border-radius: 8px;
-  object-fit: contain;
-  margin-right: 16px; /* เพิ่มระยะห่างจากชื่อระบบ */
+   width: 66px;
+  height: 66px;
+  object-fit: cover;
+  border: 0px solid #ebebeb;   /* ✅ กรอบสีฟ้า */
+  border-radius: 12px;         /* มุมโค้งมน */
+  background-color: #ffffff;
 }
 
 /* ชื่อระบบ */
 .headerTitle {
-  font-size: 24px;
-  font-weight: 500;
-  color: var(--text-on-primary);
-  margin: 0;
-  padding: 0;
-  line-height: 1;
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--text-on-primary);
+    margin: 0;
+    padding: 0;
+    line-height: 1;
 }
 
 /* กลุ่มไอคอนขวาสุด */
 .iconGroup {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 16px;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
 }
 
-/* ไอคอน (react-icons) */
+/* ไอคอน (lucide-react) */
 .icon {
-  color: var(--text-on-primary);
-  cursor: pointer;
-  transition: color 0.2s ease-in-out, transform 0.08s ease;
-  background: transparent !important;
+    color: var(--text-on-primary);
+    cursor: pointer;
+    transition: color 0.2s ease-in-out, transform 0.08s ease;
+    background: transparent !important;
 }
 
 .icon:hover {
-  color: var(--hover);
+    color: var(--hover);
 }
 
 .icon:active {
-  transform: scale(0.97);
+    transform: scale(0.97);
 }
 
 /* ปุ่ม reset style */
-.iconBtn {
-  -webkit-appearance: none;
-  appearance: none;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  border-radius: 9999px;
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-
-.iconBtn:hover,
-.iconBtn:active,
-.iconBtn:focus {
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-}
-
-.iconBtn:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.6);
-  outline-offset: 2px;
-  border-radius: 9999px;
-}
+/* ไม่จำเป็นต้องแก้ไขส่วนนี้มากนัก เพราะใช้ button สำหรับไอคอน Bell และใช้ div สำหรับ Profile */
 
 /* Badge Notification */
-.notiWrapper {
-  position: relative;
-  display: inline-block;
-}
-
-.badge {
-  position: absolute;
-  top: -6px;
-  right: -8px;
-  background: red;
-  color: white;
-  font-size: 11px;
-  font-weight: bold;
-  border-radius: 50%;
-  padding: 2px 6px;
-  min-width: 18px;
-  text-align: center;
-}
+/* ส่วนนี้ใช้ CSS จากไฟล์ NotificationBell.module.css */
 
 /* Profile Section */
 .profileWrapper {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.1);
-  transition: background 0.2s ease-in-out, transform 0.08s ease;
+    width: 200px;
+    display: flex;
+    align-items: center;
+    gap: 12px; /* เพิ่มระยะห่างระหว่างข้อความและไอคอน */
+    padding: 8px 16px; /* เพิ่ม padding ให้ดูมีพื้นที่มากขึ้น */
+    border-radius: 9999px; /* ทำให้ขอบมนเต็มที่ */
+    background: #33a0db98;
+    cursor: pointer; /* เพิ่ม cursor: pointer เพื่อบ่งบอกว่าสามารถคลิกได้ */
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* เพิ่มเงาเล็กน้อย */
 }
 
 .profileWrapper:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.02);
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px); /* ยกขึ้นเล็กน้อยเมื่อ hover */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* ทำให้เงาเข้มขึ้นเมื่อ hover */
 }
 
 .profileWrapper:active {
-  transform: scale(0.98);
+    transform: translateY(0); /* กลับสู่ตำแหน่งเดิมเมื่อคลิก */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .profileText {
-  display: flex;
-  flex-direction: column;
-  text-align: right;
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+    line-height: 1.2;
+    flex: 1 1 auto;       /* ✅ ให้ยืด-หดได้ */
+    min-width: 0;         /* ✅ สำคัญมากเพื่อให้ ellipsis ทำงาน */
+    max-width: 160px;     /* จำกัดความกว้างสูงสุด */
+    overflow: hidden;     /* ตัดส่วนเกิน */
+}
+
+.profileName,
+.profileRole {
+    white-space: nowrap;      /* ไม่ให้ขึ้นบรรทัดใหม่ */
+    overflow: hidden;         /* ซ่อนข้อความเกิน */
+    text-overflow: ellipsis;  /* ใส่ … */
 }
 
 .profileName {
-  font-size: 1rem; /* 16px */
-  font-weight: 500;
-  color: #ffffff;
-  line-height: 1.2;
+    font-size: 1rem; /* 16px */
+    font-weight: 600; /* เพิ่มความหนาของตัวอักษร */
+    color: var(--text-on-primary);
+    white-space: nowrap; /* ป้องกันการขึ้นบรรทัดใหม่ */
 }
 
 .profileRole {
-  font-size: 0.875rem; /* 14px */
-  color: #e6f3ff;
-  line-height: 1.3;
+    font-size: 0.8rem; /* ลดขนาดตัวอักษรเล็กน้อย */
+    color: #e6f3ff; /* สีที่สว่างขึ้นเล็กน้อย */
+    font-weight: 400;
+    white-space: nowrap;
 }
 
 .profileIcon {
-  color: var(--text-on-primary);
-  width: 36px;
-  height: 36px;
-  transition: color 0.2s ease-in-out, transform 0.08s ease;
+    color: var(--text-on-primary);
+    width: 36px;
+    height: 36px;
+    transition: transform 0.2s ease-in-out;
 }
 
-.profileIcon:hover {
-  color: var(--hover);
+.profileImage {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;        /* วงกลม */
+    object-fit: cover;         /* รูปเต็มกรอบ */
+    border: 2px solid #fff;    /* กรอบสีขาว */
+    flex-shrink: 0;            /* ✅ กันไม่ให้ถูกบีบ */
+    flex-grow: 0;              /* ✅ กันไม่ให้ขยาย */
+    flex-basis: 36px;          /* ✅ ล็อคความกว้าง/สูงใน flex */
+    transition: transform 0.2s ease-in-out;
 }
 
-.profileIcon:active {
-  transform: scale(0.97);
+.profileWrapper:hover .profileIcon {
+    transform: scale(1.1); /* ทำให้ไอคอนขยายเล็กน้อยเมื่อ hover */
 }
 
-/* Responsive */
+/* responsive */
 @media (max-width: 640px) {
-  .header {
-    height: 64px;
-    padding: 0 16px;
-  }
-  .logo {
-    width: 50px;
-    height: 50px;
-    margin-right: 12px;
-  }
-  .headerTitle {
-    font-size: 18px;
-  }
-  .iconGroup {
-    gap: 12px;
-  }
-  .profileWrapper {
-    padding: 6px 10px;
-  }
-  .profileName {
-    font-size: 0.875rem;
-  }
-  .profileRole {
-    font-size: 0.75rem;
-  }
-  .profileIcon {
-    width: 28px;
-    height: 28px;
-  }
+    .header {
+        height: 64px;
+        padding: 0 16px;
+    }
+    .logoWrapper {
+        width: 60px;
+        height: 60px;
+        margin-right: 12px;
+    }
+    .logo {
+        width: 50px;
+        height: 50px;
+    }
+    .headerTitle {
+        font-size: 18px;
+    }
+    .iconGroup {
+        gap: 12px;
+    }
+    .profileWrapper {
+        padding: 6px 10px;
+    }
+    .profileName {
+        font-size: 0.875rem;
+    }
+    .profileRole {
+        font-size: 0.75rem;
+    }
+    .profileIcon {
+        width: 28px;
+        height: 28px;
+    }
 }

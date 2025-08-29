@@ -1,22 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import styles from "./page.module.css";
 import axiosInstance from "@/app/utils/axiosInstance";
 import { FaSearch, FaPlusCircle, FaEye } from "react-icons/fa";
+import { PackageCheck } from "lucide-react";
 import Swal from "sweetalert2";
 import Link from "next/link";
 
 const statusOptions = ["ทั้งหมด", "รอดำเนินการ", "รอรับเพิ่ม", "เสร็จสิ้น", "ยกเลิก"];
 
-// Component สำหรับแสดง Badge สถานะ
 const StatusBadge = ({ status }) => {
   let badgeStyle = styles.pending;
   if (status?.toLowerCase() === "completed") badgeStyle = styles.completed;
   else if (status?.toLowerCase() === "partial") badgeStyle = styles.partial;
   else if (status?.toLowerCase() === "cancelled") badgeStyle = styles.canceled;
   return (
-    <span className={`${styles.badge} ${badgeStyle}`}>
+    <span className={`${styles.stBadge} ${badgeStyle}`}>
       {(() => {
         switch (status?.toLowerCase()) {
           case "completed":
@@ -41,7 +41,6 @@ const GoodsReceiptListPage = () => {
   const [filterStatus, setFilterStatus] = useState("ทั้งหมด");
   const [loading, setLoading] = useState(true);
 
-  // Load GRs
   useEffect(() => {
     const fetchGRs = async () => {
       try {
@@ -63,93 +62,123 @@ const GoodsReceiptListPage = () => {
     fetchGRs();
   }, []);
 
-  // Filter GRs
-  const filteredGrList = grList.filter(
-    (gr) =>
-      (filterStatus === "ทั้งหมด" || gr.status?.toLowerCase() === filterStatus.toLowerCase()) &&
-      (gr.gr_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        gr.po_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        gr.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredGrList = useMemo(() => {
+    return grList.filter(
+      (gr) =>
+        (filterStatus === "ทั้งหมด" || gr.status?.toLowerCase() === filterStatus.toLowerCase()) &&
+        (gr.gr_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          gr.po_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          gr.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }, [grList, filterStatus, searchTerm]);
 
   return (
-    <main className={styles.container}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>รายการรับสินค้า (Goods Receipt)</h1>
-        <p className={styles.subtitle}>ดูและจัดการรายการรับสินค้าทั้งหมด</p>
-      </header>
-
-      <section className={styles.toolbar}>
-        <div className={styles.searchBar}>
-          <FaSearch className={styles.searchIcon} />
-          <input
-            className={styles.input}
-            placeholder="ค้นหา: GR NO, PO NO, ซัพพลายเออร์..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className={styles.filter}>
-          <label>สถานะ:</label>
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-            {statusOptions.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className={styles.spacer} />
-        <div className={styles.actionButtons}>
+    <div className={styles.mainHome}>
+      <div className={styles.infoContainer}>
+        <div className={styles.pageBar}>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.pageTitle}>
+              <PackageCheck size={28} /> รายการรับสินค้า
+            </h1>
+            <p className={styles.subtitle}>ดูและจัดการรายการรับสินค้าทั้งหมด</p>
+          </div>
           <Link href="/purchasing/goodsReceipt/create">
-            <button className={styles.primaryButton}>
-              <FaPlusCircle className={styles.buttonIcon} /> เพิ่มการรับสินค้าใหม่
+            <button className={`${styles.primaryButton} ${styles.actionButton}`}>
+              <FaPlusCircle size={18} /> เพิ่มการรับสินค้าใหม่
             </button>
           </Link>
         </div>
-      </section>
 
-      <div className={styles.tableCard}>
-        <div className={styles.tableWrap} role="region" aria-label="ตารางรายการรับสินค้า">
+        <section className={styles.toolbar}>
+          <div className={styles.filterGrid}>
+            <div className={styles.filterGroup}>
+              <label className={styles.label}>สถานะ</label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className={styles.input}
+                aria-label="เลือกสถานะการรับสินค้า"
+              >
+                {statusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.filterGroup}>
+              <label className={styles.label}>ค้นหา</label>
+              <div className={styles.searchBar}>
+                <FaSearch className={styles.searchIcon} />
+                <input
+                  className={styles.input}
+                  placeholder="ค้นหา: GR NO, PO NO, ซัพพลายเออร์..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  aria-label="ค้นหาการรับสินค้า"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.tableSection}>
           {loading ? (
-            <div className={styles.empty}>กำลังโหลด...</div>
+            <div className={styles.loadingContainer}>
+              <div className={styles.spinner}>กำลังโหลด...</div>
+            </div>
           ) : filteredGrList.length === 0 ? (
-            <div className={styles.empty}>ยังไม่มีการรับสินค้า</div>
+            <div className={styles.noDataMessage}>ยังไม่มีการรับสินค้า</div>
           ) : (
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>เลขที่ GR</th>
-                  <th>เลขที่ PO</th>
-                  <th>วันที่รับ</th>
-                  <th>ซัพพลายเออร์</th>
-                  <th>สถานะ</th>
-                  <th>การจัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              <div
+                className={`${styles.tableGrid} ${styles.tableHeader}`}
+                role="region"
+                aria-label="ตารางรายการรับสินค้า"
+              >
+                <div className={styles.headerItem}>เลขที่ GR</div>
+                <div className={styles.headerItem}>เลขที่ PO</div>
+                <div className={styles.headerItem}>วันที่รับ</div>
+                <div className={styles.headerItem}>ซัพพลายเออร์</div>
+                <div className={styles.headerItem}>สถานะ</div>
+                <div className={styles.headerItem}>การจัดการ</div>
+              </div>
+              <div className={styles.inventory}>
                 {filteredGrList.map((gr) => (
-                  <tr key={gr.gr_id}>
-                    <td className={styles.mono}>{gr.gr_no}</td>
-                    <td className={styles.mono}>{gr.po_no}</td>
-                    <td>{new Date(gr.gr_date).toLocaleDateString("th-TH")}</td>
-                    <td>{gr.supplier_name || "-"}</td>
-                    <td><StatusBadge status={gr.status} /></td>
-                    <td>
+                  <div key={gr.gr_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                    <div className={`${styles.tableCell} ${styles.mono}`}>
+                      {gr.gr_no || "-"}
+                    </div>
+                    <div className={`${styles.tableCell} ${styles.mono}`}>
+                      {gr.po_no || "-"}
+                    </div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      {new Date(gr.gr_date).toLocaleDateString("th-TH")}
+                    </div>
+                    <div className={`${styles.tableCell} ${styles.textWrap}`}>
+                      {gr.supplier_name || "-"}
+                    </div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      <StatusBadge status={gr.status} />
+                    </div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
                       <Link href={`/purchasing/goodsReceipt/${gr.gr_id}`}>
-                        <button className={styles.primaryButton}>
-                          <FaEye className={styles.buttonIcon} /> ดูรายละเอียด
+                        <button
+                          className={`${styles.primaryButton} ${styles.actionButton}`}
+                          aria-label={`ดูรายละเอียดการรับสินค้า ${gr.gr_no}`}
+                        >
+                          <FaEye size={18} /> ดูรายละเอียด
                         </button>
                       </Link>
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </>
           )}
-        </div>
+        </section>
       </div>
-    </main>
+    </div>
   );
 };
 

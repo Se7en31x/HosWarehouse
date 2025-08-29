@@ -3,18 +3,18 @@ import { useState, useEffect } from "react";
 import styles from "./page.module.css";
 import axiosInstance from "@/app/utils/axiosInstance";
 import { FaSearch, FaPlusCircle, FaTimes } from "react-icons/fa";
+import { PackageCheck } from "lucide-react"; // ใช้ไอคอนจาก lucide-react เพื่อความสม่ำเสมอ
 import Swal from "sweetalert2";
 import exportPDF from "@/app/components/pdf/PDFExporter";
 
 const categories = ["ทั้งหมด", "ยา", "เวชภัณฑ์", "ครุภัณฑ์", "อุปกรณ์ทางการแพทย์", "ของใช้ทั่วไป"];
 
-// Component สำหรับแสดง Badge สถานะ
 const StatusBadge = ({ status }) => {
   let badgeStyle = styles.pending;
   if (status?.toLowerCase() === "approved") badgeStyle = styles.approved;
   else if (status?.toLowerCase() === "completed") badgeStyle = styles.completed;
   else if (status?.toLowerCase() === "canceled") badgeStyle = styles.canceled;
-  return <span className={`${styles.badge} ${badgeStyle}`}>{status ? status.charAt(0).toUpperCase() + status.slice(1) : "-"}</span>;
+  return <span className={`${styles.stBadge} ${badgeStyle}`}>{status ? status.charAt(0).toUpperCase() + status.slice(1) : "-"}</span>;
 };
 
 const PurchaseRequestPage = () => {
@@ -25,7 +25,6 @@ const PurchaseRequestPage = () => {
   const [specs, setSpecs] = useState({});
   const [loading, setLoading] = useState(true);
 
-  // Load purchase requests
   useEffect(() => {
     const fetchRequests = async () => {
       try {
@@ -100,7 +99,7 @@ const PurchaseRequestPage = () => {
 
     try {
       const res = await axiosInstance.post("/rfq", {
-        created_by: 1, // TODO: แทนด้วย user จาก session
+        created_by: 1,
         items: selectedItems.map((item) => ({
           pr_id: item.pr_id,
           pr_item_id: item.pr_item_id,
@@ -182,7 +181,7 @@ const PurchaseRequestPage = () => {
           footerTitle: "เงื่อนไขใบขอราคา",
         },
         layout: {
-          tableColWidths: [15, 70, 20, 20, 65], // Sequence, Item Name, Quantity, Unit, Specs
+          tableColWidths: [15, 70, 20, 20, 65],
         },
       },
       columns: ["ลำดับ", "ชื่อสินค้า", "จำนวน", "หน่วย", "คุณลักษณะ"],
@@ -232,187 +231,208 @@ const PurchaseRequestPage = () => {
   const hasSelectedItems = requests.some((item) => item.checked);
 
   return (
-    <main className={styles.container}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>ระบบการสั่งซื้อ - ออกใบขอราคา</h1>
-        <p className={styles.subtitle}>จัดการคำขอสั่งซื้อและสร้างใบขอราคา (RFQ)</p>
-      </header>
+    <div className={styles.mainHome}>
+      <div className={styles.infoContainer}>
+        <div className={styles.pageBar}>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.pageTitle}>
+              <PackageCheck size={28} /> ระบบการสั่งซื้อ - ออกใบขอราคา
+            </h1>
+            <p className={styles.subtitle}>จัดการคำขอสั่งซื้อและสร้างใบขอราคา (RFQ)</p>
+          </div>
+        </div>
 
-      <section className={styles.toolbar}>
-        <div className={styles.searchBar}>
-          <FaSearch className={styles.searchIcon} />
-          <input
-            className={styles.input}
-            placeholder="ค้นหา: PR NO, ชื่อสินค้า..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className={styles.toolbar}>
+          <div className={styles.filterGrid}>
+            <div className={styles.filterGroup}>
+              <label className={styles.label}>ประเภท</label>
+              <select value={filterCategory} onChange={handleFilterChange} className={styles.input}>
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.filterGroup}>
+              <label className={styles.label}>ค้นหา</label>
+              <div className={styles.searchBar}>
+                <FaSearch className={styles.searchIcon} />
+                <input
+                  className={styles.input}
+                  placeholder="ค้นหา: PR NO, ชื่อสินค้า..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+          <div className={styles.searchCluster}>
+            <button
+              className={`${styles.ghostBtn} ${styles.actionButton}`}
+              onClick={handleSelectAll}
+              disabled={filteredRequests.length === 0}
+            >
+              <FaPlusCircle size={18} /> เลือกทั้งหมด
+            </button>
+            <button
+              className={`${styles.ghostBtn} ${styles.actionButton}`}
+              onClick={handleClearSelection}
+              disabled={!hasSelectedItems}
+            >
+              <FaTimes size={18} /> ล้างการเลือก
+            </button>
+            <button
+              className={`${styles.primaryButton} ${styles.actionButton}`}
+              onClick={handleGenerateQuotation}
+              disabled={!hasSelectedItems}
+            >
+              <FaPlusCircle size={18} /> ออกใบขอราคา
+            </button>
+          </div>
         </div>
-        <div className={styles.filter}>
-          <label>ประเภท:</label>
-          <select value={filterCategory} onChange={handleFilterChange}>
-            {categories.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className={styles.spacer} />
-        <div className={styles.actionButtons}>
-          <button
-            className={styles.secondaryButton}
-            onClick={handleSelectAll}
-            disabled={filteredRequests.length === 0}
-          >
-            <FaPlusCircle className={styles.buttonIcon} /> เลือกทั้งหมด
-          </button>
-          <button
-            className={styles.secondaryButton}
-            onClick={handleClearSelection}
-            disabled={!hasSelectedItems}
-          >
-            <FaTimes className={styles.buttonIcon} /> ล้างการเลือก
-          </button>
-          <button
-            className={styles.primaryButton}
-            onClick={handleGenerateQuotation}
-            disabled={!hasSelectedItems}
-          >
-            <FaPlusCircle className={styles.buttonIcon} /> ออกใบขอราคา
-          </button>
-        </div>
-      </section>
 
-      <div className={styles.tableCard}>
-        <div className={styles.tableWrap} role="region" aria-label="ตารางคำขอสั่งซื้อ">
+        <div className={styles.tableSection}>
           {loading ? (
-            <div className={styles.empty}>กำลังโหลด...</div>
+            <div className={styles.loadingContainer}>
+              <div className={styles.spinner}>กำลังโหลด...</div>
+            </div>
           ) : filteredRequests.length === 0 ? (
-            <div className={styles.empty}>ไม่พบรายการคำขอสั่งซื้อ</div>
+            <div className={styles.noDataMessage}>ไม่พบรายการคำขอสั่งซื้อ</div>
           ) : (
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th style={{ width: "50px" }}></th>
-                  <th>PR NO</th>
-                  <th>ชื่อสินค้า</th>
-                  <th>จำนวน</th>
-                  <th>หน่วย</th>
-                  <th>ประเภท</th>
-                  <th>ผู้ขอ</th>
-                  <th>สถานะ</th>
-                  <th>วันที่</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+                <div className={styles.headerItem}>เลือก</div>
+                <div className={styles.headerItem}>PR NO</div>
+                <div className={styles.headerItem}>ชื่อสินค้า</div>
+                <div className={styles.headerItem}>จำนวน</div>
+                <div className={styles.headerItem}>หน่วย</div>
+                <div className={styles.headerItem}>ประเภท</div>
+                <div className={styles.headerItem}>ผู้ขอ</div>
+                <div className={styles.headerItem}>สถานะ</div>
+                <div className={styles.headerItem}>วันที่</div>
+              </div>
+              <div className={styles.inventory}>
                 {filteredRequests.map((item) => {
                   const rowKey = item.pr_item_id || item.pr_id;
                   return (
-                    <tr key={rowKey} className={item.checked ? styles.rowSelected : ""}>
-                      <td>
+                    <div
+                      key={rowKey}
+                      className={`${styles.tableGrid} ${styles.tableRow} ${item.checked ? styles.rowSelected : ""}`}
+                    >
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
                         <input
                           type="checkbox"
                           checked={item.checked || false}
                           onChange={() => handleCheckboxChange(rowKey)}
                         />
-                      </td>
-                      <td className={styles.mono}>{item.pr_no || "-"}</td>
-                      <td>{item.item_name || "-"}</td>
-                      <td>{item.qty_requested || 0}</td>
-                      <td>{item.unit || "-"}</td>
-                      <td>{item.item_category || "-"}</td>
-                      <td>
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.mono}`}>{item.pr_no || "-"}</div>
+                      <div className={styles.tableCell}>{item.item_name || "-"}</div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        {item.qty_requested || 0}
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        {item.unit || "-"}
+                      </div>
+                      <div className={styles.tableCell}>{item.item_category || "-"}</div>
+                      <div className={styles.tableCell}>
                         {item.user_fname || ""} {item.user_lname || ""}
-                      </td>
-                      <td><StatusBadge status={item.status} /></td>
-                      <td>
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        <StatusBadge status={item.status} />
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
                         {item.created_at
                           ? new Date(item.created_at).toLocaleDateString("th-TH")
                           : "-"}
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+            </>
           )}
         </div>
-      </div>
 
-      {showModal && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContent}>
-            <header className={styles.modalHeader}>
-              <h2>สร้างใบขอราคา (RFQ)</h2>
-              <button className={styles.closeButton} onClick={() => setShowModal(false)}>
-                <FaTimes />
-              </button>
-            </header>
-            <section className={styles.modalBody}>
-              <h3>รายการสินค้า</h3>
-              <table className={styles.itemTable}>
-                <thead>
-                  <tr>
-                    <th>PR NO</th>
-                    <th>ชื่อสินค้า</th>
-                    <th>จำนวน</th>
-                    <th>หน่วย</th>
-                    <th>คุณลักษณะ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {requests
-                    .filter((item) => item.checked)
-                    .map((item) => {
-                      const rowKey = item.pr_item_id || item.pr_id;
-                      return (
-                        <tr key={rowKey}>
-                          <td>{item.pr_no || "-"}</td>
-                          <td>{item.item_name || "-"}</td>
-                          <td>{item.qty_requested || 0}</td>
-                          <td>{item.unit || "-"}</td>
-                          <td>
-                            <input
-                              type="text"
-                              value={specs[rowKey] || ""}
-                              onChange={(e) => handleSpecChange(rowKey, e.target.value)}
-                              placeholder="ระบุคุณลักษณะ เช่น ขนาด, สี, รุ่น"
-                              className={styles.input}
-                            />
-                          </td>
-                        </tr>
-                      );
-                    })}
-                </tbody>
-              </table>
-            </section>
-            <footer className={styles.modalFooter}>
-              <button
-                className={styles.secondaryButton}
-                onClick={handleExportPDF}
-                disabled={!hasSelectedItems}
-              >
-                <FaPlusCircle className={styles.buttonIcon} /> ดาวน์โหลด PDF
-              </button>
-              <button
-                className={styles.primaryButton}
-                onClick={handleSubmitQuotation}
-                disabled={!hasSelectedItems}
-              >
-                <FaPlusCircle className={styles.buttonIcon} /> บันทึกและส่ง
-              </button>
-              <button
-                className={styles.secondaryButton}
-                onClick={() => setShowModal(false)}
-              >
-                <FaTimes className={styles.buttonIcon} /> ยกเลิก
-              </button>
-            </footer>
+        {showModal && (
+          <div className={styles.modalOverlay}>
+            <div className={styles.modalContent}>
+              <div className={styles.modalHeader}>
+                <h2>สร้างใบขอราคา (RFQ)</h2>
+                <button className={styles.closeButton} onClick={() => setShowModal(false)}>
+                  <FaTimes size={18} />
+                </button>
+              </div>
+              <div className={styles.modalBody}>
+                <h3>รายการสินค้า</h3>
+                <div className={styles.tableSection}>
+                  <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+                    <div className={styles.headerItem}>PR NO</div>
+                    <div className={styles.headerItem}>ชื่อสินค้า</div>
+                    <div className={styles.headerItem}>จำนวน</div>
+                    <div className={styles.headerItem}>หน่วย</div>
+                    <div className={styles.headerItem}>คุณลักษณะ</div>
+                  </div>
+                  <div className={styles.inventory}>
+                    {requests
+                      .filter((item) => item.checked)
+                      .map((item) => {
+                        const rowKey = item.pr_item_id || item.pr_id;
+                        return (
+                          <div key={rowKey} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                            <div className={`${styles.tableCell} ${styles.mono}`}>
+                              {item.pr_no || "-"}
+                            </div>
+                            <div className={styles.tableCell}>{item.item_name || "-"}</div>
+                            <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                              {item.qty_requested || 0}
+                            </div>
+                            <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                              {item.unit || "-"}
+                            </div>
+                            <div className={styles.tableCell}>
+                              <input
+                                type="text"
+                                value={specs[rowKey] || ""}
+                                onChange={(e) => handleSpecChange(rowKey, e.target.value)}
+                                placeholder="ระบุคุณลักษณะ เช่น ขนาด, สี, รุ่น"
+                                className={styles.input}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              </div>
+              <div className={styles.modalFooter}>
+                <button
+                  className={`${styles.ghostBtn} ${styles.actionButton}`}
+                  onClick={handleExportPDF}
+                  disabled={!hasSelectedItems}
+                >
+                  <FaPlusCircle size={18} /> ดาวน์โหลด PDF
+                </button>
+                <button
+                  className={`${styles.primaryButton} ${styles.actionButton}`}
+                  onClick={handleSubmitQuotation}
+                  disabled={!hasSelectedItems}
+                >
+                  <FaPlusCircle size={18} /> บันทึกและส่ง
+                </button>
+                <button
+                  className={`${styles.ghostBtn} ${styles.actionButton}`}
+                  onClick={() => setShowModal(false)}
+                >
+                  <FaTimes size={18} /> ยกเลิก
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
-    </main>
+        )}
+      </div>
+    </div>
   );
 };
 

@@ -1,20 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import axiosInstance from "@/app/utils/axiosInstance";
 import { FaSave, FaArrowLeft } from "react-icons/fa";
+import { PackageCheck } from "lucide-react";
 import Swal from "sweetalert2";
 import styles from "./page.module.css";
 
-// Component สำหรับแสดง Badge สถานะ
 const StatusBadge = ({ status }) => {
   let badgeStyle = styles.pending;
   if (status?.toLowerCase() === "completed") badgeStyle = styles.completed;
   else if (status?.toLowerCase() === "partial") badgeStyle = styles.partial;
   else if (status?.toLowerCase() === "cancelled") badgeStyle = styles.canceled;
   return (
-    <span className={`${styles.badge} ${badgeStyle}`}>
+    <span className={`${styles.stBadge} ${badgeStyle}`}>
       {(() => {
         switch (status?.toLowerCase()) {
           case "completed":
@@ -40,14 +40,12 @@ const GoodsReceiptDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [extraReceive, setExtraReceive] = useState({});
 
-  // Fetch GR data
   const fetchGR = async () => {
     try {
       setLoading(true);
       const res = await axiosInstance.get(`/gr/${id}`);
       setGrData(res.data);
 
-      // Initialize extra receive state for incomplete items
       const initExtra = {};
       res.data.items.forEach((it) => {
         if (it.qty_received < it.qty_ordered) {
@@ -72,7 +70,6 @@ const GoodsReceiptDetailPage = () => {
     if (id) fetchGR();
   }, [id]);
 
-  // Handle extra receive input
   const handleExtraChange = (grItemId, value) => {
     setExtraReceive({
       ...extraReceive,
@@ -80,7 +77,6 @@ const GoodsReceiptDetailPage = () => {
     });
   };
 
-  // Save extra received items
   const handleSaveExtra = async () => {
     try {
       const itemsToUpdate = [];
@@ -128,7 +124,7 @@ const GoodsReceiptDetailPage = () => {
         confirmButtonText: "ตกลง",
         customClass: { confirmButton: styles.swalButton },
       }).then(() => {
-        fetchGR(); // Reload data
+        fetchGR();
       });
     } catch (err) {
       Swal.fire({
@@ -141,64 +137,130 @@ const GoodsReceiptDetailPage = () => {
     }
   };
 
-  if (loading) return <div className={styles.empty}>กำลังโหลด...</div>;
-  if (!grData) return <div className={styles.empty}>ไม่พบข้อมูล GR</div>;
+  const sortedItems = useMemo(() => {
+    if (!grData?.items) return [];
+    return [...grData.items].sort((a, b) => a.item_name.localeCompare(b.item_name));
+  }, [grData]);
+
+  if (loading) {
+    return (
+      <div className={styles.mainHome}>
+        <div className={styles.infoContainer}>
+          <div className={styles.loadingContainer}>
+            <div className={styles.spinner}>กำลังโหลด...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!grData) {
+    return (
+      <div className={styles.mainHome}>
+        <div className={styles.infoContainer}>
+          <div className={styles.noDataMessage}>ไม่พบข้อมูล GR</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <main className={styles.container}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>รายละเอียดการรับสินค้า (GR)</h1>
-        <p className={styles.subtitle}>เลขที่ GR: {grData.gr_no}</p>
-      </header>
-
-      <section className={styles.detailCard}>
-        <div className={styles.detail}>
-          <p><strong>เลขที่ GR:</strong> <span className={styles.mono}>{grData.gr_no}</span></p>
-          <p><strong>เลขที่ PO:</strong> <span className={styles.mono}>{grData.po_no}</span></p>
-          <p><strong>วันที่รับ:</strong> {new Date(grData.gr_date).toLocaleDateString("th-TH")}</p>
-          <p><strong>ซัพพลายเออร์:</strong> {grData.supplier_name || "-"}</p>
-          <p><strong>สถานะ:</strong> <StatusBadge status={grData.status} /></p>
+    <div className={styles.mainHome}>
+      <div className={styles.infoContainer}>
+        <div className={styles.pageBar}>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.pageTitle}>
+              <PackageCheck size={28} /> รายละเอียดการรับสินค้า
+            </h1>
+            <p className={styles.subtitle}>เลขที่ GR: {grData.gr_no}</p>
+          </div>
+          <button
+            className={`${styles.ghostBtn} ${styles.actionButton}`}
+            onClick={() => router.push("/purchasing/goodsReceipt")}
+            aria-label="กลับไปยังรายการรับสินค้า"
+          >
+            <FaArrowLeft size={18} /> กลับ
+          </button>
         </div>
-      </section>
 
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>รายการสินค้า</h2>
-        <div className={styles.tableCard}>
-          <div className={styles.tableWrap} role="region" aria-label="ตารางรายการสินค้า">
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>สินค้า</th>
-                  <th>จำนวนสั่งซื้อ</th>
-                  <th>จำนวนที่รับแล้ว</th>
-                  <th>Lot</th>
-                  <th>วันผลิต</th>
-                  <th>วันหมดอายุ</th>
-                  <th>สถานะ</th>
-                  <th>รับเพิ่ม</th>
-                </tr>
-              </thead>
-              <tbody>
-                {grData.items.map((item) => {
+        <section className={styles.detail}>
+          <h2 className={styles.sectionTitle}>รายละเอียด GR: {grData.gr_no}</h2>
+          <div className={styles.infoGrid}>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel} id="gr-no-label">เลขที่ GR:</span>
+              <span className={styles.mono} aria-describedby="gr-no-label">{grData.gr_no}</span>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel} id="po-no-label">เลขที่ PO:</span>
+              <span className={styles.mono} aria-describedby="po-no-label">{grData.po_no}</span>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel} id="date-label">วันที่รับ:</span>
+              <span aria-describedby="date-label">
+                {new Date(grData.gr_date).toLocaleDateString("th-TH")}
+              </span>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel} id="supplier-label">ซัพพลายเออร์:</span>
+              <span className={styles.textWrap} aria-describedby="supplier-label">
+                {grData.supplier_name || "-"}
+              </span>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel} id="status-label">สถานะ:</span>
+              <StatusBadge status={grData.status} aria-describedby="status-label" />
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>📦 รายการสินค้า</h2>
+          <div className={styles.tableSection}>
+            <div className={`${styles.tableGrid} ${styles.tableHeader}`} role="region" aria-label="ตารางรายการสินค้า">
+              <div className={styles.headerItem}>สินค้า</div>
+              <div className={styles.headerItem}>จำนวนสั่งซื้อ</div>
+              <div className={styles.headerItem}>จำนวนที่รับแล้ว</div>
+              <div className={styles.headerItem}>Lot</div>
+              <div className={styles.headerItem}>วันผลิต</div>
+              <div className={styles.headerItem}>วันหมดอายุ</div>
+              <div className={styles.headerItem}>สถานะ</div>
+              <div className={styles.headerItem}>รับเพิ่ม</div>
+            </div>
+            <div className={styles.inventory}>
+              {sortedItems.length > 0 ? (
+                sortedItems.map((item) => {
                   const remain = item.qty_ordered - item.qty_received;
                   return (
-                    <tr key={item.gr_item_id}>
-                      <td>{item.item_name || "-"}</td>
-                      <td>{item.qty_ordered} {item.item_unit || "-"}</td>
-                      <td>{item.qty_received}</td>
-                      <td>{item.lot_no || "-"}</td>
-                      <td>
+                    <div
+                      key={item.gr_item_id}
+                      className={`${styles.tableGrid} ${styles.tableRow}`}
+                    >
+                      <div className={`${styles.tableCell} ${styles.textWrap}`}>
+                        {item.item_name || "-"}
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        {item.qty_ordered} {item.item_unit || "-"}
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        {item.qty_received}
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        {item.lot_no || "-"}
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
                         {item.mfg_date
                           ? new Date(item.mfg_date).toLocaleDateString("th-TH")
                           : "-"}
-                      </td>
-                      <td>
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
                         {item.exp_date
                           ? new Date(item.exp_date).toLocaleDateString("th-TH")
                           : "-"}
-                      </td>
-                      <td><StatusBadge status={item.status} /></td>
-                      <td>
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        <StatusBadge status={item.status} />
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
                         {remain > 0 ? (
                           <div className={styles.receiveInput}>
                             <input
@@ -209,6 +271,7 @@ const GoodsReceiptDetailPage = () => {
                               onChange={(e) => handleExtraChange(item.gr_item_id, e.target.value)}
                               className={styles.input}
                               placeholder="0"
+                              aria-label={`รับเพิ่มสำหรับ ${item.item_name}`}
                             />
                             <small className={styles.remainText}>
                               เหลือรับได้อีก {remain}
@@ -217,30 +280,37 @@ const GoodsReceiptDetailPage = () => {
                         ) : (
                           "-"
                         )}
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   );
-                })}
-              </tbody>
-            </table>
+                })
+              ) : (
+                <div className={styles.noDataMessage}>ไม่มีรายการสินค้า</div>
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <footer className={styles.footer}>
-        {Object.values(extraReceive).some((v) => v > 0) && (
-          <button className={styles.primaryButton} onClick={handleSaveExtra}>
-            <FaSave className={styles.buttonIcon} /> บันทึกการรับเพิ่ม
+        <footer className={styles.footer}>
+          {Object.values(extraReceive).some((v) => v > 0) && (
+            <button
+              className={`${styles.primaryButton} ${styles.actionButton}`}
+              onClick={handleSaveExtra}
+              aria-label="บันทึกการรับเพิ่ม"
+            >
+              <FaSave size={18} /> บันทึกการรับเพิ่ม
+            </button>
+          )}
+          <button
+            className={`${styles.ghostBtn} ${styles.actionButton}`}
+            onClick={() => router.push("/purchasing/goodsReceipt")}
+            aria-label="กลับไปยังรายการรับสินค้า"
+          >
+            <FaArrowLeft size={18} /> กลับ
           </button>
-        )}
-        <button
-          className={styles.secondaryButton}
-          onClick={() => router.push("/purchasing/goodsReceipt")}
-        >
-          <FaArrowLeft className={styles.buttonIcon} /> กลับ
-        </button>
-      </footer>
-    </main>
+        </footer>
+      </div>
+    </div>
   );
 };
 

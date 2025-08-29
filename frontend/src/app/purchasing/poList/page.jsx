@@ -4,19 +4,19 @@ import { useState, useEffect } from "react";
 import styles from "./page.module.css";
 import axiosInstance from "@/app/utils/axiosInstance";
 import { FaSearch, FaPlusCircle, FaTimes, FaEye } from "react-icons/fa";
+import { PackageCheck } from "lucide-react";
 import Swal from "sweetalert2";
 import Link from "next/link";
 
 const statusOptions = ["ทั้งหมด", "รอดำเนินการ", "อนุมัติ", "เสร็จสิ้น", "ยกเลิก"];
 
-// Component สำหรับแสดง Badge สถานะ
 const StatusBadge = ({ poStatus }) => {
   let badgeStyle = styles.pending;
   if (poStatus?.toLowerCase() === "approved") badgeStyle = styles.approved;
   else if (poStatus?.toLowerCase() === "completed") badgeStyle = styles.completed;
   else if (poStatus?.toLowerCase() === "canceled") badgeStyle = styles.canceled;
   return (
-    <span className={`${styles.badge} ${badgeStyle}`}>
+    <span className={`${styles.stBadge} ${badgeStyle}`}>
       {poStatus
         ? poStatus.charAt(0).toUpperCase() + poStatus.slice(1)
         : "รอดำเนินการ"}
@@ -45,9 +45,8 @@ const PoAndRfqPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("ทั้งหมด");
   const [loading, setLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false); // ✅ กันกดซ้ำ
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Load RFQ and PO
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -71,7 +70,6 @@ const PoAndRfqPage = () => {
     fetchData();
   }, []);
 
-  // Load selected RFQ
   const handleSelectRFQ = async (id) => {
     if (!id) {
       setSelectedRFQ(null);
@@ -105,7 +103,6 @@ const PoAndRfqPage = () => {
     }
   };
 
-  // Handle price and discount changes
   const handlePriceChange = (itemId, value) => {
     setPrices({ ...prices, [itemId]: parseFloat(value) || 0 });
   };
@@ -114,7 +111,6 @@ const PoAndRfqPage = () => {
     setDiscounts({ ...discounts, [itemId]: parseFloat(value) || 0 });
   };
 
-  // Calculate totals
   useEffect(() => {
     if (!selectedRFQ) return;
     let sub = selectedRFQ.items.reduce((sum, item) => {
@@ -129,7 +125,6 @@ const PoAndRfqPage = () => {
     setGrandTotal(sub + parseFloat(vatCalc));
   }, [selectedRFQ, prices, discounts]);
 
-  // Handle attachments
   const handleAttachmentChange = (e, type) => {
     const files = Array.from(e.target.files);
     setAttachments({
@@ -145,9 +140,8 @@ const PoAndRfqPage = () => {
     });
   };
 
-  // ✅ Create PO (แก้กันกดซ้ำ)
   const handleCreatePO = async () => {
-    if (isSubmitting) return; // ✅ กันการกดซ้ำ
+    if (isSubmitting) return;
     setIsSubmitting(true);
 
     if (!selectedRFQ) {
@@ -248,11 +242,10 @@ const PoAndRfqPage = () => {
         customClass: { confirmButton: styles.swalButton },
       });
     } finally {
-      setIsSubmitting(false); // ✅ เปิดปุ่มกลับมาใหม่
+      setIsSubmitting(false);
     }
   };
 
-  // Filter PO list
   const filteredPoList = poList.filter(
     (po) =>
       (filterStatus === "ทั้งหมด" ||
@@ -273,320 +266,350 @@ const PoAndRfqPage = () => {
   ];
 
   return (
-    <main className={styles.container}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>สร้างข้อมูลการสั่งซื้อ</h1>
-        <p className={styles.subtitle}>
-          จัดการใบสั่งซื้อและดูรายการที่สร้างแล้ว
-        </p>
-      </header>
-
-      {/* ฟอร์มสร้าง PO */}
-      <section className={styles.formSection}>
-        <div className={styles.selector}>
-          <label>เลือก RFQ:</label>
-          <select
-            value={selectedRFQ?.rfq_id || ""}
-            onChange={(e) => handleSelectRFQ(e.target.value)}
-          >
-            <option value="">-- กรุณาเลือก --</option>
-            {rfqs.map((r) => (
-              <option key={r.rfq_id} value={r.rfq_id}>
-                {r.rfq_no} - {r.status}
-              </option>
-            ))}
-          </select>
-          {selectedRFQ && (
-            <button
-              className={styles.dangerButton}
-              onClick={() => handleSelectRFQ("")}
-            >
-              <FaTimes className={styles.buttonIcon} /> ปิดฟอร์ม
-            </button>
-          )}
+    <div className={styles.mainHome}>
+      <div className={styles.infoContainer}>
+        <div className={styles.pageBar}>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.pageTitle}>
+              <PackageCheck size={28} /> สร้างข้อมูลการสั่งซื้อ
+            </h1>
+            <p className={styles.subtitle}>
+              จัดการใบสั่งซื้อและดูรายการที่สร้างแล้ว
+            </p>
+          </div>
         </div>
 
-        {selectedRFQ && (
-          <div className={styles.detail}>
-            <h2 className={styles.sectionTitle}>
-              รายละเอียด RFQ:{" "}
-              {selectedRFQ?.header?.rfq_no || selectedRFQ?.rfq_no || "-"}
-            </h2>
-
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>ชื่อสินค้า</th>
-                  <th>จำนวน</th>
-                  <th>หน่วย</th>
-                  <th>ราคา/หน่วย</th>
-                  <th>ส่วนลด</th>
-                  <th>จำนวนเงิน</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedRFQ?.items?.map((item) => {
-                  const unitPrice = prices[item.rfq_item_id] || 0;
-                  const discount = discounts[item.rfq_item_id] || 0;
-                  const total = item.qty * unitPrice - discount;
-                  return (
-                    <tr key={item.rfq_item_id}>
-                      <td>{item.item_name || "-"}</td>
-                      <td>{item.qty || 0}</td>
-                      <td>{item.unit || "-"}</td>
-                      <td>
-                        <input
-                          type="number"
-                          className={styles.inputItem}
-                          value={unitPrice}
-                          onChange={(e) =>
-                            handlePriceChange(item.rfq_item_id, e.target.value)
-                          }
-                          placeholder="0.00"
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="number"
-                          className={styles.inputItem}
-                          value={discount}
-                          onChange={(e) =>
-                            handleDiscountChange(
-                              item.rfq_item_id,
-                              e.target.value
-                            )
-                          }
-                          placeholder="0.00"
-                        />
-                      </td>
-                      <td>{Number(total).toLocaleString()} บาท</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-
-            <div className={styles.summaryContainer}>
-              <div className={styles.summaryRow}>
-                <span>รวม (ก่อนภาษี):</span>
-                <span>{Number(subtotal).toLocaleString()} บาท</span>
-              </div>
-              <div className={styles.summaryRow}>
-                <span>ภาษีมูลค่าเพิ่ม (7%):</span>
-                <span>{vat.toFixed(2)} บาท</span>
-              </div>
-              <div
-                className={`${styles.summaryRow} ${styles.grandTotalRow}`}
+        {/* ฟอร์มสร้าง PO */}
+        <section className={styles.formSection}>
+          <div className={styles.selector}>
+            <div className={styles.filterGroup}>
+              <label className={styles.label}>เลือก RFQ</label>
+              <select
+                value={selectedRFQ?.rfq_id || ""}
+                onChange={(e) => handleSelectRFQ(e.target.value)}
+                className={styles.input}
               >
-                <span>ยอดสุทธิ:</span>
-                <span>{grandTotal.toFixed(2)} บาท</span>
-              </div>
-            </div>
-
-            {/* supplier form */}
-            <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>ข้อมูลบริษัท/ซัพพลายเออร์</h3>
-              <div className={styles.formGrid}>
-                <input
-                  type="text"
-                  placeholder="ชื่อบริษัท"
-                  value={supplier.name}
-                  onChange={(e) =>
-                    setSupplier({ ...supplier, name: e.target.value })
-                  }
-                  className={styles.input}
-                />
-                <input
-                  type="text"
-                  placeholder="ที่อยู่"
-                  value={supplier.address}
-                  onChange={(e) =>
-                    setSupplier({ ...supplier, address: e.target.value })
-                  }
-                  className={styles.input}
-                />
-                <input
-                  type="text"
-                  placeholder="เบอร์โทร"
-                  value={supplier.phone}
-                  onChange={(e) =>
-                    setSupplier({ ...supplier, phone: e.target.value })
-                  }
-                  className={styles.input}
-                />
-                <input
-                  type="email"
-                  placeholder="อีเมล"
-                  value={supplier.email}
-                  onChange={(e) =>
-                    setSupplier({ ...supplier, email: e.target.value })
-                  }
-                  className={styles.input}
-                />
-                <input
-                  type="text"
-                  placeholder="เลขผู้เสียภาษี"
-                  value={supplier.taxId}
-                  onChange={(e) =>
-                    setSupplier({ ...supplier, taxId: e.target.value })
-                  }
-                  className={styles.input}
-                />
-              </div>
-            </div>
-
-            {/* Attachments */}
-            <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>แนบไฟล์ประกอบ</h3>
-              <div className={styles.fileGrid}>
-                {attachmentTypes.map((f) => (
-                  <div key={f.type} className={styles.fileGroup}>
-                    <label className={styles.fileLabel}>
-                      <div className={styles.uploadBox}>
-                        <span>{f.label}</span>
-                        <input
-                          type="file"
-                          multiple
-                          className={styles.fileInput}
-                          onChange={(e) => handleAttachmentChange(e, f.type)}
-                        />
-                      </div>
-                    </label>
-                    <div className={styles.fileList}>
-                      {(attachments[f.type] || []).map((file, i) => (
-                        <div key={i} className={styles.fileItem}>
-                          <span>{file.name}</span>
-                          <button
-                            type="button"
-                            className={styles.dangerButton}
-                            onClick={() => handleRemoveAttachment(f.type, i)}
-                          >
-                            <FaTimes className={styles.buttonIcon} /> ลบ
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                <option value="">-- กรุณาเลือก --</option>
+                {rfqs.map((r) => (
+                  <option key={r.rfq_id} value={r.rfq_id}>
+                    {r.rfq_no} - {r.status}
+                  </option>
                 ))}
-              </div>
+              </select>
             </div>
-
-            {/* Notes */}
-            <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>หมายเหตุ</h3>
-              <textarea
-                className={styles.textarea}
-                placeholder="ระบุหมายเหตุเพิ่มเติม..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
-            </div>
-
-            {/* Buttons */}
-            <div className={styles.footer}>
+            {selectedRFQ && (
               <button
-                className={styles.primaryButton}
-                onClick={handleCreatePO}
-                disabled={isSubmitting} // ✅ disable ปุ่มตอนกำลังส่ง
-              >
-                <FaPlusCircle className={styles.buttonIcon} />{" "}
-                {isSubmitting ? "กำลังบันทึก..." : "สร้างใบสั่งซื้อ"}
-              </button>
-              <button
-                className={styles.dangerButton}
+                className={`${styles.ghostBtn} ${styles.actionButton}`}
                 onClick={() => handleSelectRFQ("")}
                 disabled={isSubmitting}
               >
-                <FaTimes className={styles.buttonIcon} /> ยกเลิก
+                <FaTimes size={18} /> ปิดฟอร์ม
               </button>
-            </div>
-          </div>
-        )}
-      </section>
-
-      {/* PO List Section */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>รายการใบสั่งซื้อ</h2>
-        <div className={styles.toolbar}>
-          <div className={styles.searchBar}>
-            <FaSearch className={styles.searchIcon} />
-            <input
-              className={styles.input}
-              placeholder="ค้นหา: PO NO, ซัพพลายเออร์..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className={styles.filter}>
-            <label>สถานะ:</label>
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-            >
-              {statusOptions.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className={styles.spacer} />
-        </div>
-
-        <div className={styles.tableCard}>
-          <div
-            className={styles.tableWrap}
-            role="region"
-            aria-label="ตารางใบสั่งซื้อ"
-          >
-            {loading ? (
-              <div className={styles.empty}>กำลังโหลด...</div>
-            ) : filteredPoList.length === 0 ? (
-              <div className={styles.empty}>ยังไม่มีใบสั่งซื้อ</div>
-            ) : (
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>เลขที่ PO</th>
-                    <th>ซัพพลายเออร์</th>
-                    <th>วันที่สร้าง</th>
-                    <th>ยอดรวม (ก่อน VAT)</th>
-                    <th>VAT</th>
-                    <th>ยอดสุทธิ</th>
-                    <th>สถานะ</th>
-                    <th>การจัดการ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPoList.map((po) => (
-                    <tr key={po.po_id}>
-                      <td className={styles.mono}>{po.po_no}</td>
-                      <td>{po.supplier_name || "-"}</td>
-                      <td>
-                        {new Date(po.created_at).toLocaleDateString("th-TH")}
-                      </td>
-                      <td>{Number(po.subtotal).toLocaleString()} บาท</td>
-                      <td>{Number(po.vat_amount).toFixed(2)} บาท</td>
-                      <td>{Number(po.grand_total).toFixed(2)} บาท</td>
-                      <td>
-                        <StatusBadge poStatus={po.po_status} />
-                      </td>
-                      <td>
-                        <Link href={`/purchasing/poList/${po.po_id}`}>
-                          <button className={styles.primaryButton}>
-                            <FaEye className={styles.buttonIcon} /> ดูรายละเอียด
-                          </button>
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             )}
           </div>
-        </div>
-      </section>
-    </main>
+
+          {selectedRFQ && (
+            <div className={styles.detail}>
+              <h2 className={styles.sectionTitle}>
+                รายละเอียด RFQ: {selectedRFQ?.header?.rfq_no || selectedRFQ?.rfq_no || "-"}
+              </h2>
+
+              <div className={styles.tableSection}>
+                <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+                  <div className={styles.headerItem}>ชื่อสินค้า</div>
+                  <div className={styles.headerItem}>จำนวน</div>
+                  <div className={styles.headerItem}>หน่วย</div>
+                  <div className={styles.headerItem}>ราคา/หน่วย</div>
+                  <div className={styles.headerItem}>ส่วนลด</div>
+                  <div className={styles.headerItem}>จำนวนเงิน</div>
+                </div>
+                <div className={styles.inventory}>
+                  {selectedRFQ?.items?.map((item) => {
+                    const unitPrice = prices[item.rfq_item_id] || 0;
+                    const discount = discounts[item.rfq_item_id] || 0;
+                    const total = item.qty * unitPrice - discount;
+                    return (
+                      <div
+                        key={item.rfq_item_id}
+                        className={`${styles.tableGrid} ${styles.tableRow}`}
+                      >
+                        <div className={`${styles.tableCell} ${styles.textWrap}`}>
+                          {item.item_name || "-"}
+                        </div>
+                        <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                          {item.qty || 0}
+                        </div>
+                        <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                          {item.unit || "-"}
+                        </div>
+                        <div className={styles.tableCell}>
+                          <input
+                            type="number"
+                            className={styles.input}
+                            value={unitPrice}
+                            onChange={(e) =>
+                              handlePriceChange(item.rfq_item_id, e.target.value)
+                            }
+                            placeholder="0.00"
+                            aria-label={`ราคาต่อหน่วยสำหรับ ${item.item_name}`}
+                          />
+                        </div>
+                        <div className={styles.tableCell}>
+                          <input
+                            type="number"
+                            className={styles.input}
+                            value={discount}
+                            onChange={(e) =>
+                              handleDiscountChange(item.rfq_item_id, e.target.value)
+                            }
+                            placeholder="0.00"
+                            aria-label={`ส่วนลดสำหรับ ${item.item_name}`}
+                          />
+                        </div>
+                        <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                          {Number(total).toLocaleString()} บาท
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className={styles.summaryContainer}>
+                <div className={styles.summaryRow}>
+                  <span>รวม (ก่อนภาษี):</span>
+                  <span>{Number(subtotal).toLocaleString()} บาท</span>
+                </div>
+                <div className={styles.summaryRow}>
+                  <span>ภาษีมูลค่าเพิ่ม (7%):</span>
+                  <span>{vat.toFixed(2)} บาท</span>
+                </div>
+                <div className={`${styles.summaryRow} ${styles.grandTotalRow}`}>
+                  <span>ยอดสุทธิ:</span>
+                  <span>{grandTotal.toFixed(2)} บาท</span>
+                </div>
+              </div>
+
+              <div className={styles.section}>
+                <h3 className={styles.sectionTitle}>ข้อมูลบริษัท/ซัพพลายเออร์</h3>
+                <div className={styles.formGrid}>
+                  <input
+                    type="text"
+                    placeholder="ชื่อบริษัท"
+                    value={supplier.name}
+                    onChange={(e) =>
+                      setSupplier({ ...supplier, name: e.target.value })
+                    }
+                    className={styles.input}
+                    aria-label="ชื่อบริษัท"
+                  />
+                  <input
+                    type="text"
+                    placeholder="ที่อยู่"
+                    value={supplier.address}
+                    onChange={(e) =>
+                      setSupplier({ ...supplier, address: e.target.value })
+                    }
+                    className={styles.input}
+                    aria-label="ที่อยู่"
+                  />
+                  <input
+                    type="text"
+                    placeholder="เบอร์โทร"
+                    value={supplier.phone}
+                    onChange={(e) =>
+                      setSupplier({ ...supplier, phone: e.target.value })
+                    }
+                    className={styles.input}
+                    aria-label="เบอร์โทร"
+                  />
+                  <input
+                    type="email"
+                    placeholder="อีเมล"
+                    value={supplier.email}
+                    onChange={(e) =>
+                      setSupplier({ ...supplier, email: e.target.value })
+                    }
+                    className={styles.input}
+                    aria-label="อีเมล"
+                  />
+                  <input
+                    type="text"
+                    placeholder="เลขผู้เสียภาษี"
+                    value={supplier.taxId}
+                    onChange={(e) =>
+                      setSupplier({ ...supplier, taxId: e.target.value })
+                    }
+                    className={styles.input}
+                    aria-label="เลขผู้เสียภาษี"
+                  />
+                </div>
+              </div>
+
+              <div className={styles.section}>
+                <h3 className={styles.sectionTitle}>แนบไฟล์ประกอบ</h3>
+                <div className={styles.fileGrid}>
+                  {attachmentTypes.map((f) => (
+                    <div key={f.type} className={styles.fileGroup}>
+                      <label className={styles.fileLabel}>
+                        <div className={styles.uploadBox}>
+                          <span>{f.label}</span>
+                          <input
+                            type="file"
+                            multiple
+                            className={styles.fileInput}
+                            onChange={(e) => handleAttachmentChange(e, f.type)}
+                            aria-label={`อัปโหลดไฟล์ ${f.label}`}
+                          />
+                        </div>
+                      </label>
+                      <div className={styles.fileList}>
+                        {(attachments[f.type] || []).map((file, i) => (
+                          <div key={i} className={styles.fileItem}>
+                            <span className={styles.textWrap}>{file.name}</span>
+                            <button
+                              type="button"
+                              className={`${styles.ghostBtn} ${styles.actionButton}`}
+                              onClick={() => handleRemoveAttachment(f.type, i)}
+                            >
+                              <FaTimes size={18} /> ลบ
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className={styles.section}>
+                <h3 className={styles.sectionTitle}>หมายเหตุ</h3>
+                <textarea
+                  className={styles.textarea}
+                  placeholder="ระบุหมายเหตุเพิ่มเติม..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  aria-label="หมายเหตุ"
+                />
+              </div>
+
+              <div className={styles.footer}>
+                <button
+                  className={`${styles.primaryButton} ${styles.actionButton}`}
+                  onClick={handleCreatePO}
+                  disabled={isSubmitting}
+                >
+                  <FaPlusCircle size={18} /> {isSubmitting ? "กำลังบันทึก..." : "สร้างใบสั่งซื้อ"}
+                </button>
+                <button
+                  className={`${styles.ghostBtn} ${styles.actionButton}`}
+                  onClick={() => handleSelectRFQ("")}
+                  disabled={isSubmitting}
+                >
+                  <FaTimes size={18} /> ยกเลิก
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* PO List Section */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>รายการใบสั่งซื้อ</h2>
+          <div className={styles.toolbar}>
+            <div className={styles.filterGrid}>
+              <div className={styles.filterGroup}>
+                <label className={styles.label}>สถานะ</label>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className={styles.input}
+                >
+                  {statusOptions.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles.filterGroup}>
+                <label className={styles.label}>ค้นหา</label>
+                <div className={styles.searchBar}>
+                  <FaSearch className={styles.searchIcon} />
+                  <input
+                    className={styles.input}
+                    placeholder="ค้นหา: PO NO, ซัพพลายเออร์..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    aria-label="ค้นหาใบสั่งซื้อ"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.tableSection}>
+            {loading ? (
+              <div className={styles.loadingContainer}>
+                <div className={styles.spinner}>กำลังโหลด...</div>
+              </div>
+            ) : filteredPoList.length === 0 ? (
+              <div className={styles.noDataMessage}>ยังไม่มีใบสั่งซื้อ</div>
+            ) : (
+              <>
+                <div className={`${styles.tableGrid} ${styles.tableHeader} ${styles.poList}`}>
+                  <div className={styles.headerItem}>เลขที่ PO</div>
+                  <div className={styles.headerItem}>ซัพพลายเออร์</div>
+                  <div className={styles.headerItem}>วันที่สร้าง</div>
+                  <div className={styles.headerItem}>ยอดรวม (ก่อน VAT)</div>
+                  <div className={styles.headerItem}>VAT</div>
+                  <div className={styles.headerItem}>ยอดสุทธิ</div>
+                  <div className={styles.headerItem}>สถานะ</div>
+                  <div className={styles.headerItem}>การจัดการ</div>
+                </div>
+                <div className={styles.inventory}>
+                  {filteredPoList.map((po) => (
+                    <div key={po.po_id} className={`${styles.tableGrid} ${styles.tableRow} ${styles.poList}`}>
+                      <div className={`${styles.tableCell} ${styles.mono}`}>
+                        {po.po_no}
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.textWrap}`}>
+                        {po.supplier_name || "-"}
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        {new Date(po.created_at).toLocaleDateString("th-TH")}
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        {Number(po.subtotal).toLocaleString()} บาท
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        {Number(po.vat_amount).toFixed(2)} บาท
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        {Number(po.grand_total).toFixed(2)} บาท
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        <StatusBadge poStatus={po.po_status} />
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                        <Link href={`/purchasing/poList/${po.po_id}`}>
+                          <button
+                            className={`${styles.primaryButton} ${styles.actionButton}`}
+                            aria-label={`ดูรายละเอียดใบสั่งซื้อ ${po.po_no}`}
+                          >
+                            <FaEye size={18} /> ดูรายละเอียด
+                          </button>
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+      </div>
+    </div>
   );
 };
 

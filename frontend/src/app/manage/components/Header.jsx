@@ -3,7 +3,7 @@
 import styles from './Header.module.css';
 import Image from 'next/image';
 // ✅ เปลี่ยนมาใช้ไอคอนจาก Lucide React
-import { CircleUser } from 'lucide-react'; 
+import { CircleUser } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 
 export default function Header() {
@@ -20,19 +20,26 @@ export default function Header() {
                 />
             </div>
             <h1 className={styles.headerTitle}>ระบบคลังโรงพยาบาล</h1>
-
-            <div className={styles.iconGroup}>
-                {/* 🔔 ปุ่มแจ้งเตือน */}
-                <NotificationBell />
-                <div className={styles.profileWrapper}>
-                    <div className={styles.profileText}>
-                        <span className={styles.profileName}>พงศ์เทพ ศรีสุข</span>
-                        <span className={styles.profileRole}>ผู้จัดการคลังคลัง</span>
-                    </div>
-                    {/* ✅ เปลี่ยนมาใช้ไอคอนจาก Lucide */}
-                    <CircleUser className={styles.profileIcon} size={32} /> 
-                </div>
-            </div>
-        </header>
-    );
+      <div className={styles.iconGroup}>
+        {/* 🔔 ปุ่มแจ้งเตือน */}
+        <NotificationBell />
+        <div className={styles.profileWrapper}>
+          <div className={styles.profileText}>
+            <span className={styles.profileName}>พงศ์เทพ ศรีสุข</span>
+            <span className={styles.profileRole}>ผู้จัดการคลังคลัง</span>
+          </div>
+          {/* ✅ เปลี่ยนมาใช้ไอคอนจาก Lucide */}
+          <div className={styles.profileImageWrapper}>
+            <Image
+              src="/Profiletest/คลัง.png"   // 👉 ใส่ path ของไฟล์รูปโปรไฟล์
+              alt="Profile"
+              width={40}
+              height={40}
+              className={styles.profileImage}
+            />
+          </div>
+        </div>
+      </div>
+    </header>
+  );
 }

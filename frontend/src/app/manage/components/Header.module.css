@@ -10,6 +10,9 @@
 
 /* Header */
 .header {
+   height: 90px;   /* กำหนดให้เท่ากันทุกฝั่ง */
+  min-height: 90px;
+  max-height: 90px;
     margin: 0;
     position: sticky;
     top: 0;
@@ -29,29 +32,23 @@
 
 /* ✅ กรอบโลโก้ */
 .logoWrapper {
-    /* ขนาดกรอบ */
-    width: 66px;
-    height: 66px;
-
-    /* ✅ เปลี่ยนจาก background เป็น border */
-    background: transparent;
-    border: 5.5px solid #ffffff; /* ปรับความหนาของเส้นกรอบเป็น 2px */
-
-    /* ✅ ปรับความโค้งมนให้ดูเข้ากับกรอบที่บางลง */
-    border-radius: 16px; 
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  
-    /* เงาที่นุ่มนวล */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    margin-right: 20px;
+  width: 65px;
+  height: 65px;
+  margin-right: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent; /* เอาพื้นหลังออก */
 }
 
 /* โลโก้ */
 .logo {
-    object-fit: contain;
+   width: 66px;
+  height: 66px;
+  object-fit: cover;
+  border: 0px solid #ebebeb;   /* ✅ กรอบสีฟ้า */
+  border-radius: 12px;         /* มุมโค้งมน */
+  background-color: #ffffff;
 }
 
 /* ชื่อระบบ */
@@ -96,6 +93,7 @@
 
 /* Profile Section */
 .profileWrapper {
+    width: 200px;
     display: flex;
     align-items: center;
     gap: 12px; /* เพิ่มระยะห่างระหว่างข้อความและไอคอน */
@@ -123,6 +121,17 @@
     flex-direction: column;
     text-align: right;
     line-height: 1.2;
+    flex: 1 1 auto;       /* ✅ ให้ยืด-หดได้ */
+    min-width: 0;         /* ✅ สำคัญมากเพื่อให้ ellipsis ทำงาน */
+    max-width: 160px;     /* จำกัดความกว้างสูงสุด */
+    overflow: hidden;     /* ตัดส่วนเกิน */
+}
+
+.profileName,
+.profileRole {
+    white-space: nowrap;      /* ไม่ให้ขึ้นบรรทัดใหม่ */
+    overflow: hidden;         /* ซ่อนข้อความเกิน */
+    text-overflow: ellipsis;  /* ใส่ … */
 }
 
 .profileName {
@@ -143,6 +152,18 @@
     color: var(--text-on-primary);
     width: 36px;
     height: 36px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.profileImage {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;        /* วงกลม */
+    object-fit: cover;         /* รูปเต็มกรอบ */
+    border: 2px solid #fff;    /* กรอบสีขาว */
+    flex-shrink: 0;            /* ✅ กันไม่ให้ถูกบีบ */
+    flex-grow: 0;              /* ✅ กันไม่ให้ขยาย */
+    flex-basis: 36px;          /* ✅ ล็อคความกว้าง/สูงใน flex */
     transition: transform 0.2s ease-in-out;
 }
 

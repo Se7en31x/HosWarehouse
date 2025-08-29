@@ -1,6 +1,8 @@
+// src/app/components/NotificationBell.jsx
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { MdNotifications } from "react-icons/md";
+// ใช้ icon จาก lucide-react ทั้งหมด
+import { Bell, Check, X, Eye, Trash2 } from "lucide-react"; 
 import { useNotifications } from "../../context/NotificationContextUser";
 import styles from "./NotificationBell.module.css";
 
@@ -15,10 +17,8 @@ export default function NotificationBell() {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setOpen(false);
-        console.log("Notifications in Bell:", notifications);
       }
     };
-    console.log("Notifications in Bell:", notifications);
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -26,14 +26,11 @@ export default function NotificationBell() {
   // ✅ อ่านเฉพาะ 1 รายการ
   const handleMarkAsRead = (id) => {
     if (socket && id) {
-      console.log("👉 Mark as read:", id);
-      // update local state ก่อน
       setNotifications((prev) =>
         prev.map((n) =>
           Number(n.notification_id) === Number(id) ? { ...n, is_read: true } : n
         )
       );
-      // ส่งไป backend
       socket.emit("markAsRead", id);
     }
   };
@@ -41,7 +38,6 @@ export default function NotificationBell() {
   // ✅ อ่านทั้งหมด
   const handleMarkAllAsRead = () => {
     if (socket) {
-      console.log("👉 Mark all as read");
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
       socket.emit("markAllAsRead", 999);
     }
@@ -50,8 +46,7 @@ export default function NotificationBell() {
   // ✅ ลบทั้งหมด
   const handleClearAll = () => {
     if (socket) {
-      console.log("👉 Clear all notifications");
-      setNotifications([]); // เคลียร์ทันที
+      setNotifications([]); 
       socket.emit("clearNotifications", 999);
     }
   };
@@ -59,7 +54,7 @@ export default function NotificationBell() {
   return (
     <div className={styles.notiWrapper} ref={dropdownRef}>
       <div className={styles.bellWrapper} onClick={toggleDropdown}>
-        <MdNotifications className={styles.bellIcon} size={32} />
+        <Bell className={styles.bellIcon} size={24} />
         {unreadCount > 0 && (
           <span className={styles.badge}>
             {unreadCount > 99 ? "99+" : unreadCount}
@@ -76,12 +71,12 @@ export default function NotificationBell() {
             <div className={styles.actions}>
               {unreadCount > 0 && (
                 <button onClick={handleMarkAllAsRead} className={styles.markAllBtn}>
-                  ✔ อ่านทั้งหมด
+                  <Check size={16} /> อ่านทั้งหมด
                 </button>
               )}
               {notifications.length > 0 && (
                 <button onClick={handleClearAll} className={styles.clearBtn}>
-                  🗑 ลบทั้งหมด
+                  <Trash2 size={16} /> ลบทั้งหมด
                 </button>
               )}
             </div>
@@ -116,7 +111,9 @@ export default function NotificationBell() {
           </div>
 
           <div className={styles.dropdownFooter}>
-            <button className={styles.viewAllBtn}>🔍 ดูทั้งหมด</button>
+            <button className={styles.viewAllBtn}>
+              <Eye size={16} /> ดูทั้งหมด
+            </button>
           </div>
         </div>
       )}

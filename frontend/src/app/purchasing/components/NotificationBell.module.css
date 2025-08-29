@@ -11,9 +11,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width:50px;
+  height: 50px;
   border-radius: 50%;
+  background-color: #33a0db98;
   transition: background 0.2s ease;
 }
 
@@ -33,19 +34,19 @@
 
 /* 📌 Badge (ตัวเลขแจ้งเตือน) */
 .badge {
-  position: absolute;
-  top: 4px;
-  right: 6px;
-  background: #cc0000;
-  color: white;
-  font-size: 11px;
-  font-weight: bold;
-  border-radius: 50%;
-  padding: 2px 6px;
-  min-width: 18px;
-  text-align: center;
-  border: 2px solid white;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    position: absolute;
+    top: -4px; /* ✅ ปรับตำแหน่งให้ขยับขึ้นไปด้านบน */
+    right: -4px; /* ✅ ปรับตำแหน่งให้ขยับไปด้านขวา */
+    background: #e53935;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 9999px;
+    padding: 2px 6px;
+    min-width: 18px;
+    text-align: center;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
 /* 📌 Dropdown */

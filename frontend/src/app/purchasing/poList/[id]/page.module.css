@@ -1,107 +1,322 @@
-/* src/app/purchasing/poList/[id]/page.module.css */
+/* =============================
+   PoDetailsPage — page.module.css
+   Palette: #008dda, #41c9e2, #ace2e1, #1685bb
+   ============================= */
 
-/* จัดวางคอนเทนเนอร์หลัก */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-family: Arial, sans-serif;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ---- Variables ---- */
+:root {
+  --bg: #f0fbfe;
+  --panel: #ffffff;
+  --muted: #6b7280;
+  --text: #111827;
+  --border: #e5e7eb;
+  --primary: #008dda;
+  --primary-500: #41c9e2;
+  --primary-600: #1685bb;
+  --tint-50: #f0fbfe;
+  --tint-100: #e9f6fb;
+  --tint-200: #ace2e1;
+  --success: #16a34a;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --radius: 10px;
+  --row-h: 64px;
+  --rows-per-page: 10;
+  --th-font: 1.15rem;
+  --body-font: 1rem;
+  --th-min-h: 64px;
+  --th-pad-y: 16px;
+  --th-pad-x: 16px;
+  --th-letter: 0.01em;
+  --th-line: 1.25;
+  --z-header: 10;
+  --z-toolbar: 100;
+  --z-modal: 12000;
 }
 
-/* ส่วนหัวเรื่อง */
-.title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #333;
-  text-align: center;
-  margin-bottom: 2rem;
+/* ---- Layout ---- */
+.mainHome {
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
 }
 
-/* กล่องรายละเอียด PO */
-.detail {
-  background-color: #fff;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.detail h2 {
-  font-size: 1.8rem;
-  color: #4a90e2;
-  border-bottom: 2px solid #e0e0e0;
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.detail p {
-  font-size: 1rem;
-  margin-bottom: 0.5rem;
-}
-
-.section {
-  margin-top: 2rem;
-}
-
-.section h3 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #555;
-  margin-bottom: 1rem;
-}
-
-/* ตารางรายการสินค้า */
-.table {
+.infoContainer {
   width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 2rem;
-}
-
-.table th,
-.table td {
-  padding: 12px;
-  border: 1px solid #ddd;
-  text-align: left;
-}
-
-.table th {
-  background-color: #f2f2f2;
-  font-weight: bold;
-}
-
-/* จัดวางส่วนสรุปยอดเงิน */
-.summaryContainer {
-  margin-top: 20px;
-  width: 100%;
+  max-width: 1280px;
+  min-height: 100vh;
+  background: var(--panel);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  align-items: flex-end; /* จัดให้อยู่ชิดขวา */
-  padding: 10px;
-  border-top: 1px solid #ccc;
+  gap: 16px;
+}
+
+/* ---- Header ---- */
+.pageBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pageTitle {
+  font-weight: 700;
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text);
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin: 4px 0 0 0;
+}
+
+.titleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ---- Buttons ---- */
+.ghostBtn {
+  background: #fff;
+  color: var(--text);
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  height: 40px;
+  padding: 0 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ghostBtn:hover:not(:disabled) {
+  background: var(--tint-100);
+}
+
+.primaryButton {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  height: 40px;
+  padding: 0 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+
+.primaryButton:hover:not(:disabled) {
+  background: var(--primary-600);
+}
+
+.actionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- Detail Section ---- */
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
+  background: var(--tint-50);
+  padding: 20px;
+}
+
+.sectionTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* ---- Info Grid ---- */
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  padding: 12px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid var(--tint-200);
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.infoLabel {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.textWrap {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+/* ---- Status Badge ---- */
+.stBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border: 1px solid transparent;
+  min-width: 100px;
+  line-height: 1;
+  text-align: center;
+}
+
+.pending { color: #92400e; background: #fef3c7; border-color: #fde68a; }
+.approved { color: #166534; background: #dcfce7; border-color: #86efac; }
+.completed { color: #1e40af; background: #dbeafe; border-color: #93c5fd; }
+.canceled { color: #9f1239; background: #ffe4e6; border-color: #fecdd3; }
+
+/* ---- Table ---- */
+.tableSection {
+  border: 1px solid var(--tint-200);
+  border-radius: var(--radius);
+  background: #fff;
+  overflow-x: auto;
+  margin-top: 8px;
+}
+
+.tableGrid {
+  display: grid;
+  grid-template-columns:
+    minmax(180px, auto) /* ชื่อสินค้า */
+    minmax(80px, auto) /* จำนวน */
+    minmax(80px, auto) /* หน่วย */
+    minmax(100px, auto) /* ราคา/หน่วย */
+    minmax(100px, auto) /* ส่วนลด */
+    minmax(120px, auto); /* จำนวนเงิน */
+  align-items: center;
+  width: fit-content;
+  min-width: 100%;
+}
+
+.tableHeader {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  background: var(--tint-50);
+  border-bottom: 1px solid var(--tint-200);
+  padding: var(--th-pad-y) var(--th-pad-x);
+  font-weight: 700;
+  color: var(--text);
+  font-size: var(--th-font);
+  line-height: var(--th-line);
+  min-height: var(--th-min-h);
+}
+
+.headerItem {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 var(--th-pad-x);
+  white-space: nowrap;
+}
+
+.tableHeader .headerItem:nth-child(2),
+.tableHeader .headerItem:nth-child(3),
+.tableHeader .headerItem:nth-child(4),
+.tableHeader .headerItem:nth-child(5),
+.tableHeader .headerItem:nth-child(6) {
+  justify-content: center;
+}
+
+.inventory {
+  background: #fff;
+}
+
+.tableRow {
+  min-height: var(--row-h);
+  padding: 0 var(--th-pad-x);
+  border-top: 1px solid var(--tint-200);
+}
+
+.tableRow:hover {
+  background: var(--tint-100);
+}
+
+.tableRow:first-child {
+  border-top: 0;
+}
+
+.tableCell {
+  display: flex;
+  align-items: center;
+  padding: 8px var(--th-pad-x);
+  font-size: var(--body-font);
+  min-height: var(--row-h);
+}
+
+.tableCell.centerCell {
+  justify-content: center;
+}
+
+.tableCell.textWrap {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+/* ---- Summary ---- */
+.summaryContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  background: var(--tint-50);
 }
 
 .summaryRow {
   display: flex;
   justify-content: space-between;
-  width: 300px; /* กำหนดความกว้างเพื่อจัดคอลัมน์ให้ตรงกัน */
-  margin-bottom: 5px;
-}
-
-.summaryRow span:first-child {
-  font-weight: bold;
+  font-size: var(--body-font);
 }
 
 .grandTotalRow {
-  font-size: 1.2em;
-  font-weight: bold;
-  border-top: 2px solid #333;
+  font-weight: 600;
+  border-top: 1px solid var(--tint-200);
   padding-top: 10px;
 }
 
-/* จัดวางส่วนอัปโหลดไฟล์ */
+/* ---- File Upload ---- */
 .fileGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
 }
 
 .fileGroup {
@@ -110,89 +325,134 @@
   gap: 10px;
 }
 
-/* ซ่อน input file เดิมและสร้างปุ่มอัปโหลดใหม่ */
 .fileLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.uploadBox {
+  border: 2px dashed var(--tint-200);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
   cursor: pointer;
-  width: 100%;
+  background: #fff;
+}
+
+.uploadBox:hover {
+  background: var(--tint-100);
 }
 
 .fileInput {
   display: none;
 }
 
-.uploadBox {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-  border: 2px dashed #ccc;
-  border-radius: 8px;
-  text-align: center;
-  transition: all 0.3s ease;
-  height: 100%; /* ทำให้กล่องมีความสูงเท่ากัน */
-}
-
-.uploadBox:hover {
-  background-color: #f0f0f0;
-  border-color: #007bff;
-}
-
-.uploadBox span {
-  font-weight: bold;
-  color: #555;
-  margin-top: 5px;
-}
-
 .fileList {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 10px;
 }
 
 .fileItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #f9f9f9;
-  padding: 5px 10px;
-  border-radius: 4px;
+  padding: 10px;
+  border: 1px solid var(--tint-200);
+  border-radius: 8px;
+  background: var(--tint-50);
 }
 
 .fileItem a {
-  flex-grow: 1;
+  color: var(--primary);
+  text-decoration: none;
+  max-width: 60%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.removeButton {
-  background-color: #ff4d4d;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 2px 8px;
-  cursor: pointer;
-  margin-left: 10px;
-  font-size: 0.8rem;
+.fileItem a:hover {
+  text-decoration: underline;
 }
 
+/* ---- Footer ---- */
 .footer {
-  margin-top: 2rem;
-  text-align: right;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 0;
 }
 
-.button {
-  padding: 10px 20px;
-  background-color: #4a90e2;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+/* ---- Loading and Empty States ---- */
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(var(--row-h) * var(--rows-per-page));
+}
+
+.spinner {
   font-size: 1rem;
-  transition: background-color 0.3s ease;
+  color: var(--primary);
+  animation: spin 1s linear infinite;
 }
 
-.button:hover {
-  background-color: #357bd8;
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.noDataMessage {
+  min-height: calc(var(--row-h) * var(--rows-per-page));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: var(--body-font);
+}
+
+/* ---- Swal Button ---- */
+.swalButton {
+  background: var(--primary) !important;
+  border-radius: 8px !important;
+  padding: 10px 20px !important;
+}
+
+.swalButton:hover {
+  background: var(--primary-600) !important;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 1024px) {
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+  .fileGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --th-font: 1.1rem;
+    --body-font: 0.95rem;
+    --th-min-h: 58px;
+    --th-pad-y: 12px;
+    --th-pad-x: 12px;
+    --row-h: 58px;
+  }
+  .tableGrid {
+    grid-template-columns:
+      minmax(140px, auto)
+      minmax(70px, auto)
+      minmax(70px, auto)
+      minmax(90px, auto)
+      minmax(90px, auto)
+      minmax(100px, auto);
+  }
+  .fileItem a {
+    max-width: 50%;
+  }
 }

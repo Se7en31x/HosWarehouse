@@ -13,6 +13,14 @@ html, body {
   overflow: hidden; /* ✨ สำคัญ: ป้องกัน Scrollbar โดยรวมที่เกิดจาก body/html */
 }
 
+.header {
+  height: 75px;
+  min-height: 65px;
+  max-height: 75px;
+  flex-shrink: 0; /* กัน header ถูกบีบ */
+}
+
+
 /* --- App Layout Container (Header + Sidebar & Main Content) --- */
 .app-layout-container {
   display: flex;

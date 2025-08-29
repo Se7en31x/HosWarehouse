@@ -3,18 +3,22 @@ import { useState, useEffect } from "react";
 import styles from "./page.module.css";
 import axiosInstance from "@/app/utils/axiosInstance";
 import { FaSearch, FaEye, FaFilePdf, FaTimes } from "react-icons/fa";
+import { PackageCheck } from "lucide-react"; // ใช้ไอคอนจาก lucide-react เพื่อความสม่ำเสมอ
 import Swal from "sweetalert2";
 import exportPDF from "@/app/components/pdf/PDFExporter";
 
 const statusOptions = ["ทั้งหมด", "รอดำเนินการ", "อนุมัติ", "เสร็จสิ้น", "ยกเลิก"];
 
-// Component สำหรับแสดง Badge สถานะ
 const StatusBadge = ({ status }) => {
   let badgeStyle = styles.pending;
   if (status?.toLowerCase() === "approved") badgeStyle = styles.approved;
   else if (status?.toLowerCase() === "completed") badgeStyle = styles.completed;
   else if (status?.toLowerCase() === "canceled") badgeStyle = styles.canceled;
-  return <span className={`${styles.badge} ${badgeStyle}`}>{status ? status.charAt(0).toUpperCase() + status.slice(1) : "รอดำเนินการ"}</span>;
+  return (
+    <span className={`${styles.stBadge} ${badgeStyle}`}>
+      {status ? status.charAt(0).toUpperCase() + status.slice(1) : "รอดำเนินการ"}
+    </span>
+  );
 };
 
 const RFQListPage = () => {
@@ -24,7 +28,6 @@ const RFQListPage = () => {
   const [filterStatus, setFilterStatus] = useState("ทั้งหมด");
   const [loading, setLoading] = useState(true);
 
-  // Load RFQs
   useEffect(() => {
     const fetchRFQs = async () => {
       try {
@@ -46,7 +49,6 @@ const RFQListPage = () => {
     fetchRFQs();
   }, []);
 
-  // Export PDF
   const handleExportPDF = async (rfq) => {
     const items = rfq.items || [];
     try {
@@ -118,7 +120,6 @@ const RFQListPage = () => {
     }
   };
 
-  // Filter RFQs
   const filteredRfqs = rfqs.filter(
     (rfq) =>
       (filterStatus === "ทั้งหมด" || rfq.status?.toLowerCase() === filterStatus.toLowerCase()) &&
@@ -127,133 +128,169 @@ const RFQListPage = () => {
   );
 
   return (
-    <main className={styles.container}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>รายการใบขอราคา (RFQ)</h1>
-        <p className={styles.subtitle}>ดูและจัดการใบขอราคาที่สร้างแล้ว</p>
-      </header>
-
-      <section className={styles.toolbar}>
-        <div className={styles.searchBar}>
-          <FaSearch className={styles.searchIcon} />
-          <input
-            className={styles.input}
-            placeholder="ค้นหา: RFQ NO, ผู้จัดทำ..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className={styles.filter}>
-          <label>สถานะ:</label>
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-            {statusOptions.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className={styles.spacer} />
-      </section>
-
-      <div className={styles.tableCard}>
-        <div className={styles.tableWrap} role="region" aria-label="ตารางใบขอราคา">
-          {loading ? (
-            <div className={styles.empty}>กำลังโหลด...</div>
-          ) : filteredRfqs.length === 0 ? (
-            <div className={styles.empty}>ไม่พบใบขอราคา</div>
-          ) : (
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>RFQ NO</th>
-                  <th>ผู้จัดทำ</th>
-                  <th>วันที่สร้าง</th>
-                  <th>สถานะ</th>
-                  <th>การกระทำ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRfqs.map((rfq) => (
-                  <tr key={rfq.rfq_id}>
-                    <td className={styles.mono}>{rfq.rfq_no}</td>
-                    <td>{rfq.user_fname} {rfq.user_lname}</td>
-                    <td>{new Date(rfq.created_at).toLocaleDateString("th-TH")}</td>
-                    <td><StatusBadge status={rfq.status} /></td>
-                    <td>
-                      <button
-                        className={styles.primaryButton}
-                        onClick={() => setSelectedRFQ(rfq)}
-                      >
-                        <FaEye className={styles.buttonIcon} /> ดูรายละเอียด
-                      </button>
-                      <button
-                        className={styles.secondaryButton}
-                        onClick={() => handleExportPDF(rfq)}
-                      >
-                        <FaFilePdf className={styles.buttonIcon} /> ออกใบ PDF
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-
-      {selectedRFQ && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContent}>
-            <header className={styles.modalHeader}>
-              <h2>รายละเอียด RFQ: {selectedRFQ.rfq_no}</h2>
-              <button className={styles.closeButton} onClick={() => setSelectedRFQ(null)}>
-                <FaTimes />
-              </button>
-            </header>
-            <section className={styles.modalBody}>
-              <p><strong>ผู้จัดทำ:</strong> {selectedRFQ.user_fname} {selectedRFQ.user_lname}</p>
-              <p><strong>วันที่:</strong> {new Date(selectedRFQ.created_at).toLocaleDateString("th-TH")}</p>
-              <h3>รายการสินค้า</h3>
-              <table className={styles.itemTable}>
-                <thead>
-                  <tr>
-                    <th>ชื่อสินค้า</th>
-                    <th>จำนวน</th>
-                    <th>หน่วย</th>
-                    <th>คุณลักษณะ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedRFQ.items?.map((item) => (
-                    <tr key={item.rfq_item_id}>
-                      <td>{item.item_name || "-"}</td>
-                      <td>{item.qty || 0}</td>
-                      <td>{item.unit || "-"}</td>
-                      <td>{item.spec || "-"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </section>
-            <footer className={styles.modalFooter}>
-              <button
-                className={styles.secondaryButton}
-                onClick={() => handleExportPDF(selectedRFQ)}
-              >
-                <FaFilePdf className={styles.buttonIcon} /> ดาวน์โหลด PDF
-              </button>
-              <button
-                className={styles.secondaryButton}
-                onClick={() => setSelectedRFQ(null)}
-              >
-                <FaTimes className={styles.buttonIcon} /> ปิด
-              </button>
-            </footer>
+    <div className={styles.mainHome}>
+      <div className={styles.infoContainer}>
+        <div className={styles.pageBar}>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.pageTitle}>
+              <PackageCheck size={28} /> รายการใบขอราคา (RFQ)
+            </h1>
+            <p className={styles.subtitle}>ดูและจัดการใบขอราคาที่สร้างแล้ว</p>
           </div>
         </div>
-      )}
-    </main>
+
+        <div className={styles.toolbar}>
+          <div className={styles.filterGrid}>
+            <div className={styles.filterGroup}>
+              <label className={styles.label}>สถานะ</label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className={styles.input}
+              >
+                {statusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.filterGroup}>
+              <label className={styles.label}>ค้นหา</label>
+              <div className={styles.searchBar}>
+                <FaSearch className={styles.searchIcon} />
+                <input
+                  className={styles.input}
+                  placeholder="ค้นหา: RFQ NO, ผู้จัดทำ..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.tableSection}>
+          {loading ? (
+            <div className={styles.loadingContainer}>
+              <div className={styles.spinner}>กำลังโหลด...</div>
+            </div>
+          ) : filteredRfqs.length === 0 ? (
+            <div className={styles.noDataMessage}>ไม่พบใบขอราคา</div>
+          ) : (
+            <>
+              <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+                <div className={styles.headerItem}>RFQ NO</div>
+                <div className={styles.headerItem}>ผู้จัดทำ</div>
+                <div className={styles.headerItem}>วันที่สร้าง</div>
+                <div className={styles.headerItem}>สถานะ</div>
+                <div className={styles.headerItem}>การกระทำ</div>
+              </div>
+              <div className={styles.inventory}>
+                {filteredRfqs.map((rfq) => (
+                  <div key={rfq.rfq_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                    <div className={`${styles.tableCell} ${styles.mono}`}>
+                      {rfq.rfq_no}
+                    </div>
+                    <div className={styles.tableCell}>
+                      {rfq.user_fname} {rfq.user_lname}
+                    </div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      {new Date(rfq.created_at).toLocaleDateString("th-TH")}
+                    </div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      <StatusBadge status={rfq.status} />
+                    </div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      <button
+                        className={`${styles.primaryButton} ${styles.actionButton}`}
+                        onClick={() => setSelectedRFQ(rfq)}
+                      >
+                        <FaEye size={18} /> ดูรายละเอียด
+                      </button>
+                      <button
+                        className={`${styles.ghostBtn} ${styles.actionButton}`}
+                        onClick={() => handleExportPDF(rfq)}
+                      >
+                        <FaFilePdf size={18} /> ออกใบ PDF
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {selectedRFQ && (
+          <div className={styles.modalOverlay}>
+            <div className={styles.modalContent}>
+              <div className={styles.modalHeader}>
+                <h2>รายละเอียด RFQ: {selectedRFQ.rfq_no}</h2>
+                <button
+                  className={styles.closeButton}
+                  onClick={() => setSelectedRFQ(null)}
+                >
+                  <FaTimes size={18} />
+                </button>
+              </div>
+              <div className={styles.modalBody}>
+                <p>
+                  <strong>ผู้จัดทำ:</strong> {selectedRFQ.user_fname}{" "}
+                  {selectedRFQ.user_lname}
+                </p>
+                <p>
+                  <strong>วันที่:</strong>{" "}
+                  {new Date(selectedRFQ.created_at).toLocaleDateString("th-TH")}
+                </p>
+                <h3>รายการสินค้า</h3>
+                <div className={styles.tableSection}>
+                  <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+                    <div className={styles.headerItem}>ชื่อสินค้า</div>
+                    <div className={styles.headerItem}>จำนวน</div>
+                    <div className={styles.headerItem}>หน่วย</div>
+                    <div className={styles.headerItem}>คุณลักษณะ</div>
+                  </div>
+                  <div className={styles.inventory}>
+                    {selectedRFQ.items?.map((item) => (
+                      <div
+                        key={item.rfq_item_id}
+                        className={`${styles.tableGrid} ${styles.tableRow}`}
+                      >
+                        <div className={styles.tableCell}>
+                          {item.item_name || "-"}
+                        </div>
+                        <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                          {item.qty || 0}
+                        </div>
+                        <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                          {item.unit || "-"}
+                        </div>
+                        <div className={styles.tableCell}>{item.spec || "-"}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className={styles.modalFooter}>
+                <button
+                  className={`${styles.ghostBtn} ${styles.actionButton}`}
+                  onClick={() => handleExportPDF(selectedRFQ)}
+                >
+                  <FaFilePdf size={18} /> ดาวน์โหลด PDF
+                </button>
+                <button
+                  className={`${styles.ghostBtn} ${styles.actionButton}`}
+                  onClick={() => setSelectedRFQ(null)}
+                >
+                  <FaTimes size={18} /> ปิด
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
