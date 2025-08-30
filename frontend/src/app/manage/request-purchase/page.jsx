@@ -1,12 +1,15 @@
-"use client";
+'use client';
 import { useState, useEffect, useMemo } from "react";
 import styles from "./page.module.css";
 import axiosInstance from "@/app/utils/axiosInstance";
 import { FaPlus, FaTrashAlt, FaSearch, FaShoppingCart } from "react-icons/fa";
 import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { connectSocket, disconnectSocket } from "@/app/utils/socket";
 
-// ✅ ฟังก์ชันแปลประเภท
+const MySwal = withReactContent(Swal);
+
 const mapCategoryToThai = (category) => {
   switch ((category || "").toLowerCase()) {
     case "medicine":
@@ -24,6 +27,16 @@ const mapCategoryToThai = (category) => {
   }
 };
 
+const getImageUrl = (imgName) => {
+  if (!imgName) {
+    return "/public/defaults/landscape.png";
+  }
+  if (String(imgName).startsWith("http")) {
+    return imgName;
+  }
+  return `/uploads/${imgName}`;
+};
+
 export default function RequestPurchasePage() {
   const [items, setItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -33,23 +46,48 @@ export default function RequestPurchasePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
 
-  // ดึงสินค้า
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const itemsRes = await axiosInstance.get("/pr/items");
+      setItems(Array.isArray(itemsRes.data) ? itemsRes.data.filter(Boolean) : []);
+    } catch (err) {
+      setError("ไม่สามารถดึงข้อมูลได้: " + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const itemsRes = await axiosInstance.get("/pr/items");
-        setItems(itemsRes.data);
-      } catch (err) {
-        setError("ไม่สามารถดึงข้อมูลได้: " + (err.response?.data?.message || err.message));
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, []);
 
-  // Filter items
+  useEffect(() => {
+    let isMounted = true;
+    const socket = connectSocket();
+
+    const handleItemUpdate = () => {
+      if (isMounted) {
+        console.log("ได้รับสัญญาณอัปเดตจาก Socket.IO กำลังดึงข้อมูลใหม่ทั้งหมด");
+        fetchData();
+      }
+    };
+
+    socket.on("itemAdded", handleItemUpdate);
+    socket.on("itemUpdated", handleItemUpdate);
+    socket.on("itemLotUpdated", handleItemUpdate);
+    socket.on("itemDeleted", handleItemUpdate);
+
+    return () => {
+      isMounted = false;
+      socket.off("itemAdded", handleItemUpdate);
+      socket.off("itemUpdated", handleItemUpdate);
+      socket.off("itemLotUpdated", handleItemUpdate);
+      socket.off("itemDeleted", handleItemUpdate);
+      disconnectSocket();
+    };
+  }, []);
+
   const filteredItems = useMemo(() => {
     const q = searchQuery.toLowerCase();
     return items.filter(
@@ -59,7 +97,6 @@ export default function RequestPurchasePage() {
     );
   }, [items, searchQuery]);
 
-  // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredItems.length / ITEMS_PER_PAGE));
   const paginatedItems = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -80,9 +117,7 @@ export default function RequestPurchasePage() {
     return pages;
   };
 
-  // Add Item with Quantity Prompt
   const handleAddItem = (item) => {
-    // Check if item is already in cart
     if (selectedItems.some((i) => i.item_id === item.item_id)) {
       Swal.fire({
         title: "แจ้งเตือน",
@@ -94,7 +129,6 @@ export default function RequestPurchasePage() {
       return;
     }
 
-    // Show prompt for quantity
     Swal.fire({
       title: `เพิ่ม ${item.item_name} ลงในตะกร้า`,
       text: "กรุณาระบุจำนวนที่ต้องการ",
@@ -127,18 +161,8 @@ export default function RequestPurchasePage() {
     });
   };
 
-  const handleQuantityChange = (id, qty) => {
-    setSelectedItems((prev) =>
-      prev.map((i) => (i.item_id === id ? { ...i, requested_qty: Math.max(1, Number(qty)) } : i))
-    );
-  };
-
-  const handleNoteChange = (id, note) => {
-    setSelectedItems((prev) => prev.map((i) => (i.item_id === id ? { ...i, note } : i)));
-  };
-
   const handleRemoveItem = (id, itemName) => {
-    Swal.fire({
+    MySwal.fire({
       title: `ลบ ${itemName} ออกจากตะกร้า?`,
       text: "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้",
       icon: "warning",
@@ -151,19 +175,7 @@ export default function RequestPurchasePage() {
       },
     }).then((result) => {
       if (result.isConfirmed) {
-        // อัปเดต state เพื่อลบสินค้า
-        setSelectedItems((prev) => {
-          const updatedItems = prev.filter((i) => i.item_id !== id);
-          // แสดง popup ใหม่หลังจาก state อัปเดต
-          setTimeout(() => {
-            if (updatedItems.length > 0) {
-              showCartPopup(); // แสดง popup เฉพาะเมื่อยังมีสินค้าในตะกร้า
-            }
-          }, 100);
-          return updatedItems;
-        });
-
-        // แสดงข้อความยืนยันการลบ
+        setSelectedItems((prev) => prev.filter((i) => i.item_id !== id));
         Swal.fire({
           title: "ลบสำเร็จ",
           text: `${itemName} ถูกลบออกจากตะกร้าเรียบร้อย`,
@@ -172,15 +184,13 @@ export default function RequestPurchasePage() {
           customClass: { confirmButton: styles.swalButton },
         });
       } else {
-        // ถ้ายกเลิก ให้แสดง popup เดิม
-        showCartPopup();
+        showCartPopup(); // Reopen cart popup if cancellation occurs
       }
     });
   };
 
-  // Show Cart Popup
   const showCartPopup = () => {
-    Swal.fire({
+    MySwal.fire({
       title: `ตะกร้าสินค้า (${selectedItems.length} รายการ)`,
       html: `
         <style>
@@ -209,7 +219,6 @@ export default function RequestPurchasePage() {
             padding: 12px;
             margin-bottom: 12px;
             transition: box-shadow 0.2s ease;
-            column-gap: 16px;
           }
           .cart-item:hover {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -218,9 +227,6 @@ export default function RequestPurchasePage() {
             display: flex;
             flex-direction: column;
             gap: 4px;
-          }
-          .input-group.qty {
-            margin-right: 12px;
           }
           .item-name {
             font-size: 1rem;
@@ -316,7 +322,7 @@ export default function RequestPurchasePage() {
               grid-template-columns: 1fr;
               gap: 10px;
             }
-            .input-field {
+iban            .input-field {
               width: 100%;
             }
           }
@@ -354,7 +360,7 @@ export default function RequestPurchasePage() {
                       </div>
                       <div></div>
                       <button class="remove-btn" id="remove-${item.item_id}">
-                        🗑️
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="14" width="14" xmlns="http://www.w3.org/2000/svg"><path d="M432 32H16A16 16 0 0 0 0 48v80a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zM128 512h192V192H128zm272 0h-64V192a64 64 0 0 0-64-64H176a64 64 0 0 0-64 64v320H48a16 16 0 0 0-16 16v16a16 16 0 0 0 16 16h352a16 16 0 0 0 16-16v-16a16 16 0 0 0-16-16z"></path></svg>
                       </button>
                     </div>
                   `
@@ -371,46 +377,61 @@ export default function RequestPurchasePage() {
       `,
       showCloseButton: true,
       showConfirmButton: false,
-      showCancelButton: false,
+      showCancelButton: true,
+      cancelButtonText: "ปิด",
       customClass: {
         container: styles.swalContainer,
         popup: styles.swalPopup,
+        confirmButton: styles.swalButton,
+        cancelButton: styles.swalCancelButton,
       },
       didOpen: () => {
-        // Add event listeners for quantity, note, and remove buttons
-        selectedItems.forEach((item) => {
-          const qtyInput = document.getElementById(`qty-${item.item_id}`);
-          const noteInput = document.getElementById(`note-${item.item_id}`);
-          const removeBtn = document.getElementById(`remove-${item.item_id}`);
-
-          if (qtyInput) {
-            qtyInput.addEventListener("change", (e) => handleQuantityChange(item.item_id, e.target.value));
-          }
-          if (noteInput) {
-            noteInput.addEventListener("change", (e) => handleNoteChange(item.item_id, e.target.value));
-          }
-          if (removeBtn) {
-            removeBtn.addEventListener("click", () => {
-              Swal.close(); // Close the cart popup
-              handleRemoveItem(item.item_id, item.item_name); // Trigger confirmation prompt
-            });
-          }
-        });
-
-        const submitBtn = document.getElementById("submit-cart");
-        if (submitBtn) {
-          submitBtn.addEventListener("click", () => {
-            Swal.close();
-            handleSubmit();
+        document.querySelectorAll(".remove-btn").forEach(button => {
+          button.addEventListener("click", () => {
+            const itemId = button.id.replace("remove-", "");
+            const item = selectedItems.find(i => i.item_id === itemId);
+            if (item) {
+              MySwal.close();
+              handleRemoveItem(itemId, item.item_name);
+            }
           });
-        }
+        });
+        document.getElementById("submit-cart").addEventListener("click", () => {
+          const updatedItems = selectedItems.map(item => {
+            const qtyInput = document.querySelector(`#qty-${item.item_id}`);
+            const noteInput = document.querySelector(`#note-${item.item_id}`);
+            return {
+              ...item,
+              requested_qty: qtyInput ? Math.max(1, Number(qtyInput.value)) : item.requested_qty,
+              note: noteInput ? noteInput.value : item.note,
+            };
+          });
+          MySwal.close();
+          handleSubmit(updatedItems);
+        });
       },
+      preConfirm: () => {
+        const updatedItems = selectedItems.map(item => {
+          const qtyInput = document.querySelector(`#qty-${item.item_id}`);
+          const noteInput = document.querySelector(`#note-${item.item_id}`);
+          return {
+            ...item,
+            requested_qty: qtyInput ? Math.max(1, Number(qtyInput.value)) : item.requested_qty,
+            note: noteInput ? noteInput.value : item.note,
+          };
+        });
+        setSelectedItems(updatedItems);
+        return updatedItems;
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        handleSubmit(result.value);
+      }
     });
   };
 
-  // Submit PR
-  const handleSubmit = async () => {
-    if (!selectedItems.length) {
+  const handleSubmit = async (itemsToSubmit) => {
+    if (!itemsToSubmit || !itemsToSubmit.length) {
       Swal.fire({
         title: "แจ้งเตือน",
         text: "กรุณาเลือกรายการอย่างน้อย 1 รายการ",
@@ -421,53 +442,37 @@ export default function RequestPurchasePage() {
       return;
     }
 
-    const confirm = await Swal.fire({
-      title: "ยืนยันการส่งคำขอ?",
-      text: `คุณต้องการส่งคำขอสั่งซื้อ ${selectedItems.length} รายการใช่หรือไม่?`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "ใช่",
-      cancelButtonText: "ยกเลิก",
-      customClass: {
-        confirmButton: styles.swalButton,
-        cancelButton: styles.swalCancelButton,
-      },
-    });
+    try {
+      await axiosInstance.post("/pr", {
+        requester_id: 1,
+        items_to_purchase: itemsToSubmit.map((i) => ({
+          item_id: i.item_id,
+          qty: i.requested_qty,
+          unit: i.item_purchase_unit || i.item_unit,
+          note: i.note,
+        })),
+      });
 
-    if (confirm.isConfirmed) {
-      try {
-        await axiosInstance.post("/pr", {
-          requester_id: 1, // TODO: ปรับตามระบบ auth
-          items_to_purchase: selectedItems.map((i) => ({
-            item_id: i.item_id,
-            qty: i.requested_qty,
-            unit: i.item_purchase_unit || i.item_unit,
-            note: i.note,
-          })),
-        });
+      Swal.fire({
+        title: "สำเร็จ",
+        text: "ส่งคำขอสั่งซื้อเรียบร้อย",
+        icon: "success",
+        confirmButtonText: "ตกลง",
+        customClass: { confirmButton: styles.swalButton },
+      });
 
-        Swal.fire({
-          title: "สำเร็จ",
-          text: "ส่งคำขอสั่งซื้อเรียบร้อย",
-          icon: "success",
-          confirmButtonText: "ตกลง",
-          customClass: { confirmButton: styles.swalButton },
-        });
-
-        setSelectedItems([]);
-      } catch (err) {
-        Swal.fire({
-          title: "ผิดพลาด",
-          text: "ไม่สามารถส่งคำขอได้: " + (err.response?.data?.message || err.message),
-          icon: "error",
-          confirmButtonText: "ตกลง",
-          customClass: { confirmButton: styles.swalButton },
-        });
-      }
+      setSelectedItems([]);
+    } catch (err) {
+      Swal.fire({
+        title: "ผิดพลาด",
+        text: "ไม่สามารถส่งคำขอได้: " + (err.response?.data?.message || err.message),
+        icon: "error",
+        confirmButtonText: "ตกลง",
+        customClass: { confirmButton: styles.swalButton },
+      });
     }
   };
 
-  // Rendering
   if (loading) return <div className={styles.loading}>กำลังโหลด...</div>;
   if (error) return <div className={styles.error}>{error}</div>;
 
@@ -483,7 +488,6 @@ export default function RequestPurchasePage() {
           </button>
         </div>
 
-        {/* Item Selection */}
         <section className={styles.leftPanel}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>เลือกสินค้า</h2>
@@ -501,7 +505,6 @@ export default function RequestPurchasePage() {
           </div>
 
           <div className={styles.tableSection}>
-            {/* Header */}
             <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
               <div className={styles.headerItem}>ชื่อสินค้า</div>
               <div className={styles.headerItem}>รูปภาพ</div>
@@ -513,21 +516,14 @@ export default function RequestPurchasePage() {
               <div className={styles.headerItem}>เพิ่ม</div>
             </div>
 
-            {/* Rows */}
             <div className={styles.inventory} style={{ "--rows-per-page": ITEMS_PER_PAGE }}>
-              {paginatedItems.length ? (
+              {paginatedItems.length > 0 ? (
                 paginatedItems.map((item) => (
                   <div key={item.item_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
                     <div className={styles.tableCell}>{item.item_name}</div>
                     <div className={`${styles.tableCell} ${styles.itemCell}`}>
                       <img
-                        src={
-                          item.item_img
-                            ? (String(item.item_img).startsWith("http")
-                              ? item.item_img
-                              : `http://localhost:5000/uploads/${item.item_img}`)
-                            : "http://localhost:5000/public/defaults/landscape.png"
-                        }
+                        src={getImageUrl(item.item_img)}
                         alt={item.item_name || "ไม่มีคำอธิบายภาพ"}
                         className={styles.itemImage}
                       />
@@ -547,11 +543,9 @@ export default function RequestPurchasePage() {
                       >
                         {item.current_stock ?? 0}
                       </span>
-
                       {item.item_min && item.current_stock < item.item_min && (
                         <span className={styles.lowStockLabel}> 🔻 ต่ำกว่ากำหนด</span>
                       )}
-
                       {item.item_min &&
                         item.current_stock >= item.item_min &&
                         item.current_stock <= item.item_min + 10 && (
@@ -573,7 +567,6 @@ export default function RequestPurchasePage() {
               )}
             </div>
 
-            {/* Pagination */}
             <ul className={styles.paginationControls}>
               <li>
                 <button

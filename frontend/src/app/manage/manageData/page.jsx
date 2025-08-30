@@ -3,15 +3,15 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import styles from './page.module.css';
-import axiosInstance from '../../utils/axiosInstance';
+import axiosInstance from '@/app/utils/axiosInstance';
 import Swal from 'sweetalert2';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { Trash2, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { connectSocket, disconnectSocket } from '../../utils/socket';
 
 const Select = dynamic(() => import('react-select'), { ssr: false });
 
-// ✅ สไตล์ react-select ให้ตรงทุกหน้า
 const customSelectStyles = {
   control: (base, state) => ({
     ...base,
@@ -51,68 +51,40 @@ const unitOptions = [
   { value: 'ชิ้น', label: 'ชิ้น' },
 ];
 
-/* ── Map item_status → badge class (มี fallback) ───────────────── */
 const statusBadgeClass = (raw) => {
   if (!raw) return 'st-generic';
   const s = String(raw).trim().toLowerCase();
-
-  // ไทย ↔ อังกฤษ (ครอบคลุมเคสยอดฮิตฝั่งคลัง)
   if (['พร้อมใช้', 'active', 'available', 'in stock', 'instock'].includes(s)) return 'st-ok';
   if (['ไม่พร้อมใช้', 'inactive', 'disabled', 'unavailable'].includes(s)) return 'st-inactive';
   if (['กำลังซ่อม', 'ซ่อมบำรุง', 'maintenance', 'repairing'].includes(s)) return 'st-maintenance';
   if (['ชำรุด', 'เสีย', 'damaged', 'broken'].includes(s)) return 'st-broken';
-
   if (['หมดสต็อก', 'out of stock', 'out_of_stock', 'oos'].includes(s)) return 'st-out';
   if (['ใกล้หมด', 'low', 'low stock', 'low_stock'].includes(s)) return 'st-low';
-
   if (['หมดอายุ', 'expired', 'expire'].includes(s)) return 'st-expired';
   if (['ใกล้หมดอายุ', 'near expiry', 'near_expiry'].includes(s)) return 'st-near-exp';
-
   if (['สงวนไว้', 'reserved', 'on hold', 'hold'].includes(s)) return 'st-reserved';
   if (['ระงับจำหน่าย', 'เลิกผลิต', 'discontinued'].includes(s)) return 'st-disc';
-
   if (['รอตรวจรับ', 'กำลังรับเข้า', 'incoming', 'pending_incoming'].includes(s)) return 'st-incoming';
   if (['รอคืน', 'pending_return', 'awaiting return'].includes(s)) return 'st-return';
-
-  // fallback: สร้างคลาสปลอดภัยจากข้อความสถานะ (เผื่ออยากสไตล์เฉพาะในอนาคต)
   const slug = 'st-' + s.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '');
   return slug || 'st-generic';
 };
 
-
-/* ── แปลข้อความสถานะแบบง่าย (3 สถานะหลัก) ─────────── */
 const translateStatusText = (status, quantity) => {
   const s = String(status || '').trim().toLowerCase();
-
-  // 1. สถานะ 'สินค้าหมด'
-  if (quantity <= 0) {
-    return 'สินค้าหมด';
-  }
-
-  // 2. สถานะ 'ไม่ใช้งาน'
-  if (s === 'inactive' || s === 'discontinued') {
-    return 'ไม่ใช้งาน';
-  }
-
-  // 3. สถานะ 'พร้อมใช้งาน' (สถานะอื่นๆ ที่มีของ)
+  if (quantity <= 0) return 'สินค้าหมด';
+  if (s === 'inactive' || s === 'discontinued') return 'ไม่ใช้งาน';
   return 'พร้อมใช้งาน';
 };
 
-
 export default function ManageDataPage() {
   const [items, setItems] = useState([]);
-
-  // ฟิลเตอร์
   const [filter, setFilter] = useState('');
   const [category, setCategory] = useState('');
   const [unit, setUnit] = useState('');
   const [status, setStatus] = useState('');
-
-  // เพจจิเนชัน
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
-  // label หมวดหมู่
   const categoryLabels = {
     medicine: 'ยา',
     medsup: 'เวชภัณฑ์',
@@ -123,22 +95,15 @@ export default function ManageDataPage() {
 
   const getItemCode = (item) => {
     switch (item.item_category?.toLowerCase()) {
-      case 'medicine':
-        return item.med_code || '-';
-      case 'medsup':
-        return item.medsup_code || '-';
-      case 'equipment':
-        return item.equip_code || '-';
-      case 'meddevice':
-        return item.meddevice_code || '-';
-      case 'general':
-        return item.gen_code || '-';
-      default:
-        return '-';
+      case 'medicine': return item.med_code || '-';
+      case 'medsup': return item.medsup_code || '-';
+      case 'equipment': return item.equip_code || '-';
+      case 'meddevice': return item.meddevice_code || '-';
+      case 'general': return item.gen_code || '-';
+      default: return '-';
     }
   };
 
-  // ไทย -> อังกฤษ เพื่อกรองหมวดหมู่
   const categoryValues = {
     ยา: 'medicine',
     เวชภัณฑ์: 'medsup',
@@ -147,7 +112,6 @@ export default function ManageDataPage() {
     ของใช้ทั่วไป: 'general',
   };
 
-  // ✅ ทำ options สถานะแบบไดนามิกจากข้อมูลจริง
   const statusOptions = useMemo(() => {
     const set = new Set(
       items.map((i) => (i?.item_status ?? '').toString().trim()).filter(Boolean)
@@ -157,27 +121,13 @@ export default function ManageDataPage() {
       .map((s) => ({ value: s, label: s }));
   }, [items]);
 
-  // กรองข้อมูล
   const filteredItems = useMemo(() => {
     const f = filter.trim().toLowerCase();
     return items.filter((item) => {
-      const matchesFilter =
-        !f ||
-        item.item_name?.toLowerCase().includes(f) ||
-        getItemCode(item)?.toLowerCase().includes(f);
-
-      const matchesCategory =
-        !category ||
-        categoryValues[category]?.toLowerCase() ===
-        item.item_category?.toLowerCase();
-
-      const matchesUnit =
-        !unit || (item.item_unit ?? '').toLowerCase() === unit.toLowerCase();
-
-      const matchesStatus =
-        !status ||
-        (item.item_status ?? '').toLowerCase() === status.toLowerCase();
-
+      const matchesFilter = !f || item.item_name?.toLowerCase().includes(f) || getItemCode(item)?.toLowerCase().includes(f);
+      const matchesCategory = !category || categoryValues[category]?.toLowerCase() === item.item_category?.toLowerCase();
+      const matchesUnit = !unit || (item.item_unit ?? '').toLowerCase() === unit.toLowerCase();
+      const matchesStatus = !status || (item.item_status ?? '').toLowerCase() === status.toLowerCase();
       return matchesFilter && matchesCategory && matchesUnit && matchesStatus;
     });
   }, [items, filter, category, unit, status]);
@@ -240,7 +190,6 @@ export default function ManageDataPage() {
       try {
         const res = await axiosInstance.delete(`/deleteItem/${id}`);
         if (res.data.success) {
-          setItems((prev) => prev.filter((item) => item.item_id !== id));
           Swal.fire('ลบแล้ว!', 'รายการถูกลบเรียบร้อยแล้ว', 'success');
         } else {
           Swal.fire('ผิดพลาด', 'เกิดข้อผิดพลาดในการลบข้อมูล', 'error');
@@ -251,26 +200,48 @@ export default function ManageDataPage() {
     }
   };
 
-  function formatThaiDateTime(dateString) {
-    const date = new Date(dateString);
-    const d = String(date.getDate()).padStart(2, '0');
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const y = String(date.getFullYear() + 543).slice(-2);
-    const h = String(date.getHours()).padStart(2, '0');
-    const mm = String(date.getMinutes()).padStart(2, '0');
-    return `${d}/${m}/${y} , ${h}:${mm}`;
-  }
-
   useEffect(() => {
-    axiosInstance
-      .get('/manageData')
-      .then((res) => setItems(Array.isArray(res.data) ? res.data : []))
-      .catch(console.error);
+    let isMounted = true;
+    const fetchInitialData = async () => {
+      try {
+        const res = await axiosInstance.get('/manageData');
+        if (isMounted) {
+          setItems(Array.isArray(res.data) ? res.data : []);
+        }
+      } catch (err) {
+        console.error('❌ ไม่สามารถโหลดข้อมูลได้:', err);
+      }
+    };
+
+    fetchInitialData();
+
+    const handleUpdate = () => {
+      if (isMounted) {
+        console.log("ได้รับสัญญาณอัปเดตจาก Socket.IO, กำลังดึงข้อมูลใหม่ทั้งหมด...");
+        fetchInitialData();
+      }
+    };
+
+    const socket = connectSocket();
+
+    // ✅ เพิ่ม Event Listener สำหรับการอัปเดตข้อมูลทั้งหมด
+    socket.on("itemAdded", handleUpdate);
+    socket.on("itemUpdated", handleUpdate);
+    socket.on("itemLotUpdated", handleUpdate);
+    socket.on("itemDeleted", handleUpdate);
+
+    return () => {
+      isMounted = false;
+      // ✅ Off events ด้วย function handler ที่สร้างขึ้น
+      socket.off("itemAdded", handleUpdate);
+      socket.off("itemUpdated", handleUpdate);
+      socket.off("itemLotUpdated", handleUpdate);
+      socket.off("itemDeleted", handleUpdate);
+      disconnectSocket();
+    };
   }, []);
 
-  // สำหรับ react-select portal
-  const menuPortalTarget =
-    typeof window !== 'undefined' ? document.body : undefined;
+  const menuPortalTarget = typeof window !== 'undefined' ? document.body : undefined;
 
   return (
     <div className={styles.mainHome}>
@@ -280,8 +251,6 @@ export default function ManageDataPage() {
             <h1 className={styles.pageTitle}>การจัดการข้อมูล</h1>
           </div>
         </div>
-
-        {/* Toolbar — ใช้ react-select เหมือนทุกหน้า */}
         <div className={styles.toolbar}>
           <div className={`${styles.filterGrid} ${styles.filterGrid3}`}>
             <div className={styles.filterGroup}>
@@ -295,15 +264,12 @@ export default function ManageDataPage() {
                 isClearable
                 isSearchable={false}
                 placeholder="ทั้งหมด"
-                value={
-                  categoryOptions.find((o) => o.value === category) || null
-                }
+                value={categoryOptions.find((o) => o.value === category) || null}
                 onChange={(opt) => setCategory(opt?.value || '')}
                 menuPortalTarget={menuPortalTarget}
                 menuPosition="fixed"
               />
             </div>
-
             <div className={styles.filterGroup}>
               <label className={styles.label} htmlFor="unit">
                 หน่วย
@@ -321,8 +287,6 @@ export default function ManageDataPage() {
                 menuPosition="fixed"
               />
             </div>
-
-            {/* สถานะ — กระทัดรัด */}
             <div className={`${styles.filterGroup} ${styles.statusGroup}`}>
               <label className={styles.label} htmlFor="status">
                 สถานะ
@@ -345,7 +309,6 @@ export default function ManageDataPage() {
               />
             </div>
           </div>
-
           <div className={styles.searchCluster}>
             <div className={styles.filterGroup}>
               <label className={styles.label} htmlFor="filter">
@@ -359,14 +322,12 @@ export default function ManageDataPage() {
                 placeholder="ชื่อ, รหัส…"
               />
             </div>
-
             <button
               className={`${styles.ghostBtn} ${styles.clearButton}`}
               onClick={clearFilters}
             >
               <Trash2 size={18} /> ล้างตัวกรอง
             </button>
-
             <Link
               href="/manage/addItem"
               className={styles.addButton}
@@ -376,8 +337,6 @@ export default function ManageDataPage() {
             </Link>
           </div>
         </div>
-
-        {/* ตาราง */}
         <div className={styles.tableFrame}>
           <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
             <div className={`${styles.headerItem} ${styles.centerCell}`}>
@@ -396,7 +355,6 @@ export default function ManageDataPage() {
               การดำเนินการ
             </div>
           </div>
-
           <div
             className={styles.inventory}
             style={{ '--rows-per-page': itemsPerPage }}
@@ -428,8 +386,7 @@ export default function ManageDataPage() {
                   </div>
                   <div className={styles.tableCell}>{item.item_name}</div>
                   <div className={styles.tableCell}>
-                    {categoryLabels[item.item_category] ||
-                      item.item_category}
+                    {categoryLabels[item.item_category] || item.item_category}
                   </div>
                   <div className={styles.tableCell}>
                     {item.total_on_hand_qty}
@@ -438,8 +395,8 @@ export default function ManageDataPage() {
                   <div className={styles.tableCell}>
                     <span
                       className={`${styles.badge} ${(Number(item.total_on_hand_qty) || 0) <= 0
-                          ? styles['st-out'] // ✅ บังคับสีสินค้าหมด
-                          : (styles[statusBadgeClass(item.item_status)] || styles['st-generic'])
+                        ? styles['st-out']
+                        : (styles[statusBadgeClass(item.item_status)] || styles['st-generic'])
                         }`}
                       title={item.item_status || 'ไม่ทราบสถานะ'}
                     >
@@ -466,8 +423,6 @@ export default function ManageDataPage() {
               ))
             )}
           </div>
-
-          {/* Pagination */}
           <ul className={styles.paginationControls}>
             <li>
               <button

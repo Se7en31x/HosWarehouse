@@ -3,12 +3,12 @@ const { Server } = require("socket.io");
 const { pool } = require("./config/db");
 const NotificationModel = require("./models/notificationModel");
 
-let io; // เอาไว้เก็บ instance ของ socket.io
+let io;
 
 function socketSetup(server) {
   io = new Server(server, {
     cors: {
-      origin: ["http://localhost:3000"], // ✅ ให้ตรงกับ frontend
+      origin: ["http://localhost:3000"],
       methods: ["GET", "POST"],
       credentials: true,
     },
@@ -18,7 +18,6 @@ function socketSetup(server) {
   io.on("connection", (socket) => {
     console.log("🟢 Client connected:", socket.id);
 
-    // 👉 user join room
     socket.on("joinRoom", async (room) => {
       socket.join(room);
       console.log(`✅ ${socket.id} joined ${room}`);
@@ -35,7 +34,6 @@ function socketSetup(server) {
       }
     });
 
-    // 👉 mark as read
     socket.on("markAsRead", async (notificationId) => {
       try {
         const updated = await NotificationModel.markAsRead(notificationId);
@@ -47,7 +45,6 @@ function socketSetup(server) {
       }
     });
 
-    // 👉 mark all as read
     socket.on("markAllAsRead", async (userId) => {
       try {
         await NotificationModel.markAllAsRead(userId);
@@ -57,7 +54,6 @@ function socketSetup(server) {
       }
     });
 
-    // 👉 delete
     socket.on("deleteNotification", async ({ notificationId, userId }) => {
       try {
         const ok = await NotificationModel.delete(notificationId);
@@ -69,7 +65,6 @@ function socketSetup(server) {
       }
     });
 
-    // 👉 clear all
     socket.on("clearNotifications", async (userId) => {
       try {
         await NotificationModel.clearByUser(userId);
@@ -88,7 +83,9 @@ function socketSetup(server) {
 }
 
 function getIO() {
-  if (!io) throw new Error("Socket.io ยังไม่ได้ถูก initialize");
+  if (!io) {
+    throw new Error("Socket.io has not been initialized. Call socketSetup(server) first.");
+  }
   return io;
 }
 

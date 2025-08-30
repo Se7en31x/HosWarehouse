@@ -1,12 +1,14 @@
 const { pool } = require("../config/db");
 const { generateStockinCode } = require("../utils/stockinCounter");
+const { getIO } = require("../socket");
+const inventoryModel = require('./inventoryModel');
 
 // ===== Helper: normalize date value =====
 function normalizeDate(value) {
     if (!value || (typeof value === "string" && value.trim() === "")) {
-        return null; // ถ้าเป็น "" หรือ undefined/null → คืนค่า null
+        return null;
     }
-    return value; // ถ้าเป็น YYYY-MM-DD ปกติ → ใช้ได้เลย
+    return value;
 }
 
 // ===== Helper: Generate Lot No =====
@@ -18,7 +20,6 @@ async function generateLotNo(client, item_id) {
 
     const category = rows[0].item_category;
 
-    // กำหนด prefix ตามหมวด
     let prefix;
     switch (category) {
         case "medicine": prefix = "MED"; break;
@@ -29,9 +30,8 @@ async function generateLotNo(client, item_id) {
         default: prefix = "UNK";
     }
 
-    const today = new Date().toISOString().slice(0, 10).replace(/-/g, ""); // YYYYMMDD
+    const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
 
-    // หา running ของวันนั้นสำหรับ item_id
     const { rows: cntRows } = await client.query(
         `SELECT COUNT(*)::int AS cnt 
          FROM item_lots 
@@ -45,7 +45,7 @@ async function generateLotNo(client, item_id) {
 }
 
 // ===== Model Function: ดึงรายการสินค้าทั้งหมด =====
-exports.getAllItems = async () => {
+async function getAllItems() {
     const query = `
         SELECT
             i.item_id,
@@ -71,12 +71,12 @@ exports.getAllItems = async () => {
     `;
     const result = await pool.query(query);
     return result.rows;
-};
+}
 
 // ===== Model Function: ค้นหาสินค้าด้วย Barcode =====
-exports.findItemByBarcode = async (barcode) => {
+async function findItemByBarcode(barcode) {
     console.log("🔎 Barcode from scanner:", JSON.stringify(barcode));
-    const cleanBarcode = (barcode || "").trim(); // ตัดช่องว่าง, \r, \n ออก
+    const cleanBarcode = (barcode || "").trim();
 
     const query = `
         SELECT
@@ -95,38 +95,39 @@ exports.findItemByBarcode = async (barcode) => {
     `;
     const result = await pool.query(query, [cleanBarcode]);
     return result.rows[0] || null;
-};
+}
+
 // ===== Model Function: บันทึกการรับเข้าสินค้า =====
-exports.recordReceiving = async ({ user_id, receiving_note, stockin_type, source_name, receivingItems }) => {
+async function recordReceiving({ user_id, receiving_note, stockin_type, source_name, receivingItems }) {
     const client = await pool.connect();
     try {
         await client.query("BEGIN");
 
-        // ✅ gen เลขเอกสารใหม่ เช่น STI-YYYYMMDD-xxxx
         const stockin_no = await generateStockinCode(client);
 
-        // ───────────── INSERT HEADER ─────────────
         const insertReceiving = await client.query(
             `INSERT INTO stock_ins (
-                stockin_date, user_id, note, stockin_type, stockin_no, created_at
+                stockin_date, user_id, note, stockin_type, stockin_no, created_at, source_name
              )
-             VALUES (NOW(), $1, $2, $3, $4, NOW())
+             VALUES (NOW(), $1, $2, $3, $4, NOW(), $5)
              RETURNING stockin_id, stockin_no`,
-            [user_id, receiving_note || null, stockin_type || "general", stockin_no]
+            [user_id, receiving_note || null, stockin_type || "general", stockin_no, source_name || null]
         );
 
         const newStockinId = insertReceiving.rows[0].stockin_id;
 
-        // ───────────── INSERT DETAILS & LOT ─────────────
         for (const item of receivingItems) {
             if (!item.item_id) throw new Error(`Missing item_id`);
             if (!item.quantity || item.quantity <= 0)
                 throw new Error(`Invalid quantity for item_id ${item.item_id}`);
+            
+            const { rows: itemInfo } = await client.query(
+                `SELECT item_unit FROM items WHERE item_id = $1`, [item.item_id]
+            );
+            const itemUnit = itemInfo[0]?.item_unit || 'ชิ้น';
 
-            // ✅ ใช้ lot ที่ user กรอก ถ้าไม่มีให้ gen ใหม่
             const lotToUse = item.lotNo?.trim() || await generateLotNo(client, item.item_id);
 
-            // 1) เช็คว่ามี lot เดิมหรือยัง
             const { rows: existLot } = await client.query(
                 `SELECT lot_id FROM item_lots 
                  WHERE item_id = $1 AND lot_no = $2`,
@@ -135,17 +136,16 @@ exports.recordReceiving = async ({ user_id, receiving_note, stockin_type, source
 
             let lotId;
             if (existLot.length) {
-                // 🔹 ถ้ามี lot เดิม → update qty
                 await client.query(
                     `UPDATE item_lots
                      SET qty_imported = qty_imported + $1,
-                         qty_remaining = qty_remaining + $1
-                     WHERE lot_id = $2`,
-                    [item.quantity, existLot[0].lot_id]
+                         qty_remaining = qty_remaining + $1,
+                         exp_date = COALESCE($2, exp_date)
+                     WHERE lot_id = $3`,
+                    [item.quantity, normalizeDate(item.expiryDate), existLot[0].lot_id]
                 );
                 lotId = existLot[0].lot_id;
             } else {
-                // 🔹 ถ้าไม่มี lot เดิม → insert ใหม่
                 const lotRes = await client.query(
                     `INSERT INTO item_lots 
                         (item_id, stockin_id, lot_no, qty_imported, qty_remaining, mfg_date, exp_date, import_date, created_by, document_no)
@@ -157,7 +157,7 @@ exports.recordReceiving = async ({ user_id, receiving_note, stockin_type, source
                         lotToUse,
                         item.quantity,
                         item.quantity,
-                        item.mfgDate || null,
+                        normalizeDate(item.mfgDate),
                         normalizeDate(item.expiryDate),
                         user_id,
                         item.documentNo || null
@@ -166,7 +166,6 @@ exports.recordReceiving = async ({ user_id, receiving_note, stockin_type, source
                 lotId = lotRes.rows[0].lot_id;
             }
 
-            // 2) เพิ่ม detail (บันทึก history ว่าเข้ามากี่ชิ้น)
             await client.query(
                 `INSERT INTO stock_in_details 
                     (stockin_id, item_id, lot_id, qty, unit, note)
@@ -176,13 +175,59 @@ exports.recordReceiving = async ({ user_id, receiving_note, stockin_type, source
                     item.item_id,
                     lotId,
                     item.quantity,
-                    item.unit || null,
+                    item.unit || itemUnit,
                     item.notes || null
                 ]
             );
+            
+            const { rows: currentBalanceRows } = await client.query(
+                `SELECT COALESCE(SUM(qty_remaining), 0) AS total_balance FROM item_lots WHERE item_id = $1`,
+                [item.item_id]
+            );
+            const balanceAfter = currentBalanceRows[0].total_balance;
+
+            await client.query(
+                `INSERT INTO stock_movements
+                 (item_id, lot_id, move_type, move_qty, balance_after, move_date,
+                 move_status, user_id, move_code, note)
+                 VALUES
+                 ($1, $2, 'stock_in', $3, $4, NOW()::timestamp,
+                 'completed', $5, $6, $7)`,
+                [item.item_id, lotId, item.quantity, balanceAfter, user_id, stockin_no, receiving_note]
+            );
+            
+            // ✅ ส่วนนี้คือการลบโค้ดที่ไม่จำเป็นออกไปครับ
+            // await client.query(
+            //     `UPDATE items
+            //      SET total_on_hand_qty = (
+            //          SELECT COALESCE(SUM(qty_remaining), 0)
+            //          FROM item_lots
+            //          WHERE item_id = $1
+            //      )
+            //      WHERE item_id = $1`,
+            //     [item.item_id]
+            // );
+
         }
 
         await client.query("COMMIT");
+        
+        const io = getIO();
+        if (io) {
+            for (const item of receivingItems) {
+                const updatedItem = await inventoryModel.getItemById(item.item_id);
+                if (updatedItem) {
+                    io.emit("itemUpdated", {
+                        item_id: updatedItem.item_id,
+                        item_name: updatedItem.item_name,
+                        item_unit: updatedItem.item_unit,
+                        item_img: updatedItem.item_img,
+                        current_stock: updatedItem.total_on_hand_qty,
+                    });
+                }
+            }
+        }
+
         return { success: true, stockin_id: newStockinId, stockin_no };
     } catch (err) {
         await client.query("ROLLBACK");
@@ -191,4 +236,11 @@ exports.recordReceiving = async ({ user_id, receiving_note, stockin_type, source
     } finally {
         client.release();
     }
+}
+
+// ===== Export all functions =====
+module.exports = {
+    getAllItems,
+    findItemByBarcode,
+    recordReceiving
 };

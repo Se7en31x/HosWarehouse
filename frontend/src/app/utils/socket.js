@@ -1,3 +1,5 @@
+// frontend/utils/socket.js
+
 import { io } from "socket.io-client";
 
 let socket = null;
@@ -5,12 +7,12 @@ let socket = null;
 /**
  * เชื่อมต่อกับ WebSocket server
  * @param {object} handlers object ที่รวม callback ของ event
- *  - onItemsData
- *  - onNewNotification
- *  - onNotificationUpdated
- *  - onAllNotificationsRead
- *  - onNotificationDeleted
- *  - onNotificationsCleared
+ *  - onLotUpdated
+ *  - onNewNotification
+ *  - onNotificationUpdated
+ *  - onAllNotificationsRead
+ *  - onNotificationDeleted
+ *  - onNotificationsCleared
  */
 export const connectSocket = (handlers = {}) => {
   if (!socket) {
@@ -20,11 +22,11 @@ export const connectSocket = (handlers = {}) => {
       console.log("🟢 Connected to WebSocket server");
     });
 
-    // ✅ Event อัปเดตคลังแบบ real-time
-    socket.on("itemsData", (items) => {
-      console.log("📦 RT Items update:", items);
-      if (typeof handlers.onItemsData === "function") {
-        handlers.onItemsData(items);
+    // ✅ Event อัปเดต Lot แบบ real-time
+    socket.on("itemLotUpdated", (lotData) => {
+      console.log("📦 RT Lot update:", lotData);
+      if (typeof handlers.onLotUpdated === "function") {
+        handlers.onLotUpdated(lotData);
       }
     });
 
