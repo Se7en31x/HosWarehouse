@@ -96,8 +96,10 @@ exports.updateRequestDetailApprovalStatus = async (request_detail_id, newApprova
         let newProcessingStatusForUpdate = oldProcessingStatus;
         if (newApprovalStatus === 'approved') {
             newProcessingStatusForUpdate = 'approved_in_queue';
-        } else if (newApprovalStatus === 'rejected' || newApprovalStatus === 'waiting_approval_detail') {
-            newProcessingStatusForUpdate = null;
+        } else if (newApprovalStatus === 'rejected') {
+            newProcessingStatusForUpdate = 'rejected';
+        } else if (newApprovalStatus === 'waiting_approval_detail') {
+            newProcessingStatusForUpdate = 'waiting_approval';
         }
 
         // 3. อัปเดต approval_status, approved_qty, note, processing_status
@@ -156,7 +158,6 @@ exports.updateRequestDetailApprovalStatus = async (request_detail_id, newApprova
         client.release();
     }
 };
-
 /**
  * คำนวณและคืนค่าการนับสถานะของรายการย่อยทั้งหมดสำหรับคำขอที่ระบุ
  */

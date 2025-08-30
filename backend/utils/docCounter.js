@@ -7,6 +7,7 @@ function getPrefix(docType) {
     case "purchase_order": return "PO";
     case "rfq": return "RFQ";
     case "goods_receipt": return "GR";
+    case "repair_return": return "SI"; // ✅ เพิ่ม docType สำหรับการซ่อม
     default: return "DOC";
   }
 }
@@ -18,10 +19,8 @@ async function generateDocNo(client, docType) {
   const year = today.getFullYear();
   const month = String(today.getMonth() + 1).padStart(2, "0");
 
-  // ใช้ key เป็น เดือน (ไม่ reset ทุกวัน แต่ reset ทุกเดือน)
-  const counterKey = `${year}-${month}-01`; // วันที่ fix เป็นวันแรกของเดือน
+  const counterKey = `${year}-${month}-01`;
 
-  // ✅ lock row กันชนกัน
   const { rows } = await client.query(
     `SELECT last_seq FROM doc_counter
      WHERE counter_date = $1 AND doc_type = $2
@@ -46,8 +45,16 @@ async function generateDocNo(client, docType) {
     );
   }
 
-  // รูปแบบเลข: PR-2025-08-001
   return `${prefix}-${year}-${month}-${String(nextSeq).padStart(3, "0")}`;
 }
 
-module.exports = { generateDocNo };
+// ✅ เพิ่มฟังก์ชันใหม่ที่เรียกใช้ generateDocNo
+async function generateStockinNo(client, type) {
+  return generateDocNo(client, type);
+}
+
+// ✅ Export ทั้งสองฟังก์ชัน
+module.exports = {
+  generateDocNo,
+  generateStockinNo
+};

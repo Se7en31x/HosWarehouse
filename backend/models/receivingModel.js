@@ -176,7 +176,7 @@ exports.recordReceiving = async ({ user_id, receiving_note, stockin_type, source
                     item.item_id,
                     lotId,
                     item.quantity,
-                    item.item_unit || null,
+                    item.unit || null,
                     item.notes || null
                 ]
             );
