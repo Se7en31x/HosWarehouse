@@ -6,8 +6,6 @@ import { FaPlus, FaTrashAlt, FaSearch, FaShoppingCart } from "react-icons/fa";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-
-// ✅ Import Socket functions
 import { connectSocket, disconnectSocket } from "@/app/utils/socket";
 
 const MySwal = withReactContent(Swal);
@@ -29,16 +27,13 @@ const mapCategoryToThai = (category) => {
   }
 };
 
-// ✅ เพิ่มฟังก์ชัน getImageUrl เพื่อจัดการ URL รูปภาพ
 const getImageUrl = (imgName) => {
   if (!imgName) {
     return "/public/defaults/landscape.png";
   }
-  // ถ้าเป็น URL เต็มอยู่แล้ว ให้ใช้เลย
   if (String(imgName).startsWith("http")) {
     return imgName;
   }
-  // ถ้าเป็นแค่ชื่อไฟล์ ให้ใช้ relative path
   return `/uploads/${imgName}`;
 };
 
@@ -71,41 +66,26 @@ export default function RequestPurchasePage() {
     let isMounted = true;
     const socket = connectSocket();
 
-    socket.on("itemAdded", (newItem) => {
-      console.log("ได้รับข้อมูลสินค้าใหม่จาก Socket.IO:", newItem);
+    const handleItemUpdate = () => {
       if (isMounted) {
-        setItems(prevItems => [...prevItems, newItem]);
+        console.log("ได้รับสัญญาณอัปเดตจาก Socket.IO กำลังดึงข้อมูลใหม่ทั้งหมด");
+        fetchData();
       }
-    });
+    };
 
-    socket.on("itemLotUpdated", (payload) => {
-      console.log("ได้รับข้อมูลการอัปเดต Lot จาก Socket.IO:", payload);
-      if (isMounted) {
-        setItems(prevItems => prevItems.map(item =>
-          item.item_id === payload.item_id
-            ? {
-              ...item,
-              current_stock: payload.new_total_qty
-            }
-            : item
-        ));
-      }
-    });
-
-    socket.on("itemDeleted", (deletedItemId) => {
-      console.log("ได้รับสัญญาณลบสินค้าจาก Socket.IO:", deletedItemId);
-      if (isMounted) {
-        setItems(prevItems => prevItems.filter(item =>
-          item.item_id !== deletedItemId
-        ));
-      }
-    });
+    // เพิ่ม Event Listener สำหรับการอัปเดตข้อมูล
+    socket.on("itemAdded", handleItemUpdate);
+    socket.on("itemUpdated", handleItemUpdate);
+    socket.on("itemLotUpdated", handleItemUpdate);
+    socket.on("itemDeleted", handleItemUpdate);
 
     return () => {
       isMounted = false;
-      socket.off("itemAdded");
-      socket.off("itemLotUpdated");
-      socket.off("itemDeleted");
+      // Off events ด้วย function handler ที่สร้างขึ้น
+      socket.off("itemAdded", handleItemUpdate);
+      socket.off("itemUpdated", handleItemUpdate);
+      socket.off("itemLotUpdated", handleItemUpdate);
+      socket.off("itemDeleted", handleItemUpdate);
       disconnectSocket();
     };
   }, []);
@@ -237,7 +217,8 @@ export default function RequestPurchasePage() {
                   <label className="input-label">หมายเหตุ</label>
                   <input
                     type="text"
-                    defaultValue={item.note}
+                    // ✅ แก้ไขตรงนี้
+                    defaultValue={item.note ?? ""}
                     placeholder="เพิ่มหมายเหตุ"
                     className="input-field"
                     data-id={item.item_id}
@@ -387,7 +368,6 @@ export default function RequestPurchasePage() {
                     <div className={styles.tableCell}>{item.item_name}</div>
                     <div className={`${styles.tableCell} ${styles.itemCell}`}>
                       <img
-                        // ✅ แก้ไข: เรียกใช้ฟังก์ชันที่สร้างขึ้นมาใหม่
                         src={getImageUrl(item.item_img)}
                         alt={item.item_name || "ไม่มีคำอธิบายภาพ"}
                         className={styles.itemImage}

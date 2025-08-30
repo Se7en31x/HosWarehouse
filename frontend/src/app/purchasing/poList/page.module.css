@@ -1,7 +1,7 @@
 /* =============================
-   PoAndRfqPage — page.module.css
-   Palette: #008dda, #41c9e2, #ace2e1, #1685bb
-   ============================= */
+    PoAndRfqPage — page.module.css
+    Palette: #008dda, #41c9e2, #ace2e1, #1685bb
+    ============================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -38,17 +38,19 @@
 
 /* ---- Layout ---- */
 .mainHome {
-  min-height: 100vh;
+  /* min-height: 100vh; */
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans';
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--bg);
+  /* padding: 20px; */
+  /* เพิ่ม padding เพื่อไม่ให้เนื้อหาชิดขอบจอเกินไป */
 }
 
 .infoContainer {
   width: 100%;
-
+  /* จำกัดความกว้างสูงสุดของเนื้อหา */
   min-height: 100vh;
   background: var(--panel);
   color: var(--text);
@@ -104,7 +106,7 @@
 
 .filterGrid {
   display: grid;
-  grid-template-columns: auto auto 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 12px;
   flex: 1;
 }
@@ -128,6 +130,7 @@
   padding: 0 12px;
   font-size: 0.95rem;
   background: #fff;
+  width: 100%;
 }
 
 .input:focus {
@@ -163,6 +166,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  white-space: nowrap;
 }
 
 .ghostBtn:hover:not(:disabled) {
@@ -180,6 +184,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  white-space: nowrap;
 }
 
 .primaryButton:hover:not(:disabled) {
@@ -308,25 +313,39 @@
 .tableGrid {
   display: grid;
   grid-template-columns:
-    minmax(180px, 2fr) /* ชื่อสินค้า */
-    minmax(90px, 0.8fr) /* จำนวน */
-    minmax(90px, 0.8fr) /* หน่วย */
-    minmax(120px, 1fr) /* ราคา/หน่วย */
-    minmax(120px, 1fr) /* ส่วนลด */
-    minmax(120px, 1fr); /* จำนวนเงิน */
+    minmax(150px, 2fr)
+    /* ชื่อสินค้า */
+    minmax(80px, 0.8fr)
+    /* จำนวน */
+    minmax(80px, 0.8fr)
+    /* หน่วย */
+    minmax(120px, 1fr)
+    /* ราคา/หน่วย */
+    minmax(120px, 1fr)
+    /* ส่วนลด */
+    minmax(120px, 1fr);
+  /* จำนวนเงิน */
   align-items: center;
 }
 
 .tableGrid.poList {
   grid-template-columns:
-    minmax(120px, 1fr) /* เลขที่ PO */
-    minmax(150px, 1.5fr) /* ซัพพลายเออร์ */
-    minmax(120px, 1fr) /* วันที่สร้าง */
-    minmax(120px, 1fr) /* ยอดรวม (ก่อน VAT) */
-    minmax(100px, 0.8fr) /* VAT */
-    minmax(120px, 1fr) /* ยอดสุทธิ */
-    minmax(100px, 1fr) /* สถานะ */
-    minmax(150px, 1.2fr); /* การจัดการ */
+    minmax(120px, 1fr)
+    /* เลขที่ PO */
+    minmax(150px, 1.5fr)
+    /* ซัพพลายเออร์ */
+    minmax(120px, 1fr)
+    /* วันที่สร้าง */
+    minmax(120px, 1fr)
+    /* ยอดรวม (ก่อน VAT) */
+    minmax(100px, 0.8fr)
+    /* VAT */
+    minmax(120px, 1fr)
+    /* ยอดสุทธิ */
+    minmax(100px, 1fr)
+    /* สถานะ */
+    minmax(150px, 1.2fr);
+  /* การจัดการ */
 }
 
 .tableHeader {
@@ -350,22 +369,13 @@
   padding: 0;
 }
 
-.tableHeader .headerItem:nth-child(2),
-.tableHeader .headerItem:nth-child(3),
-.tableHeader .headerItem:nth-child(4),
-.tableHeader .headerItem:nth-child(5),
-.tableHeader .headerItem:nth-child(6),
-.tableHeader .headerItem:nth-child(7),
-.tableHeader .headerItem:nth-child(8) {
-  justify-content: center;
+/* แก้ไข: จัดหัวข้อในตารางรายการ PO ให้ชิดซ้าย */
+.tableGrid.poList .tableHeader .headerItem {
+  justify-content: flex-start;
 }
 
-.tableGrid.poList .tableHeader .headerItem:nth-child(3),
-.tableGrid.poList .tableHeader .headerItem:nth-child(4),
-.tableGrid.poList .tableHeader .headerItem:nth-child(5),
-.tableGrid.poList .tableHeader .headerItem:nth-child(6),
-.tableGrid.poList .tableHeader .headerItem:nth-child(7),
-.tableGrid.poList .tableHeader .headerItem:nth-child(8) {
+.tableGrid.poList .tableHeader .headerItem:last-child,
+.tableGrid.poList .tableHeader .headerItem:nth-last-child(2) {
   justify-content: center;
 }
 
@@ -393,14 +403,23 @@
   display: flex;
   align-items: center;
   padding: 4px 6px;
+  font-size: var(--body-font);
+  justify-content: flex-start;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: var(--body-font);
 }
 
 .tableCell.centerCell {
   justify-content: center;
+}
+
+.tableCell.textWrap {
+  white-space: normal;
+}
+
+.tableCell a {
+  text-decoration: none;
 }
 
 .mono {
@@ -421,10 +440,29 @@
   line-height: 1;
 }
 
-.pending { color: #92400e; background: #fef3c7; border-color: #fde68a; }
-.approved { color: #166534; background: #dcfce7; border-color: #86efac; }
-.completed { color: #1e40af; background: #dbeafe; border-color: #93c5fd; }
-.canceled { color: #9f1239; background: #ffe4e6; border-color: #fecdd3; }
+.pending {
+  color: #92400e;
+  background: #fef3c7;
+  border-color: #fde68a;
+}
+
+.approved {
+  color: #166534;
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
+.completed {
+  color: #1e40af;
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.canceled {
+  color: #9f1239;
+  background: #ffe4e6;
+  border-color: #fecdd3;
+}
 
 /* ---- Summary ---- */
 .summaryContainer {
@@ -456,81 +494,4 @@
   justify-content: flex-end;
   gap: 10px;
   padding: 16px 0;
-}
-
-/* ---- Loading and Empty States ---- */
-.loadingContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: calc(var(--row-h) * var(--rows-per-page));
-}
-
-.spinner {
-  font-size: 1rem;
-  color: var(--primary);
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.noDataMessage {
-  height: calc(var(--row-h) * var(--rows-per-page));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--muted);
-  font-size: var(--body-font);
-}
-
-/* ---- Responsive ---- */
-@media (max-width: 1024px) {
-  .filterGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .formGrid {
-    grid-template-columns: 1fr;
-  }
-  .fileGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 768px) {
-  .filterGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 640px) {
-  :root {
-    --th-font: 1.1rem;
-    --body-font: 0.95rem;
-    --th-min-h: 58px;
-    --th-pad-y: 12px;
-    --row-h: 58px;
-  }
-  .tableGrid {
-    grid-template-columns:
-      minmax(120px, 1.5fr)
-      80px
-      80px
-      100px
-      100px
-      100px;
-  }
-  .tableGrid.poList {
-    grid-template-columns:
-      minmax(100px, 1fr)
-      minmax(120px, 1.2fr)
-      100px
-      100px
-      80px
-      100px
-      90px
-      120px;
-  }
 }

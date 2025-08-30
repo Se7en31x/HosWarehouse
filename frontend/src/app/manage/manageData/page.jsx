@@ -215,25 +215,28 @@ export default function ManageDataPage() {
 
     fetchInitialData();
 
-    const socket = connectSocket({
-      // ✅ โค้ดส่วนนี้ถูกต้องแล้ว เพราะรับ Event 'itemLotUpdated'
-      onLotUpdated: (lotData) => {
-        if (isMounted) {
-          console.log("📦 ได้รับข้อมูลอัปเดต Lot จาก Socket.IO:", lotData);
-          setItems(prevItems => {
-            return prevItems.map(item => {
-              if (item.item_id === lotData.item_id) {
-                return { ...item, total_on_hand_qty: lotData.new_total_qty };
-              }
-              return item;
-            });
-          });
-        }
-      },
-    });
+    const handleUpdate = () => {
+      if (isMounted) {
+        console.log("ได้รับสัญญาณอัปเดตจาก Socket.IO, กำลังดึงข้อมูลใหม่ทั้งหมด...");
+        fetchInitialData();
+      }
+    };
+
+    const socket = connectSocket();
+
+    // ✅ เพิ่ม Event Listener สำหรับการอัปเดตข้อมูลทั้งหมด
+    socket.on("itemAdded", handleUpdate);
+    socket.on("itemUpdated", handleUpdate);
+    socket.on("itemLotUpdated", handleUpdate);
+    socket.on("itemDeleted", handleUpdate);
 
     return () => {
       isMounted = false;
+      // ✅ Off events ด้วย function handler ที่สร้างขึ้น
+      socket.off("itemAdded", handleUpdate);
+      socket.off("itemUpdated", handleUpdate);
+      socket.off("itemLotUpdated", handleUpdate);
+      socket.off("itemDeleted", handleUpdate);
       disconnectSocket();
     };
   }, []);

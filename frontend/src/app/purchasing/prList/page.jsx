@@ -3,18 +3,73 @@ import { useState, useEffect } from "react";
 import styles from "./page.module.css";
 import axiosInstance from "@/app/utils/axiosInstance";
 import { FaSearch, FaPlusCircle, FaTimes } from "react-icons/fa";
-import { PackageCheck } from "lucide-react"; // ใช้ไอคอนจาก lucide-react เพื่อความสม่ำเสมอ
+import { PackageCheck } from "lucide-react"; 
 import Swal from "sweetalert2";
 import exportPDF from "@/app/components/pdf/PDFExporter";
 
 const categories = ["ทั้งหมด", "ยา", "เวชภัณฑ์", "ครุภัณฑ์", "อุปกรณ์ทางการแพทย์", "ของใช้ทั่วไป"];
 
+// ✅ ฟังก์ชันแปลสถานะ
+const translateStatus = (status) => {
+  if (!status) return "-";
+  switch (status.toLowerCase()) {
+    case "pending":
+      return "รอดำเนินการ";
+    case "approved":
+      return "อนุมัติแล้ว";
+    case "completed":
+      return "เสร็จสิ้น";
+    case "canceled":
+      return "ยกเลิก";
+    default:
+      return status;
+  }
+};
+
+// ✅ ฟังก์ชันแปลประเภทสินค้า
+const translateCategory = (category) => {
+  if (!category) return "-";
+  switch (category.toLowerCase()) {
+    case "medicine":
+      return "ยา";
+    case "medsup":
+      return "เวชภัณฑ์";
+    case "equipment":
+      return "ครุภัณฑ์";
+    case "meddevice":
+      return "อุปกรณ์ทางการแพทย์";
+    case "general":
+      return "ของใช้ทั่วไป";
+    default:
+      return category;
+  }
+};
+
+// ✅ Component แสดง Badge สถานะ
 const StatusBadge = ({ status }) => {
   let badgeStyle = styles.pending;
-  if (status?.toLowerCase() === "approved") badgeStyle = styles.approved;
-  else if (status?.toLowerCase() === "completed") badgeStyle = styles.completed;
-  else if (status?.toLowerCase() === "canceled") badgeStyle = styles.canceled;
-  return <span className={`${styles.stBadge} ${badgeStyle}`}>{status ? status.charAt(0).toUpperCase() + status.slice(1) : "-"}</span>;
+  let displayText = translateStatus(status);
+
+  if (status) {
+    switch (status.toLowerCase()) {
+      case "pending":
+        badgeStyle = styles.pending;
+        break;
+      case "approved":
+        badgeStyle = styles.approved;
+        break;
+      case "completed":
+        badgeStyle = styles.completed;
+        break;
+      case "canceled":
+        badgeStyle = styles.canceled;
+        break;
+      default:
+        badgeStyle = styles.pending;
+    }
+  }
+
+  return <span className={`${styles.stBadge} ${badgeStyle}`}>{displayText}</span>;
 };
 
 const PurchaseRequestPage = () => {
@@ -69,6 +124,7 @@ const PurchaseRequestPage = () => {
     setSpecs((prev) => ({ ...prev, [id]: value }));
   };
 
+  // ✅ ออกใบขอราคา (เปิด modal)
   const handleGenerateQuotation = () => {
     const selectedItems = requests.filter((item) => item.checked);
     if (selectedItems.length === 0) {
@@ -84,6 +140,7 @@ const PurchaseRequestPage = () => {
     setShowModal(true);
   };
 
+  // ✅ บันทึกและส่ง RFQ
   const handleSubmitQuotation = async () => {
     const selectedItems = requests.filter((item) => item.checked);
     if (selectedItems.length === 0) {
@@ -131,6 +188,7 @@ const PurchaseRequestPage = () => {
     }
   };
 
+  // ✅ ดาวน์โหลด PDF
   const handleExportPDF = async () => {
     const selectedItems = requests.filter((item) => item.checked);
     if (selectedItems.length === 0) {
@@ -223,7 +281,7 @@ const PurchaseRequestPage = () => {
 
   const filteredRequests = requests.filter(
     (item) =>
-      (filterCategory === "ทั้งหมด" || item.item_category === filterCategory) &&
+      (filterCategory === "ทั้งหมด" || translateCategory(item.item_category) === filterCategory) &&
       (item.pr_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.item_name?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -236,7 +294,7 @@ const PurchaseRequestPage = () => {
         <div className={styles.pageBar}>
           <div className={styles.titleGroup}>
             <h1 className={styles.pageTitle}>
-              <PackageCheck size={28} /> ระบบการสั่งซื้อ - ออกใบขอราคา
+               ระบบการสั่งซื้อ - ออกใบขอราคา
             </h1>
             <p className={styles.subtitle}>จัดการคำขอสั่งซื้อและสร้างใบขอราคา (RFQ)</p>
           </div>
@@ -335,7 +393,8 @@ const PurchaseRequestPage = () => {
                       <div className={`${styles.tableCell} ${styles.centerCell}`}>
                         {item.unit || "-"}
                       </div>
-                      <div className={styles.tableCell}>{item.item_category || "-"}</div>
+                      {/* ✅ ใช้ translateCategory */}
+                      <div className={styles.tableCell}>{translateCategory(item.item_category)}</div>
                       <div className={styles.tableCell}>
                         {item.user_fname || ""} {item.user_lname || ""}
                       </div>

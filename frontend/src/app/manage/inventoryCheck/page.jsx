@@ -1,4 +1,3 @@
-// page.js
 'use client';
 import { useEffect, useMemo, useState } from "react";
 import styles from "./page.module.css";
@@ -117,49 +116,59 @@ export default function InventoryCheck() {
     }
   };
 
-  useEffect(() => {
+  // -------------------- ✅ ส่วนที่ต้องแก้ไข --------------------
+useEffect(() => {
     let isMounted = true;
 
     const fetchInitialData = async () => {
-      try {
-        const res = await axiosInstance.get("/inventoryCheck/all");
-        if (isMounted) {
-          setAllItems(Array.isArray(res.data) ? res.data.filter(Boolean) : []);
+        try {
+            const res = await axiosInstance.get("/inventoryCheck/all");
+            if (isMounted) {
+                setAllItems(Array.isArray(res.data) ? res.data.filter(Boolean) : []);
+                setIsLoading(false); // ควรกำหนด isLoading ที่นี่
+            }
+        } catch (err) {
+            console.error("❌ โหลดข้อมูลเริ่มต้นไม่สำเร็จ:", err);
+            toast.error("ไม่สามารถโหลดข้อมูลจากเซิร์ฟเวอร์ได้");
+            if (isMounted) setIsLoading(false);
         }
-      } catch (err) {
-        console.error("❌ โหลด REST ไม่สำเร็จ:", err);
-        toast.error("ไม่สามารถโหลดข้อมูลจากเซิร์ฟเวอร์ได้");
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
     };
 
     fetchInitialData();
 
-    // ✅ เปิด socket realtime
-    const socket = connectSocket?.({
-      // ✅ ใช้ event 'onLotUpdated' ตาม backend ที่สร้างไว้
-      onLotUpdated: (lotData) => {
-        console.log("📦 Received Lot update via socket:", lotData);
-        if (isMounted) {
-          setAllItems(prevItems => {
-            return prevItems.map(item => {
-              if (item.item_id === lotData.item_id) {
-                return { ...item, total_on_hand_qty: lotData.new_total_qty };
-              }
-              return item;
-            });
-          });
-        }
-      },
-    });
+    const socket = connectSocket();
 
-    return () => {
-      isMounted = false;
-      // ✅ ไม่ต้องใช้ socket?.off?.("itemsUpdated") เพราะไม่ได้รับ event นี้แล้ว
-      disconnectSocket?.();
+    const handleItemUpdate = () => {
+        // เมื่อได้รับ Event ที่เกี่ยวข้องกับการอัปเดตข้อมูล ให้ดึงข้อมูลใหม่ทั้งหมด
+        console.log("📦 ได้รับการอัปเดตจาก Socket.IO, กำลังดึงข้อมูลใหม่...");
+        if (isMounted) {
+            fetchInitialData();
+        }
     };
-  }, []);
+
+    // 🟢 ฟัง Event เมื่อรายการสินค้าถูกเพิ่ม
+    socket.on("itemAdded", handleItemUpdate);
+
+    // 🟡 ฟัง Event เมื่อข้อมูลสินค้าเดิมถูกแก้ไข (รวมถึงข้อมูลรายละเอียด)
+    socket.on("itemUpdated", handleItemUpdate);
+
+    // 🟡 ฟัง Event เมื่อข้อมูล Lot สินค้าถูกอัปเดต
+    socket.on("itemLotUpdated", handleItemUpdate);
+
+    // 🔴 ฟัง Event เมื่อรายการสินค้าถูกลบ
+    socket.on("itemDeleted", handleItemUpdate);
+
+    // Cleanup function
+    return () => {
+        isMounted = false;
+        socket.off("itemAdded", handleItemUpdate);
+        socket.off("itemUpdated", handleItemUpdate);
+        socket.off("itemLotUpdated", handleItemUpdate);
+        socket.off("itemDeleted", handleItemUpdate);
+        disconnectSocket();
+    };
+}, []);
+  // ----------------------------------------------------
 
   const filteredInventory = useMemo(() => {
     const f = searchText.toLowerCase();

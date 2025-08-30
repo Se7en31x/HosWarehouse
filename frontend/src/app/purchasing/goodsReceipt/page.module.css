@@ -1,36 +1,50 @@
 /* =============================
-   GoodsReceiptListPage — page.module.css
-   Palette: #008dda, #41c9e2, #ace2e1, #1685bb
-   ============================= */
+   GoodsReceiptListPage — page.module.css
+   Palette: #008dda, #41c9e2, #ace2e1, #1685bb (Originals)
+   Adjusted for full-screen and enhanced visuals.
+   ============================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap'); */
 
 /* ---- Variables ---- */
 :root {
-  --bg: #f0fbfe;
+  --bg: #eef7fa;
+  /* Lighter, more subtle background */
   --panel: #ffffff;
   --muted: #6b7280;
   --text: #111827;
-  --border: #e5e7eb;
+  --border: #e0e7eb;
+  /* Slightly softer border */
+
+  /* Original-inspired primary colors */
   --primary: #008dda;
-  --primary-500: #41c9e2;
-  --primary-600: #1685bb;
-  --tint-50: #f0fbfe;
+  /* Main blue */
+  --primary-hover: #007bbd;
+  /* Darker blue for hover */
+  --primary-active: #006aa0;
+  /* Even darker for active */
+  --secondary-btn-bg: #e1f5fe;
+  /* Light blue for secondary button background */
+  --secondary-btn-hover-text: #0056b3;
+  /* Darker text on hover */
+
+  --tint-50: #f6faff;
+  /* Lightest tint for backgrounds */
   --tint-100: #e9f6fb;
-  --tint-200: #ace2e1;
-  --success: #16a34a;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --radius: 10px;
-  --row-h: 64px;
+  /* Slightly darker tint */
+
+  --success: #28a745;
+  --danger: #dc3545;
+  --warning: #ffc107;
+  --radius: 12px;
+  --row-h: 68px;
   --rows-per-page: 10;
-  --th-font: 1.15rem;
-  --body-font: 1rem;
-  --th-min-h: 64px;
-  --th-pad-y: 16px;
-  --th-pad-x: 16px;
-  --th-letter: 0.01em;
-  --th-line: 1.25;
+  --th-font: 1.05rem;
+  --body-font: 0.95rem;
+  --th-min-h: 60px;
+  --th-pad-y: 12px;
+  --th-pad-x: 20px;
   --z-header: 10;
   --z-toolbar: 100;
   --z-modal: 12000;
@@ -38,25 +52,32 @@
 
 /* ---- Layout ---- */
 .mainHome {
-  min-height: 100vh;
-  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans';
+  /* Full viewport width */
+  font-family: 'Sarabun', 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans';
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   background: var(--bg);
+  /* Consistent padding around the main container */
+  box-sizing: border-box;
+  /* Include padding in width calculation */
 }
 
 .infoContainer {
   width: 100%;
-
-  min-height: 100vh;
+  /* Take full width of its parent (mainHome padding) */
+  /* max-width: 1600px; */
+  /* Max width to prevent it from being too stretched on very wide screens */
   background: var(--panel);
   color: var(--text);
   border-radius: var(--radius);
-  padding: 24px;
+  padding: 32px;
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.08);
+  /* More pronounced shadow */
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 28px;
+  /* Slightly increased gap for better spacing */
 }
 
 /* ---- Header ---- */
@@ -64,77 +85,89 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  /* Increased gap */
 }
 
 .pageTitle {
   font-weight: 700;
-  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  font-size: 2.2rem;
+  /* Slightly larger title */
   margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
   color: var(--text);
 }
 
 .subtitle {
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: var(--muted);
-  margin: 4px 0 0 0;
+  margin: 6px 0 0 0;
 }
 
 .titleGroup {
   display: flex;
   flex-direction: column;
-  gap: 4px;
 }
 
 /* ---- Toolbar ---- */
 .toolbar {
   z-index: var(--z-toolbar);
   display: flex;
-  gap: 12px;
+  gap: 20px;
+  /* Increased gap */
   align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
-  border: 1px solid var(--tint-200);
+  border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 12px;
+  padding: 20px;
+  /* Increased padding */
   background: var(--tint-50);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  /* Subtle inner shadow */
 }
 
 .filterGrid {
-  display: grid;
-  grid-template-columns: auto auto 1fr;
-  gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  /* Increased gap */
   flex: 1;
 }
 
 .filterGroup {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  min-width: 180px;
+  /* Ensure filter groups have a minimum width */
+  flex-grow: 1;
 }
 
 .label {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--text);
   font-weight: 600;
 }
 
 .input {
-  height: 40px;
-  border: 1px solid var(--tint-200);
+  height: 48px;
+  /* Taller input fields */
+  border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 0 12px;
-  font-size: 0.95rem;
+  padding: 0 16px;
+  font-size: 1rem;
   background: #fff;
   width: 100%;
   box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .input:focus {
-  outline: 2px solid var(--primary-500);
-  outline-offset: 1px;
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 141, 218, 0.2);
+  /* Primary color shadow */
 }
 
 .searchBar {
@@ -145,12 +178,14 @@
 
 .searchIcon {
   position: absolute;
-  left: 12px;
+  left: 16px;
+  /* Adjusted icon position */
   color: var(--muted);
 }
 
 .searchBar .input {
-  padding-left: 36px;
+  padding-left: 48px;
+  /* Adjusted padding for icon */
 }
 
 /* ---- Buttons ---- */
@@ -159,17 +194,70 @@
   color: #fff;
   border: none;
   border-radius: 8px;
-  height: 40px;
-  padding: 0 16px;
+  height: 48px;
+  /* Taller button */
+  padding: 0 24px;
+  /* More horizontal padding */
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.95rem;
+  gap: 10px;
+  /* Increased gap */
+  font-size: 1rem;
+  /* Slightly larger font */
+  font-weight: 600;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0, 141, 218, 0.2);
+  /* Subtle shadow for primary button */
 }
 
 .primaryButton:hover:not(:disabled) {
-  background: var(--primary-600);
+  background: var(--primary-hover);
+  transform: translateY(-3px);
+  /* More pronounced lift */
+  box-shadow: 0 6px 15px rgba(0, 141, 218, 0.3);
+}
+
+.primaryButton:active {
+  background: var(--primary-active);
+  transform: translateY(0);
+  box-shadow: 0 2px 5px rgba(0, 141, 218, 0.2);
+}
+
+.secondaryButton {
+  background: var(--secondary-btn-bg);
+  /* Light blue background */
+  color: var(--primary);
+  /* Primary color text */
+  border: 1px solid var(--primary);
+  /* Primary color border */
+  border-radius: 8px;
+  height: 44px;
+  /* Taller button */
+  width: 44px;
+  /* Square button */
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  /* Subtle shadow */
+}
+
+.secondaryButton:hover {
+  background: var(--primary);
+  /* Solid primary on hover */
+  color: #fff;
+  /* White text on hover */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 141, 218, 0.25);
+}
+
+.secondaryButton:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .actionButton:disabled {
@@ -177,24 +265,39 @@
   cursor: not-allowed;
 }
 
+/* CSS for removing underline from a link */
+.noUnderline {
+  text-decoration: none;
+}
+
+
 /* ---- Table ---- */
 .tableSection {
-  border: 1px solid var(--tint-200);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   background: #fff;
   overflow-x: auto;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  /* Soft table shadow */
 }
 
 .tableGrid {
   display: grid;
   grid-template-columns:
-    minmax(120px, auto) /* เลขที่ GR */
-    minmax(120px, auto) /* เลขที่ PO */
-    minmax(100px, auto) /* วันที่รับ */
-    minmax(180px, auto) /* ซัพพลายเออร์ */
-    minmax(100px, auto) /* สถานะ */
-    minmax(140px, auto); /* การจัดการ */
-  align-items: center;
+    minmax(140px, 1.2fr)
+    /* เลขที่ GR */
+    minmax(140px, 1.2fr)
+    /* เลขที่ PO */
+    minmax(120px, 1fr)
+    /* วันที่รับ */
+    minmax(200px, 2.5fr)
+    /* ซัพพลายเออร์ */
+    minmax(120px, 1.2fr)
+    /* สถานะ */
+    minmax(100px, 1fr);
+  /* การจัดการ */
+  align-items: stretch;
+  /* Stretch items to fill cell height */
   width: fit-content;
   min-width: 100%;
 }
@@ -203,13 +306,12 @@
   position: sticky;
   top: 0;
   z-index: var(--z-header);
-  background: var(--tint-50);
-  border-bottom: 1px solid var(--tint-200);
+  background: var(--tint-100);
+  border-bottom: 1px solid var(--border);
   padding: var(--th-pad-y) var(--th-pad-x);
   font-weight: 700;
   color: var(--text);
   font-size: var(--th-font);
-  line-height: var(--th-line);
   min-height: var(--th-min-h);
 }
 
@@ -217,14 +319,27 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 0 var(--th-pad-x);
+  /* Default left align */
+  padding: 0 10px;
   white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
-.tableHeader .headerItem:nth-child(3),
-.tableHeader .headerItem:nth-child(5),
-.tableHeader .headerItem:nth-child(6) {
-  justify-content: center;
+.headerItemRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  /* Right align for actions */
+  padding: 0 10px;
+}
+
+.headerItem:first-child {
+  padding-left: 20px;
+}
+
+.headerItem:last-child {
+  padding-right: 20px;
 }
 
 .inventory {
@@ -233,12 +348,11 @@
 
 .tableRow {
   min-height: var(--row-h);
-  padding: 0 var(--th-pad-x);
-  border-top: 1px solid var(--tint-200);
+  border-top: 1px solid var(--border);
 }
 
 .tableRow:hover {
-  background: var(--tint-100);
+  background: var(--tint-50);
 }
 
 .tableRow:first-child {
@@ -248,25 +362,59 @@
 .tableCell {
   display: flex;
   align-items: center;
-  padding: 8px var(--th-pad-x);
+  justify-content: flex-start;
+  /* Default left align */
+  padding: 8px 10px;
   font-size: var(--body-font);
   min-height: var(--row-h);
+  box-sizing: border-box;
 }
 
-.tableCell.centerCell {
-  justify-content: center;
+.tableCell:first-child {
+  padding-left: 20px;
 }
+
+.tableCell:last-child {
+  padding-right: 20px;
+}
+
+
+/* Specific alignment classes */
+.tableCellCenter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  font-size: var(--body-font);
+  min-height: var(--row-h);
+  box-sizing: border-box;
+}
+
+.tableCellRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 8px 10px;
+  font-size: var(--body-font);
+  min-height: var(--row-h);
+  box-sizing: border-box;
+}
+
 
 .tableCell.textWrap {
   white-space: normal;
   word-break: break-word;
   overflow-wrap: anywhere;
-  max-height: 80px;
+  max-height: var(--row-h);
+  /* Constrain height to row height */
   overflow-y: auto;
+  /* Allow scrolling if content exceeds height */
 }
 
 .mono {
   font-family: 'Courier New', Courier, monospace;
+  letter-spacing: 0.02em;
+  /* Slightly more spaced for mono fonts */
 }
 
 /* ---- Status Badge ---- */
@@ -274,89 +422,238 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: 999px;
-  font-weight: 700;
-  font-size: 0.9rem;
+  font-weight: 600;
+  font-size: 0.85rem;
   border: 1px solid transparent;
-  min-width: 100px;
+  min-width: 110px;
+  /* Slightly wider badge */
   line-height: 1;
   text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  /* Subtle badge shadow */
 }
 
-.pending { color: #92400e; background: #fef3c7; border-color: #fde68a; }
-.partial { color: #1e40af; background: #dbeafe; border-color: #93c5fd; }
-.completed { color: #166534; background: #dcfce7; border-color: #86efac; }
-.canceled { color: #9f1239; background: #ffe4e6; border-color: #fecdd3; }
+/* Adjusted badge colors to complement new primary/background */
+.pending {
+  color: #a16207;
+  background: #fffbeb;
+  border-color: #fcd34d;
+}
+
+/* Amber */
+.partial {
+  color: #075985;
+  background: #e0f7fa;
+  border-color: #88dceb;
+}
+
+/* Cyan/Blue-Green */
+.completed {
+  color: #15803d;
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+/* Green */
+.canceled {
+  color: #9f1239;
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+/* Red */
 
 /* ---- Loading and Empty States ---- */
 .loadingContainer {
   display: flex;
+  flex-direction: column;
+  /* Stack spinner and text */
   justify-content: center;
   align-items: center;
-  min-height: calc(var(--row-h) * var(--rows-per-page));
+  min-height: 350px;
+  /* Taller loading area */
+  gap: 12px;
+  font-size: 1.1rem;
+  color: var(--muted);
 }
 
 .spinner {
-  font-size: 1rem;
-  color: var(--primary);
-  animation: spin 1s linear infinite;
+  display: block;
+  width: 2.5em;
+  /* Larger spinner */
+  height: 2.5em;
+  border: 4px solid var(--primary);
+  /* Thicker spinner border */
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s cubic-bezier(0.65, 0.05, 0.36, 1) infinite;
+  /* Smoother animation */
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .noDataMessage {
-  min-height: calc(var(--row-h) * var(--rows-per-page));
+  min-height: 350px;
+  /* Taller empty state area */
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--muted);
-  font-size: var(--body-font);
+  font-size: 1.1rem;
+  font-weight: 500;
 }
 
 /* ---- Swal Button ---- */
 .swalButton {
   background: var(--primary) !important;
   border-radius: 8px !important;
-  padding: 10px 20px !important;
+  padding: 12px 24px !important;
+  /* Larger padding */
+  font-size: 1rem !important;
+  font-weight: 600 !important;
 }
 
 .swalButton:hover {
-  background: var(--primary-600) !important;
+  background: var(--primary-hover) !important;
 }
 
 /* ---- Responsive ---- */
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .filterGrid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+  }
+
+  .infoContainer {
+    padding: 28px;
+  }
+
+  .toolbar {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 992px) {
+  .mainHome {
+    padding: 24px;
+  }
+
+  .pageTitle {
+    font-size: 1.8rem;
+  }
+
+  .primaryButton {
+    height: 44px;
+    padding: 0 20px;
+  }
+
+  .tableGrid {
+    grid-template-columns:
+      minmax(120px, 1.2fr) minmax(120px, 1.2fr) minmax(100px, 1fr) minmax(180px, 2.5fr) minmax(100px, 1.2fr) minmax(90px, 1fr);
   }
 }
 
 @media (max-width: 768px) {
+  .mainHome {
+    padding: 16px;
+  }
+
+  .infoContainer {
+    padding: 20px 16px;
+    gap: 20px;
+  }
+
+  .pageBar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .pageTitle {
+    font-size: 1.6rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+
+  .toolbar {
+    padding: 16px;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
   .filterGrid {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .filterGroup {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .input {
+    height: 44px;
+    font-size: 0.9rem;
+  }
+
+  .primaryButton {
+    width: 100%;
+    justify-content: center;
+    height: 44px;
+    font-size: 0.95rem;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 600px) {
   :root {
-    --th-font: 1.1rem;
-    --body-font: 0.95rem;
-    --th-min-h: 58px;
-    --th-pad-y: 12px;
-    --th-pad-x: 12px;
-    --row-h: 58px;
+    --th-font: 0.95rem;
+    --body-font: 0.85rem;
+    --th-min-h: 55px;
+    --th-pad-y: 10px;
+    --th-pad-x: 15px;
+    --row-h: 60px;
   }
+
   .tableGrid {
     grid-template-columns:
-      minmax(100px, auto)
-      minmax(100px, auto)
-      minmax(90px, auto)
-      minmax(140px, auto)
-      minmax(90px, auto)
-      minmax(120px, auto);
+      minmax(100px, 1.2fr) minmax(100px, 1.2fr) minmax(90px, 1fr) minmax(150px, 2.5fr) minmax(90px, 1.2fr) minmax(80px, 1fr);
+  }
+
+  .tableCell,
+  .headerItem {
+    padding: 8px;
+  }
+
+  .tableCell:first-child,
+  .headerItem:first-child {
+    padding-left: 15px;
+  }
+
+  .tableCell:last-child,
+  .headerItem:last-child {
+    padding-right: 15px;
+  }
+
+  .stBadge {
+    min-width: 90px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+  }
+
+  .secondaryButton {
+    height: 38px;
+    width: 38px;
   }
 }

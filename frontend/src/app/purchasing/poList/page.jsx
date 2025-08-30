@@ -271,7 +271,7 @@ const PoAndRfqPage = () => {
         <div className={styles.pageBar}>
           <div className={styles.titleGroup}>
             <h1 className={styles.pageTitle}>
-              <PackageCheck size={28} /> สร้างข้อมูลการสั่งซื้อ
+               สร้างข้อมูลการสั่งซื้อ
             </h1>
             <p className={styles.subtitle}>
               จัดการใบสั่งซื้อและดูรายการที่สร้างแล้ว
@@ -560,7 +560,7 @@ const PoAndRfqPage = () => {
                 <div className={`${styles.tableGrid} ${styles.tableHeader} ${styles.poList}`}>
                   <div className={styles.headerItem}>เลขที่ PO</div>
                   <div className={styles.headerItem}>ซัพพลายเออร์</div>
-                  <div className={styles.headerItem}>วันที่สร้าง</div>
+                  <div className={styles.headerItem}>วันที่</div>
                   <div className={styles.headerItem}>ยอดรวม (ก่อน VAT)</div>
                   <div className={styles.headerItem}>VAT</div>
                   <div className={styles.headerItem}>ยอดสุทธิ</div>

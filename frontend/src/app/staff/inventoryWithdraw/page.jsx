@@ -141,13 +141,13 @@ export default function InventoryWithdraw() {
 
     const socket = connectSocket();
 
-    // ❌ ลบ Event นี้ออกตามคำขอ
-    // socket.on('itemsDataForWithdrawal', (data) => {
-    //   console.log('📦 itemsDataForWithdrawal ได้รับ:', data);
-    //   if (isMounted) {
-    //     setAllItems(Array.isArray(data) ? data.filter(item => item && item.item_id) : []);
-    //   }
-    // });
+    // ► แก้ไข: เพิ่มการรับฟัง event 'itemsUpdated' ใหม่
+    socket.on('itemsUpdated', (data) => {
+      console.log('📦 itemsUpdated ได้รับ:', data);
+      if (isMounted) {
+        setAllItems(Array.isArray(data) ? data.filter(item => item && item.item_id) : []);
+      }
+    });
 
     socket.on('itemLotUpdated', (updatedLot) => {
       console.log('📦 itemLotUpdated ได้รับ:', updatedLot);
@@ -167,8 +167,7 @@ export default function InventoryWithdraw() {
 
     return () => {
       isMounted = false;
-      // ❌ ลบ Event listener นี้ออกตามคำขอ
-      // socket.off('itemsDataForWithdrawal');
+      socket.off('itemsUpdated'); // ► แก้ไข: เพิ่มการลบ listener ของ 'itemsUpdated'
       socket.off('itemLotUpdated');
       disconnectSocket();
     };

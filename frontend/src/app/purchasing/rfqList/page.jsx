@@ -133,7 +133,7 @@ const RFQListPage = () => {
         <div className={styles.pageBar}>
           <div className={styles.titleGroup}>
             <h1 className={styles.pageTitle}>
-              <PackageCheck size={28} /> รายการใบขอราคา (RFQ)
+              รายการใบขอราคา (RFQ)
             </h1>
             <p className={styles.subtitle}>ดูและจัดการใบขอราคาที่สร้างแล้ว</p>
           </div>
