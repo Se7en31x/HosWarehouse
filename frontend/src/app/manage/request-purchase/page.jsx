@@ -151,18 +151,29 @@ export default function RequestPurchasePage() {
       },
     }).then((result) => {
       if (result.isConfirmed) {
-        setSelectedItems((prev) => prev.filter((i) => i.item_id !== id));
+        // อัปเดต state เพื่อลบสินค้า
+        setSelectedItems((prev) => {
+          const updatedItems = prev.filter((i) => i.item_id !== id);
+          // แสดง popup ใหม่หลังจาก state อัปเดต
+          setTimeout(() => {
+            if (updatedItems.length > 0) {
+              showCartPopup(); // แสดง popup เฉพาะเมื่อยังมีสินค้าในตะกร้า
+            }
+          }, 100);
+          return updatedItems;
+        });
+
+        // แสดงข้อความยืนยันการลบ
         Swal.fire({
           title: "ลบสำเร็จ",
-          text: `${itemName} ถูกลบออกจากตะกร้าแล้ว`,
+          text: `${itemName} ถูกลบออกจากตะกร้าเรียบร้อย`,
           icon: "success",
           confirmButtonText: "ตกลง",
           customClass: { confirmButton: styles.swalButton },
-        }).then(() => {
-          showCartPopup(); // Reopen cart popup after successful removal
         });
       } else {
-        showCartPopup(); // Reopen cart popup if cancellation occurs
+        // ถ้ายกเลิก ให้แสดง popup เดิม
+        showCartPopup();
       }
     });
   };
@@ -198,6 +209,7 @@ export default function RequestPurchasePage() {
             padding: 12px;
             margin-bottom: 12px;
             transition: box-shadow 0.2s ease;
+            column-gap: 16px;
           }
           .cart-item:hover {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -206,6 +218,9 @@ export default function RequestPurchasePage() {
             display: flex;
             flex-direction: column;
             gap: 4px;
+          }
+          .input-group.qty {
+            margin-right: 12px;
           }
           .item-name {
             font-size: 1rem;
@@ -339,7 +354,7 @@ export default function RequestPurchasePage() {
                       </div>
                       <div></div>
                       <button class="remove-btn" id="remove-${item.item_id}">
-                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="14" width="14" xmlns="http://www.w3.org/2000/svg"><path d="M432 32H16A16 16 0 0 0 0 48v80a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zM128 512h192V192H128zm272 0h-64V192a64 64 0 0 0-64-64H176a64 64 0 0 0-64 64v320H48a16 16 0 0 0-16 16v16a16 16 0 0 0 16 16h352a16 16 0 0 0 16-16v-16a16 16 0 0 0-16-16z"></path></svg>
+                        🗑️
                       </button>
                     </div>
                   `
@@ -356,8 +371,7 @@ export default function RequestPurchasePage() {
       `,
       showCloseButton: true,
       showConfirmButton: false,
-      showCancelButton: true,
-      cancelButtonText: "ปิด",
+      showCancelButton: false,
       customClass: {
         container: styles.swalContainer,
         popup: styles.swalPopup,
@@ -603,4 +617,4 @@ export default function RequestPurchasePage() {
       </div>
     </div>
   );
-} 
+}

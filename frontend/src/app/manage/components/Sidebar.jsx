@@ -21,6 +21,7 @@ import {
     Calendar,
     Wrench,
     ListChecks,
+    LogOut,
     // ✅ ไอคอนที่เพิ่มเข้ามา
     ArrowDownFromLine,
     Database,
@@ -182,6 +183,12 @@ export default function Sidebar() {
                         <Link href="/manage/settings" className={styles.noStyleLink}>
                             <Settings className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>ตั้งค่า</span>
+                        </Link>
+                    </li>
+                    <li className={`${styles.sidebarItem} ${isActive("/manage/settings") ? styles.active : ""}`}>
+                        <Link href="/manage/settings" className={styles.noStyleLink}>
+                            <LogOut className={styles.sidebarIcon} />
+                            <span className={styles.sidebarText}>ออกจากระบบ</span>
                         </Link>
                     </li>
 

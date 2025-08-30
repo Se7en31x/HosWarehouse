@@ -87,7 +87,7 @@ export default function RequestHistory() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 12;
+  const itemsPerPage = 10;
 
   // react-select portal
   const menuPortalTarget = useMemo(

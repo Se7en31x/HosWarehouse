@@ -46,16 +46,6 @@
   margin: 0 0 4px;
 }
 
-.pageTitle::after {
-  content: '';
-  display: block;
-  width: 60px;
-  height: 4px;
-  background: var(--primary);
-  margin: .5rem 0 0;
-  border-radius: 2px;
-}
-
 .infoMessage {
   text-align: center;
   padding: 12px;

@@ -80,7 +80,7 @@
   font-weight: 700;
   font-size: clamp(1.4rem, 2.2vw, 2rem);
   margin: 0;
-  color: var(--primary);
+  /* color: var(--primary); */
   display: flex;
   align-items: center;
   gap: 8px;

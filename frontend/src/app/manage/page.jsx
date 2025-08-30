@@ -38,14 +38,49 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
+  // 🔹 Translation Maps
+  const typeThaiMap = {
+    withdraw: "เบิก",
+    borrow: "ยืม",
+    return: "คืน",
+    adjust: "ปรับปรุง",
+    receive: "รับเข้า",
+    transfer: "โอนย้าย",
+    issue: "จ่ายออก",
+    dispose: "จำหน่ายทิ้ง",
+    stock_cut: "ตัดสต็อก",   // ✅ เพิ่มตรงนี้
+    // Add more mappings as needed based on API data
+  };
+
+  const statusThaiMap = {
+    available: "พร้อมใช้งาน",
+    low: "ใกล้หมด",
+    out: "หมดสต็อก",
+    hold: "พักใช้งาน",
+    pending: "รอดำเนินการ",
+    approved: "อนุมัติแล้ว",
+    rejected: "ถูกปฏิเสธ",
+    processing: "กำลังดำเนินการ",
+    completed: "เสร็จสิ้น",
+    cancelled: "ยกเลิก",
+    // Add more mappings as needed based on API data
+  };
+
   // 🔹 Bar Chart (เบิก/ยืม)
   const barOptions = {
     title: { text: "จำนวนการเบิก-ยืม รายเดือน", left: "center" },
     tooltip: { trigger: "axis" },
     legend: { data: ["เบิก", "ยืม"], bottom: 0 },
     grid: { top: 50, left: "3%", right: "3%", bottom: 50, containLabel: true },
-    xAxis: { type: "category", data: monthlyData.map((d) => d.month) },
-    yAxis: { type: "value" },
+    xAxis: {
+      type: "category",
+      name: "เดือน",
+      data: monthlyData.map((d) => d.month),
+    },
+    yAxis: {
+      type: "value",
+      name: "จำนวน",
+    },
     series: [
       {
         name: "เบิก",
@@ -92,6 +127,7 @@ export default function Dashboard() {
 
   // 🔹 Pie Chart (หมวดหมู่)
   const pieOptions = {
+    title: { text: "จำนวนของที่อยู่ในคลัง", left: "center" },
     tooltip: { trigger: "item", formatter: "{b}<br/>จำนวน: {c} ({d}%)" },
     legend: { bottom: 0, orient: "horizontal" },
     series: [
@@ -111,15 +147,24 @@ export default function Dashboard() {
             formatter: "{b}\n{c} ({d}%)",
           },
         },
-        data: categoryData.map((d, i) => ({
-          name: d.name,
-          value: d.value,
-          itemStyle: {
-            color: ["#3b82f6", "#22c55e", "#f59e0b", "#a855f7", "#ef4444"][
-              i % 5
-            ],
-          },
-        })),
+        data: categoryData.map((d, i) => {
+          const nameMap = {
+            meddevice: "อุปกรณ์ทางการแพทย์",
+            general: "ของใช้ทั่วไป",
+            medsup: "เวชภัณฑ์",
+            equipment: "ครุภัณฑ์",
+            medicine: "ยา",
+          };
+          return {
+            name: nameMap[d.name] || d.name,
+            value: d.value,
+            itemStyle: {
+              color: ["#3b82f6", "#22c55e", "#f59e0b", "#a855f7", "#ef4444"][
+                i % 5
+              ],
+            },
+          };
+        }),
       },
     ],
   };
@@ -163,28 +208,42 @@ export default function Dashboard() {
       {/* 🔹 Movements Table */}
       <div className={styles.section}>
         <h2>การเคลื่อนไหวคลังล่าสุด</h2>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>ชื่อพัสดุ</th>
-              <th>วันที่</th>
-              <th>จำนวน</th>
-              <th>ประเภท</th>
-              <th>สถานะ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {movements.map((m, i) => (
-              <tr key={i}>
-                <td>{m.item_name}</td>
-                <td>{new Date(m.move_date).toLocaleString("th-TH")}</td>
-                <td>{m.move_qty}</td>
-                <td>{m.move_type}</td>
-                <td>{m.move_status}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className={styles.tableSection}>
+          <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+            <div className={styles.headerItem}>ชื่อพัสดุ</div>
+            <div className={styles.headerItem}>วันที่</div>
+            <div className={styles.headerItem}>จำนวน</div>
+            <div className={styles.headerItem}>ประเภท</div>
+            <div className={styles.headerItem}>สถานะ</div>
+          </div>
+          <div className={styles.tableBody}>
+            {movements.length > 0 ? (
+              movements.slice(0, 8).map((m, i) => (
+                <div key={i} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                  <div className={styles.tableCell} title={m.item_name}>
+                    {m.item_name}
+                  </div>
+                  <div className={styles.tableCell}>
+                    {new Date(m.move_date).toLocaleString("th-TH", {
+                      timeZone: "Asia/Bangkok",
+                    })}
+                  </div>
+                  <div className={styles.tableCell}>{m.move_qty}</div>
+                  <div className={styles.tableCell}>
+                    {typeThaiMap[m.move_type?.toLowerCase()] || m.move_type || "-"}
+                  </div>
+                  <div className={styles.tableCell}>
+                    <span className={styles.stBadge}>
+                      {statusThaiMap[m.move_status?.toLowerCase()] || m.move_status || "-"}
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className={styles.noDataMessage}>ไม่พบข้อมูล</div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

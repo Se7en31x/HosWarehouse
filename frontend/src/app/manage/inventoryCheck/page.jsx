@@ -280,7 +280,7 @@ export default function InventoryCheck() {
         <div className={styles.pageBar}>
           <div className={styles.titleGroup}>
             <h1 className={styles.pageTitle}>
-              <PackageCheck size={28} /> {/* เปลี่ยนไอคอนตรงนี้ */}
+              {/* <PackageCheck size={28} /> เปลี่ยนไอคอนตรงนี้ */}
               ตรวจสอบยอดคงคลัง
             </h1>
           </div>

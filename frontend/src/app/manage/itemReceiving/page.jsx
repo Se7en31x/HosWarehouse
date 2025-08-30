@@ -353,7 +353,7 @@ export default function ItemReceivingPage() {
         <div className={styles.pageBar}>
           <div className={styles.titleGroup}>
             <h1 className={styles.pageTitle}>
-              <Package size={22} /> รับเข้าสินค้า
+              {/* <Package size={22} /> */}รับเข้าสินค้า 
             </h1>
           </div>
         </div>

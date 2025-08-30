@@ -13,8 +13,8 @@
 }
 
 .headerIcon {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   color: var(--primary, #008dda);
 }
 
@@ -33,7 +33,6 @@
 
 .grid {
   display: grid;
-  /* จาก minmax(260px, 1fr) → ปรับให้ยาวขึ้น */
   grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
   gap: 1.5rem;
   margin-top: 1.5rem;
@@ -43,15 +42,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1.5rem;
+  gap: 1.25rem;
+  padding: 1.75rem;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
   background: #fff;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
   text-decoration: none;
   transition: all 0.2s ease-in-out;
-  min-height: 100px; /* ให้สูงขึ้นเล็กน้อย */
+  min-height: 120px;
 }
 
 .card:hover {
@@ -59,15 +58,25 @@
 }
 
 .iconWrapper {
-  padding: 0.9rem;
-  border-radius: 12px;
+  padding: 1.5rem;
+  border-radius: 20px;
   background: #f9fafb;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease-in-out;
 }
 
 .icon {
-  width: 26px;
-  height: 26px;
+  width: 36px;
+  height: 36px;
+  stroke-width: 2.5;
+  transition: transform 0.2s ease-in-out;
+}
+
+.card:hover .icon {
+  transform: scale(1.1);
 }
 
 .textContent {
@@ -103,9 +112,21 @@
 }
 
 /* ====== Color Themes ====== */
+.blue .iconWrapper { background: #dbeafe; }
+.blue .icon { color: #3b82f6; }
 .blue:hover { background: #eff6ff; box-shadow: 0 2px 8px rgba(59,130,246,0.2); }
+.green .iconWrapper { background: #d1fae5; }
+.green .icon { color: #10b981; }
 .green:hover { background: #ecfdf5; box-shadow: 0 2px 8px rgba(16,185,129,0.2); }
+.purple .iconWrapper { background: #e9d5ff; }
+.purple .icon { color: #8b5cf6; }
 .purple:hover { background: #f5f3ff; box-shadow: 0 2px 8px rgba(139,92,246,0.2); }
+.red .iconWrapper { background: #fee2e2; }
+.red .icon { color: #ef4444; }
 .red:hover { background: #fef2f2; box-shadow: 0 2px 8px rgba(239,68,68,0.2); }
+.pink .iconWrapper { background: #fce7f3; }
+.pink .icon { color: #ec4899; }
 .pink:hover { background: #fdf2f8; box-shadow: 0 2px 8px rgba(236,72,153,0.2); }
+.gray .iconWrapper { background: #e5e7eb; }
+.gray .icon { color: #6b7280; }
 .gray:hover { background: #f9fafb; box-shadow: 0 2px 8px rgba(107,114,128,0.2); }

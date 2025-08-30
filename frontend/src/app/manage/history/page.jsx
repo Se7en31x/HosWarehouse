@@ -1,14 +1,13 @@
 "use client";
 import {
   Truck,
-  ArrowRight,
+  ClipboardList,
   Hand,
   AlertTriangle,
   Wrench,
-  Trash2,
+  PackageMinus, // Replaced Trash2 with PackageMinus
   ChevronRight,
   FileClock,
-  Undo,
 } from "lucide-react";
 import styles from "./page.module.css";
 
@@ -25,7 +24,7 @@ const historyItems = [
     id: "withdraw",
     title: "ประวัติการเบิก",
     description: "ดูประวัติการเบิกสินค้า",
-    icon: ArrowRight,
+    icon: ClipboardList,
     color: "green",
     link: "/manage/history/withdraw",
   },
@@ -57,7 +56,7 @@ const historyItems = [
     id: "stockout",
     title: "ประวัติการนำออก",
     description: "ตรวจสอบสินค้าที่ถูกนำออก",
-    icon: Trash2,
+    icon: PackageMinus, // Updated icon
     color: "gray",
     link: "/manage/history/stockout",
   },
@@ -68,10 +67,10 @@ export default function HistoryPage() {
     <div className={styles.container}>
       {/* Header */}
       <div className={styles.header}>
-        <FileClock className={styles.headerIcon} />
+        {/* <FileClock className={styles.headerIcon} /> */}
         <div>
           <h1 className={styles.title}>ประวัติคลังพัสดุ</h1>
-          <p className={styles.subtitle}>ติดตามการเคลื่อนไหวของคลัง</p>
+          {/* <p className={styles.subtitle}>ติดตามการเคลื่อนไหวของคลัง</p> */}
         </div>
       </div>
 
