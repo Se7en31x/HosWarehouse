@@ -58,17 +58,14 @@ const customSelectStyles = {
   }),
 };
 
-
 // ► แปลสถานะและจำนวนแบบง่าย
 const translateStatus = (item) => {
   const quantity = Number(item.total_on_hand_qty ?? 0);
 
-  // ถ้าจำนวนคงเหลือ (quantity) น้อยกว่าหรือเท่ากับ 0
   if (quantity <= 0) {
     return { text: 'หมดสต็อก', class: 'stOut' };
   }
 
-  // ถ้ามีจำนวนคงเหลือ ก็ให้ถือว่า "พร้อมใช้งาน"
   return { text: 'พร้อมใช้งาน', class: 'stAvailable' };
 };
 
@@ -144,39 +141,35 @@ export default function InventoryWithdraw() {
 
     const socket = connectSocket();
 
-    socket.on('itemsDataForWithdrawal', (data) => {
-      console.log('📦 itemsDataForWithdrawal ได้รับ:', data);
-      if (isMounted) {
-        setAllItems(Array.isArray(data) ? data.filter(item => item && item.item_id) : []);
-      }
-    });
+    // ❌ ลบ Event นี้ออกตามคำขอ
+    // socket.on('itemsDataForWithdrawal', (data) => {
+    //   console.log('📦 itemsDataForWithdrawal ได้รับ:', data);
+    //   if (isMounted) {
+    //     setAllItems(Array.isArray(data) ? data.filter(item => item && item.item_id) : []);
+    //   }
+    // });
 
-    socket.on('itemUpdated', (updatedItem) => {
-      console.log('📦 itemUpdated ได้รับ:', updatedItem);
-      if (!updatedItem || !updatedItem.item_id) return;
+    socket.on('itemLotUpdated', (updatedLot) => {
+      console.log('📦 itemLotUpdated ได้รับ:', updatedLot);
+      if (!updatedLot || !updatedLot.item_id) return;
       setAllItems((prevItems) => {
-        const index = prevItems.findIndex((i) => i.item_id === updatedItem.item_id);
-        const updatedData = {
-          ...updatedItem,
-          total_on_hand_qty: updatedItem.current_stock ?? updatedItem.total_on_hand_qty ?? 0,
-          item_img: updatedItem.item_img || updatedItem.item_img_url || null,
-          is_borrowable: updatedItem.is_borrowable ?? false,
-          item_status: updatedItem.item_status || 'active'
-        };
-        if (index !== -1) {
-          const newItems = [...prevItems];
-          newItems[index] = { ...newItems[index], ...updatedData };
-          return newItems;
-        } else {
-          return [...prevItems, updatedData];
-        }
+        return prevItems.map(item => {
+          if (item.item_id === updatedLot.item_id) {
+            return {
+              ...item,
+              total_on_hand_qty: updatedLot.new_total_qty ?? item.total_on_hand_qty
+            };
+          }
+          return item;
+        });
       });
     });
 
     return () => {
       isMounted = false;
-      socket.off('itemsDataForWithdrawal');
-      socket.off('itemUpdated');
+      // ❌ ลบ Event listener นี้ออกตามคำขอ
+      // socket.off('itemsDataForWithdrawal');
+      socket.off('itemLotUpdated');
       disconnectSocket();
     };
   }, []);
@@ -188,15 +181,15 @@ export default function InventoryWithdraw() {
   // ── Helpers ─────────────────────────────
   function ItemImage({ item_img, alt }) {
     const defaultImg = 'http://localhost:5000/public/defaults/landscape.png';
-    const [img, setImg] = useState(item_img ? `http://localhost:5000/uploads/${item_img}` : defaultImg);
+    const [imgSrc, setImgSrc] = useState(item_img ? `http://localhost:5000/uploads/${item_img}` : defaultImg);
     return (
       <Image
-        src={img}
+        src={imgSrc}
         alt={alt || 'ไม่มีชื่อ'}
         width={45}
         height={45}
         style={{ objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }}
-        onError={() => setImg(defaultImg)}
+        onError={() => setImgSrc(defaultImg)}
         loading="lazy"
         unoptimized
       />
@@ -305,29 +298,20 @@ export default function InventoryWithdraw() {
     setShowModal(true);
   };
 
-  // const handleBorrow = (item) => {
-  //   setSelectedItem(item);
-  //   setInputQuantity(1);
-  //   setShowModal(true);
-  // };
-
   const handleBorrow = async (item) => {
     try {
-      // ✅ เรียก API ไป backend เพื่อตรวจสอบว่ายืมค้างหรือไม่
       const response = await axiosInstance.get(`/check-pending-borrow/${item.item_id}`);
 
       if (response.data.pending) {
-        // 🚫 มีการยืมค้าง → แจ้งเตือนผู้ใช้
         Swal.fire({
           title: "ไม่สามารถยืมได้",
-          text: "คุณมีการยืมค้างอยู่ กรุณาคืนสินค้าก่อนทำรายการใหม่",
+          text: "คุณมีการยืมสินค้าชิ้นนี้ค้างอยู่ กรุณาคืนสินค้าก่อนทำรายการใหม่",
           icon: "error",
           confirmButtonText: "ตกลง",
         });
-        return; // หยุดการทำงาน
+        return;
       }
 
-      // ✅ ไม่มีการยืมค้าง → เปิด modal กรอกจำนวน
       setSelectedItem(item);
       setInputQuantity(1);
       setShowModal(true);
@@ -342,7 +326,6 @@ export default function InventoryWithdraw() {
       });
     }
   };
-
 
   const handleConfirm = async () => {
     if (!inputQuantity || inputQuantity <= 0) {
@@ -365,7 +348,7 @@ export default function InventoryWithdraw() {
     try {
       addToCart({
         id: selectedItem.item_id,
-        item_img: selectedItem.item_img ? `http://localhost:5000/uploads/${selectedItem.item_img}` : '/defaults/landscape.png',
+        item_img: selectedItem.item_img,
         number: selectedItem.item_number || '-',
         code: getItemCode(selectedItem),
         name: selectedItem.item_name || 'ไม่ระบุ',
@@ -390,7 +373,9 @@ export default function InventoryWithdraw() {
     setShowModal(false);
     setSelectedItem(null);
     setInputQuantity(1);
-    setReturnDate(actionType === 'borrow' ? new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0] : '');
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    setReturnDate(actionType === 'borrow' ? tomorrow.toISOString().split('T')[0] : '');
   };
 
   // ===== Pagination =====
@@ -401,20 +386,15 @@ export default function InventoryWithdraw() {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
       if (currentPage <= 3) {
-        // ต้น ๆ
         pages.push(1, 2, 3, 4, '...', totalPages);
       } else if (currentPage >= totalPages - 2) {
-        // ท้าย ๆ
         pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
       } else {
-        // กลาง
         pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
       }
     }
-
     return pages;
   };
-
 
   // ── Render ─────────────────────────────────
   return (

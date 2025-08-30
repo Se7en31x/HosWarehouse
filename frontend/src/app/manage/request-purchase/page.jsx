@@ -1,12 +1,17 @@
-"use client";
+'use client';
 import { useState, useEffect, useMemo } from "react";
 import styles from "./page.module.css";
 import axiosInstance from "@/app/utils/axiosInstance";
 import { FaPlus, FaTrashAlt, FaSearch, FaShoppingCart } from "react-icons/fa";
 import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-// ✅ ฟังก์ชันแปลประเภท
+// ✅ Import Socket functions
+import { connectSocket, disconnectSocket } from "@/app/utils/socket";
+
+const MySwal = withReactContent(Swal);
+
 const mapCategoryToThai = (category) => {
   switch ((category || "").toLowerCase()) {
     case "medicine":
@@ -24,6 +29,19 @@ const mapCategoryToThai = (category) => {
   }
 };
 
+// ✅ เพิ่มฟังก์ชัน getImageUrl เพื่อจัดการ URL รูปภาพ
+const getImageUrl = (imgName) => {
+  if (!imgName) {
+    return "/public/defaults/landscape.png";
+  }
+  // ถ้าเป็น URL เต็มอยู่แล้ว ให้ใช้เลย
+  if (String(imgName).startsWith("http")) {
+    return imgName;
+  }
+  // ถ้าเป็นแค่ชื่อไฟล์ ให้ใช้ relative path
+  return `/uploads/${imgName}`;
+};
+
 export default function RequestPurchasePage() {
   const [items, setItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -33,23 +51,65 @@ export default function RequestPurchasePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
 
-  // ดึงสินค้า
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const itemsRes = await axiosInstance.get("/pr/items");
+      setItems(Array.isArray(itemsRes.data) ? itemsRes.data.filter(Boolean) : []);
+    } catch (err) {
+      setError("ไม่สามารถดึงข้อมูลได้: " + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const itemsRes = await axiosInstance.get("/pr/items");
-        setItems(itemsRes.data);
-      } catch (err) {
-        setError("ไม่สามารถดึงข้อมูลได้: " + (err.response?.data?.message || err.message));
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, []);
 
-  // Filter items
+  useEffect(() => {
+    let isMounted = true;
+    const socket = connectSocket();
+
+    socket.on("itemAdded", (newItem) => {
+      console.log("ได้รับข้อมูลสินค้าใหม่จาก Socket.IO:", newItem);
+      if (isMounted) {
+        setItems(prevItems => [...prevItems, newItem]);
+      }
+    });
+
+    socket.on("itemLotUpdated", (payload) => {
+      console.log("ได้รับข้อมูลการอัปเดต Lot จาก Socket.IO:", payload);
+      if (isMounted) {
+        setItems(prevItems => prevItems.map(item =>
+          item.item_id === payload.item_id
+            ? {
+              ...item,
+              current_stock: payload.new_total_qty
+            }
+            : item
+        ));
+      }
+    });
+
+    socket.on("itemDeleted", (deletedItemId) => {
+      console.log("ได้รับสัญญาณลบสินค้าจาก Socket.IO:", deletedItemId);
+      if (isMounted) {
+        setItems(prevItems => prevItems.filter(item =>
+          item.item_id !== deletedItemId
+        ));
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      socket.off("itemAdded");
+      socket.off("itemLotUpdated");
+      socket.off("itemDeleted");
+      disconnectSocket();
+    };
+  }, []);
+
   const filteredItems = useMemo(() => {
     const q = searchQuery.toLowerCase();
     return items.filter(
@@ -59,7 +119,6 @@ export default function RequestPurchasePage() {
     );
   }, [items, searchQuery]);
 
-  // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredItems.length / ITEMS_PER_PAGE));
   const paginatedItems = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -80,9 +139,7 @@ export default function RequestPurchasePage() {
     return pages;
   };
 
-  // Add Item with Quantity Prompt
   const handleAddItem = (item) => {
-    // Check if item is already in cart
     if (selectedItems.some((i) => i.item_id === item.item_id)) {
       Swal.fire({
         title: "แจ้งเตือน",
@@ -94,7 +151,6 @@ export default function RequestPurchasePage() {
       return;
     }
 
-    // Show prompt for quantity
     Swal.fire({
       title: `เพิ่ม ${item.item_name} ลงในตะกร้า`,
       text: "กรุณาระบุจำนวนที่ต้องการ",
@@ -127,18 +183,8 @@ export default function RequestPurchasePage() {
     });
   };
 
-  const handleQuantityChange = (id, qty) => {
-    setSelectedItems((prev) =>
-      prev.map((i) => (i.item_id === id ? { ...i, requested_qty: Math.max(1, Number(qty)) } : i))
-    );
-  };
-
-  const handleNoteChange = (id, note) => {
-    setSelectedItems((prev) => prev.map((i) => (i.item_id === id ? { ...i, note } : i)));
-  };
-
   const handleRemoveItem = (id, itemName) => {
-    Swal.fire({
+    MySwal.fire({
       title: `ลบ ${itemName} ออกจากตะกร้า?`,
       text: "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้",
       icon: "warning",
@@ -152,251 +198,104 @@ export default function RequestPurchasePage() {
     }).then((result) => {
       if (result.isConfirmed) {
         setSelectedItems((prev) => prev.filter((i) => i.item_id !== id));
-        Swal.fire({
+        MySwal.fire({
           title: "ลบสำเร็จ",
           text: `${itemName} ถูกลบออกจากตะกร้าแล้ว`,
           icon: "success",
           confirmButtonText: "ตกลง",
           customClass: { confirmButton: styles.swalButton },
-        }).then(() => {
-          showCartPopup(); // Reopen cart popup after successful removal
         });
-      } else {
-        showCartPopup(); // Reopen cart popup if cancellation occurs
       }
     });
   };
 
-  // Show Cart Popup
   const showCartPopup = () => {
-    Swal.fire({
+    MySwal.fire({
       title: `ตะกร้าสินค้า (${selectedItems.length} รายการ)`,
-      html: `
-        <style>
-          .cart-container {
-            font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, sans-serif;
-            max-height: 400px;
-            overflow-y: auto;
-            padding: 10px;
-            scrollbar-width: thin;
-            scrollbar-color: #ace2e1 transparent;
-          }
-          .cart-container::-webkit-scrollbar {
-            width: 6px;
-          }
-          .cart-container::-webkit-scrollbar-thumb {
-            background-color: #ace2e1;
-            border-radius: 3px;
-          }
-          .cart-item {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr 60px;
-            align-items: center;
-            background: #f9fafb;
-            border: 1px solid #ace2e1;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 12px;
-            transition: box-shadow 0.2s ease;
-          }
-          .cart-item:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-          }
-          .item-details {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-          }
-          .item-name {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #374151;
-            margin: 0;
-          }
-          .item-meta {
-            font-size: 0.85rem;
-            color: #6b7280;
-          }
-          .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-          }
-          .input-label {
-            font-size: 0.85rem;
-            color: #374151;
-            font-weight: 500;
-          }
-          .input-field {
-            width: 100%;
-            height: 36px;
-            padding: 8px;
-            border: 1px solid #ace2e1;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            transition: border-color 0.2s ease;
-          }
-          .input-field:focus {
-            outline: none;
-            border-color: #41c9e2;
-            box-shadow: 0 0 0 2px rgba(65, 201, 226, 0.2);
-          }
-          .remove-btn {
-            background: #ef4444;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.2s ease, transform 0.15s ease;
-          }
-          .remove-btn:hover {
-            background: #dc2626;
-            transform: scale(1.05);
-          }
-          .remove-btn:active {
-            transform: scale(0.95);
-          }
-          .submit-row {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 16px;
-            padding: 10px;
-          }
-          .submit-btn {
-            background: #008dda;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            font-size: 0.95rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.15s ease;
-          }
-          .submit-btn:hover {
-            background: #1685bb;
-            transform: translateY(-1px);
-          }
-          .submit-btn:active {
-            transform: translateY(0);
-          }
-          .no-items {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 20px;
-            font-size: 1rem;
-            color: #6b7280;
-            background: #f9fafb;
-            border-radius: 8px;
-            border: 1px solid #ace2e1;
-          }
-          @media (max-width: 500px) {
-            .cart-item {
-              grid-template-columns: 1fr;
-              gap: 10px;
-            }
-            .input-field {
-              width: 100%;
-            }
-          }
-        </style>
-        <div class="cart-container">
-          ${selectedItems.length
-          ? selectedItems
-            .map(
-              (item) => `
-                    <div class="cart-item">
-                      <div class="item-details">
-                        <h3 class="item-name">${item.item_name || "-"}</h3>
-                        <span class="item-meta">ประเภท: ${mapCategoryToThai(item.item_category)}</span>
-                        <span class="item-meta">หน่วย: ${item.item_purchase_unit || item.item_unit || "-"}</span>
-                      </div>
-                      <div class="input-group">
-                        <label class="input-label">จำนวน</label>
-                        <input
-                          type="number"
-                          min="1"
-                          value="${item.requested_qty}"
-                          class="input-field"
-                          id="qty-${item.item_id}"
-                        />
-                      </div>
-                      <div class="input-group">
-                        <label class="input-label">หมายเหตุ</label>
-                        <input
-                          type="text"
-                          value="${item.note}"
-                          placeholder="เพิ่มหมายเหตุ"
-                          class="input-field"
-                          id="note-${item.item_id}"
-                        />
-                      </div>
-                      <div></div>
-                      <button class="remove-btn" id="remove-${item.item_id}">
-                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="14" width="14" xmlns="http://www.w3.org/2000/svg"><path d="M432 32H16A16 16 0 0 0 0 48v80a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zM128 512h192V192H128zm272 0h-64V192a64 64 0 0 0-64-64H176a64 64 0 0 0-64 64v320H48a16 16 0 0 0-16 16v16a16 16 0 0 0 16 16h352a16 16 0 0 0 16-16v-16a16 16 0 0 0-16-16z"></path></svg>
-                      </button>
-                    </div>
-                  `
-            )
-            .join("")
-          : `<div class="no-items">
-                  <span role="img" aria-label="ตะกร้าว่างเปล่า">🛒</span> ยังไม่มีสินค้าในตะกร้า
-                </div>`
-        }
+      html: (
+        <div className="cart-container">
+          {selectedItems.length ? (
+            selectedItems.map((item) => (
+              <div key={item.item_id} className="cart-item">
+                <div className="item-details">
+                  <h3 className="item-name">{item.item_name || "-"}</h3>
+                  <span className="item-meta">ประเภท: {mapCategoryToThai(item.item_category)}</span>
+                  <span className="item-meta">หน่วย: {item.item_purchase_unit || item.item_unit || "-"}</span>
+                </div>
+                <div className="input-group">
+                  <label className="input-label">จำนวน</label>
+                  <input
+                    type="number"
+                    min="1"
+                    defaultValue={item.requested_qty}
+                    className="input-field"
+                    data-id={item.item_id}
+                    data-field="qty"
+                  />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">หมายเหตุ</label>
+                  <input
+                    type="text"
+                    defaultValue={item.note}
+                    placeholder="เพิ่มหมายเหตุ"
+                    className="input-field"
+                    data-id={item.item_id}
+                    data-field="note"
+                  />
+                </div>
+                <div></div>
+                <button
+                  className="remove-btn"
+                  onClick={() => {
+                    MySwal.close();
+                    handleRemoveItem(item.item_id, item.item_name);
+                  }}
+                >
+                  <FaTrashAlt size={14} />
+                </button>
+              </div>
+            ))
+          ) : (
+            <div className="no-items">
+              <span role="img" aria-label="Empty cart">🛒</span> ยังไม่มีสินค้าในตะกร้า
+            </div>
+          )}
         </div>
-        <div class="submit-row">
-          <button class="submit-btn" id="submit-cart">ส่งคำขอสั่งซื้อ</button>
-        </div>
-      `,
+      ),
       showCloseButton: true,
-      showConfirmButton: false,
       showCancelButton: true,
+      showConfirmButton: true,
+      confirmButtonText: "ส่งคำขอสั่งซื้อ",
       cancelButtonText: "ปิด",
       customClass: {
         container: styles.swalContainer,
         popup: styles.swalPopup,
+        confirmButton: styles.swalButton,
+        cancelButton: styles.swalCancelButton,
       },
-      didOpen: () => {
-        // Add event listeners for quantity, note, and remove buttons
-        selectedItems.forEach((item) => {
-          const qtyInput = document.getElementById(`qty-${item.item_id}`);
-          const noteInput = document.getElementById(`note-${item.item_id}`);
-          const removeBtn = document.getElementById(`remove-${item.item_id}`);
-
-          if (qtyInput) {
-            qtyInput.addEventListener("change", (e) => handleQuantityChange(item.item_id, e.target.value));
-          }
-          if (noteInput) {
-            noteInput.addEventListener("change", (e) => handleNoteChange(item.item_id, e.target.value));
-          }
-          if (removeBtn) {
-            removeBtn.addEventListener("click", () => {
-              Swal.close(); // Close the cart popup
-              handleRemoveItem(item.item_id, item.item_name); // Trigger confirmation prompt
-            });
-          }
+      preConfirm: () => {
+        const updatedItems = selectedItems.map(item => {
+          const qtyInput = document.querySelector(`input[data-id="${item.item_id}"][data-field="qty"]`);
+          const noteInput = document.querySelector(`input[data-id="${item.item_id}"][data-field="note"]`);
+          return {
+            ...item,
+            requested_qty: qtyInput ? Math.max(1, Number(qtyInput.value)) : item.requested_qty,
+            note: noteInput ? noteInput.value : item.note,
+          };
         });
-
-        const submitBtn = document.getElementById("submit-cart");
-        if (submitBtn) {
-          submitBtn.addEventListener("click", () => {
-            Swal.close();
-            handleSubmit();
-          });
-        }
-      },
+        setSelectedItems(updatedItems);
+        return updatedItems;
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        handleSubmit(result.value);
+      }
     });
   };
 
-  // Submit PR
-  const handleSubmit = async () => {
-    if (!selectedItems.length) {
+  const handleSubmit = async (itemsToSubmit) => {
+    if (!itemsToSubmit || !itemsToSubmit.length) {
       Swal.fire({
         title: "แจ้งเตือน",
         text: "กรุณาเลือกรายการอย่างน้อย 1 รายการ",
@@ -407,53 +306,37 @@ export default function RequestPurchasePage() {
       return;
     }
 
-    const confirm = await Swal.fire({
-      title: "ยืนยันการส่งคำขอ?",
-      text: `คุณต้องการส่งคำขอสั่งซื้อ ${selectedItems.length} รายการใช่หรือไม่?`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "ใช่",
-      cancelButtonText: "ยกเลิก",
-      customClass: {
-        confirmButton: styles.swalButton,
-        cancelButton: styles.swalCancelButton,
-      },
-    });
+    try {
+      await axiosInstance.post("/pr", {
+        requester_id: 1,
+        items_to_purchase: itemsToSubmit.map((i) => ({
+          item_id: i.item_id,
+          qty: i.requested_qty,
+          unit: i.item_purchase_unit || i.item_unit,
+          note: i.note,
+        })),
+      });
 
-    if (confirm.isConfirmed) {
-      try {
-        await axiosInstance.post("/pr", {
-          requester_id: 1, // TODO: ปรับตามระบบ auth
-          items_to_purchase: selectedItems.map((i) => ({
-            item_id: i.item_id,
-            qty: i.requested_qty,
-            unit: i.item_purchase_unit || i.item_unit,
-            note: i.note,
-          })),
-        });
+      Swal.fire({
+        title: "สำเร็จ",
+        text: "ส่งคำขอสั่งซื้อเรียบร้อย",
+        icon: "success",
+        confirmButtonText: "ตกลง",
+        customClass: { confirmButton: styles.swalButton },
+      });
 
-        Swal.fire({
-          title: "สำเร็จ",
-          text: "ส่งคำขอสั่งซื้อเรียบร้อย",
-          icon: "success",
-          confirmButtonText: "ตกลง",
-          customClass: { confirmButton: styles.swalButton },
-        });
-
-        setSelectedItems([]);
-      } catch (err) {
-        Swal.fire({
-          title: "ผิดพลาด",
-          text: "ไม่สามารถส่งคำขอได้: " + (err.response?.data?.message || err.message),
-          icon: "error",
-          confirmButtonText: "ตกลง",
-          customClass: { confirmButton: styles.swalButton },
-        });
-      }
+      setSelectedItems([]);
+    } catch (err) {
+      Swal.fire({
+        title: "ผิดพลาด",
+        text: "ไม่สามารถส่งคำขอได้: " + (err.response?.data?.message || err.message),
+        icon: "error",
+        confirmButtonText: "ตกลง",
+        customClass: { confirmButton: styles.swalButton },
+      });
     }
   };
 
-  // Rendering
   if (loading) return <div className={styles.loading}>กำลังโหลด...</div>;
   if (error) return <div className={styles.error}>{error}</div>;
 
@@ -469,7 +352,6 @@ export default function RequestPurchasePage() {
           </button>
         </div>
 
-        {/* Item Selection */}
         <section className={styles.leftPanel}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>เลือกสินค้า</h2>
@@ -487,7 +369,6 @@ export default function RequestPurchasePage() {
           </div>
 
           <div className={styles.tableSection}>
-            {/* Header */}
             <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
               <div className={styles.headerItem}>ชื่อสินค้า</div>
               <div className={styles.headerItem}>รูปภาพ</div>
@@ -499,21 +380,15 @@ export default function RequestPurchasePage() {
               <div className={styles.headerItem}>เพิ่ม</div>
             </div>
 
-            {/* Rows */}
             <div className={styles.inventory} style={{ "--rows-per-page": ITEMS_PER_PAGE }}>
-              {paginatedItems.length ? (
+              {paginatedItems.length > 0 ? (
                 paginatedItems.map((item) => (
                   <div key={item.item_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
                     <div className={styles.tableCell}>{item.item_name}</div>
                     <div className={`${styles.tableCell} ${styles.itemCell}`}>
                       <img
-                        src={
-                          item.item_img
-                            ? (String(item.item_img).startsWith("http")
-                              ? item.item_img
-                              : `http://localhost:5000/uploads/${item.item_img}`)
-                            : "http://localhost:5000/public/defaults/landscape.png"
-                        }
+                        // ✅ แก้ไข: เรียกใช้ฟังก์ชันที่สร้างขึ้นมาใหม่
+                        src={getImageUrl(item.item_img)}
                         alt={item.item_name || "ไม่มีคำอธิบายภาพ"}
                         className={styles.itemImage}
                       />
@@ -533,11 +408,9 @@ export default function RequestPurchasePage() {
                       >
                         {item.current_stock ?? 0}
                       </span>
-
                       {item.item_min && item.current_stock < item.item_min && (
                         <span className={styles.lowStockLabel}> 🔻 ต่ำกว่ากำหนด</span>
                       )}
-
                       {item.item_min &&
                         item.current_stock >= item.item_min &&
                         item.current_stock <= item.item_min + 10 && (
@@ -559,7 +432,6 @@ export default function RequestPurchasePage() {
               )}
             </div>
 
-            {/* Pagination */}
             <ul className={styles.paginationControls}>
               <li>
                 <button
@@ -603,4 +475,4 @@ export default function RequestPurchasePage() {
       </div>
     </div>
   );
-} 
+}

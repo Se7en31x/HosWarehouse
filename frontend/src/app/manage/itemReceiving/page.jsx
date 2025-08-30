@@ -9,6 +9,7 @@ import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import axiosInstance from "@/app/utils/axiosInstance";
 import dynamic from "next/dynamic";
+import { connectSocket, disconnectSocket } from "@/app/utils/socket";
 
 const MySwal = withReactContent(Swal);
 const Select = dynamic(() => import("react-select"), { ssr: false });
@@ -110,31 +111,55 @@ export default function ItemReceivingPage() {
     searchInputRef.current?.focus();
   }, []);
 
-  // Fetch items
+  // Fetch items with useCallback
+  const fetchItems = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await axiosInstance.get("/receiving");
+      if (Array.isArray(res.data)) {
+        setAllItems(res.data.filter(Boolean));
+      }
+    } catch (err) {
+      setError("โหลดข้อมูลไม่สำเร็จ");
+      MySwal.fire({ title: "ผิดพลาด", text: "โหลดข้อมูลไม่สำเร็จ", icon: "error" });
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Fetch initial data and set up socket listener
   useEffect(() => {
     let isMounted = true;
-    const fetchItems = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const res = await axiosInstance.get("/receiving");
-        if (isMounted) {
-          setAllItems(Array.isArray(res.data) ? res.data.filter(Boolean) : []);
-        }
-      } catch (error) {
-        if (isMounted) {
-          setError("โหลดข้อมูลไม่สำเร็จ");
-          MySwal.fire({ title: "ผิดพลาด", text: "โหลดข้อมูลไม่สำเร็จ", icon: "error" });
-        }
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
     fetchItems();
+
+    const socket = connectSocket();
+
+    socket.on('itemLotUpdated', (updatedLot) => {
+      console.log('📦 itemLotUpdated ได้รับ:', updatedLot);
+      if (!updatedLot || !updatedLot.item_id) return;
+
+      if (isMounted) {
+        setAllItems((prevItems) => {
+          return prevItems.map(item => {
+            if (item.item_id === updatedLot.item_id) {
+              return {
+                ...item,
+                current_stock: updatedLot.new_total_qty ?? item.current_stock
+              };
+            }
+            return item;
+          });
+        });
+      }
+    });
+
     return () => {
       isMounted = false;
+      socket.off('itemLotUpdated');
+      disconnectSocket();
     };
-  }, []);
+  }, [fetchItems]);
 
   // Calculate item quantity
   const debouncedCalculateQuantity = useCallback(
