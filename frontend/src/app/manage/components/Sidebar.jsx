@@ -172,8 +172,8 @@ export default function Sidebar() {
                             <span className={styles.sidebarText}>ประวัติการทำรายการ</span>
                         </Link>
                     </li>
-                    <li className={`${styles.sidebarItem} ${isActive("/manage/report") ? styles.active : ""}`}>
-                        <Link href="/manage/report" className={styles.noStyleLink}>
+                    <li className={`${styles.sidebarItem} ${isActive("/manage/reports") ? styles.active : ""}`}>
+                        <Link href="/manage/reports" className={styles.noStyleLink}>
                             <BarChart className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>ออกรายงาน</span>
                         </Link>

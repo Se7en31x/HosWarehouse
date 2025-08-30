@@ -1,0 +1,116 @@
+:root {
+  --bg: #f8fafc;
+  --panel: #ffffff;
+  --primary: #f97316;         /* สีส้มหลัก */
+  --primary-hover: #ea580c;   /* ส้มเข้ม */
+  --secondary: #f3f4f6;
+  --border: #e5e7eb;
+  --text: #111827;
+  --muted: #6b7280;
+  --radius: 8px;
+  --shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.container {
+  min-height: 100vh;
+  background: var(--bg);
+  padding: 2rem;
+  font-family: "Inter", sans-serif;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 1.2rem;
+}
+
+.btnPrimary {
+  background: var(--primary);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s;
+}
+.btnPrimary:hover {
+  background: var(--primary-hover);
+}
+
+.btnSecondary {
+  background: var(--secondary);
+  color: var(--text);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s;
+}
+.btnSecondary:hover {
+  background: #e5e7eb;
+}
+
+.card {
+  background: var(--panel);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table thead {
+  background: var(--secondary);
+}
+.table th,
+.table td {
+  padding: 0.75rem;
+  text-align: left;   /* ✅ ชิดซ้ายให้อ่านง่าย */
+  vertical-align: middle;
+  border-bottom: 1px solid #e5e7eb;
+}
+.table th {
+  font-weight: 600;
+  color: var(--text);
+}
+.table tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+/* ✅ เพิ่มสีสถานะ */
+.status-not-managed {
+  color: #dc2626; /* แดง */
+  font-weight: 600;
+}
+.status-partial {
+  color: #f59e0b; /* ส้ม */
+  font-weight: 600;
+}
+.status-complete {
+  color: #16a34a; /* เขียว */
+  font-weight: 600;
+}

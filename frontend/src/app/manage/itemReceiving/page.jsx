@@ -252,7 +252,7 @@ export default function ItemReceivingPage() {
       purchaseUnit: itemPurchaseUnit,
       conversionRate: parseFloat(conversionRate),
       quantity: parseFloat(itemQuantity) || 0,
-      unit: selectedItem?.item_uni,
+      unit: selectedItem?.item_unit,
       expiryDate: expiryDate || null,
       notes: notes?.trim() || null,
       lotNo: lotNo?.trim() || null,

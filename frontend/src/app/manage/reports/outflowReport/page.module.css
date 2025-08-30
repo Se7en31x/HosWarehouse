@@ -1,0 +1,157 @@
+:root {
+  --bg: #f8fafc;
+  --panel: #ffffff;
+  --primary: #2563eb;
+  --primary-hover: #1e40af;
+  --secondary: #f3f4f6;
+  --border: #e5e7eb;
+  --text: #111827;
+  --muted: #6b7280;
+  --radius: 8px;
+  --shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.container {
+  min-height: 100vh;
+  background: var(--bg);
+  padding: 2rem;
+  font-family: "Inter", sans-serif;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 1.2rem;
+}
+
+.selectBox {
+  min-width: 180px;
+  font-size: 0.9rem;
+}
+
+.btnPrimary {
+  background: var(--primary);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s;
+}
+.btnPrimary:hover {
+  background: var(--primary-hover);
+}
+
+.btnSecondary {
+  background: var(--secondary);
+  color: var(--text);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s;
+}
+.btnSecondary:hover {
+  background: #e5e7eb;
+}
+
+.card {
+  background: var(--panel);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table thead {
+  background: var(--secondary);
+}
+
+.table th,
+.table td {
+  padding: 0.75rem;
+  text-align: left;   /* ✅ ค่าเริ่มต้นชิดซ้าย */
+  vertical-align: middle;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table th {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.table tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+/* ✅ จัดให้บางคอลัมน์อยู่กลาง */
+.table td:nth-child(5),  /* จำนวนอนุมัติ */
+.table td:nth-child(6),  /* จำนวนจ่ายจริง */
+.table td:nth-child(7),  /* หน่วย */
+.table td:nth-child(10), /* สถานะอนุมัติ */
+.table td:nth-child(11)  /* สถานะการดำเนินการ */
+{
+  text-align: center;
+}
+
+/* ===== Badge Base ===== */
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  min-width: 80px;   /* บังคับให้ความกว้างเท่าๆ กัน */
+}
+
+/* ===== Badge Colors ===== */
+.badgeGray {
+  background-color: #e5e7eb; /* เทาอ่อน */
+  color: #374151;           /* เทาเข้ม */
+}
+
+.badgeBlue {
+  background-color: #dbeafe; /* ฟ้าอ่อน */
+  color: #1e40af;           /* ฟ้าเข้ม */
+}
+
+.badgeOrange {
+  background-color: #ffedd5; /* ส้มอ่อน */
+  color: #9a3412;           /* ส้มเข้ม */
+}
+
+.badgeGreen {
+  background-color: #dcfce7; /* เขียวอ่อน */
+  color: #166534;           /* เขียวเข้ม */
+}
+
+.badgeRed {
+  background-color: #fee2e2; /* แดงอ่อน */
+  color: #dc2626;           /* แดงเข้ม */
+}

@@ -87,18 +87,27 @@ function drawSignatures(doc, opts, startY) {
   const colW = usableW / 3;
 
   const roles = opts.signatures.roles || ["ผู้จัดทำ", "ผู้ตรวจสอบ", "ผู้อนุมัติ"];
-  const dateLabel = "วันที่: ____ / ____ / ____";
+  const names = opts.signatures.names || []; // ✅ เพิ่มรับชื่อจาก options
+  const date = new Date();
+  const dateLabel = `วันที่: ${date.getDate().toString().padStart(2, "0")} / ${(date.getMonth() + 1)
+    .toString()
+    .padStart(2, "0")} / ${date.getFullYear() + 543}`; // ✅ วันที่อัตโนมัติ (พ.ศ.)
 
   let x = left, y = startY + 6;
   for (let i = 0; i < 3; i++) {
-    doc.setFont("Sarabun", "bold"); doc.setFontSize(10);
+    doc.setFont("Sarabun", "bold"); 
+    doc.setFontSize(10);
     doc.text(roles[i] || "", x, y + 8);
 
-    doc.setFont("Sarabun", "normal"); doc.setFontSize(9);
+    doc.setFont("Sarabun", "normal"); 
+    doc.setFontSize(9);
     doc.text("ลงชื่อ ____________________________", x, y + 16);
-    doc.text("(_______________________________)", x, y + 22);
-    doc.text(dateLabel, x, y + 28);
 
+    // ✅ ถ้ามีชื่อ → แสดงชื่อในวงเล็บ
+    const displayName = names[i] ? `(${names[i]})` : "(_______________________________)";
+    doc.text(displayName, x, y + 22);
+
+    doc.text(dateLabel, x, y + 28);
     x += colW;
   }
 }
