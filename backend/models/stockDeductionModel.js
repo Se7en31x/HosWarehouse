@@ -1,68 +1,34 @@
 const { pool } = require("../config/db");
 const { getIO } = require("../socket");
 const { generateStockoutCode } = require("../utils/stockoutCounter");
-
-/* ====================== Helpers ====================== */
-/** ใช้สำหรับ stock_movements เท่านั้น */
-async function generateMoveBatchCode(client) {
-  const { rows: nowRows } = await client.query(`SELECT CURRENT_DATE::date AS d`);
-  const d = nowRows[0].d;
-
-  await client.query(`
-    CREATE TABLE IF NOT EXISTS stock_move_counter (
-      counter_date date PRIMARY KEY,
-      last_seq integer NOT NULL
-    )`);
-
-  await client.query(
-    `INSERT INTO stock_move_counter(counter_date, last_seq)
-      VALUES ($1, 0)
-      ON CONFLICT (counter_date) DO NOTHING`,
-    [d]
-  );
-
-  const { rows } = await client.query(
-    `UPDATE stock_move_counter
-      SET last_seq = last_seq + 1
-      WHERE counter_date = $1
-    RETURNING last_seq`,
-    [d]
-  );
-
-  const seq = rows[0].last_seq;
-  const y = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  const seqStr = String(seq).padStart(4, "0");
-  return `MOV-${y}${mm}${dd}-${seqStr}`;
-}
+const inventoryModel = require('./inventoryModel'); // ยังจำเป็นต้องใช้เพื่อดึงข้อมูลล่าสุด
 
 /* ====================== Queries หลัก ====================== */
 async function getApprovedRequestsForDeduction() {
   try {
     const query = `
-      SELECT
-        r.request_id,
-        r.request_code,
-        r.request_date,
-        u.user_fname || ' ' || u.user_lname AS requester,
-        u.department AS department,
-        r.request_type AS type,
-        r.request_status AS status,
-        COUNT(rd.request_detail_id) FILTER (WHERE rd.approval_status = 'approved') AS total_approved_count,
-        COUNT(rd.request_detail_id) FILTER (WHERE rd.approval_status = 'approved' AND rd.processing_status = 'pending')     AS pending_count,
-        COUNT(rd.request_detail_id) FILTER (WHERE rd.approval_status = 'approved' AND rd.processing_status = 'preparing')   AS preparing_count,
-        COUNT(rd.request_detail_id) FILTER (WHERE rd.approval_status = 'approved' AND rd.processing_status = 'delivering') AS delivering_count
-      FROM requests r
-      JOIN users u ON r.user_id = u.user_id
-      JOIN request_details rd ON r.request_id = rd.request_id
-      WHERE rd.approval_status = 'approved'
-      GROUP BY
-        r.request_id, r.request_code, r.request_date,
-        u.user_fname, u.user_lname, u.department,
-        r.request_type, r.request_status
-      ORDER BY r.request_date DESC;
-    `;
+            SELECT
+                r.request_id,
+                r.request_code,
+                r.request_date,
+                u.user_fname || ' ' || u.user_lname AS requester,
+                u.department AS department,
+                r.request_type AS type,
+                r.request_status AS status,
+                COUNT(rd.request_detail_id) FILTER (WHERE rd.approval_status = 'approved') AS total_approved_count,
+                COUNT(rd.request_detail_id) FILTER (WHERE rd.approval_status = 'approved' AND rd.processing_status = 'pending')      AS pending_count,
+                COUNT(rd.request_detail_id) FILTER (WHERE rd.approval_status = 'approved' AND rd.processing_status = 'preparing')   AS preparing_count,
+                COUNT(rd.request_detail_id) FILTER (WHERE rd.approval_status = 'approved' AND rd.processing_status = 'delivering') AS delivering_count
+            FROM requests r
+            JOIN users u ON r.user_id = u.user_id
+            JOIN request_details rd ON r.request_id = rd.request_id
+            WHERE rd.approval_status = 'approved'
+            GROUP BY
+                r.request_id, r.request_code, r.request_date,
+                u.user_fname, u.user_lname, u.department,
+                r.request_type, r.request_status
+            ORDER BY r.request_date DESC;
+        `;
     const { rows } = await pool.query(query);
     return rows;
   } catch (error) {
@@ -74,46 +40,46 @@ async function getApprovedRequestsForDeduction() {
 async function getRequestDetailsForProcessing(requestId) {
   try {
     const requestQuery = `
-      SELECT
-        r.request_id,
-        r.request_code,
-        r.request_date,
-        u.user_fname || ' ' || u.user_lname AS user_name,
-        u.department AS department_name,
-        r.request_type,
-        r.request_status,
-        r.updated_at,
-        r.request_note
-      FROM requests r
-      JOIN users u ON r.user_id = u.user_id
-      WHERE r.request_id = $1;
-    `;
+            SELECT
+                r.request_id,
+                r.request_code,
+                r.request_date,
+                u.user_fname || ' ' || u.user_lname AS user_name,
+                u.department AS department_name,
+                r.request_type,
+                r.request_status,
+                r.updated_at,
+                r.request_note
+            FROM requests r
+            JOIN users u ON r.user_id = u.user_id
+            WHERE r.request_id = $1;
+        `;
     const { rows: requestRows } = await pool.query(requestQuery, [requestId]);
     if (requestRows.length === 0) return null;
     const request = requestRows[0];
 
     const itemsQuery = `
-      SELECT
-        rd.request_detail_id,
-        rd.item_id,
-        i.item_name,
-        i.item_unit,
-        rd.requested_qty,
-        rd.approved_qty,
-        rd.approval_status,
-        rd.processing_status,
-        rd.request_detail_note,
-        rd.updated_at AS detail_updated_at,
-        COALESCE(SUM(il.qty_remaining), 0) AS current_stock_qty
-      FROM request_details rd
-      JOIN items i ON rd.item_id = i.item_id
-      LEFT JOIN item_lots il ON rd.item_id = il.item_id
-      WHERE rd.request_id = $1
-      GROUP BY rd.request_detail_id, rd.item_id, i.item_name, i.item_unit,
-               rd.requested_qty, rd.approved_qty, rd.approval_status,
-               rd.processing_status, rd.request_detail_note, rd.updated_at
-      ORDER BY rd.request_detail_id ASC;
-    `;
+            SELECT
+                rd.request_detail_id,
+                rd.item_id,
+                i.item_name,
+                i.item_unit,
+                rd.requested_qty,
+                rd.approved_qty,
+                rd.approval_status,
+                rd.processing_status,
+                rd.request_detail_note,
+                rd.updated_at AS detail_updated_at,
+                COALESCE(SUM(il.qty_remaining), 0) AS current_stock_qty
+            FROM request_details rd
+            JOIN items i ON rd.item_id = i.item_id
+            LEFT JOIN item_lots il ON rd.item_id = il.item_id
+            WHERE rd.request_id = $1
+            GROUP BY rd.request_detail_id, rd.item_id, i.item_name, i.item_unit,
+                rd.requested_qty, rd.approved_qty, rd.approval_status,
+                rd.processing_status, rd.request_detail_note, rd.updated_at
+            ORDER BY rd.request_detail_id ASC;
+        `;
     const { rows: itemRows } = await pool.query(itemsQuery, [requestId]);
 
     request.details = itemRows;
@@ -130,41 +96,24 @@ async function deductStock(requestId, updates, userId) {
   try {
     await client.query("BEGIN");
 
-    const moveBatchCode = await generateMoveBatchCode(client); // movements
+    const stockoutNo = await generateStockoutCode(client);
 
-    // ดึง request_type
     const { rows: reqRows } = await client.query(
       `SELECT request_type FROM requests WHERE request_id = $1`,
       [requestId]
     );
     if (reqRows.length === 0) throw new Error(`Request ${requestId} not found`);
     const requestType = reqRows[0].request_type;
-
-    // mapping request_type → stockout_type (เก็บ eng)
     let stockoutType = "withdraw";
     if (requestType === "borrow") stockoutType = "borrow";
 
-    // ✅ เช็คว่ามี stockout header แล้วหรือยัง
-    const { rows: existingStockout } = await client.query(
-      `SELECT stockout_id FROM stock_outs WHERE note = $1 LIMIT 1`,
-      [`request#${requestId}`] // note เก็บสั้น ๆ
+    const { rows: stockoutRows } = await client.query(
+      `INSERT INTO stock_outs (stockout_no, stockout_date, stockout_type, note, user_id, created_at)
+            VALUES ($1, NOW()::timestamp, $2, $3, $4, NOW()::timestamp)
+            RETURNING stockout_id`,
+      [stockoutNo, stockoutType, `request#${requestId}`, userId]
     );
-
-    let stockoutId;
-    let stockoutNo;
-
-    if (existingStockout.length > 0) {
-      stockoutId = existingStockout[0].stockout_id;
-    } else {
-      stockoutNo = await generateStockoutCode(client);
-      const { rows: stockoutRows } = await client.query(
-        `INSERT INTO stock_outs (stockout_no, stockout_date, stockout_type, note, user_id, created_at)
-         VALUES ($1, NOW()::timestamp, $2, $3, $4, NOW()::timestamp)
-         RETURNING stockout_id`,
-        [stockoutNo, stockoutType, `request#${requestId}`, userId]
-      );
-      stockoutId = stockoutRows[0].stockout_id;
-    }
+    const stockoutId = stockoutRows[0].stockout_id;
 
     for (const update of updates) {
       const {
@@ -194,10 +143,10 @@ async function deductStock(requestId, updates, userId) {
 
         const { rows: lots } = await client.query(
           `SELECT lot_id, qty_remaining, exp_date
-           FROM item_lots
-           WHERE item_id = $1 AND qty_remaining > 0
-           ORDER BY exp_date ASC
-           FOR UPDATE`,
+                    FROM item_lots
+                    WHERE item_id = $1 AND qty_remaining > 0
+                    ORDER BY exp_date ASC
+                    FOR UPDATE`,
           [item_id]
         );
 
@@ -206,62 +155,54 @@ async function deductStock(requestId, updates, userId) {
 
           const deductQty = Math.min(remainingToDeduct, lot.qty_remaining);
 
-          // หักออกจาก lot
+          const newLotBalance = lot.qty_remaining - deductQty;
+
+          // 1. UPDATE ยอดคงเหลือใน lot
           await client.query(
             `UPDATE item_lots
-             SET qty_remaining = qty_remaining - $1,
-                 updated_at = NOW()::timestamp
-             WHERE lot_id = $2`,
-            [deductQty, lot.lot_id]
+                        SET qty_remaining = $1,
+                            updated_at = NOW()::timestamp
+                        WHERE lot_id = $2`,
+            [newLotBalance, lot.lot_id]
           );
 
-          // ➡ stock_movements (note = code สั้น ๆ)
-          await client.query(
-            `INSERT INTO stock_movements
-             (item_id, move_type, move_qty, move_date,
-              move_status, user_id, note, move_code, lot_id)
-             VALUES
-              ($1, 'stock_cut', $2, NOW()::timestamp,
-              'completed', $3, $4, $5, $6)`,
-            [item_id, deductQty, userId, `stockout:${stockoutType}`, moveBatchCode, lot.lot_id]
-          );
-
-          // ➡ stock_out_details (note = code สั้น ๆ)
+          // 3. INSERT รายละเอียดการเบิกจ่ายลงใน stock_out_details
           await client.query(
             `INSERT INTO stock_out_details (stockout_id, item_id, lot_id, qty, unit, note)
-             VALUES ($1, $2, $3, $4, $5, $6)`,
+                        VALUES ($1, $2, $3, $4, $5, $6)`,
             [stockoutId, item_id, lot.lot_id, deductQty, itemUnit, `detail:${stockoutType}`]
           );
 
-          // ➡ borrow_detail_lots
-          await client.query(
-            `INSERT INTO borrow_detail_lots
-              (request_detail_id, lot_id, qty)
-            VALUES ($1, $2, $3)`,
-            [request_detail_id, lot.lot_id, deductQty]
-          );
+          // 4. INSERT ข้อมูลการยืม หากเป็น request_type = 'borrow'
+          if (requestType === 'borrow') {
+            await client.query(
+              `INSERT INTO borrow_detail_lots
+                            (request_detail_id, lot_id, qty)
+                            VALUES ($1, $2, $3)`,
+              [request_detail_id, lot.lot_id, deductQty]
+            );
+          }
 
           remainingToDeduct -= deductQty;
         }
 
         if (remainingToDeduct > 0) {
           throw new Error(
-            `Insufficient stock for item ${item_id}. Need ${requested_qty}, deducted only ${
-              requested_qty - remainingToDeduct
+            `Insufficient stock for item ${item_id}. Need ${requested_qty}, deducted only ${requested_qty - remainingToDeduct
             }`
           );
         }
       }
 
-      // ➡ request_status_history
+      // อัปเดตสถานะใน request_details
       await client.query(
         `INSERT INTO request_status_history
-           (request_id, request_detail_id, changed_by, changed_at,
-           history_type, old_value_type, old_value, new_value, note)
-         VALUES
-           ($1, $2, $3, NOW(),
-           'processing_status_change', 'processing_status', $4, $5,
-           $6)`,
+                    (request_id, request_detail_id, changed_by, changed_at,
+                    history_type, old_value_type, old_value, new_value, note)
+                VALUES
+                    ($1, $2, $3, NOW(),
+                    'processing_status_change', 'processing_status', $4, $5,
+                    $6)`,
         [
           requestId,
           request_detail_id,
@@ -272,14 +213,13 @@ async function deductStock(requestId, updates, userId) {
         ]
       );
 
-      // update request_details
       const resUpd = await client.query(
         `UPDATE request_details
-           SET processing_status = $1,
-               updated_at = NOW()::timestamp
-         WHERE request_detail_id = $2
-           AND approval_status = 'approved'
-           AND processing_status IS NOT DISTINCT FROM $3`,
+                    SET processing_status = $1,
+                        updated_at = NOW()::timestamp
+                WHERE request_detail_id = $2
+                    AND approval_status = 'approved'
+                    AND processing_status IS NOT DISTINCT FROM $3`,
         [newStatus, request_detail_id, current_processing_status]
       );
       if (resUpd.rowCount === 0) {
@@ -294,8 +234,8 @@ async function deductStock(requestId, updates, userId) {
         )}] เหตุผลเบิกไม่ครบ: ${deduction_reason}`;
         await client.query(
           `UPDATE request_details
-              SET request_detail_note = COALESCE(request_detail_note, '') || $1
-            WHERE request_detail_id = $2`,
+                        SET request_detail_note = COALESCE(request_detail_note, '') || $1
+                    WHERE request_detail_id = $2`,
           [reasonNote, request_detail_id]
         );
       }
@@ -303,24 +243,45 @@ async function deductStock(requestId, updates, userId) {
 
     await client.query("COMMIT");
 
+    // Broadcast การอัปเดตไปยัง Client ทุกตัว
+    const io = getIO();
+    if (io) {
+      const updatedItemsForStaff = await inventoryModel.getAllItemsForWithdrawal();
+      io.emit("itemsDataForWithdrawal", updatedItemsForStaff);
+
+      const updatedItemsDetailed = await inventoryModel.getAllItemsDetailed();
+      io.emit("itemsData", updatedItemsDetailed);
+
+      for (const update of updates) {
+        const updatedItem = await inventoryModel.getItemById(update.item_id);
+        if (updatedItem) {
+          io.emit("itemUpdated", {
+            item_id: updatedItem.item_id,
+            item_name: updatedItem.item_name,
+            item_unit: updatedItem.item_unit,
+            item_img: updatedItem.item_img,
+            current_stock: updatedItem.total_on_hand_qty,
+          });
+        }
+      }
+    }
+
     return {
       success: true,
       message: `Stock deducted for request ${requestId}`,
       stockout_no: stockoutNo,
-      move_code: moveBatchCode,
-      stockout_type: stockoutType, // จะได้เป็น "withdraw" หรือ "borrow"
+      stockout_type: stockoutType,
     };
   } catch (error) {
     try {
       await client.query("ROLLBACK");
-    } catch (e) {}
+    } catch (e) { }
     console.error("Error during stock deduction transaction:", error);
     throw error;
   } finally {
     client.release();
   }
 }
-
 
 /* ====================== Exports ====================== */
 module.exports = {

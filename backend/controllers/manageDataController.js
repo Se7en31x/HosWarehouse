@@ -1,5 +1,5 @@
 const manageDataModel = require('../models/managedataModel');
-const { getIO } = require('../socket'); // ✅ เพิ่มบรรทัดนี้
+const { getIO } = require('../socket');
 const inventoryModel = require('../models/inventoryModel');
 const { pool } = require('../config/db');
 
@@ -16,14 +16,13 @@ exports.deleteItem = async (req, res) => {
   const { id } = req.params;
 
   try {
-    // ✅ แก้ไขจาก item_update เป็น updated_at
     const query = `UPDATE items SET is_deleted = true, updated_at = CURRENT_TIMESTAMP WHERE item_id = $1`;
     await pool.query(query, [id]);
 
     const io = getIO();
-    // โค้ดตรงนี้จะทำงานได้อย่างถูกต้องหลังจากคุณแก้ไข inventoryModel.js แล้ว
     const updatedItems = await inventoryModel.getAllItemsDetailed();
-    io.emit('itemsData', updatedItems);
+    // ✅ เปลี่ยนชื่อ Event จาก 'itemsData' เป็น 'itemsUpdated' ให้ตรงกับ Front-end
+    io.emit('itemsUpdated', updatedItems);
 
     res.status(200).json({ success: true, message: 'ลบข้อมูลเรียบร้อย (soft delete)' });
   } catch (error) {
@@ -33,7 +32,6 @@ exports.deleteItem = async (req, res) => {
 };
 
 exports.getItemById = async (req, res) => {
-
   const { id } = req.params;
   try {
     const item = await manageDataModel.getItemById(id);
@@ -41,7 +39,7 @@ exports.getItemById = async (req, res) => {
     if (!item) {
       return res.status(404).json({ error: 'ไม่พบรายการนี้' });
     }
-    console.log('ข้อมูลที่ดึงมาได้:', item);  // เพิ่มตรงนี้ เพื่อแสดงข้อมูลใน console
+    console.log('ข้อมูลที่ดึงมาได้:', item);
     res.status(200).json(item);
   } catch (error) {
     console.error('❌ getItemById error:', error);
@@ -56,10 +54,7 @@ exports.updateItem = async (req, res) => {
   const category = req.body.item_category;
 
   try {
-    // อัปเดตตารางหลัก (items)
     await manageDataModel.updateBaseItem(id, req.body, req.file);
-
-    // แยกอัปเดตตามประเภท
     switch (category) {
       case 'medicine':
         await manageDataModel.updateMedicine(id, req.body);
@@ -77,13 +72,13 @@ exports.updateItem = async (req, res) => {
         await manageDataModel.updateMedDevice(id, req.body);
         break;
       default:
-        // ไม่ตรงประเภทใดเลย
         return res.status(400).json({ error: 'ไม่รู้จักประเภทพัสดุ' });
     }
-    
+
     const io = getIO();
     const updatedItems = await inventoryModel.getAllItemsDetailed();
-    io.emit('itemsData', updatedItems);
+    // ✅ เปลี่ยนชื่อ Event จาก 'itemsData' เป็น 'itemsUpdated' ให้ตรงกับ Front-end
+    io.emit('itemsUpdated', updatedItems);
 
     res.status(200).json({ message: 'อัปเดตข้อมูลสำเร็จ' });
   } catch (err) {

@@ -1,3 +1,4 @@
+// server.js
 require('dotenv').config();
 const express = require('express');
 const app = express();
@@ -10,12 +11,12 @@ const { connectDB, disconnectDB } = require('./config/db');
 const bodyParser = require('body-parser');
 const socketIo = require('socket.io')
 const http = require('http');
-const { socketSetup  } = require('./socket'); // 🔄 แยกออก
 const helmet = require('helmet');
 const server = http.createServer(app);
 const multer = require('multer');
 require('./cronJobs');
 const upload = multer({ dest: 'uploads/' });
+const { initialize } = require('./initializer');
 
 const path = require('path');
 
@@ -24,30 +25,26 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(morgan('dev'));
 app.use(cors({
-  origin: ['http://localhost:3000'], // หรือ domain ของ frontend
+  origin: ['http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true,
 }));
 
-// ให้เข้าถึงไฟล์ใน public
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-// app
-// app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 readdirSync('./Routes').map((r) => app.use('/api', require('./Routes/' + r)))
 
-socketSetup(server); // ✨ เรียกใช้แยก
+// ✅ แก้ไขส่วนนี้: เรียกใช้ initialize(server) เพียงครั้งเดียว
+initialize(server);
 
-// database 
 connectDB();
 
-// ให้เข้าถึงรูปจาก URL เช่น http://localhost:5000/uploads/xxx.jpg
 app.use('/uploads', express.static('uploads'));
 app.use(helmet({
-  crossOriginResourcePolicy: false,  // ปิดการ block รูปจาก cross-origin
-  crossOriginEmbedderPolicy: false,  // กัน resource บางประเภทโดนบล็อค
+  crossOriginResourcePolicy: false,
+  crossOriginEmbedderPolicy: false,
 }));
 app.use((err, req, res, next) => {
   console.error('Global Error:', err.stack);
@@ -58,8 +55,6 @@ server.listen(port, () => {
   console.log(`🚀 Server running at http://localhost:${port}`);
 });
 
-
 process.on('SIGINT', () => {
   disconnectDB().then(() => process.exit());
 });
-
