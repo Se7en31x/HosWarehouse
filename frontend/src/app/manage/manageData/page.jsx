@@ -329,7 +329,7 @@ export default function ManageDataPage() {
               <Trash2 size={18} /> ล้างตัวกรอง
             </button>
             <Link
-              href="/manage/addItem"
+              href="/manage/manageData/addItem"
               className={styles.addButton}
               aria-label="เพิ่มข้อมูลใหม่"
             >

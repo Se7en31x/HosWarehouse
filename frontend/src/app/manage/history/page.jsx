@@ -5,17 +5,16 @@ import {
   Hand,
   AlertTriangle,
   Wrench,
-  PackageMinus, // Replaced Trash2 with PackageMinus
+  PackageMinus,
   ChevronRight,
-  FileClock,
 } from "lucide-react";
 import styles from "./page.module.css";
 
 const historyItems = [
   {
-    id: "import",
+    id: "stockin",
     title: "ประวัตินำเข้า",
-    description: "ดูประวัติการนำเข้าสินค้าทั้งหมด",
+    description: "ดูบันทึกรายการนำเข้าทั้งหมด",
     icon: Truck,
     color: "blue",
     link: "/manage/history/stockin",
@@ -23,31 +22,31 @@ const historyItems = [
   {
     id: "withdraw",
     title: "ประวัติการเบิก",
-    description: "ดูประวัติการเบิกสินค้า",
+    description: "ดูบันทึกรายการเบิกจากคลัง",
     icon: ClipboardList,
     color: "green",
     link: "/manage/history/withdraw",
   },
   {
     id: "borrow-return",
-    title: "ประวัติยืม / คืน",
-    description: "ตรวจสอบประวัติการยืมและการคืน",
+    title: "ประวัติการยืม / คืน",
+    description: "ตรวจสอบบันทึกการยืมและการคืน",
     icon: Hand,
     color: "purple",
     link: "/manage/history/borrow-return",
   },
   {
     id: "expired",
-    title: "ประวัติสินค้าหมดอายุ",
-    description: "รายการสินค้าที่หมดอายุ",
+    title: "ประวัติรายการหมดอายุ",
+    description: "ดูบันทึกของรายการที่หมดอายุ",
     icon: AlertTriangle,
     color: "red",
     link: "/manage/history/expired",
   },
   {
     id: "damaged",
-    title: "ประวัติสินค้าชำรุด / สูญหาย",
-    description: "ติดตามสินค้าที่เสียหายหรือสูญหาย",
+    title: "ประวัติรายการชำรุด / สูญหาย",
+    description: "ติดตามบันทึกรายการที่ชำรุดหรือสูญหาย",
     icon: Wrench,
     color: "pink",
     link: "/manage/history/damaged",
@@ -55,8 +54,8 @@ const historyItems = [
   {
     id: "stockout",
     title: "ประวัติการนำออก",
-    description: "ตรวจสอบสินค้าที่ถูกนำออก",
-    icon: PackageMinus, // Updated icon
+    description: "ดูบันทึกของรายการที่ถูกนำออกจากคลัง",
+    icon: PackageMinus,
     color: "gray",
     link: "/manage/history/stockout",
   },
@@ -67,10 +66,9 @@ export default function HistoryPage() {
     <div className={styles.container}>
       {/* Header */}
       <div className={styles.header}>
-        {/* <FileClock className={styles.headerIcon} /> */}
         <div>
-          <h1 className={styles.title}>ประวัติคลังพัสดุ</h1>
-          {/* <p className={styles.subtitle}>ติดตามการเคลื่อนไหวของคลัง</p> */}
+          <h1 className={styles.title}>ประวัติคลัง</h1>
+          <p className={styles.subtitle}>ติดตามบันทึกการเคลื่อนไหวของคลัง</p>
         </div>
       </div>
 
@@ -79,7 +77,11 @@ export default function HistoryPage() {
         {historyItems.map((item) => {
           const IconComponent = item.icon;
           return (
-            <a key={item.id} href={item.link} className={`${styles.card} ${styles[item.color]}`}>
+            <a
+              key={item.id}
+              href={item.link}
+              className={`${styles.card} ${styles[item.color]}`}
+            >
               <div className={`${styles.iconWrapper} ${styles[item.color]}`}>
                 <IconComponent className={styles.icon} />
               </div>

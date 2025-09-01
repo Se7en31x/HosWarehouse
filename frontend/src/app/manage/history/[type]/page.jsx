@@ -4,6 +4,28 @@ import { useParams } from "next/navigation";
 import axiosInstance from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
 
+const typeMap = {
+  stockin: "การนำเข้า",
+  withdraw: "การเบิก",
+  "borrow-return": "การยืม / คืน",
+  expired: "รายการหมดอายุ",
+  damaged: "รายการชำรุด / สูญหาย",
+  stockout: "การนำออก",
+};
+
+const translateStatus = (status) => {
+  switch (status?.toLowerCase()) {
+    case "completed":
+      return "เสร็จสิ้น";
+    case "pending":
+      return "รอดำเนินการ";
+    case "processing":
+      return "กำลังดำเนินการ";
+    default:
+      return status || "—";
+  }
+};
+
 export default function HistoryTypePage() {
   const { type } = useParams();
   const [records, setRecords] = useState([]);
@@ -12,7 +34,10 @@ export default function HistoryTypePage() {
   const [filter, setFilter] = useState("all");
 
   useEffect(() => {
-    axiosInstance.get(`/history/${type}`).then((res) => setRecords(res.data));
+    axiosInstance
+      .get(`/history/${type}`)
+      .then((res) => setRecords(res.data))
+      .catch(() => setRecords([]));
   }, [type]);
 
   const filteredRecords = records.filter((r) => {
@@ -29,7 +54,7 @@ export default function HistoryTypePage() {
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.subtitle}>ประวัติ: {type}</h2>
+      <h2 className={styles.subtitle}>ประวัติ{typeMap[type] || type}</h2>
 
       {/* Toolbar */}
       <div className={styles.toolbar}>
@@ -49,7 +74,7 @@ export default function HistoryTypePage() {
           <option value="this_month">เดือนนี้</option>
           <option value="last_month">เดือนที่แล้ว</option>
         </select>
-        <button className={styles.exportBtn}>⬇️ Export CSV</button>
+        <button className={styles.exportBtn}>⬇️ ส่งออก CSV</button>
       </div>
 
       {/* Table */}
@@ -64,26 +89,34 @@ export default function HistoryTypePage() {
           </tr>
         </thead>
         <tbody>
-          {filteredRecords.map((r) => (
-            <tr key={r.history_id}>
-              <td>{new Date(r.created_at).toLocaleString()}</td>
-              <td>{r.description}</td>
-              <td>{r.user_name}</td>
-              <td>
-                <span className={`${styles.badge} ${styles[r.status]}`}>
-                  {r.status || "—"}
-                </span>
-              </td>
-              <td>
-                <button
-                  className={styles.detailBtn}
-                  onClick={() => setSelected(r)}
-                >
-                  ดูรายละเอียด
-                </button>
+          {filteredRecords.length > 0 ? (
+            filteredRecords.map((r) => (
+              <tr key={r.history_id}>
+                <td>{new Date(r.created_at).toLocaleString("th-TH")}</td>
+                <td>{r.description}</td>
+                <td>{r.user_name}</td>
+                <td>
+                  <span className={`${styles.badge} ${styles[r.status]}`}>
+                    {translateStatus(r.status)}
+                  </span>
+                </td>
+                <td>
+                  <button
+                    className={styles.detailBtn}
+                    onClick={() => setSelected(r)}
+                  >
+                    ดูรายละเอียด
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="5" className={styles.noData}>
+                ไม่พบข้อมูล
               </td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
 
@@ -94,7 +127,7 @@ export default function HistoryTypePage() {
             <h3>รายละเอียด</h3>
             <p>
               <b>วันที่:</b>{" "}
-              {new Date(selected.created_at).toLocaleString()}
+              {new Date(selected.created_at).toLocaleString("th-TH")}
             </p>
             <p>
               <b>รายละเอียด:</b> {selected.description}

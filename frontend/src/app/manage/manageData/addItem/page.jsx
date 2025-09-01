@@ -3,8 +3,8 @@ import { Image as ImageIcon, UploadCloud } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useState, useEffect } from 'react';
 import styles from './page.module.css';
-import axiosInstance from '../../utils/axiosInstance';
-import BasicForm from '../components/formTemplates/BasicForm';
+import axiosInstance from '../../../utils/axiosInstance';
+import BasicForm from '../../components/formTemplates/BasicForm';
 
 export default function AddItem() {
     const initialFormState = {
