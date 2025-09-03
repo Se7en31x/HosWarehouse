@@ -3,35 +3,32 @@ const router = express.Router();
 const purchaseRequestController = require("../controllers/purchaseRequestController");
 const authMiddleware = require("../middleware/auth");
 
-// ✅ ดึงสินค้า (สำหรับเลือกตอนสร้าง PR) → เฉพาะ purchasing
+// ✅ ดึงสินค้า (สำหรับเลือกตอนสร้าง PR) → เฉพาะ warehouse_manager
 router.get(
   "/pr/items",
   authMiddleware(["marehouse_manager"]),
   purchaseRequestController.getItems
 );
 
-// ✅ ดึง PR Header ทั้งหมด → เฉพาะ purchasing
+// ✅ ดึง PR Header ทั้งหมด → ฝ่ายจัดซื้อ (เปิดอิสระ)
 router.get(
   "/pr",
-  authMiddleware(["purchasing"]),
   purchaseRequestController.getAllPurchaseRequests
 );
 
-// ✅ ดึง PR Items flatten (ทุกรายการ) → เฉพาะ purchasing
+// ✅ ดึง PR Items flatten (ทุกรายการ) → ฝ่ายจัดซื้อ (เปิดอิสระ)
 router.get(
   "/pr/details",
-  authMiddleware(["purchasing"]),
   purchaseRequestController.getAllPurchaseRequestItems
 );
 
-// ✅ ดึงรายละเอียด PR ทีละตัว → เฉพาะ purchasing
+// ✅ ดึงรายละเอียด PR ทีละตัว → ฝ่ายจัดซื้อ (เปิดอิสระ)
 router.get(
   "/pr/:id",
-  authMiddleware(["purchasing"]),
   purchaseRequestController.getPurchaseRequestById
 );
 
-// ✅ เพิ่มใหม่ (สร้าง PR) → เฉพาะ purchasing
+// ✅ เพิ่มใหม่ (สร้าง PR) → เฉพาะ warehouse_manager
 router.post(
   "/pr",
   authMiddleware(["marehouse_manager"]),
