@@ -4,11 +4,12 @@ import { useContext, useState, useEffect } from 'react';
 import { CartContext } from '../context/CartContext';
 import styles from './page.module.css';
 import Image from 'next/image';
-import axiosInstance from '../../utils/axiosInstance';
+import { staffAxios } from '../../utils/axiosInstance';
 import Swal from 'sweetalert2';
 
 export default function Cart() {
-  const { cartItems, removeFromCart, clearCart, updateQuantity, updateReturnDate } = useContext(CartContext);
+  const { cartItems, removeFromCart, clearCart, updateQuantity, updateReturnDate } =
+    useContext(CartContext);
 
   const [urgent, setUrgent] = useState(false);
   const today = new Date().toISOString().split('T')[0];
@@ -53,18 +54,32 @@ export default function Cart() {
     const itemInCart = cartItems.find((item) => item.id === itemId);
 
     if (isNaN(newQuantity) || newQuantity <= 0) {
-      await Swal.fire({ icon: 'error', title: 'จำนวนไม่ถูกต้อง', text: 'กรุณากรอกจำนวนเป็นตัวเลขบวกที่มากกว่า 0' });
+      await Swal.fire({
+        icon: 'error',
+        title: 'จำนวนไม่ถูกต้อง',
+        text: 'กรุณากรอกจำนวนเป็นตัวเลขบวกที่มากกว่า 0',
+      });
       return;
     }
 
     if (!itemInCart || itemInCart.item_qty == null || isNaN(itemInCart.item_qty)) {
-      await Swal.fire({ icon: 'error', title: 'ข้อผิดพลาดข้อมูลสินค้า', text: 'ไม่สามารถตรวจสอบจำนวนคงเหลือของสินค้าได้ กรุณาลองใหม่อีกครั้ง' });
+      await Swal.fire({
+        icon: 'error',
+        title: 'ข้อผิดพลาดข้อมูลสินค้า',
+        text: 'ไม่สามารถตรวจสอบจำนวนคงเหลือของสินค้าได้ กรุณาลองใหม่อีกครั้ง',
+      });
       console.error(`[Cart.js] Missing or invalid item_qty for item ID: ${itemId}`, itemInCart);
       return;
     }
 
     if (newQuantity > itemInCart.item_qty) {
-      await Swal.fire({ icon: 'error', title: 'จำนวนไม่เพียงพอ', text: `จำนวนที่ต้องการเกินกว่าจำนวนคงเหลือในคลัง (${itemInCart.item_qty} ${itemInCart.unit || ''})` });
+      await Swal.fire({
+        icon: 'error',
+        title: 'จำนวนไม่เพียงพอ',
+        text: `จำนวนที่ต้องการเกินกว่าจำนวนคงเหลือในคลัง (${itemInCart.item_qty} ${
+          itemInCart.unit || ''
+        })`,
+      });
       return;
     }
 
@@ -86,11 +101,19 @@ export default function Cart() {
     maxAllowedDate.setHours(0, 0, 0, 0);
 
     if (selectedReturnDate < todayD) {
-      await Swal.fire({ icon: 'error', title: 'วันที่คืนไม่ถูกต้อง', text: 'วันที่คืนต้องไม่ย้อนหลังกว่าวันนี้' });
+      await Swal.fire({
+        icon: 'error',
+        title: 'วันที่คืนไม่ถูกต้อง',
+        text: 'วันที่คืนต้องไม่ย้อนหลังกว่าวันนี้',
+      });
       return;
     }
     if (selectedReturnDate > maxAllowedDate) {
-      await Swal.fire({ icon: 'error', title: 'วันที่คืนไม่ถูกต้อง', text: 'วันที่คืนต้องไม่เกิน 3 เดือนนับจากวันนี้' });
+      await Swal.fire({
+        icon: 'error',
+        title: 'วันที่คืนไม่ถูกต้อง',
+        text: 'วันที่คืนต้องไม่เกิน 3 เดือนนับจากวันนี้',
+      });
       return;
     }
 
@@ -99,20 +122,27 @@ export default function Cart() {
 
   const handleSubmit = async () => {
     if (!requestDate || cartItems.length === 0) {
-      await Swal.fire({ icon: 'warning', title: 'กรุณากรอกข้อมูลให้ครบ', text: 'กรุณาเลือกวันที่ และเพิ่มรายการเบิก/ยืม' });
+      await Swal.fire({
+        icon: 'warning',
+        title: 'กรุณากรอกข้อมูลให้ครบ',
+        text: 'กรุณาเลือกวันที่ และเพิ่มรายการเบิก/ยืม',
+      });
       return;
     }
 
     const allActions = cartItems.map((item) => item.action);
     const allSameAction = allActions.every((action) => action === allActions[0]);
     if (!allSameAction) {
-      await Swal.fire({ icon: 'warning', title: 'ไม่สามารถส่งรายการได้', text: 'ไม่สามารถเบิกและยืมพร้อมกันได้ กรุณาเลือกอย่างใดอย่างหนึ่ง' });
+      await Swal.fire({
+        icon: 'warning',
+        title: 'ไม่สามารถส่งรายการได้',
+        text: 'ไม่สามารถเบิกและยืมพร้อมกันได้ กรุณาเลือกอย่างใดอย่างหนึ่ง',
+      });
       return;
     }
 
     setIsSubmitting(true);
 
-    // ส่งค่า EN เดิมอยู่แล้ว: 'withdraw' | 'borrow'
     const requestType = cartItems[0]?.action || 'withdraw';
 
     const payload = {
@@ -121,7 +151,7 @@ export default function Cart() {
         quantity: item.quantity,
         action: item.action,
         returnDate: item.action === 'borrow' ? item.returnDate : null,
-        borrowstatus: item.action === 'borrow' ? 'waiting_borrow' : null, // ✅ เพิ่มตรงนี้
+        borrowstatus: item.action === 'borrow' ? 'waiting_borrow' : null,
       })),
       note,
       urgent,
@@ -131,9 +161,14 @@ export default function Cart() {
     };
 
     try {
-      const res = await axiosInstance.post('/requests', payload);
+      const res = await staffAxios.post('/requests', payload);
       if (res.status === 200 || res.status === 201) {
-        await Swal.fire({ icon: 'success', title: 'ส่งคำขอสำเร็จ', showConfirmButton: false, timer: 2000 });
+        await Swal.fire({
+          icon: 'success',
+          title: 'ส่งคำขอสำเร็จ',
+          showConfirmButton: false,
+          timer: 2000,
+        });
         setNote('');
         setUrgent(false);
         setRequestDate(today);
@@ -141,7 +176,11 @@ export default function Cart() {
       }
     } catch (err) {
       console.error(err);
-      await Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่สามารถส่งคำขอได้ โปรดลองใหม่ภายหลัง' });
+      await Swal.fire({
+        icon: 'error',
+        title: 'เกิดข้อผิดพลาด',
+        text: 'ไม่สามารถส่งคำขอได้ โปรดลองใหม่ภายหลัง',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -190,60 +229,41 @@ export default function Cart() {
     }
   };
 
+  // ✅ helper เลือก path รูปภาพ
+  const getImageSrc = (imgPath) => {
+    if (!imgPath || imgPath.trim() === '') {
+      return '/defaults/landscape.png'; // fallback
+    }
+    // ถ้าเป็น URL จาก backend
+    if (imgPath.startsWith('http')) {
+      return imgPath;
+    }
+    // ถ้าเป็น path ใน public เช่น /uploads/xxx.png
+    return `/uploads/${imgPath}`;
+  };
+
   return (
     <div className={styles.mainHome}>
       <div className={styles.infoContainer}>
-        {/* Header */}
         <div className={styles.pageBar}>
           <div className={styles.titleGroup}>
-            <h2 className={styles.pageTitle}>รายการ{translateAction(cartItems[0]?.action || '')}</h2>
+            <h2 className={styles.pageTitle}>
+              รายการ{translateAction(cartItems[0]?.action || '')}
+            </h2>
           </div>
           <div className={styles.actionsRight}>
-            <button className={`${styles.ghostBtn} ${styles.clearButton}`} onClick={handleClearCart} disabled={isSubmitting}>
+            <button
+              className={`${styles.ghostBtn} ${styles.clearButton}`}
+              onClick={handleClearCart}
+              disabled={isSubmitting}
+            >
               ล้างตะกร้า
             </button>
           </div>
         </div>
 
-        {/* Toolbar (form controls) */}
-        <div className={styles.toolbar}>
-          <div className={styles.filterGrid}>
-            <div className={styles.filterGroup}>
-              <label className={styles.label}>เร่งด่วน</label>
-              <label className={styles.checkboxLabel}>
-                <input type="checkbox" checked={urgent} onChange={handleUrgentChange} disabled={isSubmitting} />
-                <span>ต้องการเร่งด่วน</span>
-              </label>
-            </div>
-
-            <div className={styles.filterGroup}>
-              <label className={styles.label}>วันที่ขอ</label>
-              <input
-                type="date"
-                className={styles.input}
-                value={requestDate}
-                onChange={(e) => setRequestDate(e.target.value)}
-                disabled={isSubmitting}
-              />
-            </div>
-
-            <div className={`${styles.filterGroup} ${styles.noteGroup}`}>
-              <label className={styles.label}>หมายเหตุ</label>
-              <textarea
-                className={`${styles.input} ${styles.textarea}`}
-                placeholder="หมายเหตุ..."
-                rows={2}
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                disabled={isSubmitting}
-              />
-            </div>
-          </div>
-        </div>
-
         {/* Table Section */}
         <div className={styles.tableSection}>
-          {/* ใช้กรอบเดียวครอบ header + body */}
           <div className={`${styles.tableFrame} ${styles.scrollable}`}>
             <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
               <div className={styles.headerItem}>ลำดับ</div>
@@ -266,11 +286,15 @@ export default function Cart() {
                     <div className={styles.tableCell}>{item.code || '-'}</div>
                     <div className={`${styles.tableCell} ${styles.imageCell}`}>
                       <Image
-                        src={item.item_img || '/defaults/landscape.png'}
-                        alt={item.name}
+                        src={getImageSrc(item.item_img)}
+                        alt={item.name || 'no-image'}
                         width={50}
                         height={50}
-                        style={{ objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }}
+                        style={{
+                          objectFit: 'cover',
+                          borderRadius: 8,
+                          border: '1px solid #e5e7eb',
+                        }}
                       />
                     </div>
                     <div className={styles.tableCell}>{item.name || '-'}</div>
@@ -288,7 +312,11 @@ export default function Cart() {
                     <div className={styles.tableCell}>{item.unit || '-'}</div>
                     <div className={styles.tableCell}>{translateCategory(item.type)}</div>
                     <div className={styles.tableCell}>
-                      {item.action === 'borrow' ? 'ยืม' : item.action === 'withdraw' ? 'เบิก' : 'คืน'}
+                      {item.action === 'borrow'
+                        ? 'ยืม'
+                        : item.action === 'withdraw'
+                        ? 'เบิก'
+                        : 'คืน'}
                     </div>
                     <div className={styles.tableCell}>
                       {item.action === 'borrow' ? (
@@ -317,7 +345,9 @@ export default function Cart() {
                   </div>
                 ))
               ) : (
-                <div className={styles.noDataMessage}>ไม่มีรายการในตะกร้า กรุณาเพิ่มรายการก่อนยืนยัน</div>
+                <div className={styles.noDataMessage}>
+                  ไม่มีรายการในตะกร้า กรุณาเพิ่มรายการก่อนยืนยัน
+                </div>
               )}
             </div>
           </div>
@@ -326,7 +356,11 @@ export default function Cart() {
         {/* Footer actions */}
         <div className={styles.footerBar}>
           <div className={styles.footerActions}>
-            <button className={`${styles.actionButton} ${styles.cancelBtn}`} onClick={handleCancel} disabled={isSubmitting}>
+            <button
+              className={`${styles.actionButton} ${styles.cancelBtn}`}
+              onClick={handleCancel}
+              disabled={isSubmitting}
+            >
               ยกเลิก
             </button>
             <button

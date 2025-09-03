@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import axiosInstance from "@/app/utils/axiosInstance";
+import {manageAxios} from "@/app/utils/axiosInstance";
 import ReactECharts from "echarts-for-react";
 import {
   Package,
@@ -19,16 +19,16 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const resSummary = await axiosInstance.get("/dashboard/summary");
+        const resSummary = await manageAxios.get("/dashboard/summary");
         setSummary(resSummary.data);
 
-        const resMonthly = await axiosInstance.get("/dashboard/monthly");
+        const resMonthly = await manageAxios.get("/dashboard/monthly");
         setMonthlyData(resMonthly.data);
 
-        const resCategory = await axiosInstance.get("/dashboard/category");
+        const resCategory = await manageAxios.get("/dashboard/category");
         setCategoryData(resCategory.data);
 
-        const resMovements = await axiosInstance.get("/dashboard/movements");
+        const resMovements = await manageAxios.get("/dashboard/movements");
         setMovements(resMovements.data);
       } catch (err) {
         console.error("โหลดข้อมูล Dashboard ล้มเหลว:", err);

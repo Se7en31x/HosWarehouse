@@ -2,7 +2,7 @@
 
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import axiosInstance from "@/app/utils/axiosInstance";
+import {manageAxios} from "@/app/utils/axiosInstance";
 import Swal from "sweetalert2";
 import styles from "./page.module.css";
 import { Trash2, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
@@ -272,7 +272,7 @@ export default function BorrowHistory() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axiosInstance.get("/history/borrow");
+        const res = await manageAxios.get("/history/borrow");
         setData(Array.isArray(res.data) ? res.data : []);
       } catch (error) {
         console.error("Failed to fetch borrow history:", error);

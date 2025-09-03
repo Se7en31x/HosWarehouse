@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import axiosInstance from "@/app/utils/axiosInstance";
+import {manageAxios} from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
 import dynamic from "next/dynamic";
 const Select = dynamic(() => import("react-select"), { ssr: false });
@@ -80,7 +80,7 @@ export default function WarehousePurchaseStatus() {
       setLoading(true);
       setError(null);
       try {
-        const res = await axiosInstance.get("/purchase-status");
+        const res = await manageAxios.get("/purchase-status");
         if (isMounted) {
           setRows(Array.isArray(res.data) ? res.data.filter(Boolean) : []);
         }

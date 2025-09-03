@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import styles from "./page.module.css";
 import Swal from "sweetalert2";
-import axiosInstance from "@/app/utils/axiosInstance";
+import {manageAxios} from "@/app/utils/axiosInstance";
 import { Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import dynamic from "next/dynamic";
 
@@ -101,7 +101,7 @@ export default function ImportHistory() {
     let isMounted = true;
     const fetchData = async () => {
       try {
-        const res = await axiosInstance.get("/history/stockin");
+        const res = await manageAxios.get("/history/stockin");
         if (isMounted) {
           setData(Array.isArray(res.data) ? res.data.filter(Boolean) : []);
         }

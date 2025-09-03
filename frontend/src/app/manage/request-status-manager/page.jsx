@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import axiosInstance from '@/app/utils/axiosInstance';
+import {manageAxios} from '@/app/utils/axiosInstance';
 import Swal from 'sweetalert2';
 import dynamic from 'next/dynamic';
 import { Trash2, ChevronLeft, ChevronRight, Settings, Eye } from 'lucide-react';
@@ -128,7 +128,7 @@ export default function RequestStatusManagerPage() {
     setLoading(true);
     try {
       const statusQuery = allowedStatuses.join(',');
-      const res = await axiosInstance.get('/requestStatus', { params: { status: statusQuery } });
+      const res = await manageAxios.get('/requestStatus', { params: { status: statusQuery } });
       if (!Array.isArray(res.data)) throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
       const normalized = res.data.map(r => ({
         ...r,

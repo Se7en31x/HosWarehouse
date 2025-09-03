@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
-import axiosInstance from '@/app/utils/axiosInstance';
+import { manageAxios } from '@/app/utils/axiosInstance';
 import styles from './page.module.css';
 
 // Map สถานะและประเภท (เหมือนเดิม)
@@ -37,7 +37,7 @@ export default function SingleStockDeductionPage() {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const res = await axiosInstance.get(`/stockDeduction/${requestId}/details`);
+        const res = await manageAxios.get(`/stockDeduction/${requestId}/details`);
         const fetched = res.data;
         const pendingItems = fetched.details.filter(i => i.processing_status === 'pending');
         setRequestDetail({ ...fetched, details: pendingItems });
@@ -110,7 +110,7 @@ export default function SingleStockDeductionPage() {
 
     try {
       setIsProcessing(true);
-      await axiosInstance.put(`/stockDeduction/${requestId}/process`, {
+      await manageAxios.put(`/stockDeduction/${requestId}/process`, {
         updates: itemsToProcess.map(i => ({
           request_detail_id: i.request_detail_id,
           newStatus: 'preparing',

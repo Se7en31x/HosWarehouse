@@ -12,7 +12,7 @@ import dynamic from 'next/dynamic';
 
 const Select = dynamic(() => import('react-select'), { ssr: false });
 
-import axiosInstance from '@/app/utils/axiosInstance';
+import { staffAxios } from '@/app/utils/axiosInstance';
 import { connectSocket, disconnectSocket } from '@/app/utils/socket';
 
 // ► Options
@@ -125,7 +125,7 @@ export default function InventoryWithdraw() {
 
     const fetchInitialData = async () => {
       try {
-        const res = await axiosInstance.get('/for-withdrawal');
+        const res = await staffAxios.get('/for-withdrawal');
         if (isMounted) {
           setAllItems(Array.isArray(res.data) ? res.data.filter(item => item && item.item_id) : []);
         }
@@ -299,7 +299,7 @@ export default function InventoryWithdraw() {
 
   const handleBorrow = async (item) => {
     try {
-      const response = await axiosInstance.get(`/check-pending-borrow/${item.item_id}`);
+      const response = await staffAxios.get(`/check-pending-borrow/${item.item_id}`);
 
       if (response.data.pending) {
         Swal.fire({

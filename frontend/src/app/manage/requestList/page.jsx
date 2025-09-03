@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import styles from "./page.module.css";
 import Link from "next/link";
 import { connectSocket, disconnectSocket } from "../../utils/socket";
-import axiosInstance from "../../utils/axiosInstance";
+import {manageAxios} from "../../utils/axiosInstance";
 import { Trash2, ChevronLeft, ChevronRight, Settings } from "lucide-react";
 import dynamic from "next/dynamic";
 
@@ -94,7 +94,7 @@ export default function ApprovalRequest() {
     setLoading(true);
     setError(null);
     try {
-      const res = await axiosInstance.get(
+      const res = await manageAxios.get(
         "/requests?status=waiting_approval,approved_all,rejected_all,approved_partial,rejected_partial,approved_partial_and_rejected_partial"
       );
       setRequests(Array.isArray(res.data) ? res.data : []);

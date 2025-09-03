@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import styles from './page.module.css';
 import BasicForm from '@/app/manage/components/formTemplates/BasicForm';
-import axiosInstance from '@/app/utils/axiosInstance';
+import { manageAxios } from '@/app/utils/axiosInstance';
 
 export default function EditItem() {
     const { id } = useParams();
@@ -112,7 +112,7 @@ export default function EditItem() {
             }
         }
         try {
-            await axiosInstance.put(`/manageData/${id}`, formData, {
+            await manageAxios.put(`/manageData/${id}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             Swal.fire({
@@ -144,7 +144,7 @@ export default function EditItem() {
 
     useEffect(() => {
         if (!id) return;
-        axiosInstance.get(`/manageData/${id}`)
+        manageAxios.get(`/manageData/${id}`)
             .then((res) => {
                 const fetchedData = res.data;
                 console.log('✅ fetchedData:', res.data);

@@ -3,7 +3,7 @@ import { Image as ImageIcon, UploadCloud } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useState, useEffect } from 'react';
 import styles from './page.module.css';
-import axiosInstance from '../../../utils/axiosInstance';
+import { manageAxios } from '../../../utils/axiosInstance';
 import BasicForm from '../../components/formTemplates/BasicForm';
 
 export default function AddItem() {
@@ -205,7 +205,7 @@ export default function AddItem() {
         });
 
         try {
-            await axiosInstance.post('/addNewItem', formData, {
+            await manageAxios.post('/addNewItem', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             Swal.fire({

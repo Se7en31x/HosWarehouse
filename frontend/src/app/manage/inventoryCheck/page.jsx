@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import styles from "./page.module.css";
 import { connectSocket, disconnectSocket } from "../../utils/socket";
-import axiosInstance from "../../utils/axiosInstance";
+import { manageAxios } from "../../utils/axiosInstance";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Trash2, Search, PackageCheck } from "lucide-react";
 import { toast } from "react-toastify";
@@ -117,21 +117,21 @@ export default function InventoryCheck() {
   };
 
   // -------------------- ✅ ส่วนที่ต้องแก้ไข --------------------
-useEffect(() => {
+  useEffect(() => {
     let isMounted = true;
 
     const fetchInitialData = async () => {
-        try {
-            const res = await axiosInstance.get("/inventoryCheck/all");
-            if (isMounted) {
-                setAllItems(Array.isArray(res.data) ? res.data.filter(Boolean) : []);
-                setIsLoading(false); // ควรกำหนด isLoading ที่นี่
-            }
-        } catch (err) {
-            console.error("❌ โหลดข้อมูลเริ่มต้นไม่สำเร็จ:", err);
-            toast.error("ไม่สามารถโหลดข้อมูลจากเซิร์ฟเวอร์ได้");
-            if (isMounted) setIsLoading(false);
+      try {
+        const res = await manageAxios.get("/inventoryCheck/all");
+        if (isMounted) {
+          setAllItems(Array.isArray(res.data) ? res.data.filter(Boolean) : []);
+          setIsLoading(false); // ควรกำหนด isLoading ที่นี่
         }
+      } catch (err) {
+        console.error("❌ โหลดข้อมูลเริ่มต้นไม่สำเร็จ:", err);
+        toast.error("ไม่สามารถโหลดข้อมูลจากเซิร์ฟเวอร์ได้");
+        if (isMounted) setIsLoading(false);
+      }
     };
 
     fetchInitialData();
@@ -139,11 +139,11 @@ useEffect(() => {
     const socket = connectSocket();
 
     const handleItemUpdate = () => {
-        // เมื่อได้รับ Event ที่เกี่ยวข้องกับการอัปเดตข้อมูล ให้ดึงข้อมูลใหม่ทั้งหมด
-        console.log("📦 ได้รับการอัปเดตจาก Socket.IO, กำลังดึงข้อมูลใหม่...");
-        if (isMounted) {
-            fetchInitialData();
-        }
+      // เมื่อได้รับ Event ที่เกี่ยวข้องกับการอัปเดตข้อมูล ให้ดึงข้อมูลใหม่ทั้งหมด
+      console.log("📦 ได้รับการอัปเดตจาก Socket.IO, กำลังดึงข้อมูลใหม่...");
+      if (isMounted) {
+        fetchInitialData();
+      }
     };
 
     // 🟢 ฟัง Event เมื่อรายการสินค้าถูกเพิ่ม
@@ -160,14 +160,14 @@ useEffect(() => {
 
     // Cleanup function
     return () => {
-        isMounted = false;
-        socket.off("itemAdded", handleItemUpdate);
-        socket.off("itemUpdated", handleItemUpdate);
-        socket.off("itemLotUpdated", handleItemUpdate);
-        socket.off("itemDeleted", handleItemUpdate);
-        disconnectSocket();
+      isMounted = false;
+      socket.off("itemAdded", handleItemUpdate);
+      socket.off("itemUpdated", handleItemUpdate);
+      socket.off("itemLotUpdated", handleItemUpdate);
+      socket.off("itemDeleted", handleItemUpdate);
+      disconnectSocket();
     };
-}, []);
+  }, []);
   // ----------------------------------------------------
 
   const filteredInventory = useMemo(() => {

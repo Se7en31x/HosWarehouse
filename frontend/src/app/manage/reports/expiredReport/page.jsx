@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { ClipboardX, FileDown, Search } from "lucide-react";
-import axiosInstance from "@/app/utils/axiosInstance";
+import {manageAxios} from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
 
 import jsPDF from "jspdf";
@@ -17,7 +17,7 @@ export default function ExpiredReportPage() {
   const fetchReport = async () => {
     try {
       setLoading(true);
-      const res = await axiosInstance.get("/report/expired");
+      const res = await manageAxios.get("/report/expired");
       setData(res.data);
     } catch (err) {
       console.error("Error fetching expired report:", err);

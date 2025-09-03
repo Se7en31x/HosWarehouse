@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import dynamic from 'next/dynamic';
-import axiosInstance from '@/app/utils/axiosInstance';
+import { manageAxios } from '@/app/utils/axiosInstance';
 import styles from './page.module.css';
 import { Trash2, ChevronLeft, ChevronRight, Package, Eye } from 'lucide-react';
 
@@ -97,7 +97,7 @@ export default function StockDeductionPage() {
       try {
         setIsLoading(true);
         setError(null);
-        const res = await axiosInstance.get('/stockDeduction/ready');
+        const res = await manageAxios.get('/stockDeduction/ready');
         const data = Array.isArray(res.data) ? res.data : [];
         data.sort((a, b) => {
           const da = new Date(a?.request_date).getTime();
@@ -193,7 +193,7 @@ export default function StockDeductionPage() {
             <h1 className={styles.pageTitle}>รายการคำขอที่รอเบิก-จ่ายสต็อก</h1>
           </div>
         </div>
-        
+
         <div className={styles.toolbar}>
           <div className={`${styles.filterGrid} ${styles.filterGrid3}`}>
             <div className={styles.filterGroup}>
@@ -302,9 +302,8 @@ export default function StockDeductionPage() {
                             </td>
                             <td className="nowrap">
                               <button
-                                className={`${styles.button} ${
-                                  pending > 0 ? styles.actionButton : styles.detailButton
-                                }`}
+                                className={`${styles.button} ${pending > 0 ? styles.actionButton : styles.detailButton
+                                  }`}
                                 onClick={() => handleDeductStockClick(item?.request_id)}
                                 disabled={!item?.request_id}
                                 title={pending > 0 ? 'ดำเนินการเบิก-จ่าย' : 'ดูรายละเอียด'}

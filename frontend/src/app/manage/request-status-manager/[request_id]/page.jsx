@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import axiosInstance from '../../../utils/axiosInstance';
+import {manageAxios} from '../../../utils/axiosInstance';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import styles from './page.module.css';
@@ -89,7 +89,7 @@ export default function RequestDetailClient() {
     const fetchRequestDetails = async () => {
         setLoading(true);
         try {
-            const res = await axiosInstance.get(`/requestStatus/${request_id}`, {
+            const res = await manageAxios.get(`/requestStatus/${request_id}`, {
                 params: { t: Date.now() },
             });
             const fetchedRequest = res.data.request || null;
@@ -269,7 +269,7 @@ export default function RequestDetailClient() {
 
         setIsSavingAll(true);
         try {
-            await axiosInstance.put(`/requestStatus/${request_id}/processing-status-batch`, {
+            await manageAxios.put(`/requestStatus/${request_id}/processing-status-batch`, {
                 updates: changesToSave,
                 userId: currentUserId,
             });

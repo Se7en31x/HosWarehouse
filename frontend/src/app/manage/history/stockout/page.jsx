@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useMemo } from "react";
-import axiosInstance from "@/app/utils/axiosInstance";
+import {manageAxios} from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
 import { Trash2, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -66,7 +66,7 @@ export default function StockOutHistoryPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axiosInstance.get("/history/stockout");
+        const res = await manageAxios.get("/history/stockout");
         setRecords(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("Error fetching stockout history:", err);
@@ -128,7 +128,7 @@ export default function StockOutHistoryPage() {
   const handleShowDetail = async (doc) => {
     setSelected(doc);
     try {
-      const res = await axiosInstance.get(`/history/stockout/${doc.stockout_id}`);
+      const res = await manageAxios.get(`/history/stockout/${doc.stockout_id}`);
       setDetails(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Error fetching stockout detail:", err);

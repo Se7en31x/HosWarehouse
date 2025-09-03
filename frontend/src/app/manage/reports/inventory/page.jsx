@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Select from "react-select";
 import { Package, FileDown, Search } from "lucide-react";
-import axiosInstance from "@/app/utils/axiosInstance";
+import {manageAxios} from "@/app/utils/axiosInstance";
 import {
   exportInventoryPDF,
   exportInventoryCSV,
@@ -54,7 +54,7 @@ export default function InventoryReport() {
   const fetchReport = async () => {
     try {
       setLoading(true);
-      const res = await axiosInstance.get("/report/inventory/summary", {
+      const res = await manageAxios.get("/report/inventory/summary", {
         params: {
           category: category?.value || "all",
           start: dateRange?.value === "month" ? "2025-08-01" : null,

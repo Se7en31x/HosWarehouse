@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import styles from './page.module.css';
-import axiosInstance from '@/app/utils/axiosInstance';
+import {manageAxios} from '@/app/utils/axiosInstance';
 import Swal from 'sweetalert2';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashCan } from '@fortawesome/free-solid-svg-icons';
@@ -188,7 +188,7 @@ export default function ManageDataPage() {
     });
     if (result.isConfirmed) {
       try {
-        const res = await axiosInstance.delete(`/deleteItem/${id}`);
+        const res = await manageAxios.delete(`/deleteItem/${id}`);
         if (res.data.success) {
           Swal.fire('ลบแล้ว!', 'รายการถูกลบเรียบร้อยแล้ว', 'success');
         } else {
@@ -204,7 +204,7 @@ export default function ManageDataPage() {
     let isMounted = true;
     const fetchInitialData = async () => {
       try {
-        const res = await axiosInstance.get('/manageData');
+        const res = await manageAxios.get('/manageData');
         if (isMounted) {
           setItems(Array.isArray(res.data) ? res.data : []);
         }

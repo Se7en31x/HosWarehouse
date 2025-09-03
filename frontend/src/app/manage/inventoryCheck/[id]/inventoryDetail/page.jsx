@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import styles from './page.module.css';
-import axiosInstance from '../../../../utils/axiosInstance';
+import { manageAxios } from '../../../../utils/axiosInstance';
 
 // Components
 import BasicDetail from '../../../components/inventoryDetail/BasicDetail';
@@ -52,7 +52,7 @@ export default function InventoryDetail() {
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    axiosInstance
+    manageAxios
       .get(`/inventoryCheck/${id}`)
       .then((res) => alive && setItem(res.data))
       .catch(() => alive && setError('ไม่สามารถโหลดข้อมูลพัสดุได้ กรุณาลองใหม่อีกครั้ง'))
@@ -118,7 +118,7 @@ export default function InventoryDetail() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await axiosInstance.post(`/damaged`, {
+          await manageAxios.post(`/damaged`, {
             lot_id: lot.lot_id,
             item_id: lot.item_id,
             qty: result.value,
@@ -133,7 +133,7 @@ export default function InventoryDetail() {
             confirmButtonColor: 'var(--primary)',
             customClass: { popup: styles.swalPopup },
           });
-          const res = await axiosInstance.get(`/inventoryCheck/${lot.item_id}`);
+          const res = await manageAxios.get(`/inventoryCheck/${lot.item_id}`);
           setItem(res.data);
         } catch {
           Swal.fire({
@@ -188,7 +188,7 @@ export default function InventoryDetail() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await axiosInstance.post(`/inventory/adjust`, {
+          await manageAxios.post(`/inventory/adjust`, {
             lot_id: lot.lot_id,
             item_id: lot.item_id,
             actual_qty: result.value.actual_qty,
@@ -201,7 +201,7 @@ export default function InventoryDetail() {
             confirmButtonColor: 'var(--primary)',
             customClass: { popup: styles.swalPopup },
           });
-          const res = await axiosInstance.get(`/inventoryCheck/${lot.item_id}`);
+          const res = await manageAxios.get(`/inventoryCheck/${lot.item_id}`);
           setItem(res.data);
         } catch {
           Swal.fire({

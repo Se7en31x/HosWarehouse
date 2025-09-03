@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useMemo } from 'react';
-import axios from '@/app/utils/axiosInstance';
+import {manageAxios} from '@/app/utils/axiosInstance';
 import styles from './page.module.css';
 import { ChevronLeft, ChevronRight, Trash2, Clock, CheckCircle, X } from 'lucide-react';
 import dynamic from 'next/dynamic';
@@ -189,7 +189,7 @@ export default function ExpiredItemsPage() {
   // โหลดข้อมูล
   const fetchExpired = async () => {
     try {
-      const res = await axios.get('/expired');
+      const res = await manageAxios.get('/expired');
       const data = Array.isArray(res.data) ? res.data : [];
       setExpiredList(data);
     } catch (err) {
@@ -210,7 +210,7 @@ export default function ExpiredItemsPage() {
   // บันทึกทำลาย
   const confirmDispose = async () => {
     try {
-      await axios.post(`/expired/action`, {
+      await manageAxios.post(`/expired/action`, {
         lot_id: disposeData.lotId,
         item_id: disposeData.itemId,
         action_qty: disposeData.actionQty,
@@ -241,7 +241,7 @@ export default function ExpiredItemsPage() {
   // เปิด modal ประวัติ
   const openHistoryModal = async (lotId) => {
     try {
-      const res = await axios.get(`/expired/actions/${lotId}`);
+      const res = await manageAxios.get(`/expired/actions/${lotId}`);
       setHistoryData(Array.isArray(res.data) ? res.data : []);
       setShowHistoryModal(true);
     } catch (err) {

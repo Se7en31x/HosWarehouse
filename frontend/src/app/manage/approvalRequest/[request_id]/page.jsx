@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import axiosInstance from '../../../utils/axiosInstance';
+import {manageAxios} from '../../../utils/axiosInstance';
 import Swal from 'sweetalert2';
 import Image from 'next/image';
 import styles from './page.module.css';
@@ -78,7 +78,7 @@ export default function ApprovalRequestPage() {
   const fetchRequestDetail = async () => {
     setLoading(true);
     try {
-      const res = await axiosInstance.get(`/approval/${request_id}`);
+      const res = await manageAxios.get(`/approval/${request_id}`);
       setRequest(res.data.request);
       setDetails(res.data.details);
 
@@ -243,7 +243,7 @@ export default function ApprovalRequestPage() {
     setLoading(true);
     try {
       const userId = parseInt(localStorage.getItem('user_id'), 10);
-      await axiosInstance.put(`/approval/${request_id}/bulk-update`, { updates: changesToSave, userId });
+      await manageAxios.put(`/approval/${request_id}/bulk-update`, { updates: changesToSave, userId });
       Swal.fire('สำเร็จ', 'บันทึกสำเร็จแล้ว', 'success');
       await fetchRequestDetail();
     } catch (err) {

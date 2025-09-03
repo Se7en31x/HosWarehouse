@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Select from "react-select";
 import { ClipboardList, FileDown, Search } from "lucide-react";
-import axiosInstance from "@/app/utils/axiosInstance";
+import {manageAxios} from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
 
 import jsPDF from "jspdf";
@@ -62,7 +62,7 @@ export default function ReturnReport() {
   const fetchReport = async () => {
     try {
       setLoading(true);
-      const res = await axiosInstance.get("/report/return", {
+      const res = await manageAxios.get("/report/return", {
         params: {
           department: department?.value || "all",
           start: dateRange?.value === "month" ? "2025-08-01" : null,

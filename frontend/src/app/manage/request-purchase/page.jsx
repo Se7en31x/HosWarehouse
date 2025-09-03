@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useMemo } from "react";
 import styles from "./page.module.css";
-import axiosInstance from "@/app/utils/axiosInstance";
+import {manageAxios} from "@/app/utils/axiosInstance";
 import { FaPlus, FaTrashAlt, FaSearch, FaShoppingCart } from "react-icons/fa";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -49,7 +49,7 @@ export default function RequestPurchasePage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const itemsRes = await axiosInstance.get("/pr/items");
+      const itemsRes = await manageAxios.get("/pr/items");
       setItems(Array.isArray(itemsRes.data) ? itemsRes.data.filter(Boolean) : []);
     } catch (err) {
       setError("ไม่สามารถดึงข้อมูลได้: " + (err.response?.data?.message || err.message));
@@ -443,7 +443,7 @@ iban            .input-field {
     }
 
     try {
-      await axiosInstance.post("/pr", {
+      await manageAxios.post("/pr", {
         requester_id: 1,
         items_to_purchase: itemsToSubmit.map((i) => ({
           item_id: i.item_id,

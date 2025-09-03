@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import axiosInstance from "@/app/utils/axiosInstance";
+import { manageAxios } from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
 
 export default function ImportHistoryPage() {
@@ -8,7 +8,7 @@ export default function ImportHistoryPage() {
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
-    axiosInstance.get("/history/import").then((res) => setRecords(res.data));
+    manageAxios.get("/history/import").then((res) => setRecords(res.data));
   }, []);
 
   return (

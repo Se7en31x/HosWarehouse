@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Select from "react-select";
 import { ClipboardList, FileDown, Search } from "lucide-react";
-import axiosInstance from "@/app/utils/axiosInstance";
+import {manageAxios} from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
 
 export default function OutflowReport() {
@@ -115,7 +115,7 @@ const fetchReport = async () => {
       end = lastDay.toISOString().split("T")[0];
     }
 
-    const res = await axiosInstance.get("/report/outflow", {
+    const res = await manageAxios.get("/report/outflow", {
       params: {
         type: type?.value || "all",
         department: department?.value || "all",

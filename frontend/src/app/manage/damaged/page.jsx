@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import axiosInstance from '@/app/utils/axiosInstance';
+import { manageAxios } from '@/app/utils/axiosInstance';
 import Swal from 'sweetalert2';
 import styles from './page.module.css';
 import { connectSocket, disconnectSocket } from '@/app/utils/socket';
@@ -85,7 +85,7 @@ export default function DamagedItemsPage() {
 
   const fetchDamaged = async () => {
     try {
-      const res = await axiosInstance.get('/damaged');
+      const res = await manageAxios.get('/damaged');
       setDamagedList(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error(err);
@@ -187,7 +187,7 @@ export default function DamagedItemsPage() {
       if (!qty) return;
 
       // ✅ call API
-      await axiosInstance.post(`/damaged/${damagedId}/action`, {
+      await manageAxios.post(`/damaged/${damagedId}/action`, {
         damaged_id: damagedId,
         action_type: actionType,
         action_qty: qty,
@@ -278,10 +278,10 @@ export default function DamagedItemsPage() {
                 />
               </div>
             </div>
-            <button className={`${styles.ghostBtn} ${styles.clearButton}`} 
-            onClick={clearFilters}
-            title="ล้างตัวกรอง"
-            aria-label="ล้างตัวกรอง"
+            <button className={`${styles.ghostBtn} ${styles.clearButton}`}
+              onClick={clearFilters}
+              title="ล้างตัวกรอง"
+              aria-label="ล้างตัวกรอง"
             >
               <Trash2 size={18} /> ล้างตัวกรอง
             </button>

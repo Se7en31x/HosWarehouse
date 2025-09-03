@@ -1,14 +1,18 @@
 "use client";
 import { useState, useEffect } from "react";
-import Select from "react-select";
+import dynamic from "next/dynamic";
 import { ClipboardList, FileDown, Search } from "lucide-react";
-import axiosInstance from "@/app/utils/axiosInstance";
+import { manageAxios } from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Papa from "papaparse";
 import { saveAs } from "file-saver";
+
+// ✅ ใช้ dynamic import แก้ hydration error
+const Select = dynamic(() => import("react-select"), { ssr: false });
+
 
 export default function InflowReport() {
   const [type, setType] = useState(null);
@@ -69,7 +73,7 @@ export default function InflowReport() {
   const fetchReport = async () => {
     try {
       setLoading(true);
-      const res = await axiosInstance.get("/report/inflow", {
+      const res = await manageAxios.get("/report/inflow", {
         params: {
           type: type?.value || "all",
           start: dateRange?.value === "month" ? "2025-08-01" : null,

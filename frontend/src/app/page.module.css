@@ -1,72 +1,568 @@
 /* page.module.css */
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
 .container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    background: linear-gradient(to bottom right, #bfdbfe, #bbf7d0);
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 30%, #334155 100%);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* padding: 2rem; */
+  font-family: 'Sarabun', 'Inter', sans-serif;
+  overflow: hidden;
+}
+
+/* Animated particles background */
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 70%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+  background-size: 300px 300px;
+  animation: particleMove 20s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes particleMove {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(-10px, -10px) rotate(90deg); }
+  50% { transform: translate(10px, -20px) rotate(180deg); }
+  75% { transform: translate(-20px, 10px) rotate(270deg); }
+}
+
+/* Medical floating icons */
+.container::after {
+  content: '';
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  top: 15%;
+  right: 20%;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="rgba(59,130,246,0.2)"><path d="M19 8h-2V6c0-1.1-.9-2-2-2h-6c-1.1 0-2 .9-2 2v2H5c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h2v2c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2v-2h2c1.1 0 2-.9 2-2v-6c0-1.1-.9-2-2-2z"/></svg>') center/contain no-repeat;
+  animation: float 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.6; }
+  50% { transform: translateY(-30px) rotate(10deg); opacity: 0.9; }
+}
+
+.card {
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.95) 0%, rgba(51, 65, 85, 0.9) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 24px;
+  padding: 3.5rem;
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(59, 130, 246, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  max-width: 520px;
+  width: 100%;
+  position: relative;
+  animation: slideUp 0.8s ease-out;
+}
+
+/* Neon accent line */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #3b82f6, #10b981, #8b5cf6, transparent);
+  background-size: 200% 100%;
+  border-radius: 24px 24px 0 0;
+  animation: neonFlow 3s linear infinite;
+}
+
+@keyframes neonFlow {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.title {
+  font-size: 2.8rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 0.8rem;
+  background: linear-gradient(135deg, #60a5fa 0%, #34d399 50%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: relative;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 30px rgba(96, 165, 250, 0.3);
+}
+
+/* Medical symbol with glow */
+.title::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 40px;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2360a5fa"><path d="M19 8h-2V6c0-1.1-.9-2-2-2h-6c-1.1 0-2 .9-2 2v2H5c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h2v2c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2v-2h2c1.1 0 2-.9 2-2v-6c0-1.1-.9-2-2-2z"/></svg>') center/contain no-repeat;
+  animation: pulse 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(96, 165, 250, 0.7));
+}
+
+.title::after {
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+@keyframes pulse {
+  0%, 100% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.15); }
+}
+
+.description {
+  text-align: center;
+  color: #cbd5e1;
+  margin-bottom: 3rem;
+  font-size: 1.15rem;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.buttonGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.button {
+  padding: 1.5rem 2rem;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 16px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(51, 65, 85, 0.6) 100%);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.2), transparent);
+  transition: left 0.6s ease;
+}
+
+.button:hover::before {
+  left: 100%;
+}
+
+.button:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(59, 130, 246, 0.3);
+  border-color: rgba(59, 130, 246, 0.6);
+}
+
+.button:active {
+  transform: translateY(-1px);
+}
+
+/* Inventory Manager Button */
+.manager {
+  color: #60a5fa;
+  border-left: 4px solid #3b82f6;
+}
+
+.manager::after {
+  content: '\f187'; /* FontAwesome archive icon */
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  font-size: 1.5rem;
+  color: #3b82f6;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+.manager:hover {
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.1) 0%, rgba(30, 41, 59, 0.9) 100%);
+  color: #93c5fd;
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(59, 130, 246, 0.4);
+}
+
+/* Medical Staff Button */
+.user {
+  color: #34d399;
+  border-left: 4px solid #10b981;
+}
+
+.user::after {
+  content: '\f0f0'; /* FontAwesome user-md icon */
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  font-size: 1.5rem;
+  color: #10b981;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+.user:hover {
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.1) 0%, rgba(30, 41, 59, 0.9) 100%);
+  color: #6ee7b7;
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(16, 185, 129, 0.4);
+}
+
+/* Purchasing Button */
+.purchasing {
+  color: #a78bfa;
+  border-left: 4px solid #8b5cf6;
+}
+
+.purchasing::after {
+  content: '\f07a'; /* FontAwesome shopping-cart icon */
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  font-size: 1.5rem;
+  color: #8b5cf6;
+  text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+}
+
+.purchasing:hover {
+  background: linear-gradient(145deg, rgba(139, 92, 246, 0.1) 0%, rgba(30, 41, 59, 0.9) 100%);
+  color: #c4b5fd;
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(139, 92, 246, 0.4);
+}
+
+/* Token input form styling */
+.tokenForm {
+  margin-top: 2.5rem;
+  padding: 2.5rem;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  animation: fadeIn 0.6s ease-out;
+  position: relative;
+  box-shadow: 
+    0 15px 35px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.tokenForm::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #10b981);
+  border-radius: 0 0 3px 3px;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(30px) scale(0.95); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+}
+
+.tokenForm h3 {
+  color: #e2e8f0;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.tokenTextarea {
+  width: 100%;
+  padding: 1.2rem;
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+  resize: vertical;
+  font-family: 'Inter', monospace;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+  background: rgba(15, 23, 42, 0.8);
+  color: #e2e8f0;
+  backdrop-filter: blur(5px);
+}
+
+.tokenTextarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 
+    0 0 0 3px rgba(59, 130, 246, 0.2),
+    0 4px 15px rgba(59, 130, 246, 0.3),
+    0 0 20px rgba(59, 130, 246, 0.2);
+}
+
+.tokenTextarea::placeholder {
+  color: #64748b;
+}
+
+.saveButton {
+  padding: 1.2rem 2rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1.05rem;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 4px 15px rgba(59, 130, 246, 0.4),
+    0 0 20px rgba(59, 130, 246, 0.2);
+}
+
+.saveButton::before {
+  content: '\f00c'; /* FontAwesome check icon */
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  position: absolute;
+  left: 1.5rem;
+  font-size: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.saveButton:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 20px rgba(59, 130, 246, 0.5),
+    0 0 30px rgba(59, 130, 246, 0.3);
+}
+
+.saveButton:hover::before {
+  transform: scale(1.2);
+}
+
+.saveButton:active {
+  transform: translateY(0);
+}
+
+/* Cancel button styling */
+.cancelButton {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+  color: #e2e8f0;
+  border: 1px solid rgba(100, 116, 139, 0.5);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(100, 116, 139, 0.3);
+}
+
+.cancelButton::before {
+  content: '\f00d'; /* FontAwesome times icon */
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  margin-right: 0.5rem;
+}
+
+.cancelButton:hover {
+  background: linear-gradient(135deg, #475569 0%, #334155 100%);
+  box-shadow: 
+    0 6px 20px rgba(100, 116, 139, 0.4),
+    0 0 20px rgba(100, 116, 139, 0.2);
+  color: white;
+}
+
+/* Loading animation for buttons */
+.button.loading {
+  pointer-events: none;
+  position: relative;
+  opacity: 0.8;
+}
+
+.button.loading::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px;
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Success notification styles */
+.notification {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(5, 150, 105, 0.9) 100%);
+  backdrop-filter: blur(10px);
+  color: white;
+  padding: 1.2rem 2rem;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  box-shadow: 
+    0 8px 25px rgba(16, 185, 129, 0.4),
+    0 0 20px rgba(16, 185, 129, 0.3);
+  animation: slideInRight 0.5s ease-out;
+  z-index: 1000;
+  font-weight: 500;
+}
+
+.notification::before {
+  content: '\f058'; /* FontAwesome check-circle icon */
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  margin-right: 0.5rem;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Additional floating medical elements */
+.card::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: -10px;
+  width: 80px;
+  height: 80px;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="rgba(16,185,129,0.1)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>') center/contain no-repeat;
+  animation: rotate 15s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
   }
   
   .card {
-    background-color: white;
     padding: 2.5rem;
-    border-radius: 1rem;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    text-align: center;
+    margin: 1rem;
   }
   
   .title {
-    font-size: 2.25rem;
-    font-weight: 800;
-    color: #1f2937;
-    margin-bottom: 1rem;
+    font-size: 2.2rem;
   }
   
-  .description {
-    color: #4b5563;
-    margin-bottom: 2rem;
-  }
-  
-  .buttonGroup {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  @media (min-width: 640px) {
-    .buttonGroup {
-      flex-direction: row;
-      justify-content: center;
-    }
+  .title::before {
+    width: 35px;
+    height: 35px;
+    top: -18px;
   }
   
   .button {
-    padding: 0.75rem 1.5rem;
-    font-weight: 500;
-    border-radius: 0.5rem;
-    color: white;
-    transition: background-color 0.2s ease;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    border: none;
-    cursor: pointer;
+    padding: 1.2rem 1.5rem;
+    font-size: 1rem;
   }
   
-  .manager {
-    background-color: #2563eb;
+  .tokenForm {
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 2rem;
   }
   
-  .manager:hover {
-    background-color: #1d4ed8;
+  .title {
+    font-size: 2rem;
   }
   
-  .user {
-    background-color: #16a34a;
+  .description {
+    font-size: 1rem;
   }
   
-  .user:hover {
-    background-color: #15803d;
+  .button {
+    padding: 1rem;
   }
-  .purchasing {
-    background-color: red;
+  
+  .button::after {
+    font-size: 1.2rem;
   }
+  
+  .tokenForm {
+    padding: 1.5rem;
+  }
+  
+  .notification {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+    padding: 1rem 1.5rem;
+  }
+}

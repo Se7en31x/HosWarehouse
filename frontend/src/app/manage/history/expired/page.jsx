@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useMemo } from "react";
-import axiosInstance from "@/app/utils/axiosInstance";
+import {manageAxios} from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
 import { Trash2, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -75,7 +75,7 @@ export default function ExpiredHistoryPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axiosInstance.get("/history/expired");
+        const res = await manageAxios.get("/history/expired");
         setRecords(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("Error fetching expired history:", err);

@@ -7,7 +7,7 @@ import {
 import styles from "./page.module.css";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
-import axiosInstance from "@/app/utils/axiosInstance";
+import { manageAxios } from "@/app/utils/axiosInstance";
 import dynamic from "next/dynamic";
 import { connectSocket, disconnectSocket } from "@/app/utils/socket";
 
@@ -116,7 +116,7 @@ export default function ItemReceivingPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await axiosInstance.get("/receiving");
+      const res = await manageAxios.get("/receiving");
       if (Array.isArray(res.data)) {
         setAllItems(res.data.filter(Boolean));
       }
@@ -202,7 +202,7 @@ export default function ItemReceivingPage() {
       e.key === "Enter" || e.key === "Tab" || e.code === "NumpadEnter" || e.keyCode === 13;
     if (isEnter && searchTerm.trim() !== "") {
       try {
-        const res = await axiosInstance.get(`/receiving/barcode?barcode=${searchTerm.trim()}`);
+        const res = await manageAxios.get(`/receiving/barcode?barcode=${searchTerm.trim()}`);
         if (res.data) {
           handleSelectItem(res.data);
           MySwal.fire({
@@ -294,7 +294,7 @@ export default function ItemReceivingPage() {
         receivingItems: [newItem],
       };
 
-      await axiosInstance.post("/receiving", payload);
+      await manageAxios.post("/receiving", payload);
       MySwal.fire({ title: "บันทึกสำเร็จ", icon: "success" });
       handleClearForm();
     } catch (err) {
@@ -378,7 +378,7 @@ export default function ItemReceivingPage() {
         <div className={styles.pageBar}>
           <div className={styles.titleGroup}>
             <h1 className={styles.pageTitle}>
-              {/* <Package size={22} /> */}รับเข้าสินค้า 
+              {/* <Package size={22} /> */}รับเข้าสินค้า
             </h1>
           </div>
         </div>

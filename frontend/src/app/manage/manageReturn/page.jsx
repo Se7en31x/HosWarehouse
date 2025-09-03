@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
-import axiosInstance from '@/app/utils/axiosInstance';
+import {manageAxios} from '@/app/utils/axiosInstance';
 import dynamic from 'next/dynamic';
 import { Trash2, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
 
@@ -110,7 +110,7 @@ export default function ManageReturnPage() {
     setLoading(true);
     setErr('');
     try {
-      const res = await axiosInstance.get('/manage/returns/queue', {
+      const res = await manageAxios.get('/manage/returns/queue', {
         params: { q: debouncedQ, status, page, limit },
         signal: controller.signal,
       });

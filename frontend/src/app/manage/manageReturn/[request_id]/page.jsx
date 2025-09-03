@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import axiosInstance from "@/app/utils/axiosInstance";
+import {manageAxios} from "@/app/utils/axiosInstance";
 import Swal from "sweetalert2";
 import styles from "./page.module.css";
 import { Settings } from "lucide-react";
@@ -73,7 +73,7 @@ export default function ManageReturnDetailPage() {
     setLoading(true);
     setErr("");
     try {
-      const res = await axiosInstance.get(`/manage/returns/request/${requestId}`, {
+      const res = await manageAxios.get(`/manage/returns/request/${requestId}`, {
         params: { _t: Date.now() },
       });
       setData(res?.data ?? null);
@@ -256,7 +256,7 @@ export default function ManageReturnDetailPage() {
         item_id: activeRow.item_id,
       };
 
-      const res = await axiosInstance.post("/manage/returns/receive", payload);
+      const res = await manageAxios.post("/manage/returns/receive", payload);
 
       Swal.close();
       const status = res?.data?.status || "normal";
