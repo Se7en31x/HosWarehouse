@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import {manageAxios} from "@/app/utils/axiosInstance";
+import { manageAxios } from "../utils/axiosInstance";
 import ReactECharts from "echarts-for-react";
 import {
   Package,

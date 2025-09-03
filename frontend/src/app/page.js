@@ -11,9 +11,18 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleNavigate = (role) => {
+    // ✅ ฝ่ายจัดซื้อเข้าได้เลยโดยไม่ต้องใช้ token
+    if (role === 'purchasing') {
+      setIsLoading(true)
+      setTimeout(() => {
+        router.push(`/${role}`)
+      }, 500)
+      return
+    }
+
+    // ส่วนอื่นๆ ยังต้องใช้ token ตามเดิม
     const token = localStorage.getItem(`authToken_${role}`)
     if (!token) {
-      // ถ้าไม่มี token → ให้กรอก
       setSelectedRole(role)
       return
     }
@@ -28,10 +37,10 @@ export default function HomePage() {
       showNotification('กรุณากรอก Token ก่อน', 'error')
       return
     }
-    
+
     setIsLoading(true)
     localStorage.setItem(`authToken_${selectedRole}`, tokenInput)
-    
+
     setTimeout(() => {
       showNotification(`✅ บันทึก Token สำหรับ ${getRoleDisplayName(selectedRole)} เรียบร้อยแล้ว`)
       setTokenInput('')
@@ -55,13 +64,13 @@ export default function HomePage() {
     const notification = document.createElement('div')
     notification.className = styles.notification
     notification.textContent = message
-    
+
     if (type === 'error') {
       notification.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)'
     }
-    
+
     document.body.appendChild(notification)
-    
+
     setTimeout(() => {
       notification.remove()
     }, 3000)
@@ -115,19 +124,19 @@ export default function HomePage() {
               disabled={isLoading}
             />
             <div style={{ display: 'flex', gap: '1rem' }}>
-              <button 
-                onClick={handleSaveToken} 
+              <button
+                onClick={handleSaveToken}
                 className={`${styles.saveButton} ${isLoading ? styles.loading : ''}`}
                 disabled={isLoading}
                 style={{ flex: 1 }}
               >
                 {isLoading ? 'กำลังบันทึก...' : 'Save Token & เข้าสู่ระบบ'}
               </button>
-              <button 
+              <button
                 onClick={handleCancelToken}
                 className={`${styles.button} ${styles.cancelButton}`}
                 disabled={isLoading}
-                style={{ 
+                style={{
                   flex: 'none',
                   padding: '1rem 1.5rem'
                 }}
