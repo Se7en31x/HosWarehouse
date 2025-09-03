@@ -1,29 +1,45 @@
-// routes/inventory.js
 const express = require('express');
 const router = express.Router();
 const inventoryController = require('../controllers/inventoryController');
+const authMiddleware = require('../middleware/auth'); // ✅ import middleware
 
 // --------------------------------------------------------
 // ✅ ROUTES สำหรับผู้ดูแลคลัง (Manager)
 // --------------------------------------------------------
-// ดึงข้อมูลสินค้าทั้งหมดแบบละเอียด (ใช้สำหรับหน้า Overview)
-router.get('/inventoryCheck/all', inventoryController.getAllItems);
-// ดึงข้อมูลสินค้าชิ้นเดียวพร้อมรายละเอียด Lot (ใช้สำหรับหน้ารายละเอียดสินค้า)
-router.get('/inventoryCheck/:id', inventoryController.getItemById);
+router.get(
+  '/inventoryCheck/all',
+  authMiddleware(['marehouse_manager']), // 🔐 เฉพาะ manage
+  inventoryController.getAllItems
+);
 
+router.get(
+  '/inventoryCheck/:id',
+  authMiddleware(['marehouse_manager']), // 🔐 เฉพาะ manage
+  inventoryController.getItemById
+);
 
 // --------------------------------------------------------
-// ✅ ROUTES ใหม่สำหรับพนักงานทั่วไป (Staff)
+// ✅ ROUTES สำหรับพนักงานทั่วไป (Staff)
 // --------------------------------------------------------
-// ดึงข้อมูลสินค้าทั้งหมดแบบย่อ (ใช้สำหรับหน้าเบิก-ยืม)
-router.get('/for-withdrawal', inventoryController.getAllItemsForWithdrawal);
-// --------------------------------------------------------
-// ✅ ROUTES ที่ใช้ร่วมกัน
-// --------------------------------------------------------
-// บันทึกของชำรุด (สามารถใช้ได้ทั้ง Staff และ Manager)
-router.post('/damaged', inventoryController.reportDamaged);
+router.get(
+  '/for-withdrawal',
+  authMiddleware(['staff', 'nurse', 'doctor', 'pharmacist']), // 🔐 staff และ role อื่น ๆ ที่มีสิทธิ์เบิก
+  inventoryController.getAllItemsForWithdrawal
+);
 
-// ✅ เพิ่ม Route ใหม่สำหรับปรับปรุงจำนวน
-router.post('/inventory/adjust', inventoryController.adjustInventory);
+// --------------------------------------------------------
+// ✅ ROUTES ใช้ร่วมกัน (Staff + Manager)
+// --------------------------------------------------------
+router.post(
+  '/damaged',
+  authMiddleware(['marehouse_manager']), // 🔐 ทั้ง staff และ manage เข้าได้
+  inventoryController.reportDamaged
+);
+
+router.post(
+  '/inventory/adjust',
+  authMiddleware(['marehouse_manager']), // 🔐 ปรับจำนวน = เฉพาะ manager
+  inventoryController.adjustInventory
+);
 
 module.exports = router;

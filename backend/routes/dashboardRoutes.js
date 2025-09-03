@@ -5,12 +5,14 @@ const {
   getCategory,
   getMovements,
 } = require("../controllers/dashboardController");
+const authMiddleware = require("../middleware/auth"); // ✅ ใช้ไฟล์ auth.js ที่คุณมีแล้ว
 
 const router = express.Router();
 
-router.get("/dashboard/summary", getSummary);
-router.get("/dashboard/monthly", getMonthly);
-router.get("/dashboard/category", getCategory);
-router.get("/dashboard/movements", getMovements);
+// 🔐 ใส่ middleware → เฉพาะ role manage เข้าได้
+router.get("/dashboard/summary", authMiddleware(["marehouse_manager"]), getSummary);
+router.get("/dashboard/monthly", authMiddleware(["marehouse_manager"]), getMonthly);
+router.get("/dashboard/category", authMiddleware(["marehouse_manager"]), getCategory);
+router.get("/dashboard/movements", authMiddleware(["marehouse_manager"]), getMovements);
 
 module.exports = router;

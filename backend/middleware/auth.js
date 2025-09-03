@@ -1,0 +1,31 @@
+// middleware/auth.js
+
+const jwt = require("jsonwebtoken");
+
+function authMiddleware(roles = []) {
+  return (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ error: "No token provided" });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = decoded; // เก็บ payload ไว้ใช้งานต่อ
+
+      // ✅ ถ้ามีการกำหนด roles → ต้องเช็ก
+      if (roles.length > 0 && !roles.includes(decoded.role)) {
+        return res.status(403).json({ error: "Forbidden: insufficient rights" });
+      }
+
+      next();
+    } catch (err) {
+      return res.status(401).json({ error: "Invalid or expired token" });
+    }
+  };
+}
+
+module.exports = authMiddleware;
+ 

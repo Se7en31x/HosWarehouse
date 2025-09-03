@@ -1,11 +1,27 @@
-// routes/stockDeductionRoutes.js
 const express = require('express');
 const router = express.Router();
-const stockDeductionController = require('../controllers/stockDeductionController'); // Path นี้ถูกต้อง
+const stockDeductionController = require('../controllers/stockDeductionController');
+const authMiddleware = require('../middleware/auth');
 
-router.get('/stockDeduction/ready', stockDeductionController.getRequestsReadyForDeduction);
-router.get('/stockDeduction/:requestId/details', stockDeductionController.getDeductionRequestDetails); // เพิ่ม /details เพื่อความชัดเจน
+// ✅ ดึงคำขอที่พร้อมหักสต็อก
+router.get(
+  '/stockDeduction/ready',
+  authMiddleware(['manage', 'marehouse_manager']),
+  stockDeductionController.getRequestsReadyForDeduction
+);
 
-router.put('/stockDeduction/:requestId/process', stockDeductionController.processStockDeduction); // เปลี่ยน endpoint และ method
+// ✅ ดึงรายละเอียดคำขอหักสต็อก
+router.get(
+  '/stockDeduction/:requestId/details',
+  authMiddleware(['manage', 'marehouse_manager']),
+  stockDeductionController.getDeductionRequestDetails
+);
+
+// ✅ ดำเนินการหักสต็อก
+router.put(
+  '/stockDeduction/:requestId/process',
+  authMiddleware(['manage', 'marehouse_manager']),
+  stockDeductionController.processStockDeduction
+);
 
 module.exports = router;

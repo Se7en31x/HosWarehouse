@@ -1,14 +1,27 @@
 const express = require('express');
 const router = express.Router();
 const expiredController = require('../controllers/expiredController');
+const authMiddleware = require('../middleware/auth');
 
-// GET /api/expired
-router.get('/expired', expiredController.getAll);
+// ✅ ดึงข้อมูลของหมดอายุทั้งหมด
+router.get(
+  '/expired',
+  authMiddleware(['manage', 'marehouse_manager']),
+  expiredController.getAll
+);
 
-// POST /api/expired/action
-router.post('/expired/action', expiredController.addAction);
+// ✅ เพิ่ม action สำหรับ lot ที่หมดอายุ
+router.post(
+  '/expired/action',
+  authMiddleware(['manage', 'marehouse_manager']),
+  expiredController.addAction
+);
 
-// GET /api/expired/actions/:lot_id
-router.get('/expired/actions/:lot_id', expiredController.getActionsByLotId);
+// ✅ ดูประวัติการจัดการ lot ที่หมดอายุ
+router.get(
+  '/expired/actions/:lot_id',
+  authMiddleware(['manage', 'marehouse_manager']),
+  expiredController.getActionsByLotId
+);
 
 module.exports = router;

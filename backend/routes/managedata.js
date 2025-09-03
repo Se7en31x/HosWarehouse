@@ -1,19 +1,36 @@
 const express = require('express');
 const router = express.Router();
 const manageDataController = require('../controllers/manageDataController');
-const upload = require('../middleware/upload'); // เพิ่มตรงนี้
+const upload = require('../middleware/upload');
+const authMiddleware = require('../middleware/auth'); // ✅ import auth
 
+// ✅ ดึงข้อมูลทั้งหมด (เฉพาะผู้ดูแลคลัง)
+router.get(
+  '/manageData',
+  authMiddleware(['manage', 'marehouse_manager']),
+  manageDataController.getManageData
+);
 
-// ดึงข้อมูลทั้งหมด
-router.get('/manageData', manageDataController.getManageData);
+// ✅ ดึงข้อมูลรายการเดียว (เฉพาะผู้ดูแลคลัง)
+router.get(
+  '/manageData/:id',
+  authMiddleware(['manage', 'marehouse_manager']),
+  manageDataController.getItemById
+);
 
-// ดึงข้อมูลรายการเดียว (เช่นใช้ในหน้าแก้ไข)
-router.get('/manageData/:id', manageDataController.getItemById);
+// ✅ อัปเดตข้อมูลพัสดุ (เฉพาะผู้ดูแลคลัง)
+router.put(
+  '/manageData/:id',
+  authMiddleware(['manage', 'marehouse_manager']),
+  upload.single('item_img'),
+  manageDataController.updateItem
+);
 
-// อัปเดตข้อมูลพัสดุ
-router.put('/manageData/:id', upload.single('item_img'), manageDataController.updateItem);
-
-// ลบข้อมูลแบบ soft delete
-router.delete('/deleteItem/:id', manageDataController.deleteItem);
+// ✅ ลบข้อมูลแบบ soft delete (เฉพาะผู้ดูแลคลัง)
+router.delete(
+  '/deleteItem/:id',
+  authMiddleware(['manage', 'marehouse_manager']),
+  manageDataController.deleteItem
+);
 
 module.exports = router;

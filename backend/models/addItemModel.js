@@ -21,7 +21,7 @@ async function addBaseItem(client, data) {
       item_img, item_zone, item_barcode, item_sub_category,
       item_status, is_deleted,
       item_purchase_unit, item_conversion_rate,
-      is_borrowable  -- เพิ่มคอลัมน์ใหม่
+      is_borrowable
     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
     RETURNING item_id;
   `;
@@ -40,7 +40,7 @@ async function addBaseItem(client, data) {
     false,
     toNullOrValue(data.item_purchase_unit),
     toNullOrFloat(data.item_conversion_rate),
-    data.is_borrowable // เพิ่มค่าใหม่
+    data.is_borrowable
   ];
   const { rows } = await client.query(sql, vals);
   return rows[0].item_id;
@@ -50,8 +50,7 @@ async function addBaseItem(client, data) {
 async function insertMedicine(client, item_id, d) {
   const code = await generateAutoCode(client, {
     prefix: 'MED_',
-    tableName: 'medicine_detail',
-    orderBy: 'med_id',
+    seqName: 'medicine_seq'
   });
 
   await client.query(`
@@ -91,8 +90,7 @@ async function insertMedicine(client, item_id, d) {
 async function insertMedsup(client, item_id, d) {
   const code = await generateAutoCode(client, {
     prefix: 'MS_',
-    tableName: 'medsup_detail',
-    orderBy: 'medsup_id',
+    seqName: 'medsup_seq'
   });
 
   await client.query(`
@@ -117,8 +115,7 @@ async function insertMedsup(client, item_id, d) {
 async function insertEquipment(client, item_id, d) {
   const code = await generateAutoCode(client, {
     prefix: 'EQP_',
-    tableName: 'equipment_detail',
-    orderBy: 'equip_id',
+    seqName: 'equipment_seq'
   });
 
   await client.query(`
@@ -141,8 +138,7 @@ async function insertEquipment(client, item_id, d) {
 async function insertMedDevice(client, item_id, d) {
   const code = await generateAutoCode(client, {
     prefix: 'MD_',
-    tableName: 'meddevices_detail',
-    orderBy: 'meddevice_id',
+    seqName: 'meddevices_seq'
   });
 
   await client.query(`
@@ -169,8 +165,7 @@ async function insertMedDevice(client, item_id, d) {
 async function insertGeneral(client, item_id, d) {
   const code = await generateAutoCode(client, {
     prefix: 'GEN_',
-    tableName: 'generalsup_detail',
-    orderBy: 'gen_id',
+    seqName: 'generalsup_seq'
   });
 
   await client.query(`

@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const { pool } = require("../config/db");
+const authMiddleware = require("../middleware/auth");
 
 // ✅ API: ติดตามสถานะคำขอซื้อ (ฝ่ายคลัง)
-router.get("/purchase-status", async (req, res) => {
+router.get("/purchase-status", authMiddleware(["manage", "marehouse_manager"]), async (req, res) => {
   try {
     const sql = `
       SELECT 
@@ -39,7 +40,7 @@ router.get("/purchase-status", async (req, res) => {
 
     const { rows } = await pool.query(sql);
 
-    // ✅ map class สำหรับ CSS
+    // ✅ เพิ่ม statusClass ไว้ใช้ใน frontend
     const result = rows.map(r => ({
       ...r,
       statusClass: r.status.toLowerCase()
