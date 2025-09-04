@@ -16,7 +16,7 @@ export default function Cart() {
   const [requestDate, setRequestDate] = useState(today);
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const userId = 2; // TODO: replace with logged-in user id
+  const userId = 1; // TODO: replace with logged-in user id
 
   const [minReturnDate, setMinReturnDate] = useState('');
   const [maxReturnDate, setMaxReturnDate] = useState('');

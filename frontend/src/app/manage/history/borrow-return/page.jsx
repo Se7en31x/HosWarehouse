@@ -2,7 +2,7 @@
 
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import {manageAxios} from "@/app/utils/axiosInstance";
+import { manageAxios } from "@/app/utils/axiosInstance";
 import Swal from "sweetalert2";
 import styles from "./page.module.css";
 import { Trash2, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
@@ -72,7 +72,7 @@ const formatThaiDate = (isoString) => {
   if (!isoString) return "-";
   const d = new Date(isoString);
   try {
-    const parts = new Date(isoString).toISOString().split('T')[0].split('-');
+    const parts = new Date(isoString).toISOString().split("T")[0].split("-");
     if (parts.length === 3) {
       return `${parts[2]}/${parts[1]}/${parseInt(parts[0]) + 543}`;
     }
@@ -131,7 +131,8 @@ const getStatusBadgeClass = (status) => {
       return "st-default";
   }
 };
-const getUrgentBadgeClass = (isUrgent) => (isUrgent ? "st-urgent" : "st-default");
+const getUrgentBadgeClass = (isUrgent) =>
+  isUrgent ? "st-urgent" : "st-default";
 const getConditionBadgeClass = (condition) => {
   switch (condition) {
     case "normal":
@@ -151,17 +152,19 @@ const DetailModal = ({ show, onClose, data }) => {
   const getReturnStatus = (detail) => {
     const approvedQty = detail.approved_qty ?? 0;
     const returnedQty = detail.returned_total ?? 0;
-    
+
     if (returnedQty === 0) return "not_returned";
     if (returnedQty < approvedQty) return "partially_returned";
     return "returned_complete";
-  }
+  };
 
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modalContent}>
         <div className={styles.modalHeader}>
-          <h2 className={styles.modalTitle}>รายละเอียดคำขอ {data.request_code}</h2>
+          <h2 className={styles.modalTitle}>
+            รายละเอียดคำขอ {data.request_code}
+          </h2>
           <button onClick={onClose} className={styles.modalCloseBtn}>
             <X size={24} />
           </button>
@@ -170,22 +173,43 @@ const DetailModal = ({ show, onClose, data }) => {
           <div className={styles.modalSection}>
             <h4 className={styles.modalSectionTitle}>ข้อมูลคำขอ</h4>
             <div className={styles.modalGrid}>
-              <div className={styles.modalItem}><b>วันที่ยืม:</b> {formatThaiDate(data.request_date) || '-'}</div>
-              <div className={styles.modalItem}><b>กำหนดคืน:</b> {formatThaiDate(data.request_due_date) || '-'}</div>
-              <div className={styles.modalItem}><b>ผู้ยืม:</b> {data.requester_name || '-'}</div>
-              <div className={styles.modalItem}><b>แผนก:</b> {data.department || '-'}</div>
-              <div className={styles.modalItem}><b>ผู้อนุมัติ:</b> {data.approved_by_name || '-'}</div>
-              <div className={styles.modalItem}><b>วันที่อนุมัติ:</b> {formatThaiDate(data.approved_at) || '-'}</div>
               <div className={styles.modalItem}>
-                <b>ความเร่งด่วน:</b> 
-                <span className={`${styles.stBadge} ${styles[getUrgentBadgeClass(data.is_urgent)]}`}>
+                <b>วันที่ยืม:</b> {formatThaiDate(data.request_date) || "-"}
+              </div>
+              <div className={styles.modalItem}>
+                <b>กำหนดคืน:</b> {formatThaiDate(data.request_due_date) || "-"}
+              </div>
+              <div className={styles.modalItem}>
+                <b>ผู้ยืม:</b> {data.requester_name || "-"}
+              </div>
+              <div className={styles.modalItem}>
+                <b>แผนก:</b> {data.department || "-"}
+              </div>
+              <div className={styles.modalItem}>
+                <b>ผู้อนุมัติ:</b> {data.approved_by_name || "-"}
+              </div>
+              <div className={styles.modalItem}>
+                <b>วันที่อนุมัติ:</b> {formatThaiDate(data.approved_at) || "-"}
+              </div>
+              <div className={styles.modalItem}>
+                <b>ความเร่งด่วน:</b>
+                <span
+                  className={`${styles.stBadge} ${styles[getUrgentBadgeClass(
+                    data.is_urgent
+                  )]}`}
+                >
                   {data.is_urgent ? urgentMap.true : urgentMap.false}
                 </span>
               </div>
               <div className={styles.modalItem}>
-                <b>สถานะอนุมัติ:</b> 
-                <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(data.request_status)]}`}>
-                  {approvalStatusMap[data.request_status] || data.request_status}
+                <b>สถานะอนุมัติ:</b>
+                <span
+                  className={`${styles.stBadge} ${styles[getStatusBadgeClass(
+                    data.request_status
+                  )]}`}
+                >
+                  {approvalStatusMap[data.request_status] ||
+                    data.request_status}
                 </span>
               </div>
             </div>
@@ -195,48 +219,60 @@ const DetailModal = ({ show, onClose, data }) => {
             <div className={styles.itemListContainer}>
               {(data.details || []).map((detail, index) => {
                 const returnStatus = getReturnStatus(detail);
-                const returnStatusText = borrowStatusMap[returnStatus] || returnStatus;
+                const returnStatusText =
+                  borrowStatusMap[returnStatus] || returnStatus;
 
                 return (
                   <div key={index} className={styles.itemDetailCard}>
                     <div className={styles.itemHeader}>
                       <h5 className={styles.itemName}>{detail.item_name}</h5>
-                      <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(returnStatus)]}`}>
+                      <span
+                        className={`${styles.stBadge} ${styles[getStatusBadgeClass(
+                          returnStatus
+                        )]}`}
+                      >
                         {returnStatusText}
                       </span>
                     </div>
                     <div className={styles.itemInfoGrid}>
-                      <p><b>จำนวนที่อนุมัติ:</b> {detail.approved_qty ?? '-'} {detail.item_unit}</p>
-                      <p><b>จำนวนที่คืนแล้ว:</b> {detail.returned_total ?? 0} {detail.item_unit}</p>
-                      <p><b>จำนวนคงเหลือ:</b> {(detail.approved_qty ?? 0) - (detail.returned_total ?? 0)} {detail.item_unit}</p>
+                      <p>
+                        <b>จำนวนที่อนุมัติ:</b> {detail.approved_qty ?? "-"}{" "}
+                        {detail.item_unit}
+                      </p>
+                      <p>
+                        <b>จำนวนที่คืนแล้ว:</b>{" "}
+                        {detail.returned_total ?? 0} {detail.item_unit}
+                      </p>
+                      <p>
+                        <b>จำนวนคงเหลือ:</b>{" "}
+                        {(detail.approved_qty ?? 0) -
+                          (detail.returned_total ?? 0)}{" "}
+                        {detail.item_unit}
+                      </p>
                     </div>
 
+                    {/* ✅ แสดงเฉพาะประวัติการคืน */}
                     <div className={styles.subDetailSection}>
-                      <h6 className={styles.subDetailHeader}>ล็อตที่ถูกตัด</h6>
-                      {(detail.lots || []).length > 0 ? (
-                        <ul className={styles.subDetailList}>
-                          {detail.lots.map((lot, lotIndex) => (
-                            <li key={lotIndex}>
-                              <b>ล็อต:</b> {lot.lot_no} | <b>จำนวน:</b> {lot.qty} {detail.item_unit}
-                              {lot.exp_date && ` | <b>หมดอายุ:</b> ${formatThaiDate(lot.exp_date)}`}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className={styles.noSubData}>ไม่มีข้อมูลล็อต</p>
-                      )}
-                    </div>
-                    <div className={styles.subDetailSection}>
-                      <h6 className={styles.subDetailHeader}>ประวัติการคืน</h6>
+                      <h6 className={styles.subDetailHeader}>
+                        ประวัติการคืน
+                      </h6>
                       {(detail.returns || []).length > 0 ? (
                         <ul className={styles.subDetailList}>
                           {detail.returns.map((ret, retIndex) => (
                             <li key={retIndex}>
-                              <b>วันที่:</b> {formatThaiDate(ret.return_date)} | <b>จำนวน:</b> {ret.qty} {detail.item_unit}
-                              <span className={`${styles.stBadge} ${styles[getConditionBadgeClass(ret.condition)]}`}>
-                                {returnConditionMap[ret.condition] || ret.condition}
+                              <b>วันที่:</b>{" "}
+                              {formatThaiDate(ret.return_date)} |{" "}
+                              <b>จำนวน:</b> {ret.qty} {detail.item_unit}
+                              <span
+                                className={`${styles.stBadge} ${styles[getConditionBadgeClass(
+                                  ret.condition
+                                )]}`}
+                              >
+                                {returnConditionMap[ret.condition] ||
+                                  ret.condition}
                               </span>
-                              {ret.return_note && ` | <b>หมายเหตุ:</b> ${ret.return_note}`}
+                              {ret.return_note &&
+                                ` | <b>หมายเหตุ:</b> ${ret.return_note}`}
                             </li>
                           ))}
                         </ul>
@@ -255,7 +291,6 @@ const DetailModal = ({ show, onClose, data }) => {
   );
 };
 
-
 export default function BorrowHistory() {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -265,7 +300,7 @@ export default function BorrowHistory() {
   const [searchText, setSearchText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
-  
+
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
 
@@ -299,7 +334,7 @@ export default function BorrowHistory() {
         });
 
         const hasReturns = req.details?.some((d) => d.returned_total > 0);
-        
+
         let overallReturnStatus = "not_returned";
         if (allReturned) {
           overallReturnStatus = "returned_complete";
@@ -313,8 +348,11 @@ export default function BorrowHistory() {
         };
       })
       .filter((req) => {
-        const okStatus = filterStatus === "all" || req.request_status === filterStatus;
-        const okReturn = filterReturn === "all" || req.overall_return_status === filterReturn;
+        const okStatus =
+          filterStatus === "all" || req.request_status === filterStatus;
+        const okReturn =
+          filterReturn === "all" ||
+          req.overall_return_status === filterReturn;
         const okUrgent =
           filterUrgent === "all" ||
           (filterUrgent === "urgent" && req.is_urgent) ||
@@ -323,7 +361,9 @@ export default function BorrowHistory() {
           searchText === "" ||
           req.request_code?.toLowerCase().includes(searchText.toLowerCase()) ||
           req.department?.toLowerCase().includes(searchText.toLowerCase()) ||
-          req.requester_name?.toLowerCase().includes(searchText.toLowerCase()) ||
+          req.requester_name?.toLowerCase().includes(
+            searchText.toLowerCase()
+          ) ||
           (req.details || []).some((d) =>
             d.item_name?.toLowerCase().includes(searchText.toLowerCase())
           );
@@ -346,9 +386,25 @@ export default function BorrowHistory() {
     } else if (currentPage <= 4) {
       pages.push(1, 2, 3, 4, 5, "...", totalPages);
     } else if (currentPage >= totalPages - 3) {
-      pages.push(1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      pages.push(
+        1,
+        "...",
+        totalPages - 4,
+        totalPages - 3,
+        totalPages - 2,
+        totalPages - 1,
+        totalPages
+      );
     } else {
-      pages.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
+      pages.push(
+        1,
+        "...",
+        currentPage - 1,
+        currentPage,
+        currentPage + 1,
+        "...",
+        totalPages
+      );
     }
     return pages;
   };
@@ -360,19 +416,17 @@ export default function BorrowHistory() {
     setSearchText("");
     setCurrentPage(1);
   };
-  
+
   const handleShowDetail = (request) => {
     setSelectedRequest(request);
     setShowDetailModal(true);
   };
-  
+
   return (
     <div className={styles.mainHome}>
       <div className={styles.infoContainer}>
         <div className={styles.pageBar}>
-          <h1 className={styles.pageTitle}>
-            ประวัติการยืม/คืน
-          </h1>
+          <h1 className={styles.pageTitle}>ประวัติการยืม/คืน</h1>
         </div>
 
         {/* Toolbar */}
@@ -455,7 +509,9 @@ export default function BorrowHistory() {
             <div className={styles.headerItem}>สถานะอนุมัติ</div>
             <div className={styles.headerItem}>สถานะการคืน</div>
             <div className={styles.headerItem}>จำนวน</div>
-            <div className={`${styles.headerItem} ${styles.centerCell}`}>ตรวจสอบ</div>
+            <div className={`${styles.headerItem} ${styles.centerCell}`}>
+              ตรวจสอบ
+            </div>
           </div>
 
           <div className={styles.inventory}>
@@ -467,29 +523,59 @@ export default function BorrowHistory() {
               pageRows.map((req, idx) => {
                 const overallBorrow = req.overall_return_status;
                 return (
-                  <div key={req.request_id || `row-${idx}`} className={`${styles.tableGrid} ${styles.tableRow}`}>
-                    <div className={styles.tableCell}>{formatThaiDate(req.request_date)}</div>
-                    <div className={styles.tableCell}>{req.request_code || "-"}</div>
-                    <div className={styles.tableCell}>{req.requester_name || "-"}</div>
-                    <div className={styles.tableCell}>{req.department || "-"}</div>
-                    <div className={styles.tableCell}>{formatThaiDate(req.request_due_date)}</div>
+                  <div
+                    key={req.request_id || `row-${idx}`}
+                    className={`${styles.tableGrid} ${styles.tableRow}`}
+                  >
                     <div className={styles.tableCell}>
-                      <span className={`${styles.stBadge} ${styles[getUrgentBadgeClass(req.is_urgent)]}`}>
+                      {formatThaiDate(req.request_date)}
+                    </div>
+                    <div className={styles.tableCell}>
+                      {req.request_code || "-"}
+                    </div>
+                    <div className={styles.tableCell}>
+                      {req.requester_name || "-"}
+                    </div>
+                    <div className={styles.tableCell}>
+                      {req.department || "-"}
+                    </div>
+                    <div className={styles.tableCell}>
+                      {formatThaiDate(req.request_due_date)}
+                    </div>
+                    <div className={styles.tableCell}>
+                      <span
+                        className={`${styles.stBadge} ${styles[getUrgentBadgeClass(
+                          req.is_urgent
+                        )]}`}
+                      >
                         {req.is_urgent ? urgentMap.true : urgentMap.false}
                       </span>
                     </div>
                     <div className={styles.tableCell}>
-                      <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(req.request_status)]}`}>
-                        {approvalStatusMap[req.request_status] || req.request_status}
+                      <span
+                        className={`${styles.stBadge} ${styles[getStatusBadgeClass(
+                          req.request_status
+                        )]}`}
+                      >
+                        {approvalStatusMap[req.request_status] ||
+                          req.request_status}
                       </span>
                     </div>
                     <div className={styles.tableCell}>
-                      <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(overallBorrow)]}`}>
+                      <span
+                        className={`${styles.stBadge} ${styles[getStatusBadgeClass(
+                          overallBorrow
+                        )]}`}
+                      >
                         {borrowStatusMap[overallBorrow] || overallBorrow}
                       </span>
                     </div>
-                    <div className={styles.tableCell}>{req.details?.length ?? 0}</div>
-                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                    <div className={styles.tableCell}>
+                      {req.details?.length ?? 0}
+                    </div>
+                    <div
+                      className={`${styles.tableCell} ${styles.centerCell}`}
+                    >
                       <button
                         className={styles.actionButton}
                         onClick={() => handleShowDetail(req)}
@@ -509,7 +595,9 @@ export default function BorrowHistory() {
             <li>
               <button
                 className={styles.pageButton}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                onClick={() =>
+                  setCurrentPage((p) => Math.max(1, p - 1))
+                }
                 disabled={currentPage === 1}
                 aria-label="หน้าก่อนหน้า"
               >
@@ -518,11 +606,15 @@ export default function BorrowHistory() {
             </li>
             {getPageNumbers().map((p, idx) =>
               p === "..." ? (
-                <li key={`ellipsis-${idx}`} className={styles.ellipsis}>…</li>
+                <li key={`ellipsis-${idx}`} className={styles.ellipsis}>
+                  …
+                </li>
               ) : (
                 <li key={`page-${p}`}>
                   <button
-                    className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
+                    className={`${styles.pageButton} ${
+                      p === currentPage ? styles.activePage : ""
+                    }`}
                     onClick={() => setCurrentPage(p)}
                     aria-label={`หน้า ${p}`}
                     aria-current={p === currentPage ? "page" : undefined}
@@ -535,7 +627,9 @@ export default function BorrowHistory() {
             <li>
               <button
                 className={styles.pageButton}
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
                 disabled={currentPage >= totalPages}
                 aria-label="หน้าถัดไป"
               >

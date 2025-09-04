@@ -67,7 +67,7 @@ export default function HistoryPage() {
       {/* Header */}
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>ประวัติคลัง</h1>
+          <h1 className={styles.title}>ประวัติการดำเนินการคลัง</h1>
           <p className={styles.subtitle}>ติดตามบันทึกการเคลื่อนไหวของคลัง</p>
         </div>
       </div>

@@ -1,8 +1,7 @@
 // File: WithdrawHistory.js
-
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import {manageAxios} from "@/app/utils/axiosInstance";
+import { manageAxios } from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
 import { Trash2, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -10,7 +9,7 @@ import Swal from "sweetalert2";
 
 const Select = dynamic(() => import("react-select"), { ssr: false });
 
-/* react-select styles (identical to ImportHistory) */
+/* react-select styles */
 const customSelectStyles = {
   control: (base, state) => ({
     ...base,
@@ -29,7 +28,6 @@ const customSelectStyles = {
     border: "1px solid #e5e7eb",
     zIndex: 9000,
   }),
-  menuPortal: (base) => ({ ...base, zIndex: 9000 }),
   option: (base, state) => ({
     ...base,
     backgroundColor: state.isFocused ? "#f1f5ff" : "#fff",
@@ -37,10 +35,42 @@ const customSelectStyles = {
     padding: "6px 10px",
     fontSize: "0.9rem",
   }),
-  placeholder: (base) => ({ ...base, color: "#9ca3af", fontSize: "0.9rem" }),
-  clearIndicator: (base) => ({ ...base, padding: 4 }),
-  dropdownIndicator: (base) => ({ ...base, padding: 4 }),
 };
+
+/* mapping */
+const statusMap = {
+  draft: "ร่าง",
+  waiting_approval: "รอการอนุมัติ",
+  waiting_approval_detail: "รออนุมัติ", // ✅ เพิ่มอันนี้
+  approved_all: "อนุมัติทั้งหมด",
+  approved_partial: "อนุมัติบางส่วน",
+  approved_partial_and_rejected_partial: "อนุมัติบางส่วน",
+  rejected_all: "ปฏิเสธทั้งหมด",
+  canceled: "ยกเลิก",
+  approved: "อนุมัติ",
+  rejected: "ปฏิเสธ",
+};
+
+const processingStatusMap = {
+  waiting_approval: "รออนุมัติ",
+  in_progress: "กำลังดำเนินการ",
+  completed: "เสร็จสิ้น",
+  canceled: "ยกเลิก",
+  pending: "รอดำเนินการ",
+};
+
+const STATUS_OPTIONS = [
+  { value: "all", label: "ทุกสถานะ" },
+  ...Object.entries(statusMap).map(([k, v]) => ({ value: k, label: v })),
+];
+
+const URGENT_OPTIONS = [
+  { value: "all", label: "เร่งด่วน/ปกติ" },
+  { value: "urgent", label: "เฉพาะเร่งด่วน" },
+  { value: "normal", label: "เฉพาะปกติ" },
+];
+
+/* badge class */
 const getStatusBadgeClass = (status) => {
   switch (status) {
     case "approved_all":
@@ -50,6 +80,7 @@ const getStatusBadgeClass = (status) => {
     case "approved_partial":
     case "approved_partial_and_rejected_partial":
     case "waiting_approval":
+    case "waiting_approval_detail": // ✅ เพิ่มตรงนี้
     case "in_progress":
       return "stLow"; // เหลือง
     case "rejected_all":
@@ -62,54 +93,6 @@ const getStatusBadgeClass = (status) => {
       return "stHold"; // เทา
   }
 };
-/* mapping */
-const statusMap = {
-  draft: "ร่าง",
-  waiting_approval: "รอการอนุมัติ",
-  approved_all: "อนุมัติทั้งหมด",
-  approved_partial: "อนุมัติบางส่วน",
-  approved_partial_and_rejected_partial: "อนุมัติบางส่วน",
-  rejected_all: "ปฏิเสธทั้งหมด",
-  canceled: "ยกเลิก",
-  // New mapping for individual item statuses
-  approved: "อนุมัติ",
-  rejected: "ปฏิเสธ",
-};
-
-const processingStatusMap = {
-  pending: "รอดำเนินการ",
-  in_progress: "กำลังดำเนินการ",
-  completed: "เสร็จสิ้น",
-};
-
-const STATUS_OPTIONS = [
-  { value: "all", label: "ทุกสถานะ" },
-  ...Object.entries(statusMap).map(([k, v]) => ({ value: k, label: v })),
-];
-const URGENT_OPTIONS = [
-  { value: "all", label: "เร่งด่วน/ปกติ" },
-  { value: "urgent", label: "เฉพาะเร่งด่วน" },
-  { value: "normal", label: "เฉพาะปกติ" },
-];
-
-/* badge class mapping */
-const getProcessingBadgeClass = (processingStatus) => {
-  switch (processingStatus) {
-    case "completed":
-      return "stAvailable"; // เขียว
-    case "in_progress":
-    case "preparing":
-    case "approved_in_queue":
-      return "stLow"; // เหลือง
-    case "pending":
-      return "stHold"; // เทา
-    case null:
-    default:
-      return "stOut"; // แดง หรือ “ไม่มีการดำเนินการ”
-  }
-};
-
-const getUrgentBadgeClass = (isUrgent) => (isUrgent ? "stOut" : "stHold");
 
 /* helper */
 const formatThaiDate = (isoString) => {
@@ -123,9 +106,33 @@ const formatThaiDate = (isoString) => {
   });
 };
 
+/* overall processing logic */
+const getOverallProcessingStatus = (req) => {
+  if (["canceled", "rejected_all"].includes(req.request_status)) {
+    return "canceled";
+  }
+  if (req.request_status === "waiting_approval" || req.request_status === "draft") {
+    return "waiting_approval";
+  }
+  if (
+    ["approved_all", "approved_partial", "approved_partial_and_rejected_partial", "approved"].includes(
+      req.request_status
+    )
+  ) {
+    if (!req.details || req.details.length === 0) return "in_progress";
+    if (req.details.every((d) => d.processing_status === "completed")) {
+      return "completed";
+    }
+    return "in_progress";
+  }
+  return "pending";
+};
+
 // Modal Component
 const DetailModal = ({ show, onClose, data }) => {
   if (!show || !data) return null;
+
+  const overallProcessing = getOverallProcessingStatus(data);
 
   return (
     <div className={styles.modalOverlay}>
@@ -144,8 +151,16 @@ const DetailModal = ({ show, onClose, data }) => {
               <div className={styles.modalItem}><b>แผนก:</b> {data.department || "-"}</div>
               <div className={styles.modalItem}><b>ผู้ขอ:</b> {data.requester_name || "-"}</div>
               <div className={styles.modalItem}><b>ผู้อนุมัติ:</b> {data.approved_by_name || "-"}</div>
-              <div className={styles.modalItem}><b>จำนวน:</b> {data.total_items || 0} รายการ </div>
-              <div className={styles.modalItem}><b>สถานะ:</b> {statusMap[data.request_status] || data.request_status}</div>
+              <div className={styles.modalItem}>
+                <b>สถานะคำขอ:</b>{" "}
+                {statusMap[data.request_status] || data.request_status}
+              </div>
+              <div className={styles.modalItem}>
+                <b>สถานะดำเนินการ:</b>{" "}
+                <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(overallProcessing)]}`}>
+                  {processingStatusMap[overallProcessing]}
+                </span>
+              </div>
               <div className={styles.modalItem}><b>ความเร่งด่วน:</b> {data.is_urgent ? "ด่วน" : "ปกติ"}</div>
             </div>
           </div>
@@ -178,7 +193,7 @@ const DetailModal = ({ show, onClose, data }) => {
                         </span>
                       </td>
                       <td>
-                        <span className={`${styles.stBadge} ${styles[getProcessingBadgeClass(item.processing_status)]}`}>
+                        <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(item.processing_status)]}`}>
                           {processingStatusMap[item.processing_status] || "-"}
                         </span>
                       </td>
@@ -295,7 +310,6 @@ export default function WithdrawHistory() {
                 onChange={(opt) => setFilterStatus(opt?.value || "all")}
                 styles={customSelectStyles}
                 placeholder="เลือกสถานะ..."
-                aria-label="กรองตามสถานะ"
               />
             </div>
             <div className={styles.filterGroup}>
@@ -308,7 +322,6 @@ export default function WithdrawHistory() {
                 onChange={(opt) => setFilterUrgent(opt?.value || "all")}
                 styles={customSelectStyles}
                 placeholder="เลือกความเร่งด่วน..."
-                aria-label="กรองตามความเร่งด่วน"
               />
             </div>
           </div>
@@ -316,22 +329,17 @@ export default function WithdrawHistory() {
             <div className={styles.filterGroup}>
               <label className={styles.label}>ค้นหา</label>
               <div className={styles.searchBox}>
-                <Search size={14} className={styles.searchIcon} aria-hidden="true" />
+                <Search size={14} className={styles.searchIcon} />
                 <input
                   type="text"
                   className={styles.input}
                   placeholder="รหัส / แผนก / ผู้ขอ"
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  aria-label="ค้นหาคำขอ"
                 />
               </div>
             </div>
-            <button
-              className={`${styles.ghostBtn} ${styles.clearButton}`}
-              onClick={clearFilters}
-              aria-label="ล้างตัวกรองทั้งหมด"
-            >
+            <button className={`${styles.ghostBtn} ${styles.clearButton}`} onClick={clearFilters}>
               <Trash2 size={16} /> ล้างตัวกรอง
             </button>
           </div>
@@ -344,62 +352,52 @@ export default function WithdrawHistory() {
             <div className={styles.headerItem}>เลขที่คำขอ</div>
             <div className={styles.headerItem}>แผนก</div>
             <div className={styles.headerItem}>ผู้ขอ</div>
-            <div className={styles.headerItem}>จำนวนรายการ</div>
-            <div className={styles.headerItem}>รวมจำนวน</div>
-            <div className={`${styles.headerItem} ${styles.centerCell}`}>สถานะ</div>
-            <div className={`${styles.headerItem} ${styles.centerCell}`}>ด่วน</div>
+            <div className={styles.headerItem}>จำนวนในรายการ</div>
+            <div className={`${styles.headerItem} ${styles.centerCell}`}>สถานะคำขอ</div>
+            <div className={`${styles.headerItem} ${styles.centerCell}`}>สถานะดำเนินการ</div>
             <div className={`${styles.headerItem} ${styles.centerCell}`}>ตรวจสอบ</div>
           </div>
 
-          <div className={styles.inventory} style={{ "--rows-per-page": rowsPerPage }}>
+          <div className={styles.inventory}>
             {isLoading ? (
               <div className={styles.loadingContainer}>กำลังโหลดข้อมูล...</div>
             ) : pageRows.length === 0 ? (
-              <div className={styles.noDataMessage}>ไม่พบข้อมูลคำขอเบิก/ยืม</div>
+              <div className={styles.noDataMessage}>ไม่พบข้อมูลคำขอเบิก</div>
             ) : (
-              pageRows.map((req) => (
-                <div key={req.request_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
-                  <div className={styles.tableCell}>{formatThaiDate(req.request_date)}</div>
-                  <div className={styles.tableCell}>{req.request_code || "-"}</div>
-                  <div className={styles.tableCell}>{req.department || "-"}</div>
-                  <div className={styles.tableCell}>{req.requester_name || "-"}</div>
-                  <div className={styles.tableCell}>{req.total_items || 0}</div>
-                  <div className={styles.tableCell}>{req.total_qty || 0}</div>
-                  <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                    <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(req.request_status)]}`}>
-                      {statusMap[req.request_status] || req.request_status}
-                    </span>
-                  </div>
-                  <div className={styles.tableCell}>
+              pageRows.map((req) => {
+                const overallProcessing = getOverallProcessingStatus(req);
+                return (
+                  <div key={req.request_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                    <div className={styles.tableCell}>{formatThaiDate(req.request_date)}</div>
+                    <div className={styles.tableCell}>{req.request_code || "-"}</div>
+                    <div className={styles.tableCell}>{req.department || "-"}</div>
+                    <div className={styles.tableCell}>{req.requester_name || "-"}</div>
+                    <div className={styles.tableCell}>{req.details?.length || 0}</div>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                      <span className={`${styles.stBadge} ${styles[getUrgentBadgeClass(req.is_urgent)]}`}>
-                        {req.is_urgent ? "ด่วน" : "ปกติ"}
+                      <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(req.request_status)]}`}>
+                        {statusMap[req.request_status] || req.request_status}
                       </span>
                     </div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(overallProcessing)]}`}>
+                        {processingStatusMap[overallProcessing]}
+                      </span>
+                    </div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      <button className={styles.actionButton} onClick={() => handleShowDetail(req)}>
+                        <Search size={18} />
+                      </button>
+                    </div>
                   </div>
-                  <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                    <button
-                      className={styles.actionButton}
-                      onClick={() => handleShowDetail(req)}
-                      aria-label={`ดูรายละเอียดคำขอ ${req.request_code}`}
-                    >
-                      <Search size={18} />
-                    </button>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 
           {/* Pagination */}
           <ul className={styles.paginationControls}>
             <li>
-              <button
-                className={styles.pageButton}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                aria-label="หน้าก่อนหน้า"
-              >
+              <button className={styles.pageButton} onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
                 <ChevronLeft size={16} />
               </button>
             </li>
@@ -411,8 +409,6 @@ export default function WithdrawHistory() {
                   <button
                     className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
                     onClick={() => setCurrentPage(p)}
-                    aria-label={`หน้า ${p}`}
-                    aria-current={p === currentPage ? "page" : undefined}
                   >
                     {p}
                   </button>
@@ -420,23 +416,14 @@ export default function WithdrawHistory() {
               )
             )}
             <li>
-              <button
-                className={styles.pageButton}
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage >= totalPages}
-                aria-label="หน้าถัดไป"
-              >
+              <button className={styles.pageButton} onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages}>
                 <ChevronRight size={16} />
               </button>
             </li>
           </ul>
         </div>
       </div>
-      <DetailModal
-        show={showDetailModal}
-        onClose={() => setShowDetailModal(false)}
-        data={selectedRequest}
-      />
+      <DetailModal show={showDetailModal} onClose={() => setShowDetailModal(false)} data={selectedRequest} />
     </div>
   );
 }

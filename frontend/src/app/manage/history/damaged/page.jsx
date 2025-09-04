@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
-import {manageAxios} from "@/app/utils/axiosInstance";
+import { manageAxios } from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
 import { Trash2, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -39,18 +39,7 @@ const customSelectStyles = {
   dropdownIndicator: (base) => ({ ...base, padding: 4 }),
 };
 
-/* Map สถานะและประเภท */
-const statusMap = {
-  waiting: "รอดำเนินการ",
-  sent_repair: "ส่งซ่อม",
-  repaired: "ซ่อมเสร็จแล้ว",
-  discarded: "จำหน่ายทิ้ง",
-  disposed: "เลิกใช้งาน",
-};
-const STATUS_OPTIONS = [
-  { value: "all", label: "ทุกสถานะ" },
-  ...Object.entries(statusMap).map(([k, v]) => ({ value: k, label: v })),
-];
+/* Map ประเภท */
 const TYPE_OPTIONS = [
   { value: "all", label: "ทุกประเภท" },
   { value: "damaged", label: "ชำรุด" },
@@ -61,28 +50,10 @@ const SOURCE_MAP = {
   stock_check: "ตรวจสต็อก",
 };
 
-/* badge class mapping */
-const getStatusBadgeClass = (status) => {
-  switch (status) {
-    case "repaired":
-      return "stAvailable"; // เขียว
-    case "sent_repair":
-      return "stLow"; // เหลือง
-    case "waiting":
-      return "stOut"; // แดง
-    case "discarded":
-    case "disposed":
-      return "stHold"; // เทา
-    default:
-      return "stHold";
-  }
-};
-
 export default function DamagedHistoryPage() {
   const [records, setRecords] = useState([]);
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const ROWS_PER_PAGE = 10;
@@ -116,11 +87,10 @@ export default function DamagedHistoryPage() {
         search === "" ||
         r.item_name?.toLowerCase().includes(search.toLowerCase()) ||
         r.reported_by?.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus = statusFilter === "all" || r.damaged_status === statusFilter;
       const matchesType = typeFilter === "all" || r.damage_type === typeFilter;
-      return matchesSearch && matchesStatus && matchesType;
+      return matchesSearch && matchesType;
     });
-  }, [records, search, statusFilter, typeFilter]);
+  }, [records, search, typeFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRecords.length / ROWS_PER_PAGE));
   const start = (currentPage - 1) * ROWS_PER_PAGE;
@@ -128,7 +98,7 @@ export default function DamagedHistoryPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, statusFilter, typeFilter]);
+  }, [search, typeFilter]);
 
   const getPageNumbers = () => {
     const pages = [];
@@ -146,7 +116,6 @@ export default function DamagedHistoryPage() {
 
   const clearFilters = () => {
     setSearch("");
-    setStatusFilter("all");
     setTypeFilter("all");
     setCurrentPage(1);
   };
@@ -163,20 +132,6 @@ export default function DamagedHistoryPage() {
         {/* Toolbar */}
         <div className={styles.filterBar}>
           <div className={styles.filterLeft}>
-            <div className={styles.filterGroup}>
-              <label className={styles.label}>สถานะ</label>
-              <Select
-                isClearable
-                isSearchable={false}
-                options={STATUS_OPTIONS}
-                value={STATUS_OPTIONS.find((o) => o.value === statusFilter) || null}
-                onChange={(opt) => setStatusFilter(opt?.value || "all")}
-                styles={customSelectStyles}
-                placeholder="เลือกสถานะ..."
-                aria-label="กรองตามสถานะ"
-                menuPortalTarget={typeof window !== "undefined" ? document.body : undefined}
-              />
-            </div>
             <div className={styles.filterGroup}>
               <label className={styles.label}>ประเภท</label>
               <Select
@@ -225,7 +180,6 @@ export default function DamagedHistoryPage() {
             <div className={styles.headerItem}>จำนวน</div>
             <div className={styles.headerItem}>ประเภท</div>
             <div className={styles.headerItem}>ที่มา</div>
-            <div className={`${styles.headerItem} ${styles.centerCell}`}>สถานะ</div>
             <div className={styles.headerItem}>ผู้รายงาน</div>
             <div className={`${styles.headerItem} ${styles.centerCell}`}>ตรวจสอบ</div>
           </div>
@@ -246,11 +200,6 @@ export default function DamagedHistoryPage() {
                   </div>
                   <div className={styles.tableCell}>
                     {SOURCE_MAP[r.source_type] || "-"}
-                  </div>
-                  <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                    <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(r.damaged_status)]}`}>
-                      {STATUS_OPTIONS.find((s) => s.value === r.damaged_status)?.label || "-"}
-                    </span>
                   </div>
                   <div className={styles.tableCell}>{r.reported_by || "-"}</div>
                   <div className={`${styles.tableCell} ${styles.centerCell}`}>
@@ -329,12 +278,6 @@ export default function DamagedHistoryPage() {
                 <p><b>จำนวน:</b> {selected.damaged_qty || 0} {selected.item_unit || ""}</p>
                 <p><b>ประเภท:</b> {TYPE_OPTIONS.find((t) => t.value === selected.damage_type)?.label || "-"}</p>
                 <p><b>ที่มา:</b> {SOURCE_MAP[selected.source_type] || "-"}</p>
-                <p>
-                  <b>สถานะ:</b>{" "}
-                  <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(selected.damaged_status)]}`}>
-                    {STATUS_OPTIONS.find((s) => s.value === selected.damaged_status)?.label || "-"}
-                  </span>
-                </p>
                 <p><b>ผู้รายงาน:</b> {selected.reported_by || "-"}</p>
                 {selected.damaged_note && (
                   <p><b>หมายเหตุ:</b> {selected.damaged_note}</p>

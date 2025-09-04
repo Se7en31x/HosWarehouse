@@ -183,7 +183,6 @@
     minmax(100px, 1fr) /* จำนวน */
     minmax(100px, 1fr) /* ประเภท */
     minmax(120px, 1.2fr) /* ที่มา */
-    minmax(100px, 1fr) /* สถานะ */
     minmax(120px, 1.2fr) /* ผู้รายงาน */
     minmax(110px, 1.1fr); /* จัดการ */
   align-items: center;
