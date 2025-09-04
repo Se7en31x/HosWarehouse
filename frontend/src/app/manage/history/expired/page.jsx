@@ -1,13 +1,17 @@
-'use client';
-import { useEffect, useState, useMemo } from "react";
-import {manageAxios} from "@/app/utils/axiosInstance";
-import styles from "./page.module.css";
+// ExpiredHistoryPage.js
+"use client";
+
+import { useState, useEffect, useMemo } from "react";
+import Swal from "sweetalert2";
+import { manageAxios } from "@/app/utils/axiosInstance";
 import { Trash2, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 import dynamic from "next/dynamic";
+import styles from "./page.module.css";
 
+// --- Imports ---
 const Select = dynamic(() => import("react-select"), { ssr: false });
 
-/* react-select styles */
+// --- React Select Styles ---
 const customSelectStyles = {
   control: (base, state) => ({
     ...base,
@@ -23,6 +27,7 @@ const customSelectStyles = {
     ...base,
     borderRadius: "0.5rem",
     marginTop: 6,
+    boxShadow: "none",
     border: "1px solid #e5e7eb",
     zIndex: 9000,
   }),
@@ -39,69 +44,167 @@ const customSelectStyles = {
   dropdownIndicator: (base) => ({ ...base, padding: 4 }),
 };
 
-/* Map สถานะ */
+// --- Constants and Mappings ---
 const statusMap = {
   pending: "รอดำเนินการ",
   partial: "ทำลายบางส่วนแล้ว",
   done: "ทำลายครบแล้ว",
 };
+
 const STATUS_OPTIONS = [
   { value: "all", label: "ทุกสถานะ" },
   ...Object.entries(statusMap).map(([k, v]) => ({ value: k, label: v })),
 ];
 
-/* badge class mapping */
+// --- Helper Functions ---
+const formatThaiDate = (isoString) => {
+  if (!isoString) return "-";
+  try {
+    const parts = new Date(isoString).toISOString().split("T")[0].split("-");
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parseInt(parts[0]) + 543}`;
+    }
+  } catch (e) {
+    // Fallback
+  }
+  return new Date(isoString).toLocaleString("th-TH", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Bangkok",
+  });
+};
+
+const getStatusKey = (expiredQty, disposedQty) => {
+  const remaining = (expiredQty || 0) - (disposedQty || 0);
+  if (remaining <= 0) return "done";
+  if (disposedQty > 0) return "partial";
+  return "pending";
+};
+
 const getStatusBadgeClass = (status) => {
-  switch (status) {
+  switch (status?.toLowerCase()) {
     case "done":
-      return "stAvailable"; // เขียว
+      return "st-approved";
     case "partial":
-      return "stLow"; // เหลือง
+      return "st-warning";
     case "pending":
-      return "stOut"; // แดง
+      return "st-rejected";
     default:
-      return "stHold"; // เทา
+      return "st-default";
   }
 };
 
+// --- Modal Component ---
+const DetailModal = ({ show, onClose, data }) => {
+  if (!show || !data) return null;
+
+  const statusKey = getStatusKey(data.expired_qty, data.disposed_qty);
+
+  return (
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContent}>
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle}>รายละเอียด Lot {data.lot_no || "-"}</h2>
+          <button onClick={onClose} className={styles.modalCloseBtn}>
+            <X size={24} />
+          </button>
+        </div>
+        <div className={styles.modalBody}>
+          <div className={styles.modalSection}>
+            <h4 className={styles.modalSectionTitle}>ข้อมูลของหมดอายุ</h4>
+            <div className={styles.modalGrid}>
+              <div className={styles.modalItem}>
+                <b>วันที่บันทึก:</b> {formatThaiDate(data.expired_date) || "-"}
+              </div>
+              <div className={styles.modalItem}>
+                <b>Lot No:</b> {data.lot_no || "-"}
+              </div>
+              <div className={styles.modalItem}>
+                <b>พัสดุ:</b> {data.item_name || "-"}
+              </div>
+              <div className={styles.modalItem}>
+                <b>จำนวนรับเข้า:</b> {data.qty_imported || 0} {data.item_unit || "-"}
+              </div>
+              <div className={styles.modalItem}>
+                <b>จำนวนหมดอายุ:</b> {data.expired_qty || 0} {data.item_unit || "-"}
+              </div>
+              <div className={styles.modalItem}>
+                <b>ทำลายแล้ว:</b> {data.disposed_qty || 0} {data.item_unit || "-"}
+              </div>
+              <div className={styles.modalItem}>
+                <b>คงเหลือ:</b> {(data.expired_qty || 0) - (data.disposed_qty || 0)} {data.item_unit || "-"}
+              </div>
+              <div className={styles.modalItem}>
+                <b>วันหมดอายุ:</b> {formatThaiDate(data.exp_date) || "-"}
+              </div>
+              <div className={styles.modalItem}>
+                <b>สถานะ:</b>{" "}
+                <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(statusKey)]}`}>
+                  {statusMap[statusKey]}
+                </span>
+              </div>
+              <div className={styles.modalItem}>
+                <b>รายงานโดย:</b> {data.user_name || "ระบบ"}
+              </div>
+              <div className={styles.modalItem}>
+                <b>จัดการโดย:</b> {data.last_disposed_by || "ยังไม่มีข้อมูล"}
+              </div>
+              {data.note && (
+                <div className={styles.modalItem}>
+                  <b>หมายเหตุ:</b> {data.note}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Main Component ---
 export default function ExpiredHistoryPage() {
+  // --- State ---
   const [records, setRecords] = useState([]);
-  const [selected, setSelected] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null);
   const rowsPerPage = 10;
 
+  // --- Data Fetching ---
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
       try {
         const res = await manageAxios.get("/history/expired");
-        setRecords(Array.isArray(res.data) ? res.data : []);
+        if (isMounted) {
+          setRecords(Array.isArray(res.data) ? res.data.filter(Boolean) : []);
+        }
       } catch (err) {
         console.error("Error fetching expired history:", err);
+        Swal.fire({
+          icon: "error",
+          title: "ข้อผิดพลาด",
+          text: "ไม่สามารถโหลดข้อมูลจากเซิร์ฟเวอร์ได้",
+          confirmButtonColor: "#008dda",
+        });
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
     };
     fetchData();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const formatThaiDate = (isoString) => {
-    if (!isoString) return "-";
-    const d = new Date(isoString);
-    return d.toLocaleString("th-TH", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      timeZone: "Asia/Bangkok",
-    });
-  };
-
-  const getStatusKey = (expiredQty, disposedQty) => {
-    const remaining = (expiredQty || 0) - (disposedQty || 0);
-    if (remaining <= 0) return "done";
-    if (disposedQty > 0) return "partial";
-    return "pending";
-  };
-
+  // --- Data Filtering ---
   const filteredData = useMemo(() => {
     return records.filter((r) => {
       const statusKey = getStatusKey(r.expired_qty, r.disposed_qty);
@@ -114,9 +217,12 @@ export default function ExpiredHistoryPage() {
     });
   }, [records, statusFilter, search]);
 
+  // --- Pagination ---
   const totalPages = Math.max(1, Math.ceil(filteredData.length / rowsPerPage));
-  const start = (currentPage - 1) * rowsPerPage;
-  const pageRows = filteredData.slice(start, start + rowsPerPage);
+  const paginatedRows = useMemo(() => {
+    const start = (currentPage - 1) * rowsPerPage;
+    return filteredData.slice(start, start + rowsPerPage);
+  }, [filteredData, currentPage]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -136,17 +242,27 @@ export default function ExpiredHistoryPage() {
     return pages;
   };
 
+  // --- Handlers ---
   const clearFilters = () => {
     setStatusFilter("all");
     setSearch("");
     setCurrentPage(1);
   };
 
+  const handleShowDetail = (row) => {
+    setSelectedRow(row);
+    setShowDetailModal(true);
+  };
+
+  // --- Render ---
   return (
     <div className={styles.mainHome}>
       <div className={styles.infoContainer}>
+        {/* Header */}
         <div className={styles.pageBar}>
-          <h1 className={styles.pageTitle}>ประวัติของหมดอายุ</h1>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.pageTitle}>ประวัติของหมดอายุ</h1>
+          </div>
         </div>
 
         {/* Toolbar */}
@@ -163,7 +279,6 @@ export default function ExpiredHistoryPage() {
                 styles={customSelectStyles}
                 placeholder="เลือกสถานะ..."
                 aria-label="กรองตามสถานะ"
-                menuPortalTarget={typeof window !== "undefined" ? document.body : undefined}
               />
             </div>
           </div>
@@ -200,20 +315,28 @@ export default function ExpiredHistoryPage() {
             <div className={styles.headerItem}>พัสดุ</div>
             <div className={styles.headerItem}>รับเข้า</div>
             <div className={styles.headerItem}>หมดอายุ</div>
+            <div className={styles.headerItem}>คงเหลือ</div>
             <div className={styles.headerItem}>วันหมดอายุ</div>
             <div className={`${styles.headerItem} ${styles.centerCell}`}>สถานะ</div>
             <div className={`${styles.headerItem} ${styles.centerCell}`}>ตรวจสอบ</div>
           </div>
 
-          <div className={styles.inventory} style={{ "--rows-per-page": rowsPerPage }}>
-            {filteredData.length === 0 ? (
+          <div className={styles.inventory}>
+            {isLoading ? (
+              <div className={styles.loadingContainer}>กำลังโหลดข้อมูล...</div>
+            ) : paginatedRows.length === 0 ? (
               <div className={styles.noDataMessage}>ไม่พบข้อมูลของหมดอายุ</div>
             ) : (
-              pageRows.map((r) => {
+              paginatedRows.map((r) => {
                 const statusKey = getStatusKey(r.expired_qty, r.disposed_qty);
                 return (
-                  <div key={r.expired_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
-                    <div className={styles.tableCell}>{formatThaiDate(r.expired_date)}</div>
+                  <div
+                    key={r.expired_id}
+                    className={`${styles.tableGrid} ${styles.tableRow}`}
+                  >
+                    <div className={styles.tableCell}>
+                      {formatThaiDate(r.expired_date)}
+                    </div>
                     <div className={styles.tableCell}>{r.lot_no || "-"}</div>
                     <div className={styles.tableCell}>{r.item_name || "-"}</div>
                     <div className={styles.tableCell}>
@@ -223,17 +346,23 @@ export default function ExpiredHistoryPage() {
                       {r.expired_qty || 0} {r.item_unit || ""}
                     </div>
                     <div className={styles.tableCell}>
+                      {(r.expired_qty || 0) - (r.disposed_qty || 0)} {r.item_unit || ""}
+                    </div>
+                    <div className={styles.tableCell}>
                       {formatThaiDate(r.exp_date)}
                     </div>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                      <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(statusKey)]}`}>
+                      <span
+                        className={`${styles.stBadge} ${styles[getStatusBadgeClass(statusKey)]}`}
+                      >
                         {statusMap[statusKey]}
                       </span>
                     </div>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>
                       <button
                         className={styles.actionButton}
-                        onClick={() => setSelected(r)}
+                        onClick={() => handleShowDetail(r)}
+                        title="ดูรายละเอียด"
                         aria-label={`ดูรายละเอียด Lot ${r.lot_no}`}
                       >
                         <Search size={18} />
@@ -259,7 +388,9 @@ export default function ExpiredHistoryPage() {
             </li>
             {getPageNumbers().map((p, idx) =>
               p === "..." ? (
-                <li key={`ellipsis-${idx}`} className={styles.ellipsis}>…</li>
+                <li key={`ellipsis-${idx}`} className={styles.ellipsis}>  
+                  …
+                </li>
               ) : (
                 <li key={`page-${p}`}>
                   <button
@@ -287,95 +418,11 @@ export default function ExpiredHistoryPage() {
         </div>
 
         {/* Modal */}
-        {selected && (
-          <div className={styles.modalOverlay}>
-            <div className={styles.modal}>
-              <div className={styles.modalHeader}>
-                <h3 className={styles.modalTitle}>รายละเอียด Lot {selected.lot_no || "-"}</h3>
-                <button className={styles.modalClose} onClick={() => setSelected(null)}>
-                  <X size={24} />
-                </button>
-              </div>
-              <div className={styles.modalContent}>
-                <table className={styles.detailTable}>
-                  <tbody>
-                    <tr className={styles.detailRow}>
-                      <td className={styles.detailLabel}>วันที่บันทึก:</td>
-                      <td className={styles.detailValue}>{formatThaiDate(selected.expired_date)}</td>
-                    </tr>
-                    <tr className={styles.detailRow}>
-                      <td className={styles.detailLabel}>Lot No:</td>
-                      <td className={styles.detailValue}>{selected.lot_no || "-"}</td>
-                    </tr>
-                    <tr className={styles.detailRow}>
-                      <td className={styles.detailLabel}>พัสดุ:</td>
-                      <td className={styles.detailValue}>{selected.item_name || "-"}</td>
-                    </tr>
-                    <tr className={styles.detailRow}>
-                      <td className={styles.detailLabel}>จำนวนรับเข้า:</td>
-                      <td className={styles.detailValue}>
-                        {selected.qty_imported || 0} {selected.item_unit || ""}
-                      </td>
-                    </tr>
-                    <tr className={styles.detailRow}>
-                      <td className={styles.detailLabel}>จำนวนหมดอายุ:</td>
-                      <td className={styles.detailValue}>
-                        {selected.expired_qty || 0} {selected.item_unit || ""}
-                      </td>
-                    </tr>
-                    <tr className={styles.detailRow}>
-                      <td className={styles.detailLabel}>ทำลายแล้ว:</td>
-                      <td className={styles.detailValue}>
-                        {selected.disposed_qty || 0} {selected.item_unit || ""}
-                      </td>
-                    </tr>
-                    <tr className={styles.detailRow}>
-                      <td className={styles.detailLabel}>คงเหลือ:</td>
-                      <td className={styles.detailValue}>
-                        {(selected.expired_qty || 0) - (selected.disposed_qty || 0)} {selected.item_unit || ""}
-                      </td>
-                    </tr>
-                    <tr className={styles.detailRow}>
-                      <td className={styles.detailLabel}>วันหมดอายุ:</td>
-                      <td className={styles.detailValue}>{formatThaiDate(selected.exp_date)}</td>
-                    </tr>
-                    <tr className={styles.detailRow}>
-                      <td className={styles.detailLabel}>สถานะ:</td>
-                      <td className={styles.detailValue}>
-                        <span className={`${styles.stBadge} ${styles[getStatusBadgeClass(getStatusKey(selected.expired_qty, selected.disposed_qty))]}`}>
-                          {statusMap[getStatusKey(selected.expired_qty, selected.disposed_qty)]}
-                        </span>
-                      </td>
-                    </tr>
-                    <tr className={styles.detailRow}>
-                      <td className={styles.detailLabel}>รายงานโดย:</td>
-                      <td className={styles.detailValue}>{selected.user_name || "ระบบ"}</td>
-                    </tr>
-                    <tr className={styles.detailRow}>
-                      <td className={styles.detailLabel}>จัดการโดย:</td>
-                      <td className={styles.detailValue}>{selected.last_disposed_by || "ยังไม่มีข้อมูล"}</td>
-                    </tr>
-                    {selected.note && (
-                      <tr className={styles.detailRow}>
-                        <td className={styles.detailLabel}>หมายเหตุ:</td>
-                        <td className={styles.detailValue}>{selected.note}</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              <div className={styles.modalActions}>
-                <button
-                  className={`${styles.btnSecondary} ${styles.closeBtn}`}
-                  onClick={() => setSelected(null)}
-                  aria-label="ปิดหน้าต่างรายละเอียด"
-                >
-                  ปิด
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <DetailModal
+          show={showDetailModal}
+          onClose={() => setShowDetailModal(false)}
+          data={selectedRow}
+        />
       </div>
     </div>
   );

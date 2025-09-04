@@ -1,13 +1,14 @@
-'use client';
+"use client";
 import { useEffect, useState, useMemo } from "react";
-import {manageAxios} from "@/app/utils/axiosInstance";
+import { manageAxios } from "@/app/utils/axiosInstance";
+import Swal from "sweetalert2";
 import styles from "./page.module.css";
 import { Trash2, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const Select = dynamic(() => import("react-select"), { ssr: false });
 
-/* react-select styles (aligned with ImportHistory) */
+/* react-select styles (aligned with BorrowHistory) */
 const customSelectStyles = {
   control: (base, state) => ({
     ...base,
@@ -23,6 +24,7 @@ const customSelectStyles = {
     ...base,
     borderRadius: "0.5rem",
     marginTop: 6,
+    boxShadow: "none",
     border: "1px solid #e5e7eb",
     zIndex: 9000,
   }),
@@ -39,7 +41,7 @@ const customSelectStyles = {
   dropdownIndicator: (base) => ({ ...base, padding: 4 }),
 };
 
-/* Map ประเภท */
+/* Mapping */
 const typeMap = {
   withdraw: "เบิกพัสดุ",
   borrow: "ยืมออก",
@@ -49,42 +51,145 @@ const typeMap = {
   adjust_out: "ปรับปรุงยอดตัดออก",
   return_lost: "สูญหาย (ตรวจนับ)",
 };
+
 const CATEGORY_OPTIONS = [
   { value: "all", label: "ทุกประเภท" },
   ...Object.entries(typeMap).map(([k, v]) => ({ value: k, label: v })),
 ];
 
+/* Badge class mapping */
+const getTypeBadgeClass = (type) => {
+  switch (type) {
+    case "withdraw":
+    case "borrow":
+      return "st-approved";
+    case "return_damaged":
+    case "damaged_dispose":
+    case "expired_dispose":
+      return "st-warning";
+    case "return_lost":
+      return "st-rejected";
+    case "adjust_out":
+      return "st-default";
+    default:
+      return "st-default";
+  }
+};
+
+/* Helper */
+const formatThaiDate = (isoString) => {
+  if (!isoString) return "-";
+  try {
+    const parts = new Date(isoString).toISOString().split("T")[0].split("-");
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parseInt(parts[0]) + 543}`;
+    }
+  } catch (e) {
+    // Fallback
+  }
+  return new Date(isoString).toLocaleString("th-TH", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "Asia/Bangkok",
+  });
+};
+
+/* Modal Component */
+const DetailModal = ({ show, onClose, data, details }) => {
+  if (!show || !data) return null;
+
+  return (
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContent}>
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle}>
+            รายละเอียดเอกสาร {data.stockout_no || "-"}
+          </h2>
+          <button onClick={onClose} className={styles.modalCloseBtn} aria-label="ปิดหน้าต่างรายละเอียด">
+            <X size={24} />
+          </button>
+        </div>
+        <div className={styles.modalBody}>
+          <div className={styles.modalSection}>
+            <h4 className={styles.modalSectionTitle}>ข้อมูลเอกสาร</h4>
+            <div className={styles.modalGrid}>
+              <div className={styles.modalItem}>
+                <b>เลขที่เอกสาร:</b> {data.stockout_no || "-"}
+              </div>
+              <div className={styles.modalItem}>
+                <b>ผู้ดำเนินการ:</b> {data.user_name || "-"}
+              </div>
+              <div className={styles.modalItem}>
+                <b>ประเภท:</b>
+                <span className={`${styles.stBadge} ${styles[getTypeBadgeClass(data.stockout_type)]}`}>
+                  {typeMap[data.stockout_type] || "อื่น ๆ"}
+                </span>
+              </div>
+              <div className={styles.modalItem}>
+                <b>สร้างเมื่อ:</b> {formatThaiDate(data.created_at) || "-"}
+              </div>
+            </div>
+          </div>
+          <div className={styles.modalSection}>
+            <h4 className={styles.modalSectionTitle}>รายการพัสดุ</h4>
+            <div className={styles.itemListContainer}>
+              {details.length > 0 ? (
+                details.map((d, index) => (
+                  <div key={d.stockout_detail_id} className={styles.itemDetailCard}>
+                    <div className={styles.itemHeader}>
+                      <h5 className={styles.itemName}>{d.item_name || "-"}</h5>
+                    </div>
+                    <div className={styles.itemInfoGrid}>
+                      <p><b>ลำดับ:</b> {index + 1}</p>
+                      <p><b>Lot No.:</b> {d.lot_no || "-"}</p>
+                      <p><b>จำนวน:</b> {d.qty || 0} {d.unit || ""}</p>
+                      <p><b>วันหมดอายุ:</b> {formatThaiDate(d.exp_date) || "-"}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className={styles.noSubData}>ไม่มีข้อมูลรายการพัสดุ</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function StockOutHistoryPage() {
   const [records, setRecords] = useState([]);
-  const [selected, setSelected] = useState(null);
-  const [details, setDetails] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [details, setDetails] = useState([]);
   const ROWS_PER_PAGE = 10;
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
         const res = await manageAxios.get("/history/stockout");
         setRecords(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("Error fetching stockout history:", err);
+        Swal.fire({
+          icon: "error",
+          title: "ข้อผิดพลาด",
+          text: "ไม่สามารถโหลดข้อมูลได้",
+          confirmButtonColor: "#008dda",
+        });
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchData();
   }, []);
-
-  const formatThaiDate = (isoString) => {
-    if (!isoString) return "-";
-    const d = new Date(isoString);
-    return d.toLocaleString("th-TH", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      timeZone: "Asia/Bangkok",
-    });
-  };
 
   const filteredRecords = useMemo(() => {
     return records.filter((r) => {
@@ -107,12 +212,12 @@ export default function StockOutHistoryPage() {
 
   const getPageNumbers = () => {
     const pages = [];
-    if (totalPages <= 4) {
+    if (totalPages <= 7) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else if (currentPage <= 4) {
-      pages.push(1, 2, 3, 4, "...", totalPages);
+      pages.push(1, 2, 3, 4, 5, "...", totalPages);
     } else if (currentPage >= totalPages - 3) {
-      pages.push(1, "...", totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      pages.push(1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
     } else {
       pages.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
     }
@@ -126,12 +231,19 @@ export default function StockOutHistoryPage() {
   };
 
   const handleShowDetail = async (doc) => {
-    setSelected(doc);
+    setSelectedRecord(doc);
+    setShowDetailModal(true);
     try {
       const res = await manageAxios.get(`/history/stockout/${doc.stockout_id}`);
       setDetails(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Error fetching stockout detail:", err);
+      Swal.fire({
+        icon: "error",
+        title: "ข้อผิดพลาด",
+        text: "ไม่สามารถโหลดรายละเอียดได้",
+        confirmButtonColor: "#008dda",
+      });
       setDetails([]);
     }
   };
@@ -140,9 +252,7 @@ export default function StockOutHistoryPage() {
     <div className={styles.mainHome}>
       <div className={styles.infoContainer}>
         <div className={styles.pageBar}>
-          <h1 className={styles.pageTitle}>
-            ประวัติการตัดออกจากคลัง
-          </h1>
+          <h1 className={styles.pageTitle}>ประวัติการตัดออกจากคลัง</h1>
         </div>
 
         {/* Toolbar */}
@@ -199,8 +309,10 @@ export default function StockOutHistoryPage() {
             <div className={`${styles.headerItem} ${styles.centerCell}`}>ตรวจสอบ</div>
           </div>
 
-          <div className={styles.inventory} style={{ "--rows-per-page": ROWS_PER_PAGE }}>
-            {filteredRecords.length === 0 ? (
+          <div className={styles.inventory}>
+            {isLoading ? (
+              <div className={styles.loadingContainer}>กำลังโหลดข้อมูล...</div>
+            ) : filteredRecords.length === 0 ? (
               <div className={styles.noDataMessage}>ไม่พบข้อมูลการตัดออกจากคลัง</div>
             ) : (
               pageRows.map((r) => (
@@ -209,7 +321,9 @@ export default function StockOutHistoryPage() {
                   <div className={styles.tableCell}>{r.stockout_no || "-"}</div>
                   <div className={styles.tableCell}>{r.user_name || "-"}</div>
                   <div className={styles.tableCell}>
-                    {typeMap[r.stockout_type] || "อื่น ๆ"}
+                    <span className={`${styles.stBadge} ${styles[getTypeBadgeClass(r.stockout_type)]}`}>
+                      {typeMap[r.stockout_type] || "อื่น ๆ"}
+                    </span>
                   </div>
                   <div className={`${styles.tableCell} ${styles.centerCell}`}>
                     {r.total_items || 0} รายการ
@@ -242,7 +356,9 @@ export default function StockOutHistoryPage() {
             </li>
             {getPageNumbers().map((p, idx) =>
               p === "..." ? (
-                <li key={`ellipsis-${idx}`} className={styles.ellipsis}>…</li>
+                <li key={`ellipsis-${idx}`} className={styles.ellipsis}>
+                  …
+                </li>
               ) : (
                 <li key={`page-${p}`}>
                   <button
@@ -270,87 +386,16 @@ export default function StockOutHistoryPage() {
         </div>
 
         {/* Modal */}
-        {selected && (
-          <div className={styles.modalOverlay}>
-            <div className={styles.modal}>
-              <div className={styles.modalHeader}>
-                <h3 className={styles.modalTitle}>
-                  รายละเอียดเอกสาร {selected.stockout_no || "-"}
-                </h3>
-                <button
-                  className={styles.closeIcon}
-                  onClick={() => {
-                    setSelected(null);
-                    setDetails([]);
-                  }}
-                  aria-label="ปิดหน้าต่างรายละเอียด"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              <div className={styles.detailInfoGrid}>
-                <div className={styles.detailInfoItem}>
-                  <div className={styles.detailLabel}>เลขที่เอกสาร:</div>
-                  <div className={styles.detailValue}>{selected.stockout_no || "-"}</div>
-                </div>
-                <div className={styles.detailInfoItem}>
-                  <div className={styles.detailLabel}>ผู้ดำเนินการ:</div>
-                  <div className={styles.detailValue}>{selected.user_name || "-"}</div>
-                </div>
-                <div className={styles.detailInfoItem}>
-                  <div className={styles.detailLabel}>ประเภท:</div>
-                  <div className={styles.detailValue}>{typeMap[selected.stockout_type] || "อื่น ๆ"}</div>
-                </div>
-                <div className={styles.detailInfoItem}>
-                  <div className={styles.detailLabel}>สร้างเมื่อ:</div>
-                  <div className={styles.detailValue}>{formatThaiDate(selected.created_at)}</div>
-                </div>
-              </div>
-
-              <h4 className={styles.detailTableTitle}>รายการพัสดุ</h4>
-              <div className={styles.popupTableWrapper}>
-                {/* Header */}
-                <div className={`${styles.popupTable} ${styles.popupTableHeader}`}>
-                  <div className={styles.tableColNo}>ลำดับ</div>
-                  <div>พัสดุ</div>
-                  <div>Lot No.</div>
-                  <div>จำนวน</div>
-                  <div>หน่วยนับ</div>
-                  <div>วันหมดอายุ</div>
-                </div>
-
-                {/* Rows */}
-                {details.length > 0 ? (
-                  details.map((d, index) => (
-                    <div key={d.stockout_detail_id} className={`${styles.popupTable} ${styles.popupTableRow}`}>
-                      <div className={styles.tableColNo}>{index + 1}</div>
-                      <div>{d.item_name || "-"}</div>
-                      <div>{d.lot_no || "-"}</div>
-                      <div>{d.qty || 0}</div>
-                      <div>{d.unit || ""}</div>
-                      <div>{formatThaiDate(d.exp_date)}</div>
-                    </div>
-                  ))
-                ) : (
-                  <div className={`${styles.popupTable} ${styles.popupTableRow} ${styles.noDataRow}`}>
-                    <div className={styles.noDataCell}>ไม่มีข้อมูลรายการพัสดุ</div>
-                  </div>
-                )}
-              </div>
-              <button
-                className={styles.closeBtn}
-                onClick={() => {
-                  setSelected(null);
-                  setDetails([]);
-                }}
-                aria-label="ปิดหน้าต่างรายละเอียด"
-              >
-                ปิด
-              </button>
-            </div>
-          </div>
-        )}
+        <DetailModal
+          show={showDetailModal}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedRecord(null);
+            setDetails([]);
+          }}
+          data={selectedRecord}
+          details={details}
+        />
       </div>
     </div>
   );
