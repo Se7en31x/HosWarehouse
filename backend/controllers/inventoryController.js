@@ -110,3 +110,26 @@ exports.adjustInventory = async (req, res) => {
         res.status(500).json({ message: error.message || 'เกิดข้อผิดพลาดในการปรับปรุงจำนวนสต็อก' });
     }
 };
+
+exports.cancelLot = async (req, res) => {
+  try {
+    const { lot_id, item_id, reason } = req.body;
+    const canceled_by = req.user?.user_id || 1;
+
+    if (!lot_id || !item_id) {
+      return res.status(400).json({ message: "lot_id และ item_id จำเป็นต้องระบุ" });
+    }
+
+    const result = await inventoryModel.cancelLot({
+      lot_id,
+      item_id,
+      reason: reason || "ยกเลิก Lot",
+      canceled_by,
+    });
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("❌ Error cancelLot:", error);
+    res.status(500).json({ message: error.message || "ไม่สามารถยกเลิก Lot ได้" });
+  }
+};

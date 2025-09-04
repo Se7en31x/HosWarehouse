@@ -36,6 +36,7 @@ router.post(
   inventoryController.reportDamaged
 );
 
+
 router.post(
   '/inventory/adjust',
   authMiddleware(['marehouse_manager']), // 🔐 ปรับจำนวน = เฉพาะ manager

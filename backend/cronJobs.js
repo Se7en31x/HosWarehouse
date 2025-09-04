@@ -1,6 +1,7 @@
 // cronJobs.js
 const cron = require("node-cron");
 const { runManagerRules } = require("./services/manager");
+const { runUserNotifications } = require("./services/user");
 
 // 🚀 เรียกตอน server start ทันที (ไม่ต้องรอ cron)
 // (async () => {
@@ -8,11 +9,13 @@ const { runManagerRules } = require("./services/manager");
 //   await runManagerRules();
 // })();
 
-// cron.schedule("*/10 * * * * *", async () => {
-//   console.log("🚀 Running Manager Rules (every 5 seconds)...");
-//   await runManagerRules();
-// });
+cron.schedule("*/10 * * * * *", async () => {
+  console.log("🚀 Running Manager Rules (every 10s)...");
+  await runManagerRules();
 
+  console.log("👤 Running User Notifications (every 10s)...");
+  await runUserNotifications();
+});
 
 // // 🟢 โหมด Production → ทุกวัน 00:05
 // cron.schedule("5 0 * * *", async () => {
