@@ -107,12 +107,12 @@ async function recordReceiving({ user_id, receiving_note, stockin_type, source_n
 
         const insertReceiving = await client.query(
             `INSERT INTO stock_ins (
-                stockin_date, user_id, note, stockin_type, stockin_no, created_at, source_name
-             )
-             VALUES (NOW(), $1, $2, $3, $4, NOW(), $5)
-             RETURNING stockin_id, stockin_no`,
+        stockin_date, user_id, note, stockin_type, stockin_no, created_at, source_name, stockin_status
+     )
+     VALUES (NOW(), $1, $2, $3, $4, NOW(), $5, 'posted')
+     RETURNING stockin_id, stockin_no, stockin_status`,
             [user_id, receiving_note || null, stockin_type || "general", stockin_no, source_name || null]
-        );
+        );  
 
         const newStockinId = insertReceiving.rows[0].stockin_id;
 
@@ -120,7 +120,7 @@ async function recordReceiving({ user_id, receiving_note, stockin_type, source_n
             if (!item.item_id) throw new Error(`Missing item_id`);
             if (!item.quantity || item.quantity <= 0)
                 throw new Error(`Invalid quantity for item_id ${item.item_id}`);
-            
+
             const { rows: itemInfo } = await client.query(
                 `SELECT item_unit FROM items WHERE item_id = $1`, [item.item_id]
             );
@@ -179,23 +179,13 @@ async function recordReceiving({ user_id, receiving_note, stockin_type, source_n
                     item.notes || null
                 ]
             );
-            
+
             const { rows: currentBalanceRows } = await client.query(
                 `SELECT COALESCE(SUM(qty_remaining), 0) AS total_balance FROM item_lots WHERE item_id = $1`,
                 [item.item_id]
             );
             const balanceAfter = currentBalanceRows[0].total_balance;
 
-            await client.query(
-                `INSERT INTO stock_movements
-                 (item_id, lot_id, move_type, move_qty, balance_after, move_date,
-                 move_status, user_id, move_code, note)
-                 VALUES
-                 ($1, $2, 'stock_in', $3, $4, NOW()::timestamp,
-                 'completed', $5, $6, $7)`,
-                [item.item_id, lotId, item.quantity, balanceAfter, user_id, stockin_no, receiving_note]
-            );
-            
             // ✅ ส่วนนี้คือการลบโค้ดที่ไม่จำเป็นออกไปครับ
             // await client.query(
             //     `UPDATE items
@@ -211,7 +201,7 @@ async function recordReceiving({ user_id, receiving_note, stockin_type, source_n
         }
 
         await client.query("COMMIT");
-        
+
         const io = getIO();
         if (io) {
             for (const item of receivingItems) {

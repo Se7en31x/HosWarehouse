@@ -3,6 +3,7 @@ const router = express.Router();
 const reportController = require("../controllers/reportController");
 const authMiddleware = require("../middleware/auth"); // ✅ import middleware
 
+
 // ✅ รายงานคงคลัง (เฉพาะผู้ดูแลคลัง)
 router.get(
   "/report/inventory/summary",
@@ -28,6 +29,13 @@ router.get(
   "/report/inflow",
   authMiddleware(["manage", "marehouse_manager"]),
   reportController.getInflowReport
+);
+
+// ✅ รายงานการนำออก (ตัดสต็อก, ชำรุด, หมดอายุ)
+router.get(
+  "/report/general-outflow",
+  authMiddleware(["manage", "marehouse_manager"]),
+  reportController.getGeneralOutflowReport
 );
 
 // ✅ รายงานการคืน

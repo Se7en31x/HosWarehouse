@@ -1,74 +1,61 @@
-// backend/models/report/inflowReportModel.js
 const { pool } = require("../../config/db");
 
 exports.getInflowReport = async (filters) => {
-  const { type, department, dateRange } = filters;
+  const { type, start, end, user_id } = filters;
 
-  const params = [];
-  let whereClause = "WHERE 1=1";
+  let params = [];
+  let paramIndex = 1;
+  let conditions = [];
 
   if (type && type !== "all") {
     params.push(type);
-    whereClause += ` AND inflow_type = $${params.length}`;
+    conditions.push(`si.stockin_type = $${paramIndex++}`);
   }
 
-  if (department && department !== "all") {
-    params.push(department);
-    whereClause += ` AND department = $${params.length}`;
+  if (start && end) {
+    const startOfDay = start + ' 00:00:00';
+    const endOfDay = end + ' 23:59:59';
+    params.push(startOfDay, endOfDay);
+    conditions.push(`si.stockin_date BETWEEN $${paramIndex++} AND $${paramIndex++}`);
   }
 
-  if (dateRange?.start && dateRange?.end) {
-    params.push(dateRange.start, dateRange.end);
-    whereClause += ` AND doc_date BETWEEN $${params.length - 1} AND $${params.length}`;
+  if (user_id && user_id !== "all") {
+    params.push(user_id);
+    conditions.push(`si.user_id = $${paramIndex++}`);
   }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
   const query = `
-    SELECT * FROM (
-      -- ✅ รับเข้าทั่วไป
-      SELECT 
-        s.stockin_no AS doc_no,
-        s.stockin_date AS doc_date,
-        i.item_name,
-        i.item_category AS category,
-        sid.qty,
-        sid.unit,
-        s.stockin_type AS inflow_type,
-        u.department,
-        NULL::text AS supplier_name,
-        l.lot_no
-      FROM stock_ins s
-      JOIN stock_in_details sid ON s.stockin_id = sid.stockin_id
-      JOIN items i ON sid.item_id = i.item_id
-      LEFT JOIN item_lots l ON sid.lot_id = l.lot_id   -- ✅ lot
-      LEFT JOIN users u ON s.user_id = u.user_id
-      WHERE s.stockin_type <> 'purchase'
-
-      UNION ALL
-
-      -- ✅ รับเข้าจากการสั่งซื้อ (GR)
-      SELECT 
-        gr.gr_no AS doc_no,
-        gr.gr_date AS doc_date,
-        i.item_name,
-        i.item_category AS category,
-        gri.qty_received AS qty,
-        poi.unit,
-        'purchase' AS inflow_type,
-        pr.department,
-        po.supplier_name,
-        l.lot_no
-      FROM goods_receipts gr
-      JOIN goods_receipt_items gri ON gr.gr_id = gri.gr_id
-      JOIN items i ON gri.item_id = i.item_id
-      JOIN purchase_order_items poi ON gri.po_item_id = poi.po_item_id
-      LEFT JOIN purchase_orders po ON gr.po_id = po.po_id
-      LEFT JOIN purchase_requests pr ON po.pr_id = pr.pr_id
-      LEFT JOIN item_lots l ON gri.lot_id = l.lot_id   -- ✅ lot
-    ) sub
+    SELECT
+      si.stockin_no AS doc_no,
+      si.stockin_date AS doc_date,
+      si.stockin_type AS inflow_type,
+      sid.qty,
+      i.item_unit AS unit, 
+      i.item_name,
+      i.item_category AS category,
+      il.lot_no,
+      -- ✅ แก้ไขตรงนี้: ใช้ COALESCE เพื่อดึงชื่อผู้ขายจาก purchase_orders
+      COALESCE(po.supplier_name, s.supplier_name) AS supplier_name,
+      u.user_fname || ' ' || u.user_lname AS user_name
+    FROM stock_in_details sid
+    JOIN stock_ins si ON si.stockin_id = sid.stockin_id
+    JOIN items i ON i.item_id = sid.item_id
+    LEFT JOIN item_lots il ON sid.lot_id = il.lot_id
+    -- ✅ เชื่อมต่อกับ purchase_orders และ suppliers โดยตรง
+    LEFT JOIN purchase_orders po ON po.po_id = si.po_id
+    LEFT JOIN suppliers s ON s.supplier_id = po.supplier_id
+    LEFT JOIN users u ON u.user_id = si.user_id
     ${whereClause}
-    ORDER BY doc_date DESC
+    ORDER BY si.stockin_date DESC;
   `;
 
-  const result = await pool.query(query, params);
-  return result.rows;
+  try {
+    const { rows } = await pool.query(query, params);
+    return rows;
+  } catch (err) {
+    console.error("Error fetching inflow report:", err);
+    throw err;
+  }
 };

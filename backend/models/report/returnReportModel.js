@@ -2,46 +2,67 @@
 const { pool } = require("../../config/db");
 
 exports.getReturnReport = async (filters) => {
-  const { department, dateRange } = filters;
+    console.log('Received filters:', filters);
 
-  const params = [];
-  let whereClause = "WHERE r.request_type = 'borrow'"; // ✅ เอาเฉพาะคำขอแบบยืม
+    const { department, start, end, approvalStatus } = filters;
+    const params = [];
+    let whereClause = "WHERE r.request_type = 'borrow'";
 
-  if (department && department !== "all") {
-    params.push(department);
-    whereClause += ` AND u.department = $${params.length}`;
-  }
+    console.log('Filtering by department:', department);
+    if (department && department !== "all") {
+        params.push(department);
+        whereClause += ` AND u.department = $${params.length}`;
+    }
 
-  if (dateRange?.start && dateRange?.end) {
-    params.push(dateRange.start, dateRange.end);
-    whereClause += ` AND r.request_date BETWEEN $${params.length - 1} AND $${params.length}`;
-  }
+    // จุดที่แก้ไข: เปลี่ยนจาก r.request_date เป็น br.return_date
+    console.log('Filtering by return date range:', { start, end });
+    if (start && end) {
+        console.log('Date range start:', start);
+        console.log('Date range end:', end);
+        
+        params.push(start, end);
+        whereClause += ` AND br.return_date::date BETWEEN $${params.length - 1} AND $${params.length}`;
+    }
 
-  const query = `
-    SELECT 
-      r.request_code,
-      i.item_name,
-      rd.approved_qty,
-      rd.approval_status,  -- ✅ เพิ่มสถานะอนุมัติ
-      COALESCE(SUM(br.return_qty), 0) AS returned_qty,
-      (rd.approved_qty - COALESCE(SUM(br.return_qty), 0)) AS not_returned_qty,
-      MAX(br.return_date) AS last_return_date,
-      CASE
-        WHEN COALESCE(SUM(br.return_qty), 0) = 0 THEN 'ยังไม่คืน'
-        WHEN COALESCE(SUM(br.return_qty), 0) < rd.approved_qty THEN 'คืนบางส่วน'
-        ELSE 'คืนครบแล้ว'
-      END AS return_status,
-      u.department
-    FROM request_details rd
-    JOIN requests r ON rd.request_id = r.request_id
-    JOIN items i ON rd.item_id = i.item_id
-    JOIN users u ON r.user_id = u.user_id
-    LEFT JOIN borrow_returns br ON rd.request_detail_id = br.request_detail_id
-    ${whereClause}
-    GROUP BY r.request_code, i.item_name, rd.approved_qty, rd.approval_status, u.department
-    ORDER BY r.request_code DESC;
-  `;
+    if (approvalStatus && approvalStatus !== "all") {
+        console.log('Filtering by approvalStatus:', approvalStatus);
+        params.push(approvalStatus);
+        whereClause += ` AND rd.approval_status = $${params.length}`;
+    }
 
-  const { rows } = await pool.query(query, params);
-  return rows;
+    const query = `
+      SELECT 
+        r.request_code,
+        i.item_name,
+        rd.approved_qty,
+        rd.approval_status,
+        rd.expected_return_date,
+        COALESCE(SUM(brl.qty), 0) AS returned_qty,
+        GREATEST(rd.approved_qty - COALESCE(SUM(brl.qty), 0), 0) AS not_returned_qty,
+        MAX(br.return_date) AS last_return_date,
+        CASE
+          WHEN rd.approval_status ILIKE 'reject%' THEN 'ปฏิเสธ'
+          WHEN COALESCE(SUM(brl.qty), 0) = 0 THEN 'ยังไม่คืน'
+          WHEN COALESCE(SUM(brl.qty), 0) < rd.approved_qty THEN 'คืนบางส่วน'
+          ELSE 'คืนครบ'
+        END AS return_status,
+        u.department,
+        (u.user_fname || ' ' || u.user_lname) AS borrower_name,
+        MAX(br.return_note) AS return_note
+      FROM request_details rd
+      JOIN requests r ON rd.request_id = r.request_id
+      JOIN items i ON rd.item_id = i.item_id
+      JOIN users u ON r.user_id = u.user_id
+      LEFT JOIN borrow_returns br ON rd.request_detail_id = br.request_detail_id
+      LEFT JOIN borrow_return_lots brl ON br.return_id = brl.return_id
+      ${whereClause}
+      GROUP BY r.request_code, i.item_name, rd.approved_qty, rd.approval_status, rd.expected_return_date, u.department, borrower_name
+      ORDER BY last_return_date DESC NULLS LAST;
+    `;
+
+    console.log('Final Query:', query);
+    console.log('Query Parameters:', params);
+
+    const { rows } = await pool.query(query, params);
+    return rows;
 };

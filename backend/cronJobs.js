@@ -9,13 +9,13 @@ const { runUserNotifications } = require("./services/user");
 //   await runManagerRules();
 // })();
 
-cron.schedule("*/10 * * * * *", async () => {
-  console.log("🚀 Running Manager Rules (every 10s)...");
-  await runManagerRules();
+// cron.schedule("*/10 * * * * *", async () => {
+//   console.log("🚀 Running Manager Rules (every 10s)...");
+//   await runManagerRules();
 
-  console.log("👤 Running User Notifications (every 10s)...");
-  await runUserNotifications();
-});
+//   console.log("👤 Running User Notifications (every 10s)...");
+//   await runUserNotifications();
+// });
 
 // // 🟢 โหมด Production → ทุกวัน 00:05
 // cron.schedule("5 0 * * *", async () => {

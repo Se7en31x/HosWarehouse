@@ -1,22 +1,19 @@
 const inventoryModel = require("../models/report/inventoryReportModel");
 const outflowReportModel = require("../models/report/outflowReportModel");
-const inflowReportModel = require("../models/report/inflowReportModel"); // ✅ เพิ่ม
+const inflowReportModel = require("../models/report/inflowReportModel");
 const returnReportModel = require("../models/report/returnReportModel");
 const expiredReportModel = require("../models/report/expiredReportModel");
 const damagedReportModel = require("../models/report/damagedReportModel");
-
+const generalOutflowReportModel = require("../models/report/generalOutflowReportModel");
 
 // ✅ รายงานคงคลัง (Summary)
 exports.getInventorySummary = async (req, res) => {
   try {
     const filters = {
       category: req.query.category || "all",
-      dateRange:
-        req.query.start && req.query.end
-          ? { start: req.query.start, end: req.query.end }
-          : null,
+      start: req.query.start || null,
+      end: req.query.end || null,
     };
-
     const data = await inventoryModel.getInventorySummary(filters);
     res.json(data);
   } catch (err) {
@@ -31,12 +28,9 @@ exports.getInventoryByDepartment = async (req, res) => {
     const filters = {
       category: req.query.category || "all",
       department: req.query.department || "all",
-      dateRange:
-        req.query.start && req.query.end
-          ? { start: req.query.start, end: req.query.end }
-          : null,
+      start: req.query.start || null,
+      end: req.query.end || null,
     };
-
     const data = await inventoryModel.getInventoryByDepartment(filters);
     res.json(data);
   } catch (err) {
@@ -45,16 +39,15 @@ exports.getInventoryByDepartment = async (req, res) => {
   }
 };
 
-// ✅ รายงานเบิก+ยืม
+// ✅ รายงานเบิก+ยืม (แก้ไขแล้ว)
 exports.getOutflowReport = async (req, res) => {
   try {
     const filters = {
-      category: req.query.category || "all",
+      type: req.query.type || "all",
       department: req.query.department || "all",
       start: req.query.start || null,
       end: req.query.end || null,
     };
-
     const result = await outflowReportModel.getOutflowReport(filters);
     res.json(result);
   } catch (err) {
@@ -67,14 +60,12 @@ exports.getOutflowReport = async (req, res) => {
 exports.getInflowReport = async (req, res) => {
   try {
     const filters = {
-      type: req.query.type || "all",           // purchase, general, all
+      type: req.query.type || "all",
       department: req.query.department || "all",
-      dateRange:
-        req.query.start && req.query.end
-          ? { start: req.query.start, end: req.query.end }
-          : null,
+      start: req.query.start || null,
+      end: req.query.end || null,
+      user_id: req.query.user_id || "all",
     };
-
     const result = await inflowReportModel.getInflowReport(filters);
     res.json(result);
   } catch (err) {
@@ -88,12 +79,10 @@ exports.getReturnReport = async (req, res) => {
   try {
     const filters = {
       department: req.query.department || "all",
-      dateRange:
-        req.query.start && req.query.end
-          ? { start: req.query.start, end: req.query.end }
-          : null,
+      start: req.query.start || null,
+      end: req.query.end || null,
+      approvalStatus: req.query.approvalStatus || "all" 
     };
-
     const result = await returnReportModel.getReturnReport(filters);
     res.json(result);
   } catch (err) {
@@ -103,16 +92,15 @@ exports.getReturnReport = async (req, res) => {
 };
 
 
-// ✅ รายงานพัสดุหมดอายุ
+// ✅ รายงานพัสดุหมดอายุ (แก้ไขแล้ว)
 exports.getExpiredReport = async (req, res) => {
   try {
     const filters = {
-      dateRange:
-        req.query.start && req.query.end
-          ? { start: req.query.start, end: req.query.end }
-          : null,
+      category: req.query.category || "all",
+      status: req.query.status || "all",
+      start_date: req.query.start_date || null,
+      end_date: req.query.end_date || null,
     };
-
     const result = await expiredReportModel.getExpiredReport(filters);
     res.json(result);
   } catch (err) {
@@ -121,13 +109,38 @@ exports.getExpiredReport = async (req, res) => {
   }
 };
 
-// ✅ รายงานพัสดุชำรุด
+
+// ✅ รายงานพัสดุชำรุด (แก้ไขแล้ว)
 exports.getDamagedReport = async (req, res) => {
   try {
-    const data = await damagedReportModel.getDamagedReport();
+    const filters = {
+      category: req.query.category || "all",
+      damage_type: req.query.damage_type || "all",
+      status: req.query.status || "all",
+      start_date: req.query.start_date || null,
+      end_date: req.query.end_date || null,
+    };
+    const data = await damagedReportModel.getDamagedReport(filters);
     res.json(data);
   } catch (err) {
     console.error("Error getDamagedReport:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+// ✅ รายงานการนำออก (ตัดสต็อก, ชำรุด, หมดอายุ)
+exports.getGeneralOutflowReport = async (req, res) => {
+  try {
+    const filters = {
+      type: req.query.type || "all",
+      start: req.query.start || null,
+      end: req.query.end || null,
+      user_id: req.query.user_id || "all",
+    };
+    const result = await generalOutflowReportModel.getGeneralOutflowReport(filters);
+    res.json(result);
+  } catch (err) {
+    console.error("Error getGeneralOutflowReport:", err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };

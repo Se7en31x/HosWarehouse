@@ -205,8 +205,7 @@ exports.reportDamaged = async ({
       RETURNING damaged_id;
     `;
     const damaged_status = "waiting";
-
-    await client.query(insertLogQuery, [
+    const { rows: damagedRows } = await client.query(insertLogQuery, [
       lot_id,
       item_id,
       qty,
@@ -217,9 +216,42 @@ exports.reportDamaged = async ({
       damaged_status,
       reported_by
     ]);
+    const damaged_id = damagedRows[0].damaged_id;
+
+    // 3) ✅ gen stockout_no
+    const stockout_no = await generateStockoutCode(client);
+
+    // 4) insert ลง stock_outs
+    const { rows: stockoutRows } = await client.query(
+      `INSERT INTO stock_outs 
+        (stockout_no, stockout_date, stockout_type, note, user_id, created_at)
+       VALUES ($1, NOW(), 'damaged', $2, $3, NOW())
+       RETURNING stockout_id`,
+      [stockout_no, `ชำรุดจากการตรวจสอบคลัง`, reported_by]
+    );
+    const stockout_id = stockoutRows[0].stockout_id;
+
+    // 5) insert รายละเอียดลง stock_out_details
+    const { rows: unitRows } = await client.query(
+      `SELECT item_unit FROM items WHERE item_id = $1`,
+      [item_id]
+    );
+    const itemUnit = unitRows[0]?.item_unit || "ชิ้น";
+
+    await client.query(
+      `INSERT INTO stock_out_details (stockout_id, item_id, lot_id, qty, unit, note)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [stockout_id, item_id, lot_id, qty, itemUnit, note || "แจ้งชำรุด"]
+    );
 
     await client.query("COMMIT");
-    return { success: true, message: "บันทึกของชำรุดเรียบร้อยแล้ว" };
+    return {
+      success: true,
+      message: "บันทึกของชำรุดเรียบร้อยแล้ว",
+      damaged_id,
+      stockout_id,
+      stockout_no
+    };
 
   } catch (error) {
     await client.query("ROLLBACK");
