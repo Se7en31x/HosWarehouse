@@ -43,13 +43,14 @@ const customSelectStyles = {
 
 /* Mapping */
 const typeMap = {
-  withdraw: "เบิกพัสดุ",
+  withdraw: "เบิกจ่าย",
   borrow: "ยืมออก",
   return_damaged: "คืนสภาพชำรุด",
-  damaged_dispose: "ทำลายชำรุด",
-  expired_dispose: "ทำลายหมดอายุ",
+  damaged_dispose: "จัดการชำรุด",
+  expired_dispose: "จัดการหมดอายุ",
   adjust_out: "ปรับปรุงยอดตัดออก",
   return_lost: "สูญหาย (ตรวจนับ)",
+  damaged: "การชำรุด", // เพิ่มสถานะใหม่
 };
 
 const CATEGORY_OPTIONS = [
@@ -66,6 +67,7 @@ const getTypeBadgeClass = (type) => {
     case "return_damaged":
     case "damaged_dispose":
     case "expired_dispose":
+    case "damaged": // เพิ่มสถานะใหม่
       return "st-warning";
     case "return_lost":
       return "st-rejected";

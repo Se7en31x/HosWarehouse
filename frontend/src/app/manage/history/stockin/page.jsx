@@ -2,49 +2,44 @@
 import { useState, useEffect, useMemo } from "react";
 import styles from "./page.module.css";
 import Swal from "sweetalert2";
-import {manageAxios} from "@/app/utils/axiosInstance";
+import { manageAxios } from "@/app/utils/axiosInstance";
 import { Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const Select = dynamic(() => import("react-select"), { ssr: false });
 
-/* react-select styles (เหมือนต้นแบบ แต่ปรับขนาดให้เล็กลง) */
+/* react-select styles */
 const customSelectStyles = {
   control: (base, state) => ({
     ...base,
     borderRadius: "0.5rem",
-    minHeight: "2.5rem", /* ลดความสูงลงเล็กน้อย */
+    minHeight: "2.5rem",
     borderColor: state.isFocused ? "#2563eb" : "#e5e7eb",
     boxShadow: "none",
     "&:hover": { borderColor: "#2563eb" },
-    fontSize: "0.9rem", /* ลดขนาดฟอนต์ */
+    fontSize: "0.9rem",
     width: "250px",
   }),
   menu: (base) => ({
     ...base,
     borderRadius: "0.5rem",
     marginTop: 6,
-    boxShadow: "none",
     border: "1px solid #e5e7eb",
     zIndex: 9000,
   }),
-  menuPortal: (base) => ({ ...base, zIndex: 9000 }),
   option: (base, state) => ({
     ...base,
     backgroundColor: state.isFocused ? "#f1f5ff" : "#fff",
     color: "#111827",
-    padding: "6px 10px", /* ลด padding */
+    padding: "6px 10px",
     fontSize: "0.9rem",
   }),
-  placeholder: (base) => ({ ...base, color: "#9ca3af", fontSize: "0.9rem" }),
-  clearIndicator: (base) => ({ ...base, padding: 4 }),
-  dropdownIndicator: (base) => ({ ...base, padding: 4 }),
 };
 
 /* mapping */
 const stockinTypeMap = {
   purchase: "จัดซื้อ",
-  "purchase-extra": "รับเพิ่มเติมจากการสั่งซื้อ",  // ✅ ใส่ quote
+  "purchase-extra": "รับเพิ่มเติมจากการสั่งซื้อ",
   general: "รับเข้าทั่วไป",
   return: "คืนพัสดุ",
   repair_return: "คืนจากซ่อม",
@@ -53,6 +48,7 @@ const stockinTypeMap = {
 
 const stockinStatusMap = {
   posted: "บันทึกแล้ว",
+  completed: "เสร็จสิ้น",
   draft: "ร่าง",
   waiting_approval: "รอการอนุมัติ",
   canceled: "ยกเลิก",
@@ -60,25 +56,45 @@ const stockinStatusMap = {
 
 const TYPE_OPTIONS = [
   { value: "all", label: "ทุกประเภท" },
-  ...Object.entries(stockinTypeMap).map(([k, v]) => ({ value: k, label: v })),
+  ...Object.entries(stockinTypeMap).map(([k, v]) => ({
+    value: k,
+    label: v,
+  })),
 ];
 const STATUS_OPTIONS = [
   { value: "all", label: "ทุกสถานะ" },
-  ...Object.entries(stockinStatusMap).map(([k, v]) => ({ value: k, label: v })),
+  ...Object.entries(stockinStatusMap).map(([k, v]) => ({
+    value: k,
+    label: v,
+  })),
 ];
 
-// สถานะ badge
+/* badge */
 const getStatusBadgeClass = (status) => {
   switch (status?.toLowerCase()) {
     case "posted":
-      return "stAvailable"; // เขียว
+    case "completed":
+      return "stAvailable";
     case "draft":
     case "waiting_approval":
-      return "stLow"; // เหลือง
+      return "stLow";
     case "canceled":
-      return "stOut"; // แดง
+      return "stOut";
     default:
-      return "stHold"; // เทา
+      return "stHold";
+  }
+};
+
+// ✅ ฟังก์ชันช่วย render extra info แบบเรียบง่าย
+const renderExtraInfo = (row) => {
+  switch (row.stockin_type) {
+    case "purchase":
+    case "purchase-extra":
+      return `<p><b>หมายเหตุ GR:</b> ${row.gr_note || "-"}</p>`;
+    case "adjustment":
+      return `<p><b>เหตุผลการปรับปรุง:</b> ${row.stockin_note || "-"}</p>`;
+    default:
+      return `<p><b>หมายเหตุ:</b> ${row.stockin_note || "-"}</p>`;
   }
 };
 
@@ -125,7 +141,7 @@ export default function ImportHistory() {
 
   const formatDate = (dateStr) =>
     dateStr
-      ? new Date(dateStr).toLocaleString("th-TH", {
+      ? new Date(dateStr).toLocaleDateString("th-TH", {
           timeZone: "Asia/Bangkok",
           year: "numeric",
           month: "2-digit",
@@ -133,21 +149,21 @@ export default function ImportHistory() {
         })
       : "-";
 
-  // กรองข้อมูล
+  // filter
   const filtered = useMemo(() => {
     return data.filter((row) => {
       const okType = typeFilter === "all" || row.stockin_type === typeFilter;
-      const okStatus = statusFilter === "all" || row.stockin_status === statusFilter;
+      const okStatus =
+        statusFilter === "all" || row.stockin_status === statusFilter;
       const okSearch =
         search === "" ||
         row.stockin_no?.toLowerCase().includes(search.toLowerCase()) ||
-        row.source_name?.toLowerCase().includes(search.toLowerCase()) ||
         row.user_name?.toLowerCase().includes(search.toLowerCase());
       return okType && okStatus && okSearch;
     });
   }, [data, typeFilter, statusFilter, search]);
 
-  // Pagination
+  // pagination
   const totalPages = Math.max(1, Math.ceil(filtered.length / rowsPerPage));
   const paginatedRows = useMemo(() => {
     const start = (currentPage - 1) * rowsPerPage;
@@ -194,52 +210,53 @@ export default function ImportHistory() {
     setCurrentPage(1);
   };
 
-  // Popup detail
+  // popup detail
   const showDetail = (row) => {
     const detailsHtml = row.details
-      ?.map((item, index) => {
-        return `
-            <tr style="border-bottom: 1px solid #e5e7eb;">
-              <td style="padding: 12px 8px; text-align: left;">${index + 1}</td>
-              <td style="padding: 12px 8px; text-align: left;">${item.item_name || '-'}</td>
-              <td style="padding: 12px 8px; text-align: right;">${item.qty || 0} ${item.item_unit || '-'}</td>
-              <td style="padding: 12px 8px; text-align: left;">${item.lot_no ? `Lot: ${item.lot_no}` : '-'}</td>
-              <td style="padding: 12px 8px; text-align: left;">${item.note || '-'}</td>
-            </tr>
-        `;
-      })
-      .join('');
+      ?.map(
+        (item, index) => `
+          <tr style="border-bottom: 1px solid #e5e7eb;">
+            <td style="padding: 12px 8px;">${index + 1}</td>
+            <td style="padding: 12px 8px;">${item.item_name || "-"}</td>
+            <td style="padding: 12px 8px; text-align: right;">
+              ${item.qty || 0} ${item.unit || "-"}
+            </td>
+            <td style="padding: 12px 8px;">${item.lot_no || "-"}</td>
+            <td style="padding: 12px 8px;">${item.note || "-"}</td>
+          </tr>
+        `
+      )
+      .join("");
 
     Swal.fire({
-      title: `<h2 style="font-size: 1.5rem; color: #1f2937; margin-bottom: 0.5rem;">รายละเอียดการนำเข้า</h2>`,
+      title: `<h2 style="font-size: 1.5rem; color: #1f2937;">รายละเอียดการนำเข้า</h2>`,
       html: `
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; text-align: left; padding: 1rem; border-radius: 0.5rem; background-color: #f9fafb; margin-bottom: 1.5rem;">
-            <p><b>เลขที่เอกสาร:</b> ${row.stockin_no || "-"}</p>
-            <p><b>วันที่นำเข้า:</b> ${formatDate(row.stockin_date)}</p>
-            <p><b>ประเภท:</b> ${stockinTypeMap[row.stockin_type] || row.stockin_type}</p>
-            <p><b>แหล่งที่มา:</b> ${row.source_name || "-"}</p>
-            <p><b>ผู้นำเข้า:</b> ${row.user_name || "-"}</p>
-            <p><b>สถานะ:</b> ${stockinStatusMap[row.stockin_status] || row.stockin_status}</p>
-            <div style="grid-column: 1 / span 2;"><p><b>หมายเหตุ:</b> ${row.stockin_note || "-"}</p></div>
+        <div style="display: grid; grid-template-columns: repeat(2,1fr); gap: 1rem; margin-bottom: 1rem;">
+          <p><b>เลขที่เอกสาร:</b> ${row.stockin_no || "-"}</p>
+          <p><b>วันที่นำเข้า:</b> ${formatDate(row.stockin_date)}</p>
+          <p><b>ประเภท:</b> ${stockinTypeMap[row.stockin_type] || row.stockin_type}</p>
+          <p><b>สถานะ:</b> ${stockinStatusMap[row.stockin_status] || row.stockin_status}</p>
+          <p><b>ผู้นำเข้า:</b> ${row.user_name || "-"}</p>
+          ${renderExtraInfo(row)}
         </div>
-        
-        <h3 style="font-size: 1.25rem; color: #1f2937; margin-bottom: 1rem;">รายการพัสดุที่นำเข้า</h3>
-        <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-                <thead style="background-color: #f3f4f6;">
-                    <tr>
-                        <th style="border-bottom: 2px solid #e5e7eb; padding: 12px 8px; text-align: left;">#</th>
-                        <th style="border-bottom: 2px solid #e5e7eb; padding: 12px 8px; text-align: left;">ชื่อพัสดุ</th>
-                        <th style="border-bottom: 2px solid #e5e7eb; padding: 12px 8px; text-align: right;">จำนวน</th>
-                        <th style="border-bottom: 2px solid #e5e7eb; padding: 12px 8px; text-align: left;">Lot</th>
-                        <th style="border-bottom: 2px solid #e5e7eb; padding: 12px 8px; text-align: left;">หมายเหตุ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${detailsHtml || '<tr><td colspan="5" style="padding: 12px; text-align: center; color: #6b7280;">ไม่พบรายการพัสดุ</td></tr>'}
-                </tbody>
-            </table>
-        </div>
+        <h3 style="font-size:1.25rem;margin:1rem 0;">รายการพัสดุ</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+          <thead style="background:#f3f4f6;">
+            <tr>
+              <th style="padding:8px;text-align:left;">#</th>
+              <th style="padding:8px;text-align:left;">ชื่อพัสดุ</th>
+              <th style="padding:8px;text-align:right;">จำนวน</th>
+              <th style="padding:8px;text-align:left;">Lot</th>
+              <th style="padding:8px;text-align:left;">หมายเหตุ</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${
+              detailsHtml ||
+              `<tr><td colspan="5" style="text-align:center;color:#6b7280;">ไม่พบรายการ</td></tr>`
+            }
+          </tbody>
+        </table>
       `,
       width: "800px",
       confirmButtonColor: "#008dda",
@@ -249,16 +266,12 @@ export default function ImportHistory() {
   return (
     <div className={styles.mainHome}>
       <div className={styles.infoContainer}>
-        {/* Header */}
         <div className={styles.pageBar}>
-          <div className={styles.titleGroup}>
-            <h1 className={styles.pageTitle}>ประวัติการนำเข้า</h1>
-          </div>
+          <h1 className={styles.pageTitle}>ประวัติการนำเข้า</h1>
         </div>
 
-        {/* Toolbar */}
+        {/* toolbar */}
         <div className={styles.filterBar}>
-          {/* ซ้าย: ประเภท + สถานะ */}
           <div className={styles.filterLeft}>
             <div className={styles.filterGroup}>
               <label className={styles.label}>ประเภท</label>
@@ -273,14 +286,15 @@ export default function ImportHistory() {
                 placeholder="เลือกประเภท..."
               />
             </div>
-
             <div className={styles.filterGroup}>
               <label className={styles.label}>สถานะ</label>
               <Select
                 isClearable
                 isSearchable={false}
                 options={STATUS_OPTIONS}
-                value={STATUS_OPTIONS.find((o) => o.value === statusFilter) || null}
+                value={
+                  STATUS_OPTIONS.find((o) => o.value === statusFilter) || null
+                }
                 onChange={(opt) => setStatusFilter(opt?.value || "all")}
                 styles={customSelectStyles}
                 menuPortalTarget={menuPortalTarget}
@@ -288,8 +302,6 @@ export default function ImportHistory() {
               />
             </div>
           </div>
-
-          {/* ขวา: ค้นหา + ล้าง */}
           <div className={styles.filterRight}>
             <div className={styles.filterGroup}>
               <label className={styles.label}>ค้นหา</label>
@@ -298,7 +310,7 @@ export default function ImportHistory() {
                 <input
                   type="text"
                   className={styles.input}
-                  placeholder="ค้นหา..."
+                  placeholder="ค้นหาเลขที่เอกสารหรือผู้นำเข้า"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -313,9 +325,9 @@ export default function ImportHistory() {
           </div>
         </div>
 
-        {/* Table */}
+        {/* table */}
         {isLoading ? (
-          <div className={styles.loadingContainer} />
+          <div className={styles.loadingContainer}>กำลังโหลด...</div>
         ) : (
           <div className={styles.tableSection}>
             <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
@@ -331,34 +343,45 @@ export default function ImportHistory() {
               </div>
             </div>
 
-            <div className={styles.inventory} style={{ "--rows-per-page": rowsPerPage }}>
+            <div className={styles.inventory}>
               {paginatedRows.length === 0 ? (
-                <div className={styles.noDataMessage}>ไม่พบข้อมูลการนำเข้า</div>
+                <div className={styles.noDataMessage}>ไม่พบข้อมูล</div>
               ) : (
                 paginatedRows.map((row) => (
                   <div
                     key={row.stockin_id}
                     className={`${styles.tableGrid} ${styles.tableRow}`}
                   >
-                    <div className={styles.tableCell}>{formatDate(row.stockin_date)}</div>
-                    <div className={styles.tableCell}>{row.stockin_no || "-"}</div>
+                    <div className={styles.tableCell}>
+                      {formatDate(row.stockin_date)}
+                    </div>
+                    <div className={styles.tableCell}>
+                      {row.stockin_no || "-"}
+                    </div>
                     <div className={styles.tableCell}>
                       {stockinTypeMap[row.stockin_type] || row.stockin_type}
                     </div>
-                    <div className={styles.tableCell}>{row.user_name || "-"}</div>
-                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                    <div className={styles.tableCell}>
+                      {row.user_name || "-"}
+                    </div>
+                    <div
+                      className={`${styles.tableCell} ${styles.centerCell}`}
+                    >
                       <span
-                        className={`${styles.stBadge} ${styles[getStatusBadgeClass(row.stockin_status)]}`}
+                        className={`${styles.stBadge} ${styles[getStatusBadgeClass(
+                          row.stockin_status
+                        )]}`}
                       >
-                        {stockinStatusMap[row.stockin_status] || row.stockin_status}
+                        {stockinStatusMap[row.stockin_status] ||
+                          row.stockin_status}
                       </span>
                     </div>
-                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                    <div
+                      className={`${styles.tableCell} ${styles.centerCell}`}
+                    >
                       <button
                         onClick={() => showDetail(row)}
                         className={styles.actionButton}
-                        title="ดูรายละเอียด"
-                        aria-label="ดูรายละเอียดการนำเข้า"
                       >
                         <Search size={18} />
                       </button>
@@ -368,14 +391,15 @@ export default function ImportHistory() {
               )}
             </div>
 
-            {/* Pagination */}
+            {/* pagination */}
             <ul className={styles.paginationControls}>
               <li>
                 <button
                   className={styles.pageButton}
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.max(1, p - 1))
+                  }
                   disabled={currentPage === 1}
-                  aria-label="หน้าก่อนหน้า"
                 >
                   <ChevronLeft size={16} />
                 </button>
@@ -388,10 +412,10 @@ export default function ImportHistory() {
                 ) : (
                   <li key={`page-${p}`}>
                     <button
-                      className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""
-                        }`}
+                      className={`${styles.pageButton} ${
+                        p === currentPage ? styles.activePage : ""
+                      }`}
                       onClick={() => setCurrentPage(p)}
-                      aria-label={`หน้า ${p}`}
                     >
                       {p}
                     </button>
@@ -401,9 +425,10 @@ export default function ImportHistory() {
               <li>
                 <button
                   className={styles.pageButton}
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
                   disabled={currentPage >= totalPages}
-                  aria-label="หน้าถัดไป"
                 >
                   <ChevronRight size={16} />
                 </button>

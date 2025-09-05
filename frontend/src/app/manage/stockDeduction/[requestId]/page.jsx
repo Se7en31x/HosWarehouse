@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import { manageAxios } from '@/app/utils/axiosInstance';
@@ -31,7 +31,7 @@ export default function SingleStockDeductionPage() {
   const [deductionSuccess, setDeductionSuccess] = useState(false);
   const [itemQuantities, setItemQuantities] = useState({});
 
-  // โหลดข้อมูล (เหมือนเดิม)
+  // โหลดข้อมูล (แก้ไขให้แสดงทั้งหมด)
   useEffect(() => {
     if (!requestId) return;
     const fetchData = async () => {
@@ -39,12 +39,15 @@ export default function SingleStockDeductionPage() {
         setIsLoading(true);
         const res = await manageAxios.get(`/stockDeduction/${requestId}/details`);
         const fetched = res.data;
-        const pendingItems = fetched.details.filter(i => i.processing_status === 'pending');
-        setRequestDetail({ ...fetched, details: pendingItems });
+        // ลบการกรองออกเพื่อให้แสดงรายการทั้งหมด
+        setRequestDetail(fetched);
 
         const initial = {};
-        pendingItems.forEach(i => {
-          initial[i.item_id] = { actual_deducted_qty: '', deduction_reason: '' }; // เริ่มต้นเป็นค่าว่าง
+        fetched.details.forEach(i => {
+          if (i.processing_status === 'pending') {
+            // ตั้งค่าเริ่มต้นเป็นจำนวนที่อนุมัติสูงสุด
+            initial[i.item_id] = { actual_deducted_qty: i.approved_qty, deduction_reason: '' };
+          }
         });
         setItemQuantities(initial);
       } catch (err) {
@@ -74,7 +77,11 @@ export default function SingleStockDeductionPage() {
   // เบิกสต็อก (ปรับการตรวจสอบเล็กน้อย)
   const handleDeduct = async () => {
     if (!requestDetail || isProcessing) return;
-    const itemsToProcess = requestDetail.details
+
+    // ตรวจสอบเฉพาะรายการที่มีสถานะเป็น 'pending' เท่านั้น
+    const pendingItems = requestDetail.details.filter(it => it.processing_status === 'pending');
+    
+    const itemsToProcess = pendingItems
       .map(it => {
         const qty = itemQuantities[it.item_id]?.actual_deducted_qty;
         const reason = itemQuantities[it.item_id]?.deduction_reason || '';
@@ -93,7 +100,7 @@ export default function SingleStockDeductionPage() {
       })
       .filter(Boolean);
 
-    if (itemsToProcess.length !== requestDetail.details.length) {
+    if (itemsToProcess.length !== pendingItems.length) {
       Swal.fire('ผิดพลาด', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง', 'error');
       return;
     }
@@ -124,6 +131,7 @@ export default function SingleStockDeductionPage() {
       });
       setDeductionSuccess(true);
       Swal.fire('สำเร็จ', 'เบิก-จ่ายสำเร็จแล้ว', 'success');
+      // ให้เวลาผู้ใช้ดูข้อความสำเร็จก่อน
       setTimeout(() => router.push('/manage/stockDeduction'), 600);
     } catch (err) {
       Swal.fire('ผิดพลาด', err.response?.data?.message || 'ไม่สามารถดำเนินการได้', 'error');
@@ -131,6 +139,12 @@ export default function SingleStockDeductionPage() {
       setIsProcessing(false);
     }
   };
+
+  // ใช้ useMemo เพื่อคำนวณรายการที่รอดำเนินการ
+  const pendingItems = useMemo(() => {
+    if (!requestDetail) return [];
+    return requestDetail.details.filter(it => it.processing_status === 'pending');
+  }, [requestDetail]);
 
   // Render
   if (isLoading) return <div className={styles.loading}>กำลังโหลด...</div>;
@@ -165,18 +179,10 @@ export default function SingleStockDeductionPage() {
           <div>เหตุผล</div>
         </div>
         <div className={styles.tableBody}>
-          {Array.from({ length: 10 }).map((_, idx) => {
-            const it = requestDetail.details[idx];
-            if (!it) {
-              return (
-                <div
-                  key={`empty-${idx}`}
-                  className={`${styles.tableGrid} ${styles.tableRow} ${styles.emptyRow}`}
-                />
-              );
-            }
+          {requestDetail?.details.map((it, idx) => {
+            const isDeducted = it.processing_status !== 'pending';
             return (
-              <div key={it.item_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
+              <div key={it.item_id} className={`${styles.tableGrid} ${styles.tableRow} ${isDeducted ? styles.disabledRow : ''}`}>
                 <div>{idx + 1}</div>
                 <div>{it.item_name}</div>
                 <div>{it.requested_qty}</div>
@@ -189,23 +195,23 @@ export default function SingleStockDeductionPage() {
                     type="number"
                     min="0"
                     max={it.approved_qty}
-                    value={itemQuantities[it.item_id]?.actual_deducted_qty ?? ''} // ใช้ ?? เพื่อให้เป็นค่าว่างได้
+                    value={isDeducted ? it.actual_deducted_qty : itemQuantities[it.item_id]?.actual_deducted_qty ?? ''}
                     onChange={e => handleQtyChange(it.item_id, e.target.value)}
                     className={styles.qtyInput}
-                    disabled={isProcessing}
+                    disabled={isDeducted || isProcessing}
                   />
                 </div>
                 <div>
-                  {itemQuantities[it.item_id]?.actual_deducted_qty < it.approved_qty && (
+                  {(isDeducted && it.deduction_reason) || (!isDeducted && itemQuantities[it.item_id]?.actual_deducted_qty < it.approved_qty) ? (
                     <input
                       type="text"
                       placeholder="เหตุผล"
-                      value={itemQuantities[it.item_id]?.deduction_reason || ''}
+                      value={isDeducted ? it.deduction_reason : itemQuantities[it.item_id]?.deduction_reason || ''}
                       onChange={e => handleReasonChange(it.item_id, e.target.value)}
                       className={styles.reasonInput}
-                      disabled={isProcessing}
+                      disabled={isDeducted || isProcessing}
                     />
-                  )}
+                  ) : null}
                 </div>
               </div>
             );
@@ -213,14 +219,20 @@ export default function SingleStockDeductionPage() {
         </div>
       </div>
 
-      <div className={styles.actions}>
-        <button onClick={handleDeduct} disabled={isProcessing} className={styles.primaryBtn}>
-          {isProcessing ? 'กำลังดำเนินการ...' : 'ยืนยันเบิก-จ่าย'}
-        </button>
-        <button onClick={() => router.push('/manage/stockDeduction')} className={styles.secondaryBtn}>
-          ย้อนกลับ
-        </button>
-      </div>
+      {pendingItems.length > 0 && (
+        <div className={styles.actions}>
+          <button
+            onClick={handleDeduct}
+            disabled={isProcessing}
+            className={styles.primaryBtn}
+          >
+            {isProcessing ? 'กำลังดำเนินการ...' : 'ยืนยันเบิก-จ่าย'}
+          </button>
+          <button onClick={() => router.push('/manage/stockDeduction')} className={styles.secondaryBtn}>
+            ย้อนกลับ
+          </button>
+        </div>
+      )}
     </div>
   );
 }

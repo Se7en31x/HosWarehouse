@@ -1,7 +1,7 @@
 /* =============================
-   ImportHistory — page.module.css
-   Palette: #008dda #41c9e2 #ace2e1 #1685bb
-   ============================= */
+    ImportHistory — page.module.css
+    Palette: #008dda #41c9e2 #ace2e1 #1685bb
+    ============================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -477,4 +477,98 @@
       80px /* สถานะ */
       90px; /* จัดการ */
   }
+}
+
+/* =============================
+    SweetAlert2 Custom Styles
+    ============================= */
+.swal2-popup {
+    border-radius: var(--radius) !important;
+}
+
+.swal2-title-custom {
+    font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: var(--text) !important;
+}
+
+.swal2-html-container-custom {
+    font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
+    text-align: left !important;
+    font-size: 0.95rem !important;
+    color: var(--text) !important;
+}
+
+.swal2-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 24px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.swal2-detail-item {
+    margin: 0;
+    padding: 0;
+    line-height: 1.5;
+}
+
+.swal2-detail-item b {
+    color: #374151;
+}
+
+/* For notes or items that should span the full width */
+.swal2-full-width {
+    grid-column: span 2;
+}
+
+.swal2-section-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    color: #374151;
+}
+
+.swal2-table-wrapper {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.swal2-detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.swal2-detail-table th {
+    background-color: #f6fbfd;
+    padding: 12px;
+    text-align: left;
+    color: #374151;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+}
+
+.swal2-detail-table td {
+    padding: 12px;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: top;
+}
+
+.swal2-detail-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.swal2-text-center {
+    text-align: center !important;
+}
+
+.swal2-no-data {
+    text-align: center !important;
+    color: var(--muted);
+    font-style: italic;
 }

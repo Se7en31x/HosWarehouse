@@ -1,14 +1,17 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Select from "react-select";
 import { ClipboardList, FileDown, Search } from "lucide-react";
-import {manageAxios} from "@/app/utils/axiosInstance";
+import { manageAxios } from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
 
 export default function OutflowReport() {
-  const [type, setType] = useState(null);
-  const [department, setDepartment] = useState(null);
-  const [dateRange, setDateRange] = useState(null);
+  // ✅ แก้ไขค่าเริ่มต้นของ state ให้เป็น 'all'
+  const [type, setType] = useState({ value: "all", label: "ทั้งหมด" });
+  const [department, setDepartment] = useState({ value: "all", label: "ทั้งหมด" });
+  const [dateRange, setDateRange] = useState({ value: "all", label: "ทั้งหมด" });
+  
+  const [sortBy, setSortBy] = useState({ value: "date_desc", label: "ล่าสุดก่อน" });
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -25,13 +28,25 @@ export default function OutflowReport() {
     { value: "or", label: "ห้องผ่าตัด" },
   ];
 
+  // ✅ เพิ่มตัวเลือก 'all' สำหรับช่วงเวลา
   const dateOptions = [
+    { value: "all", label: "ทั้งหมด" },
     { value: "today", label: "วันนี้" },
-    { value: "month", label: "เดือนนี้" },
+    { value: "last1month", label: "1 เดือนที่ผ่านมา" },
+    { value: "last3months", label: "3 เดือนที่ผ่านมา" },
+    { value: "last6months", label: "6 เดือนที่ผ่านมา" },
+    { value: "last9months", label: "9 เดือนที่ผ่านมา" },
+    { value: "last12months", label: "12 เดือนที่ผ่านมา" },
     { value: "year", label: "ปีนี้" },
   ];
 
-  // ✅ ตัวช่วยแปลง category
+  const sortOptions = [
+    { value: "date_desc", label: "ล่าสุดก่อน" },
+    { value: "date_asc", label: "เก่าก่อน" },
+    { value: "request_code", label: "เลขที่คำขอ" },
+    { value: "status", label: "สถานะการดำเนินการ" },
+  ];
+
   const translateCategory = (cat) => {
     const map = {
       general: "ของใช้ทั่วไป",
@@ -43,38 +58,36 @@ export default function OutflowReport() {
     return map[cat] || cat || "-";
   };
 
-  // ✅ ประเภทคำขอ
   const translateRequestType = (type) => {
     const map = { withdraw: "เบิก", borrow: "ยืม" };
     return map[type] || type;
   };
 
-  // ✅ สถานะอนุมัติ
   const translateApprovalStatus = (status) => {
-  const map = {
-    waiting_approval: "รออนุมัติ",
-    waiting_approval_detail: "รออนุมัติ", // ✅ เพิ่มตัวนี้
-    approved: "อนุมัติ",
-    rejected: "ไม่อนุมัติ",
-    partial: "อนุมัติบางส่วน",
+    const map = {
+      waiting_approval: "รออนุมัติ",
+      waiting_approval_detail: "รออนุมัติ",
+      approved: "อนุมัติ",
+      approved_in_queue: "อนุมัติรอดำเนินการ",
+      rejected: "ไม่อนุมัติ",
+      partial: "อนุมัติบางส่วน",
+    };
+    return map[status] || status;
   };
-  return map[status] || status;
-};
 
-// ✅ สถานะการดำเนินการ
-const translateProcessingStatus = (status) => {
-  const map = {
-    pending: { text: "รอจ่าย", className: styles.badgeGray },
-    preparing: { text: "กำลังเตรียม", className: styles.badgeBlue },
-    delivering: { text: "กำลังนำส่ง", className: styles.badgeOrange },
-    completed: { text: "เสร็จสิ้น", className: styles.badgeGreen },
-    rejected: { text: "ปฏิเสธ", className: styles.badgeRed },          // ✅ เพิ่มตรงนี้
-    waiting_approval: { text: "รออนุมัติ", className: styles.badgeGray },  // ✅ กันไว้ด้วย
+  const translateProcessingStatus = (status) => {
+    const map = {
+      pending: { text: "รอจ่าย", className: styles.badgeGray },
+      preparing: { text: "กำลังเตรียม", className: styles.badgeBlue },
+      delivering: { text: "กำลังนำส่ง", className: styles.badgeOrange },
+      completed: { text: "เสร็จสิ้น", className: styles.badgeGreen },
+      rejected: { text: "ปฏิเสธ", className: styles.badgeRed },
+      waiting_approval: { text: "รออนุมัติ", className: styles.badgeGray },
+      approved_in_queue: { text: "อนุมัติรอดำเนินการ", className: styles.badgeBlue },
+    };
+    return map[status] || { text: "-", className: styles.badgeGray };
   };
-  return map[status] || { text: "-", className: styles.badgeGray };
-};
 
-  // ✅ ฟอร์แมตวันที่
   const formatDate = (iso) => {
     if (!iso) return "-";
     const d = new Date(iso);
@@ -87,68 +100,113 @@ const translateProcessingStatus = (status) => {
     });
   };
 
-  // ✅ ดึงข้อมูล
-  // ✅ ดึงข้อมูล
-const fetchReport = async () => {
-  try {
-    setLoading(true);
+  const fetchReport = useCallback(async () => {
+    try {
+      setLoading(true);
 
-    let start = null;
-    let end = null;
-    const today = new Date();
+      let start = null;
+      let end = null;
+      const today = new Date();
+      const option = dateRange?.value;
 
-    if (dateRange?.value === "today") {
-      // กำหนดเป็นวันเดียว
-      start = today.toISOString().split("T")[0];
-      end = today.toISOString().split("T")[0];
-    } else if (dateRange?.value === "month") {
-      // หาวันแรกและวันสุดท้ายของเดือน
-      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-      start = firstDay.toISOString().split("T")[0];
-      end = lastDay.toISOString().split("T")[0];
-    } else if (dateRange?.value === "year") {
-      // หาวันแรกและวันสุดท้ายของปี
-      const firstDay = new Date(today.getFullYear(), 0, 1);
-      const lastDay = new Date(today.getFullYear(), 11, 31);
-      start = firstDay.toISOString().split("T")[0];
-      end = lastDay.toISOString().split("T")[0];
-    }
+      if (option === "today") {
+        start = today.toISOString().split("T")[0];
+        end = today.toISOString().split("T")[0];
+      } else if (option === "year") {
+        const firstDay = new Date(today.getFullYear(), 0, 1);
+        const lastDay = new Date(today.getFullYear(), 11, 31);
+        start = firstDay.toISOString().split("T")[0];
+        end = lastDay.toISOString().split("T")[0];
+      } else if (option?.startsWith("last")) {
+        const months = parseInt(option.replace("last", "").replace("months", ""));
+        end = today.toISOString().split("T")[0];
+        const pastDate = new Date();
+        pastDate.setMonth(pastDate.getMonth() - months);
+        start = pastDate.toISOString().split("T")[0];
+      }
 
-    const res = await manageAxios.get("/report/outflow", {
-      params: {
+      const params = {
         type: type?.value || "all",
         department: department?.value || "all",
-        start,
-        end,
-      },
-    });
-    setData(res.data);
-  } catch (err) {
-    console.error("Error fetching outflow report:", err);
-  } finally {
-    setLoading(false);
-  }
-};
+      };
+      if (start) {
+        params.start = start;
+        params.end = end;
+      }
 
+      const res = await manageAxios.get("/report/outflow", { params });
+      setData(res.data);
+    } catch (err) {
+      console.error("Error fetching outflow report:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [type, department, dateRange]);
 
   useEffect(() => {
     fetchReport();
-  }, []);
+  }, [fetchReport]);
+
+  const sortedData = [...data].sort((a, b) => {
+    if (sortBy.value === "date_desc") {
+      return new Date(b.request_date) - new Date(a.request_date);
+    }
+    if (sortBy.value === "date_asc") {
+      return new Date(a.request_date) - new Date(b.request_date);
+    }
+    if (sortBy.value === "request_code") {
+      return a.request_code.localeCompare(b.request_code);
+    }
+    if (sortBy.value === "status") {
+      const order = [
+        "waiting_approval",
+        "approved_in_queue",
+        "pending",
+        "preparing",
+        "delivering",
+        "completed",
+        "rejected",
+      ];
+      return order.indexOf(a.processing_status) - order.indexOf(b.processing_status);
+    }
+    return 0;
+  });
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <ClipboardList size={32} color="#2563eb" />
-        <h1>รายงานการนำออก (เบิก + ยืม)</h1>
+        <h1>รายงานการเบิก ยืม</h1>
       </div>
-
-      {/* Filter */}
       <div className={styles.filterBar}>
-        <Select className={styles.selectBox} options={typeOptions} value={type} onChange={setType} placeholder="ประเภทคำขอ" />
-        <Select className={styles.selectBox} options={departmentOptions} value={department} onChange={setDepartment} placeholder="แผนก" />
-        <Select className={styles.selectBox} options={dateOptions} value={dateRange} onChange={setDateRange} placeholder="ช่วงเวลา" />
-
+        <Select
+          className={styles.selectBox}
+          options={typeOptions}
+          value={type}
+          onChange={setType}
+          placeholder="ประเภทคำขอ"
+        />
+        <Select
+          className={styles.selectBox}
+          options={departmentOptions}
+          value={department}
+          onChange={setDepartment}
+          placeholder="แผนก"
+        />
+        <Select
+          className={styles.selectBox}
+          options={dateOptions}
+          value={dateRange}
+          onChange={setDateRange}
+          placeholder="ช่วงเวลา"
+        />
+        <Select
+          className={styles.selectBox}
+          options={sortOptions}
+          value={sortBy}
+          onChange={setSortBy}
+          placeholder="เรียงตาม"
+        />
         <button className={styles.btnPrimary} onClick={fetchReport}>
           <Search size={16} style={{ marginRight: "6px" }} />
           ค้นหา
@@ -162,8 +220,6 @@ const fetchReport = async () => {
           CSV
         </button>
       </div>
-
-      {/* Table */}
       <div className={styles.card}>
         {loading ? (
           <p>⏳ กำลังโหลดข้อมูล...</p>
@@ -185,8 +241,8 @@ const fetchReport = async () => {
               </tr>
             </thead>
             <tbody>
-              {data.length > 0 ? (
-                data.map((item, idx) => {
+              {sortedData.length > 0 ? (
+                sortedData.map((item, idx) => {
                   const proc = translateProcessingStatus(item.processing_status);
                   return (
                     <tr key={idx}>

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { ClipboardList, FileDown, Search } from "lucide-react";
+import { Send, FileDown, Search } from "lucide-react";
 import { manageAxios } from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
 import jsPDF from "jspdf";
@@ -11,31 +11,31 @@ import { saveAs } from "file-saver";
 
 const Select = dynamic(() => import("react-select"), { ssr: false });
 
-export default function InflowReport() {
+export default function GeneralOutflowReport() {
   const [type, setType] = useState({ value: "all", label: "ทั้งหมด" });
   const [data, setData] = useState([]);
   const [dateRange, setDateRange] = useState({ value: "all", label: "ทุกช่วงเวลา" });
+  const [user, setUser] = useState(null);
+  const [users, setUsers] = useState([]);
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const typeOptions = [
-    { value: "all", label: "ทั้งหมด" },
-    { value: "general", label: "รับเข้าทั่วไป" },
-    { value: "purchase", label: "รับเข้าจากการสั่งซื้อ" },
-    { value: "return", label: "คืนพัสดุ" },
-    { value: "repair_return", label: "คืนจากซ่อม" },
-    { value: "adjustment", label: "ปรับปรุงยอด" },
-  ];
+const typeOptions = [
+  { value: "all", label: "ทั้งหมด" },
+  { value: "withdraw", label: "ตัดสต็อก" },
+  { value: "damaged", label: "ชำรุด" },
+  { value: "expired_dispose", label: "หมดอายุ" },
+];
 
   const dateOptions = [
     { value: "all", label: "ทุกช่วงเวลา" },
     { value: "today", label: "วันนี้" },
-    { value: "last_1_month", label: "ย้อนหลัง 1 เดือน" },
-    { value: "last_3_months", label: "ย้อนหลัง 3 เดือน" },
-    { value: "last_6_months", label: "ย้อนหลัง 6 เดือน" },
-    { value: "last_9_months", label: "ย้อนหลัง 9 เดือน" },
-    { value: "last_12_months", label: "ย้อนหลัง 12 เดือน" },
+    { value: "1m", label: "1 เดือนย้อนหลัง" },
+    { value: "3m", label: "3 เดือนย้อนหลัง" },
+    { value: "6m", label: "6 เดือนย้อนหลัง" },
+    { value: "9m", label: "9 เดือนย้อนหลัง" },
+    { value: "12m", label: "12 เดือนย้อนหลัง" },
     { value: "custom", label: "กำหนดเอง" },
   ];
 
@@ -50,16 +50,14 @@ export default function InflowReport() {
     return map[cat] || cat || "-";
   };
 
-  const translateInflowType = (type) => {
-    const map = {
-      general: "รับเข้าทั่วไป",
-      purchase: "รับเข้าจากการสั่งซื้อ",
-      return: "คืนพัสดุ",
-      repair_return: "คืนจากซ่อม",
-      adjustment: "ปรับปรุงยอด",
-    };
-    return map[type] || type || "-";
+const translateOutflowType = (type) => {
+  const map = {
+    withdraw: "ตัดสต็อก",
+    damaged: "ชำรุด",
+    expired_dispose: "หมดอายุ",
   };
+  return map[type] || type || "-";
+};
 
   const formatDate = (iso) => {
     if (!iso) return "-";
@@ -73,6 +71,19 @@ export default function InflowReport() {
     });
   };
 
+  const fetchUsers = useCallback(async () => {
+    try {
+      const res = await manageAxios.get("/users");
+      const userOptions = res.data.map(u => ({
+        value: u.user_id,
+        label: `${u.user_fname} ${u.user_lname}`
+      }));
+      setUsers([{ value: "all", label: "ผู้ใช้งานทั้งหมด" }, ...userOptions]);
+    } catch (err) {
+      console.error("Error fetching users:", err);
+    }
+  }, []);
+
   const fetchReport = useCallback(async () => {
     try {
       setLoading(true);
@@ -81,87 +92,77 @@ export default function InflowReport() {
       let end = null;
       const now = new Date();
 
-      switch (dateRange?.value) {
-        case "today":
+      if (dateRange?.value === "today") {
           start = now.toISOString().split("T")[0];
           end = now.toISOString().split("T")[0];
-          break;
-        case "last_1_month":
-        case "last_3_months":
-        case "last_6_months":
-        case "last_9_months":
-        case "last_12_months":
-          const monthsAgo = parseInt(dateRange.value.split('_')[1]);
-          const d = new Date(now);
-          d.setMonth(now.getMonth() - monthsAgo);
-          start = d.toISOString().split('T')[0];
-          end = now.toISOString().split('T')[0];
-          break;
-        case "custom":
+      } else if (["1m", "3m", "6m", "9m", "12m"].includes(dateRange?.value)) {
+          const months = parseInt(dateRange.value.split('m')[0]);
+          const past = new Date();
+          past.setMonth(now.getMonth() - months);
+          start = past.toISOString().split("T")[0];
+          end = now.toISOString().split("T")[0];
+      } else if (dateRange?.value === "custom") {
           start = customStart || null;
           end = customEnd || null;
-          break;
-        default: // 'all' หรือค่าอื่นๆ
-          start = null;
-          end = null;
-          break;
       }
       
-      const res = await manageAxios.get("/report/inflow", {
+      const res = await manageAxios.get("/report/general-outflow", {
         params: {
           type: type?.value || "all",
           start,
           end,
+          user_id: user?.value || "all",
         },
       });
       setData(res.data);
     } catch (err) {
-      console.error("Error fetching inflow report:", err);
+      console.error("Error fetching general outflow report:", err);
     } finally {
       setLoading(false);
     }
-  }, [type, dateRange, customStart, customEnd]);
+  }, [type, dateRange, customStart, customEnd, user]);
 
   useEffect(() => {
+    fetchUsers();
     fetchReport();
-  }, [fetchReport]);
+  }, [fetchReport, fetchUsers]);
 
   const exportCSV = useCallback(() => {
     if (!data.length) return;
     const csvData = data.map((item) => ({
       'เลขที่เอกสาร': item.doc_no,
       'วันที่': formatDate(item.doc_date),
-      'ประเภทการรับเข้า': translateInflowType(item.inflow_type),
+      'ประเภทการนำออก': translateOutflowType(item.outflow_type),
       'ชื่อพัสดุ': item.item_name,
       'ประเภท': translateCategory(item.category),
       'Lot No': item.lot_no || "-",
       'จำนวน': item.qty,
       'หน่วย': item.unit,
-      'ผู้ขาย/ซัพพลายเออร์': item.supplier_name || "-",
       'ผู้ทำรายการ': item.user_name || "-",
+      'หมายเหตุ': item.doc_note || "-",
     }));
     const csv = Papa.unparse(csvData, { header: true });
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    saveAs(blob, `inflow-report-${Date.now()}.csv`);
+    saveAs(blob, `general-outflow-report-${Date.now()}.csv`);
   }, [data]);
 
   const exportPDF = useCallback(() => {
     if (!data.length) return;
     const doc = new jsPDF();
     doc.setFontSize(14);
-    doc.text("รายงานการรับเข้า (Inflow Report)", 14, 15);
+    doc.text("รายงานการนำออก (ตัดสต็อก, ชำรุด, หมดอายุ)", 14, 15);
 
     const tableData = data.map((item) => [
       item.doc_no,
       formatDate(item.doc_date),
-      translateInflowType(item.inflow_type),
+      translateOutflowType(item.outflow_type),
       item.item_name,
       translateCategory(item.category),
       item.lot_no || "-",
       item.qty,
       item.unit,
-      item.supplier_name || "-",
       item.user_name || "-",
+      item.doc_note || "-",
     ]);
 
     autoTable(doc, {
@@ -169,28 +170,28 @@ export default function InflowReport() {
         [
           "เลขที่เอกสาร",
           "วันที่",
-          "ประเภทการรับเข้า",
+          "ประเภทการนำออก",
           "ชื่อพัสดุ",
           "ประเภท",
           "Lot No",
           "จำนวน",
           "หน่วย",
-          "ผู้ขาย/ซัพพลายเออร์",
           "ผู้ทำรายการ",
+          "หมายเหตุ",
         ],
       ],
       body: tableData,
       startY: 25,
     });
 
-    doc.save(`inflow-report-${Date.now()}.pdf`);
+    doc.save(`general-outflow-report-${Date.now()}.pdf`);
   }, [data]);
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <ClipboardList size={32} color="#2563eb" />
-        <h1>รายงานการรับเข้า</h1>
+        <Send size={32} color="#f97316" />
+        <h1>รายงานการนำออก</h1>
       </div>
 
       <div className={styles.filterBar}>
@@ -199,7 +200,7 @@ export default function InflowReport() {
           options={typeOptions}
           value={type}
           onChange={setType}
-          placeholder="ประเภทการรับเข้า"
+          placeholder="ประเภทการนำออก"
         />
         <Select
           className={styles.selectBox}
@@ -210,8 +211,7 @@ export default function InflowReport() {
         />
 
         {dateRange?.value === "custom" && (
-          // ✅ ส่วนที่ปรับแต่งการแสดงผลของ Date Inputs
-          <div className={`${styles.dateInputs} ${styles.customDateRange}`}> 
+          <div className={`${styles.dateInputs} ${styles.customDateRange}`}>
             <input
               type="date"
               value={customStart}
@@ -226,6 +226,16 @@ export default function InflowReport() {
               className={styles.dateInput}
             />
           </div>
+        )}
+
+        {users.length > 0 && (
+          <Select
+            className={styles.selectBox}
+            options={users}
+            value={user}
+            onChange={setUser}
+            placeholder="ผู้ทำรายการ"
+          />
         )}
 
         <button className={styles.btnPrimary} onClick={fetchReport}>
@@ -251,14 +261,14 @@ export default function InflowReport() {
               <tr>
                 <th>เลขที่เอกสาร</th>
                 <th>วันที่</th>
-                <th>ประเภทการรับเข้า</th>
+                <th>ประเภทการนำออก</th>
                 <th>ชื่อพัสดุ</th>
                 <th>ประเภท</th>
                 <th>Lot No</th>
                 <th>จำนวน</th>
                 <th>หน่วย</th>
-                <th>ผู้ขาย/ซัพพลายเออร์</th>
                 <th>ผู้ทำรายการ</th>
+                <th>หมายเหตุ</th>
               </tr>
             </thead>
             <tbody>
@@ -267,14 +277,14 @@ export default function InflowReport() {
                   <tr key={idx}>
                     <td>{item.doc_no}</td>
                     <td>{formatDate(item.doc_date)}</td>
-                    <td>{translateInflowType(item.inflow_type)}</td>
+                    <td>{translateOutflowType(item.outflow_type)}</td>
                     <td>{item.item_name}</td>
                     <td>{translateCategory(item.category)}</td>
                     <td>{item.lot_no || "-"}</td>
                     <td>{item.qty}</td>
                     <td>{item.unit}</td>
-                    <td>{item.supplier_name || "-"}</td>
                     <td>{item.user_name || "-"}</td>
+                    <td>{item.doc_note || "-"}</td>
                   </tr>
                 ))
               ) : (

@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   ShieldAlert,
   ChevronRight,
+  Send,
 } from "lucide-react";
 import styles from "./page.module.css";
 
@@ -30,16 +31,25 @@ export default function ReportsMainPage() {
       href: "/manage/reports/inflowReport",
     },
     {
-      id: "outflow",
-      title: "รายงานการเบิก–จ่าย",
+      id: "outflow-borrow",
+      title: "รายงานการเบิก–ยืม",
       description: "ดูการเบิกจ่ายแยกตามแผนกและประเภทพัสดุ",
       icon: ShoppingCart,
       color: "orange",
       href: "/manage/reports/outflowReport",
     },
+    // ✅ เพิ่มรายงานการนำออกใหม่
+    {
+      id: "outflow-general",
+      title: "รายงานการนำออก",
+      description: "ดูการตัดสต็อก, ชำรุด และหมดอายุ",
+      icon: Send,
+      color: "red",
+      href: "/manage/reports/generalOutflowReport", // ✅ Route ใหม่
+    },
     {
       id: "return",
-      title: "รายงานการยืม–คืน",
+      title: "รายงานการคืน",
       description: "ติดตามพัสดุที่ถูกยืม คืนแล้ว/ยังไม่คืน",
       icon: Repeat,
       color: "purple",

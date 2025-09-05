@@ -88,15 +88,15 @@ export default function InventoryDetail() {
     Swal.fire({
       title: `แจ้งของชำรุด (Lot ${lot.lot_no || '-'})`,
       html: `
-        <input id="damagedQty" class="swal2-input ${styles.swalInput}" 
-          type="number" 
-          min="1" 
-          max="${lot.remaining_qty}" 
-          placeholder="จำนวน (สูงสุด ${lot.remaining_qty})"
-          oninvalid="this.setCustomValidity('❌ จำนวนต้องไม่เกิน ${lot.remaining_qty} และต้องมากกว่า 0')"
-          oninput="this.setCustomValidity('')"
-        />
-      `,
+        <input id="damagedQty" class="swal2-input ${styles.swalInput}" 
+          type="number" 
+          min="1" 
+          max="${lot.remaining_qty ?? 0}" 
+          placeholder="จำนวน (สูงสุด ${lot.remaining_qty ?? 0})"
+          oninvalid="this.setCustomValidity('❌ จำนวนต้องไม่เกิน ${lot.remaining_qty ?? 0} และต้องมากกว่า 0')"
+          oninput="this.setCustomValidity('')"
+        />
+      `,
       showCancelButton: true,
       confirmButtonText: 'บันทึก',
       cancelButtonText: 'ยกเลิก',
@@ -152,20 +152,20 @@ export default function InventoryDetail() {
     Swal.fire({
       title: `ปรับปรุงจำนวน (Lot ${lot.lot_no || '-'})`,
       html: `
-        <p>คงเหลือปัจจุบัน: <b>${lot.remaining_qty}</b></p>
-        <input id="newQty" class="swal2-input ${styles.swalInput}" 
-          type="number" 
-          value="${lot.remaining_qty}" 
-          min="0" 
-          max="${lot.qty_imported}" 
-          placeholder="จำนวน (สูงสุด ${lot.qty_imported})"
-          oninvalid="this.setCustomValidity('❌ จำนวนต้องไม่เกิน ${lot.qty_imported} และต้องไม่ต่ำกว่า 0')"
-          oninput="this.setCustomValidity('')"
-        />
-        <input id="reason" class="swal2-input ${styles.swalInput}" 
-          placeholder="เหตุผลในการปรับปรุง"
-        />
-      `,
+        <p>คงเหลือปัจจุบัน: <b>${lot.remaining_qty ?? '-'}</b></p>
+        <input id="newQty" class="swal2-input ${styles.swalInput}" 
+          type="number" 
+          value="${lot.remaining_qty ?? 0}" 
+          min="0" 
+          max="${lot.qty_imported ?? 0}" 
+          placeholder="จำนวน (สูงสุด ${lot.qty_imported ?? 0})"
+          oninvalid="this.setCustomValidity('❌ จำนวนต้องไม่เกิน ${lot.qty_imported ?? 0} และต้องไม่ต่ำกว่า 0')"
+          oninput="this.setCustomValidity('')"
+        />
+        <input id="reason" class="swal2-input ${styles.swalInput}" 
+          placeholder="เหตุผลในการปรับปรุง"
+        />
+      `,
       showCancelButton: true,
       confirmButtonText: 'ยืนยัน',
       cancelButtonText: 'ยกเลิก',
@@ -275,8 +275,8 @@ export default function InventoryDetail() {
                     <td>{formatDate(lot.mfg_date)}</td>
                     <td>{formatDate(lot.exp_date)}</td>
                     <td>{formatDate(lot.import_date)}</td>
-                    <td>{lot.qty_imported || '-'}</td>
-                    <td>{lot.remaining_qty || '-'}</td>
+                    <td>{lot.qty_imported ?? '-'}</td>
+                    <td>{lot.remaining_qty ?? '-'}</td>
                     <td className={styles.btnGroup}>
                       <button onClick={() => handleAdjust(lot)} className={styles.btnBlue}>
                         ปรับ
