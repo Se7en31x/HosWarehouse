@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import axiosInstance from '../../utils/axiosInstance';
+import { staffAxios } from '../../utils/axiosInstance';
 import styles from './page.module.css';
 import Swal from 'sweetalert2';
 import { ChevronLeft, ChevronRight, X, Eye, Trash2, CheckCircle } from 'lucide-react';
@@ -127,7 +127,7 @@ function RequestDetailBody({ requestId }) {
       setLoading(true);
       setError('');
       try {
-        const res = await axiosInstance.get(`/myRequestDetail/${requestId}?user_id=1`);
+        const res = await staffAxios.get(`/myRequestDetail/${requestId}`);
         if (!alive) return;
         const data = res.data || {};
         setDetail(data.detail || null);
@@ -206,7 +206,7 @@ function RequestDetailBody({ requestId }) {
                   <td>{item.item_unit || '-'}</td>
                   <td>
                     <span className={styles.typeChip}>
-                      {translateStatus(item.processing_status || item.processing_status)}
+                      {translateStatus(item.processing_status)}
                     </span>
                   </td>
                 </tr>
@@ -226,28 +226,23 @@ function RequestDetailBody({ requestId }) {
 // ─────────────────────────────────────────────────────────────
 // หน้า List หลัก + Popup ดูรายละเอียด
 export default function MyRequestsPage() {
-  // ✅ filter state
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-
-  // ✅ menuPortalTarget สำหรับ react-select
   const menuPortalTarget = typeof window !== "undefined" ? document.body : null;
 
   const [requests, setRequests] = useState([]);
   const [loadingList, setLoadingList] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
-  const userId = 1;
   const [openId, setOpenId] = useState(null);
 
-  // ค้นหา/กรอง
   const [query, setQuery] = useState('');
 
   // ดึงคำขอ
   const fetchRequests = async () => {
     try {
       setLoadingList(true);
-      const res = await axiosInstance.get(`/myRequest?user_id=${userId}`);
+      const res = await staffAxios.get(`/myRequest`);
       setRequests(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error(err);
@@ -258,7 +253,7 @@ export default function MyRequestsPage() {
         customClass: { container: 'swal-topmost' }
       });
     } finally {
-      if (loadingList) setLoadingList(false);
+      setLoadingList(false);
     }
   };
 
@@ -282,7 +277,7 @@ export default function MyRequestsPage() {
     });
     if (!result.isConfirmed) return;
     try {
-      await axiosInstance.put(`/myRequest/${requestId}/cancel`, { user_id: userId });
+      await staffAxios.put(`/myRequest/${requestId}/cancel`);
       await Swal.fire({ icon: 'success', title: 'สำเร็จ', text: 'ยกเลิกคำขอเรียบร้อยแล้ว' });
       fetchRequests();
     } catch (err) {
@@ -303,7 +298,7 @@ export default function MyRequestsPage() {
     });
     if (!result.isConfirmed) return;
     try {
-      await axiosInstance.put(`/myRequest/${requestId}/complete`, { user_id: userId });
+      await staffAxios.put(`/myRequest/${requestId}/complete`);
       await Swal.fire({ icon: 'success', title: 'สำเร็จ', text: 'ยืนยันการรับของเรียบร้อยแล้ว' });
       fetchRequests();
     } catch (err) {
@@ -362,27 +357,20 @@ export default function MyRequestsPage() {
 
   const stats = useMemo(() => {
     const total = (requests || []).length;
-
-    // 👉 นับตามประเภท ไม่สนสถานะ
     const withdraw = requests.filter(r =>
       parseTypes(r.request_types).includes('withdraw')
     ).length;
-
     const borrow = requests.filter(r =>
       parseTypes(r.request_types).includes('borrow')
     ).length;
-
-    // 👉 ถ้าอยากแยกสถานะ pending, cancelled ไว้ด้วยก็เพิ่มได้
     const pending = requests.filter(r =>
       ["waiting_approval", "waiting_approval_detail", "pending"]
         .includes(String(r.request_status).toLowerCase())
     ).length;
-
     const cancelled = requests.filter(r =>
       ["canceled", "cancelled", "rejected_all", "rejected"]
         .includes(String(r.request_status).toLowerCase())
     ).length;
-
     return { total, withdraw, borrow, pending, cancelled };
   }, [requests]);
 
@@ -448,8 +436,6 @@ export default function MyRequestsPage() {
           <div className={styles.statValue}>{stats.borrow}</div>
         </div>
       </div>
-
-
       {/* Toolbar Filters */}
       <div className={styles.toolbar}>
         <div className={styles.filterGrid}>

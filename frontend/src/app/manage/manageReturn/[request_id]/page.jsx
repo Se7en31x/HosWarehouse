@@ -252,7 +252,6 @@ export default function ManageReturnDetailPage() {
         qty_return: parseInt(n, 10),
         condition,
         note,
-        inspected_by: 1,
         item_id: activeRow.item_id,
       };
 

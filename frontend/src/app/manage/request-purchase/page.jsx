@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useMemo } from "react";
 import styles from "./page.module.css";
-import {manageAxios} from "@/app/utils/axiosInstance";
+import { manageAxios } from "@/app/utils/axiosInstance";
 import { FaPlus, FaTrashAlt, FaSearch, FaShoppingCart } from "react-icons/fa";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -444,7 +444,6 @@ iban            .input-field {
 
     try {
       await manageAxios.post("/pr", {
-        requester_id: 1,
         items_to_purchase: itemsToSubmit.map((i) => ({
           item_id: i.item_id,
           qty: i.requested_qty,
@@ -452,7 +451,7 @@ iban            .input-field {
           note: i.note,
         })),
       });
-
+      
       Swal.fire({
         title: "สำเร็จ",
         text: "ส่งคำขอสั่งซื้อเรียบร้อย",

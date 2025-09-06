@@ -16,7 +16,6 @@ export default function Cart() {
   const [requestDate, setRequestDate] = useState(today);
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const userId = 1; // TODO: replace with logged-in user id
 
   const [minReturnDate, setMinReturnDate] = useState('');
   const [maxReturnDate, setMaxReturnDate] = useState('');
@@ -76,9 +75,8 @@ export default function Cart() {
       await Swal.fire({
         icon: 'error',
         title: 'จำนวนไม่เพียงพอ',
-        text: `จำนวนที่ต้องการเกินกว่าจำนวนคงเหลือในคลัง (${itemInCart.item_qty} ${
-          itemInCart.unit || ''
-        })`,
+        text: `จำนวนที่ต้องการเกินกว่าจำนวนคงเหลือในคลัง (${itemInCart.item_qty} ${itemInCart.unit || ''
+          })`,
       });
       return;
     }
@@ -157,7 +155,7 @@ export default function Cart() {
       urgent,
       date: requestDate,
       type: requestType,
-      user_id: userId,
+      // ❌ user_id ถูกตัดออกแล้ว
     };
 
     try {
@@ -229,16 +227,13 @@ export default function Cart() {
     }
   };
 
-  // ✅ helper เลือก path รูปภาพ
   const getImageSrc = (imgPath) => {
     if (!imgPath || imgPath.trim() === '') {
-      return '/defaults/landscape.png'; // fallback
+      return '/defaults/landscape.png';
     }
-    // ถ้าเป็น URL จาก backend
     if (imgPath.startsWith('http')) {
       return imgPath;
     }
-    // ถ้าเป็น path ใน public เช่น /uploads/xxx.png
     return `/uploads/${imgPath}`;
   };
 
@@ -315,8 +310,8 @@ export default function Cart() {
                       {item.action === 'borrow'
                         ? 'ยืม'
                         : item.action === 'withdraw'
-                        ? 'เบิก'
-                        : 'คืน'}
+                          ? 'เบิก'
+                          : 'คืน'}
                     </div>
                     <div className={styles.tableCell}>
                       {item.action === 'borrow' ? (

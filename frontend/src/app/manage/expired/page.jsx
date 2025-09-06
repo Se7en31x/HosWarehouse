@@ -215,7 +215,6 @@ export default function ExpiredItemsPage() {
         item_id: disposeData.itemId,
         action_qty: disposeData.actionQty,
         note: 'ทำลายเนื่องจากหมดอายุ',
-        action_by: 999
       });
 
       setAlertInfo({

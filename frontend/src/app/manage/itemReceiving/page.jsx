@@ -287,7 +287,6 @@ export default function ItemReceivingPage() {
 
     try {
       const payload = {
-        user_id: 1,
         import_type: "general",
         source_name: sourceName?.trim() || null,
         receiving_note: notes?.trim() || null,

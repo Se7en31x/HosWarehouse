@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import styles from "./page.module.css";
-import axiosInstance from "@/app/utils/axiosInstance";
+import { staffAxios } from "@/app/utils/axiosInstance";
 import { useRouter } from "next/navigation";
 import exportPDF from "@/app/components/pdf/PDFExporter";
 import exportCSV from "@/app/components/CSVexport";
@@ -98,7 +98,7 @@ export default function RequestHistory() {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const res = await axiosInstance.get("/my-requests");
+        const res = await staffAxios.get("/my-requests");
         setRequests(res.data || []);
       } catch (err) {
         console.error("Error fetching requests:", err);

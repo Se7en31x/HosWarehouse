@@ -127,7 +127,6 @@ export default function SingleStockDeductionPage() {
           requested_qty: i.actual_deducted_qty,
           deduction_reason: i.deduction_reason,
         })),
-        userId: 999,
       });
       setDeductionSuccess(true);
       Swal.fire('สำเร็จ', 'เบิก-จ่ายสำเร็จแล้ว', 'success');

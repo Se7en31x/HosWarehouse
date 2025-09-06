@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import styles from "./page.module.css";
-import axiosInstance from "@/app/utils/axiosInstance";
+import { staffAxios } from "@/app/utils/axiosInstance";
 import { useParams } from "next/navigation";
 
 export default function RequestDetailPage() {
@@ -14,12 +14,13 @@ export default function RequestDetailPage() {
 
   // ===== Helpers =====
   const API_BASE = useMemo(() => {
-    let fromAxios = axiosInstance?.defaults?.baseURL?.replace(/\/+$/, "");
+    let fromAxios = staffAxios?.defaults?.baseURL?.replace(/\/+$/, "");
     // Remove /api from baseURL if present
     if (fromAxios && fromAxios.endsWith("/api")) {
       fromAxios = fromAxios.replace(/\/api$/, "");
     }
-    const base = fromAxios || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    const base =
+      fromAxios || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
     console.log("API_BASE:", base); // Debug API_BASE
     return base;
   }, []);
@@ -28,7 +29,11 @@ export default function RequestDetailPage() {
     if (!v) return "-";
     const d = new Date(v);
     if (Number.isNaN(d.getTime())) return String(v);
-    return d.toLocaleDateString("th-TH", { day: "2-digit", month: "2-digit", year: "numeric" });
+    return d.toLocaleDateString("th-TH", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
   };
 
   const imgUrl = (val) => {
@@ -68,8 +73,13 @@ export default function RequestDetailPage() {
     const ctrl = new AbortController();
     (async () => {
       try {
-        const res = await axiosInstance.get(`/my-requests/${id}`, { signal: ctrl.signal });
-        console.log("API Response - item_img:", res.data?.details?.map(d => d.item_img)); // Debug item_img
+        const res = await staffAxios.get(`/my-requests/${id}`, {
+          signal: ctrl.signal,
+        });
+        console.log(
+          "API Response - item_img:",
+          res.data?.details?.map((d) => d.item_img)
+        ); // Debug item_img
         setHeader(res.data?.header ?? null);
         setDetails(res.data?.details ?? []);
       } catch (err) {
@@ -104,7 +114,7 @@ export default function RequestDetailPage() {
     processing: "กำลังดำเนินการ",
     completed: "เสร็จสิ้น",
     returned: "คืนแล้ว",
-    approved_in_queue: "อนุมัติแล้ว รอคิว", // Added for new status
+    approved_in_queue: "อนุมัติแล้ว รอคิว",
   };
   const categoryMap = {
     medicine: "ยา",
@@ -113,6 +123,7 @@ export default function RequestDetailPage() {
     meddevice: "อุปกรณ์ทางการแพทย์",
     general: "ของใช้ทั่วไป",
   };
+
   // ===== Badges ของ detail table เท่านั้น =====
   const getApprovalBadge = (st) => {
     let cls = `${styles.badge} `;
@@ -129,7 +140,7 @@ export default function RequestDetailPage() {
     else if (st === "processing") cls += styles.procProcessing;
     else if (st === "completed") cls += styles.procCompleted;
     else if (st === "returned") cls += styles.procReturned;
-    else if (st === "approved_in_queue") cls += styles.procWaiting; // Reuse waiting style for new status
+    else if (st === "approved_in_queue") cls += styles.procWaiting;
     else cls += styles.procWaiting;
     return <span className={cls}>{processingStatusMap[st] || "-"}</span>;
   };
@@ -147,18 +158,31 @@ export default function RequestDetailPage() {
           <>
             {/* Summary card */}
             <div className={styles.summaryCard}>
-              {/* แถวบน */}
               <div className={styles.summaryRowTop}>
-                <div><strong>เลขคำขอ:</strong> {header.request_code}</div>
-                <div><strong>วันที่ขอ:</strong> {fmtDate(header.request_date)}</div>
-                <div><strong>ผู้ขอ:</strong> {header.user_name || "-"}</div>
-                <div><strong>ประเภท:</strong> {header.request_type === "borrow" ? "ยืม" : "เบิก"}</div>
+                <div>
+                  <strong>เลขคำขอ:</strong> {header.request_code}
+                </div>
+                <div>
+                  <strong>วันที่ขอ:</strong> {fmtDate(header.request_date)}
+                </div>
+                <div>
+                  <strong>ผู้ขอ:</strong> {header.user_name || "-"}
+                </div>
+                <div>
+                  <strong>ประเภท:</strong>{" "}
+                  {header.request_type === "borrow" ? "ยืม" : "เบิก"}
+                </div>
               </div>
 
-              {/* แถวล่าง */}
               <div className={styles.summaryRowBottom}>
-                <div><strong>ความเร่งด่วน:</strong> {header.is_urgent ? "เร่งด่วน" : "ปกติ"}</div>
-                <div><strong>สถานะคำขอ:</strong> {requestStatusMap[header.request_status] || "-"}</div>
+                <div>
+                  <strong>ความเร่งด่วน:</strong>{" "}
+                  {header.is_urgent ? "เร่งด่วน" : "ปกติ"}
+                </div>
+                <div>
+                  <strong>สถานะคำขอ:</strong>{" "}
+                  {requestStatusMap[header.request_status] || "-"}
+                </div>
               </div>
 
               {header.request_note && (
@@ -170,9 +194,7 @@ export default function RequestDetailPage() {
 
             {/* ===== TABLE ===== */}
             <div className={styles.tableFrame}>
-              {/* Header */}
               <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
-                <div>รหัส</div>
                 <div>รูปภาพ</div>
                 <div>ชื่อรายการ</div>
                 <div>ประเภท</div>
@@ -183,14 +205,18 @@ export default function RequestDetailPage() {
                 <div>กำหนดคืน</div>
               </div>
 
-              {/* Body */}
               <div className={styles.tableBody}>
                 {details.length > 0 ? (
                   details.map((d) => {
-                    const due = header?.request_type === "borrow" ? fmtDate(d.expected_return_date) : "-";
+                    const due =
+                      header?.request_type === "borrow"
+                        ? fmtDate(d.expected_return_date)
+                        : "-";
                     return (
-                      <div key={d.request_detail_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
-                        <div className={styles.mono}>{d.item_code || "-"}</div>
+                      <div
+                        key={d.request_detail_id}
+                        className={`${styles.tableGrid} ${styles.tableRow}`}
+                      >
                         <div>
                           <img
                             src={imgUrl(d.item_img)}
@@ -201,7 +227,9 @@ export default function RequestDetailPage() {
                             onError={(e) => {
                               const img = e.currentTarget;
                               if (img.dataset.fallback !== "1") {
-                                console.warn(`Image failed to load: ${img.src}, using default`); // Debug image error
+                                console.warn(
+                                  `Image failed to load: ${img.src}, using default`
+                                );
                                 img.src = `${API_BASE}/public/defaults/landscape.png`;
                                 img.dataset.fallback = "1";
                               }
@@ -209,7 +237,7 @@ export default function RequestDetailPage() {
                           />
                         </div>
                         <div title={d.item_name}>{d.item_name || "-"}</div>
-                        <div>{categoryMap[d.item_category] || d.item_category || "-"}</div>
+                        <div>{categoryMap[d.item_category] || "-"}</div>
                         <div className={styles.mono}>
                           {(d.requested_qty ?? 0)} / {(d.approved_qty ?? 0)}
                         </div>

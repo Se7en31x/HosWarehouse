@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import {manageAxios} from '../../../utils/axiosInstance';
+import { manageAxios } from '../../../utils/axiosInstance';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import styles from './page.module.css';
@@ -20,7 +20,7 @@ const processingStatusStepsForLogic = [
     'pending',
     'preparing',
     'delivering',
-    'completed'
+    'completed',
 ];
 
 const translateStatus = (status) => {
@@ -59,7 +59,6 @@ export default function RequestDetailClient() {
     const [loading, setLoading] = useState(true);
     const [pendingProcessingStatus, setPendingProcessingStatus] = useState({});
     const [isSavingAll, setIsSavingAll] = useState(false);
-    const currentUserId = 1;
 
     useEffect(() => {
         if (!request_id) {
@@ -68,18 +67,10 @@ export default function RequestDetailClient() {
         }
         fetchRequestDetails();
         const socket = io(process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000');
-        socket.on('connect', () => {
-            console.log('Connected to Socket.IO server');
-        });
         socket.on('requestUpdated', (data) => {
-            console.log('Received requestUpdated event:', data);
             if (parseInt(data.request_id, 10) === parseInt(request_id, 10)) {
-                console.log('Refetching details for current request due to Socket.IO update.');
                 fetchRequestDetails();
             }
-        });
-        socket.on('disconnect', () => {
-            console.log('Disconnected from Socket.IO server');
         });
         return () => {
             socket.disconnect();
@@ -96,12 +87,14 @@ export default function RequestDetailClient() {
             const fetchedDetails = Array.isArray(res.data.details) ? res.data.details : [];
             setRequestInfo({
                 ...fetchedRequest,
-                overall_processing_status: fetchedRequest.overall_processing_status || null
+                overall_processing_status: fetchedRequest.overall_processing_status || null,
             });
             setDetails(fetchedDetails);
             const initialPendingStatuses = {};
-            fetchedDetails.forEach(detail => {
-                initialPendingStatuses[detail.request_detail_id] = detail.processing_status || (detail.approval_status === 'approved' ? 'approved_in_queue' : null);
+            fetchedDetails.forEach((detail) => {
+                initialPendingStatuses[detail.request_detail_id] =
+                    detail.processing_status ||
+                    (detail.approval_status === 'approved' ? 'approved_in_queue' : null);
             });
             setPendingProcessingStatus(initialPendingStatuses);
         } catch (err) {
@@ -137,36 +130,47 @@ export default function RequestDetailClient() {
     };
 
     const handleDropdownChange = (e, requestDetailId) => {
-        const newValue = e.target.value === "" ? null : e.target.value;
-        const currentDetail = details.find(d => d.request_detail_id === requestDetailId);
-        const currentStatus = currentDetail?.processing_status || (currentDetail?.approval_status === 'approved' ? 'approved_in_queue' : null);
+        const newValue = e.target.value === '' ? null : e.target.value;
+        const currentDetail = details.find((d) => d.request_detail_id === requestDetailId);
+        const currentStatus =
+            currentDetail?.processing_status ||
+            (currentDetail?.approval_status === 'approved' ? 'approved_in_queue' : null);
 
         if (currentStatus === 'pending' && newValue === 'preparing') {
             showStockDeductionAlert();
             return;
         }
 
-        setPendingProcessingStatus(prev => ({
+        setPendingProcessingStatus((prev) => ({
             ...prev,
-            [requestDetailId]: newValue
+            [requestDetailId]: newValue,
         }));
     };
 
     const handleSaveAllChanges = async () => {
-        const changesToSave = Object.keys(pendingProcessingStatus).filter(detailId => {
-            const originalDetail = details.find(d => d.request_detail_id === parseInt(detailId, 10));
-            const originalDbStatus = originalDetail?.processing_status || (originalDetail?.approval_status === 'approved' ? 'approved_in_queue' : null);
-            const currentPendingStatus = pendingProcessingStatus[detailId];
-            return currentPendingStatus !== originalDbStatus;
-        }).map(detailId => {
-            const originalDetail = details.find(d => d.request_detail_id === parseInt(detailId, 10));
-            const newStatusValue = pendingProcessingStatus[detailId];
-            return {
-                request_detail_id: parseInt(detailId, 10),
-                newStatus: newStatusValue,
-                current_approval_status: originalDetail?.approval_status,
-            };
-        }).filter(Boolean);
+        const changesToSave = Object.keys(pendingProcessingStatus)
+            .filter((detailId) => {
+                const originalDetail = details.find(
+                    (d) => d.request_detail_id === parseInt(detailId, 10)
+                );
+                const originalDbStatus =
+                    originalDetail?.processing_status ||
+                    (originalDetail?.approval_status === 'approved' ? 'approved_in_queue' : null);
+                const currentPendingStatus = pendingProcessingStatus[detailId];
+                return currentPendingStatus !== originalDbStatus;
+            })
+            .map((detailId) => {
+                const originalDetail = details.find(
+                    (d) => d.request_detail_id === parseInt(detailId, 10)
+                );
+                const newStatusValue = pendingProcessingStatus[detailId];
+                return {
+                    request_detail_id: parseInt(detailId, 10),
+                    newStatus: newStatusValue,
+                    current_approval_status: originalDetail?.approval_status,
+                };
+            })
+            .filter(Boolean);
 
         if (changesToSave.length === 0) {
             Swal.fire({
@@ -182,81 +186,14 @@ export default function RequestDetailClient() {
             return;
         }
 
-        const invalidApprovalStatusChanges = changesToSave.filter(change => {
-            const currentDetail = details.find(d => d.request_detail_id === change.request_detail_id);
-            return currentDetail && currentDetail.approval_status !== 'approved';
-        });
-
-        if (invalidApprovalStatusChanges.length > 0) {
-            const invalidItems = invalidApprovalStatusChanges.map(item => {
-                const detail = details.find(d => d.request_detail_id === item.request_detail_id);
-                return detail ? `"${detail.item_name}" (สถานะอนุมัติ: ${translateStatus(detail.approval_status)})` : `รายการ ID: ${item.request_detail_id}`;
-            }).join(', ');
-            Swal.fire({
-                icon: 'warning',
-                title: 'ไม่สามารถบันทึกบางรายการได้',
-                text: `รายการเหล่านี้ไม่สามารถเปลี่ยนแปลงสถานะการดำเนินการได้: ${invalidItems} (เนื่องจากยังไม่ได้รับการอนุมัติ หรือถูกปฏิเสธแล้ว)`,
-                confirmButtonText: 'ตกลง',
-                customClass: {
-                    popup: styles.swalPopup,
-                    confirmButton: styles.swalButton,
-                },
-            });
-            return;
-        }
-
-        const invalidSequenceChanges = changesToSave.filter(change => {
-            const originalDetail = details.find(d => d.request_detail_id === change.request_detail_id);
-            const oldStatus = originalDetail?.processing_status || (originalDetail?.approval_status === 'approved' ? 'approved_in_queue' : null);
-            const newStatus = change.newStatus;
-            const effectiveOldStatus = oldStatus;
-            const effectiveNewStatus = newStatus || 'approved_in_queue';
-
-            const oldIndex = processingStatusStepsForLogic.indexOf(effectiveOldStatus);
-            const newIndex = processingStatusStepsForLogic.indexOf(effectiveNewStatus);
-
-            if (newIndex < oldIndex) {
-                return true;
-            }
-            if (effectiveOldStatus === 'completed' && effectiveNewStatus !== 'completed') {
-                return true;
-            }
-            if (newIndex > oldIndex + 1) {
-                const isPendingToPreparing = effectiveOldStatus === 'pending' && effectiveNewStatus === 'preparing';
-                if (!isPendingToPreparing) {
-                    return true;
-                }
-            }
-            return false;
-        });
-
-        if (invalidSequenceChanges.length > 0) {
-            const invalidItems = invalidSequenceChanges.map(item => {
-                const detail = details.find(d => d.request_detail_id === item.request_detail_id);
-                const originalDetail = details.find(d => d.request_detail_id === item.request_detail_id);
-                const oldStatusDisplay = translateStatus(originalDetail?.processing_status || (originalDetail?.approval_status === 'approved' ? 'approved_in_queue' : null));
-                const newStatusDisplay = translateStatus(item.newStatus || null);
-                return `"${detail.item_name}" (จาก: ${oldStatusDisplay} ไป: ${newStatusDisplay})`;
-            }).join(', ');
-            Swal.fire({
-                icon: 'warning',
-                title: 'การเปลี่ยนสถานะไม่ถูกต้อง',
-                text: `ไม่สามารถเปลี่ยนสถานะของรายการเหล่านี้ได้เนื่องจากไม่เป็นไปตามลำดับที่กำหนด หรือพยายามย้อนกลับ/ข้ามสถานะ: ${invalidItems}`,
-                confirmButtonText: 'ตกลง',
-                customClass: {
-                    popup: styles.swalPopup,
-                    confirmButton: styles.swalButton,
-                },
-            });
-            return;
-        }
-
         const confirmResult = await Swal.fire({
             title: `<span style="font-size:1.1rem">คุณต้องการบันทึกการเปลี่ยนแปลงสถานะการดำเนินการทั้งหมด <strong>${changesToSave.length}</strong> รายการหรือไม่?</span>`,
             icon: 'question',
             showCancelButton: true,
-            confirmButtonText: '<span style="min-width: 120px; display: inline-block;">✅ ใช่, บันทึก</span>',
-            cancelButtonText: '<span style="min-width: 120px; display: inline-block;">❌ ยกเลิก</span>',
+            confirmButtonText:
+                '<span style="min-width: 120px; display: inline-block;">✅ ใช่, บันทึก</span>',
+            cancelButtonText:
+                '<span style="min-width: 120px; display: inline-block;">❌ ยกเลิก</span>',
             customClass: {
                 popup: styles.swalPopup,
                 confirmButton: styles.swalButton,
@@ -271,7 +208,6 @@ export default function RequestDetailClient() {
         try {
             await manageAxios.put(`/requestStatus/${request_id}/processing-status-batch`, {
                 updates: changesToSave,
-                userId: currentUserId,
             });
             Swal.fire({
                 icon: 'success',
@@ -288,7 +224,10 @@ export default function RequestDetailClient() {
             Swal.fire({
                 icon: 'error',
                 title: 'เกิดข้อผิดพลาด',
-                text: err.response?.data?.message || err.message || 'ไม่สามารถอัปเดตสถานะการดำเนินการได้ ลองใหม่อีกครั้ง',
+                text:
+                    err.response?.data?.message ||
+                    err.message ||
+                    'ไม่สามารถอัปเดตสถานะการดำเนินการได้ ลองใหม่อีกครั้ง',
                 confirmButtonText: 'ตกลง',
                 customClass: {
                     popup: styles.swalPopup,
@@ -306,20 +245,21 @@ export default function RequestDetailClient() {
 
     const totalRequestedQty = useMemo(() => {
         return details
-            .filter(d => d.approval_status === 'approved')
+            .filter((d) => d.approval_status === 'approved')
             .reduce((sum, d) => sum + d.requested_qty, 0);
     }, [details]);
 
     const countByStatus = useMemo(() => {
         const counts = {};
-        summaryStatusesToDisplay.forEach(status => {
+        summaryStatusesToDisplay.forEach((status) => {
             counts[status] = 0;
         });
 
         details
-            .filter(d => d.approval_status === 'approved')
-            .forEach(d => {
-                const effectiveStatus = pendingProcessingStatus[d.request_detail_id] ??
+            .filter((d) => d.approval_status === 'approved')
+            .forEach((d) => {
+                const effectiveStatus =
+                    pendingProcessingStatus[d.request_detail_id] ??
                     (d.processing_status || 'approved_in_queue');
                 if (summaryStatusesToDisplay.includes(effectiveStatus)) {
                     counts[effectiveStatus] += d.requested_qty;
@@ -334,7 +274,7 @@ export default function RequestDetailClient() {
         const order = {
             approved: 1,
             waiting_approval: 2,
-            rejected: 3
+            rejected: 3,
         };
         return [...details].sort((a, b) => {
             const aOrder = order[a.approval_status] || 99;
@@ -345,9 +285,13 @@ export default function RequestDetailClient() {
     }, [details]);
 
     const hasPendingChanges = useMemo(() => {
-        return Object.keys(pendingProcessingStatus).some(detailId => {
-            const originalDetail = details.find(d => d.request_detail_id === parseInt(detailId, 10));
-            const originalDbStatus = originalDetail?.processing_status || (originalDetail?.approval_status === 'approved' ? 'approved_in_queue' : null);
+        return Object.keys(pendingProcessingStatus).some((detailId) => {
+            const originalDetail = details.find(
+                (d) => d.request_detail_id === parseInt(detailId, 10)
+            );
+            const originalDbStatus =
+                originalDetail?.processing_status ||
+                (originalDetail?.approval_status === 'approved' ? 'approved_in_queue' : null);
             const currentPendingStatus = pendingProcessingStatus[detailId];
             return currentPendingStatus !== originalDbStatus;
         });
@@ -375,7 +319,10 @@ export default function RequestDetailClient() {
                 <p className={styles.noDataMessage}>
                     ไม่พบรายละเอียดสำหรับคำขอ #{request_id} หรือคำขอนี้ไม่มีอยู่จริง
                 </p>
-                <button className={styles.backButton} onClick={() => router.push('/manage/request-status-manager')}>
+                <button
+                    className={styles.backButton}
+                    onClick={() => router.push('/manage/request-status-manager')}
+                >
                     ← กลับหน้ารวม
                 </button>
             </div>
@@ -414,17 +361,21 @@ export default function RequestDetailClient() {
                                     <MdHistory size={20} className={styles.infoIcon} aria-hidden="true" />
                                     <p>
                                         <strong>วันที่อัปเดตล่าสุด:</strong>{' '}
-                                        {requestInfo.updated_at ? new Date(requestInfo.updated_at).toLocaleString('th-TH', {
-                                            dateStyle: 'medium',
-                                            timeStyle: 'short',
-                                        }) : '-'}
+                                        {requestInfo.updated_at
+                                            ? new Date(requestInfo.updated_at).toLocaleString('th-TH', {
+                                                dateStyle: 'medium',
+                                                timeStyle: 'short',
+                                            })
+                                            : '-'}
                                     </p>
                                 </div>
                                 <div className={styles.infoRow}>
                                     <MdInfoOutline size={20} className={styles.infoIcon} aria-hidden="true" />
                                     <p>
                                         <strong>สถานะอนุมัติรวม:</strong>{' '}
-                                        <span className={`${styles.statusBadge} ${styles[getStatusClass(requestInfo?.request_status)]}`}>
+                                        <span
+                                            className={`${styles.statusBadge} ${styles[getStatusClass(requestInfo?.request_status)]}`}
+                                        >
                                             {translateStatus(requestInfo?.request_status)}
                                         </span>
                                     </p>
@@ -472,35 +423,54 @@ export default function RequestDetailClient() {
                                     <tbody>
                                         {sortedDetails.map((d, index) => {
                                             const isProcessingSelectDisabled =
-                                                d.approval_status !== 'approved' || isSavingAll || d.processing_status === 'completed';
-                                            const actualProcessingStatus = pendingProcessingStatus[d.request_detail_id] !== undefined
-                                                ? pendingProcessingStatus[d.request_detail_id]
-                                                : (d.processing_status || (d.approval_status === 'approved' ? 'approved_in_queue' : null));
-                                            const isStatusChanged = pendingProcessingStatus[d.request_detail_id] !== undefined &&
-                                                pendingProcessingStatus[d.request_detail_id] !== (d.processing_status || (d.approval_status === 'approved' ? 'approved_in_queue' : null));
-                                            const originalDbStatus = d.processing_status || (d.approval_status === 'approved' ? 'approved_in_queue' : null);
-                                            const originalDbStatusIndex = processingStatusStepsForLogic.indexOf(originalDbStatus);
+                                                d.approval_status !== 'approved' ||
+                                                isSavingAll ||
+                                                d.processing_status === 'completed';
+                                            const actualProcessingStatus =
+                                                pendingProcessingStatus[d.request_detail_id] !== undefined
+                                                    ? pendingProcessingStatus[d.request_detail_id]
+                                                    : d.processing_status ||
+                                                    (d.approval_status === 'approved' ? 'approved_in_queue' : null);
+                                            const isStatusChanged =
+                                                pendingProcessingStatus[d.request_detail_id] !== undefined &&
+                                                pendingProcessingStatus[d.request_detail_id] !==
+                                                (d.processing_status ||
+                                                    (d.approval_status === 'approved' ? 'approved_in_queue' : null));
+                                            const originalDbStatus =
+                                                d.processing_status ||
+                                                (d.approval_status === 'approved' ? 'approved_in_queue' : null);
+                                            const originalDbStatusIndex =
+                                                processingStatusStepsForLogic.indexOf(originalDbStatus);
                                             return (
-                                                <tr key={d.request_detail_id} className={`${isStatusChanged ? styles.pendingChangeRow : ''}`}>
+                                                <tr
+                                                    key={d.request_detail_id}
+                                                    className={`${isStatusChanged ? styles.pendingChangeRow : ''}`}
+                                                >
                                                     <td data-label="ลำดับ">{index + 1}</td>
                                                     <td data-label="ชื่อพัสดุ">{d.item_name}</td>
                                                     <td data-label="จำนวน">{d.requested_qty}</td>
                                                     <td data-label="หน่วย">{d.item_unit}</td>
                                                     <td data-label="สถานะการอนุมัติ">
-                                                        <span className={`${styles.statusBadge} ${styles[getStatusClass(d.approval_status)]}`}>
+                                                        <span
+                                                            className={`${styles.statusBadge} ${styles[getStatusClass(d.approval_status)]}`}
+                                                        >
                                                             {translateStatus(d.approval_status)}
                                                         </span>
                                                     </td>
                                                     <td data-label="สถานะการดำเนินการ">
-                                                        <span className={`${styles.statusBadge} ${styles[getStatusClass(actualProcessingStatus)]}`}>
+                                                        <span
+                                                            className={`${styles.statusBadge} ${styles[getStatusClass(actualProcessingStatus)]}`}
+                                                        >
                                                             {translateStatus(actualProcessingStatus)}
                                                         </span>
                                                     </td>
                                                     <td data-label="วันที่อัปเดตล่าสุด">
-                                                        {d.updated_at ? new Date(d.updated_at).toLocaleString('th-TH', {
-                                                            dateStyle: 'medium',
-                                                            timeStyle: 'short',
-                                                        }) : '-'}
+                                                        {d.updated_at
+                                                            ? new Date(d.updated_at).toLocaleString('th-TH', {
+                                                                dateStyle: 'medium',
+                                                                timeStyle: 'short',
+                                                            })
+                                                            : '-'}
                                                     </td>
                                                     <td data-label="อัปเดตสถานะ">
                                                         <select
@@ -510,17 +480,22 @@ export default function RequestDetailClient() {
                                                             disabled={isProcessingSelectDisabled}
                                                             aria-label={`อัปเดตสถานะการดำเนินการสำหรับ ${d.item_name}`}
                                                         >
-                                                            {d.approval_status === 'approved' && processingStatusStepsForLogic.map(status => {
-                                                                const optionStatusIndex = processingStatusStepsForLogic.indexOf(status);
-                                                                if (optionStatusIndex === originalDbStatusIndex || optionStatusIndex === originalDbStatusIndex + 1) {
-                                                                    return (
-                                                                        <option key={status} value={status}>
-                                                                            {translateStatus(status)}
-                                                                        </option>
-                                                                    );
-                                                                }
-                                                                return null;
-                                                            })}
+                                                            {d.approval_status === 'approved' &&
+                                                                processingStatusStepsForLogic.map((status) => {
+                                                                    const optionStatusIndex =
+                                                                        processingStatusStepsForLogic.indexOf(status);
+                                                                    if (
+                                                                        optionStatusIndex === originalDbStatusIndex ||
+                                                                        optionStatusIndex === originalDbStatusIndex + 1
+                                                                    ) {
+                                                                        return (
+                                                                            <option key={status} value={status}>
+                                                                                {translateStatus(status)}
+                                                                            </option>
+                                                                        );
+                                                                    }
+                                                                    return null;
+                                                                })}
                                                         </select>
                                                     </td>
                                                 </tr>
