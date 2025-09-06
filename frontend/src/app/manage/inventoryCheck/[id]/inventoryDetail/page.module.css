@@ -1,19 +1,23 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+Thai:wght@400;500;600;700&display=swap');
 
 /* ---- Variables (aligned with RequestDetailClient, EditItem, AddItem, etc.) ---- */
 :root {
-  --bg: #f0fbfe;
-  --panel: #ffffff;
-  --muted: #6b7280;
-  --text: #111827;
-  --border: #e5e7eb;
-  --primary: #008dda;
-  --primary-500: #41c9e2;
-  --primary-600: #1685bb;
-  --tint-50: #f0fbfe;
-  --tint-100: #e9f6fb;
-  --tint-200: #ace2e1;
+  --bg: #F9FAFB;          /* เดิม #f0fbfe -> ให้เหมือนหน้าก่อน ๆ */
+  --panel: #FFFFFF;
+  --muted: #6B7280;
+  --text: #1F2A44;        /* เดิม #111827 */
+  --border: #D1D5DB;      /* เดิม #e5e7eb */
+
+  /* Primary palette ให้ตรงกับหน้าก่อน ๆ */
+  --primary: #3B82F6;     /* ฟ้า main */
+  --primary-500: #3B82F6; /* ใช้ค่าสีเดียวกับ main */
+  --primary-600: #2563EB; /* โทนเข้มสำหรับ hover */
+
+  /* Neutral tints ให้ไปทางเทาเหมือนหน้าอื่น */
+  --tint-50:  #FAFAFA;    /* เดิม #f0fbfe */
+  --tint-100: #F3F4F6;    /* เดิม #e9f6fb */
+  --tint-200: #E5E7EB;    /* เดิม #ace2e1 */
+
   --radius: 10px;
   --z-swal: 10000;
 }
@@ -148,7 +152,7 @@
 .textarea:focus {
   outline: none;
   border-color: var(--primary-500);
-  box-shadow: 0 0 0 2px rgba(65, 201, 226, 0.2);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.20); /* ปรับเงาให้เข้าชุด primary */
 }
 
 .input:disabled,
@@ -238,7 +242,7 @@
 .uploadBox.dragActive {
   border-color: var(--primary-500);
   background: var(--tint-100);
-  box-shadow: 0 6px 16px rgba(0, 141, 218, 0.1);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.10);
 }
 
 .uploadBox.dragActive::before {

@@ -1,4 +1,5 @@
-"use client";
+'use client';
+
 import { useEffect, useState, useMemo } from "react";
 import { manageAxios } from "@/app/utils/axiosInstance";
 import Swal from "sweetalert2";
@@ -8,7 +9,7 @@ import dynamic from "next/dynamic";
 
 const Select = dynamic(() => import("react-select"), { ssr: false });
 
-/* react-select styles (aligned with BorrowHistory) */
+/* react-select styles */
 const customSelectStyles = {
   control: (base, state) => ({
     ...base,
@@ -56,11 +57,11 @@ const SOURCE_MAP = {
 const getTypeBadgeClass = (type) => {
   switch (type) {
     case "damaged":
-      return "st-warning";
+      return "stLow";
     case "lost":
-      return "st-rejected";
+      return "stOut";
     default:
-      return "st-default";
+      return "stHold";
   }
 };
 
@@ -73,7 +74,7 @@ const formatThaiDate = (isoString) => {
       return `${parts[2]}/${parts[1]}/${parseInt(parts[0]) + 543}`;
     }
   } catch (e) {
-    // Fallback
+    // fallback
   }
   return new Date(isoString).toLocaleString("th-TH", {
     year: "numeric",
@@ -149,27 +150,33 @@ export default function DamagedHistoryPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
-  const ROWS_PER_PAGE = 10;
+  const ROWS_PER_PAGE = 12;
 
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
       setIsLoading(true);
       try {
         const res = await manageAxios.get("/history/damaged");
-        setRecords(Array.isArray(res.data) ? res.data : []);
+        if (isMounted) {
+          setRecords(Array.isArray(res.data) ? res.data : []);
+        }
       } catch (err) {
         console.error("Error fetching damaged history:", err);
         Swal.fire({
           icon: "error",
           title: "ข้อผิดพลาด",
           text: "ไม่สามารถโหลดข้อมูลได้",
-          confirmButtonColor: "#008dda",
+          confirmButtonColor: "#2563eb",
         });
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
     fetchData();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const filteredRecords = useMemo(() => {
@@ -183,13 +190,20 @@ export default function DamagedHistoryPage() {
     });
   }, [records, search, typeFilter]);
 
+  // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredRecords.length / ROWS_PER_PAGE));
   const start = (currentPage - 1) * ROWS_PER_PAGE;
   const pageRows = filteredRecords.slice(start, start + ROWS_PER_PAGE);
+  const startDisplay = filteredRecords.length ? start + 1 : 0;
+  const endDisplay = Math.min(start + ROWS_PER_PAGE, filteredRecords.length);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [search, typeFilter]);
+
+  useEffect(() => {
+    setCurrentPage((p) => Math.min(Math.max(1, p), totalPages));
+  }, [totalPages]);
 
   const getPageNumbers = () => {
     const pages = [];
@@ -216,16 +230,20 @@ export default function DamagedHistoryPage() {
     setShowDetailModal(true);
   };
 
+  const fillersCount = Math.max(0, ROWS_PER_PAGE - (pageRows?.length || 0));
+
   return (
     <div className={styles.mainHome}>
       <div className={styles.infoContainer}>
         <div className={styles.pageBar}>
-          <h1 className={styles.pageTitle}>ประวัติชำรุด/สูญหาย</h1>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.pageTitle}>ประวัติชำรุด/สูญหาย</h1>
+          </div>
         </div>
 
         {/* Toolbar */}
-        <div className={styles.filterBar}>
-          <div className={styles.filterLeft}>
+        <div className={styles.toolbar}>
+          <div className={styles.filterGrid}>
             <div className={styles.filterGroup}>
               <label className={styles.label}>ประเภท</label>
               <Select
@@ -237,11 +255,9 @@ export default function DamagedHistoryPage() {
                 styles={customSelectStyles}
                 placeholder="เลือกประเภท..."
                 aria-label="กรองตามประเภท"
-                menuPortalTarget={typeof window !== "undefined" ? document.body : undefined}
+                menuPortalTarget={typeof window !== "undefined" ? document.body : null}
               />
             </div>
-          </div>
-          <div className={styles.filterRight}>
             <div className={styles.filterGroup}>
               <label className={styles.label}>ค้นหา</label>
               <div className={styles.searchBox}>
@@ -256,12 +272,14 @@ export default function DamagedHistoryPage() {
                 />
               </div>
             </div>
+          </div>
+          <div className={styles.searchCluster}>
             <button
               className={`${styles.ghostBtn} ${styles.clearButton}`}
               onClick={clearFilters}
               aria-label="ล้างตัวกรองทั้งหมด"
             >
-              <Trash2 size={16} /> ล้างตัวกรอง
+              <Trash2 size={18} /> ล้างตัวกรอง
             </button>
           </div>
         </div>
@@ -272,89 +290,110 @@ export default function DamagedHistoryPage() {
             <div className={styles.headerItem}>วันที่</div>
             <div className={styles.headerItem}>พัสดุ</div>
             <div className={styles.headerItem}>จำนวน</div>
-            <div className={styles.headerItem}>ประเภท</div>
+            <div className={`${styles.headerItem} ${styles.centerCell}`}>ประเภท</div>
             <div className={styles.headerItem}>ที่มา</div>
             <div className={styles.headerItem}>ผู้รายงาน</div>
             <div className={`${styles.headerItem} ${styles.centerCell}`}>ตรวจสอบ</div>
           </div>
 
-          <div className={styles.inventory}>
+          <div className={styles.inventory} style={{ "--rows-per-page": ROWS_PER_PAGE }}>
             {isLoading ? (
-              <div className={styles.loadingContainer}>กำลังโหลดข้อมูล...</div>
+              <div className={styles.loadingContainer} />
             ) : filteredRecords.length === 0 ? (
               <div className={styles.noDataMessage}>ไม่พบข้อมูลชำรุด/สูญหาย</div>
             ) : (
-              pageRows.map((r) => (
-                <div key={r.damaged_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
-                  <div className={styles.tableCell}>{formatThaiDate(r.damaged_date)}</div>
-                  <div className={styles.tableCell}>{r.item_name || "-"}</div>
-                  <div className={styles.tableCell}>
-                    {r.damaged_qty || 0} {r.item_unit || ""}
+              <>
+                {pageRows.map((r, idx) => (
+                  <div key={`${r.damaged_id || "row"}-${idx}`} className={`${styles.tableGrid} ${styles.tableRow}`} role="row">
+                    <div className={styles.tableCell} role="cell">{formatThaiDate(r.damaged_date)}</div>
+                    <div className={styles.tableCell} role="cell">{r.item_name || "-"}</div>
+                    <div className={styles.tableCell} role="cell">
+                      {r.damaged_qty || 0} {r.item_unit || ""}
+                    </div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
+                      <span className={`${styles.stBadge} ${styles[getTypeBadgeClass(r.damage_type)]}`}>
+                        {TYPE_OPTIONS.find((t) => t.value === r.damage_type)?.label || "-"}
+                      </span>
+                    </div>
+                    <div className={styles.tableCell} role="cell">
+                      {SOURCE_MAP[r.source_type] || "-"}
+                    </div>
+                    <div className={styles.tableCell} role="cell">{r.reported_by || "-"}</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
+                      <button
+                        className={styles.actionButton}
+                        onClick={() => handleShowDetail(r)}
+                        aria-label={`ดูรายละเอียดพัสดุ ${r.item_name || "ไม่ระบุ"}`}
+                        title="ดูรายละเอียด"
+                      >
+                        <Search size={18} />
+                      </button>
+                    </div>
                   </div>
-                  <div className={styles.tableCell}>
-                    <span className={`${styles.stBadge} ${styles[getTypeBadgeClass(r.damage_type)]}`}>
-                      {TYPE_OPTIONS.find((t) => t.value === r.damage_type)?.label || "-"}
-                    </span>
+                ))}
+                {Array.from({ length: fillersCount }).map((_, i) => (
+                  <div
+                    key={`filler-${i}`}
+                    className={`${styles.tableGrid} ${styles.tableRow} ${styles.fillerRow}`}
+                    aria-hidden="true"
+                  >
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
                   </div>
-                  <div className={styles.tableCell}>
-                    {SOURCE_MAP[r.source_type] || "-"}
-                  </div>
-                  <div className={styles.tableCell}>{r.reported_by || "-"}</div>
-                  <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                    <button
-                      className={styles.actionButton}
-                      onClick={() => handleShowDetail(r)}
-                      aria-label={`ดูรายละเอียดพัสดุ ${r.item_name || "ไม่ระบุ"}`}
-                    >
-                      <Search size={18} />
-                    </button>
-                  </div>
-                </div>
-              ))
+                ))}
+              </>
             )}
           </div>
 
           {/* Pagination */}
-          <ul className={styles.paginationControls}>
-            <li>
-              <button
-                className={styles.pageButton}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                aria-label="หน้าก่อนหน้า"
-              >
-                <ChevronLeft size={16} />
-              </button>
-            </li>
-            {getPageNumbers().map((p, idx) =>
-              p === "..." ? (
-                <li key={`ellipsis-${idx}`} className={styles.ellipsis}>
-                  …
-                </li>
-              ) : (
-                <li key={`page-${p}`}>
-                  <button
-                    className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
-                    onClick={() => setCurrentPage(p)}
-                    aria-label={`หน้า ${p}`}
-                    aria-current={p === currentPage ? "page" : undefined}
-                  >
-                    {p}
-                  </button>
-                </li>
-              )
-            )}
-            <li>
-              <button
-                className={styles.pageButton}
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage >= totalPages}
-                aria-label="หน้าถัดไป"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </li>
-          </ul>
+          <div className={styles.paginationBar}>
+            <div className={styles.paginationInfo}>
+              กำลังแสดง {startDisplay}-{endDisplay} จาก {filteredRecords.length} รายการ
+            </div>
+            <ul className={styles.paginationControls}>
+              <li>
+                <button
+                  className={styles.pageButton}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  aria-label="หน้าก่อนหน้า"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+              </li>
+              {getPageNumbers().map((p, idx) =>
+                p === "..." ? (
+                  <li key={`ellipsis-${idx}`} className={styles.ellipsis}>…</li>
+                ) : (
+                  <li key={`page-${p}-${idx}`}>
+                    <button
+                      className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
+                      onClick={() => setCurrentPage(p)}
+                      aria-label={`หน้า ${p}`}
+                      aria-current={p === currentPage ? "page" : undefined}
+                    >
+                      {p}
+                    </button>
+                  </li>
+                )
+              )}
+              <li>
+                <button
+                  className={styles.pageButton}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage >= totalPages}
+                  aria-label="หน้าถัดไป"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
 
         {/* Modal */}

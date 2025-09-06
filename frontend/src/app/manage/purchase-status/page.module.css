@@ -1,31 +1,32 @@
+/* =============================
+   WarehousePurchaseStatus — page.module.css
+   Same as InventoryCheck with added status badges
+   ============================= */
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* ---- Variables (aligned with InventoryCheck) ---- */
+/* ---- Variables ---- */
 :root {
   /* Colors */
-  --bg: #f0fbfe;
-  --panel: #ffffff;
-  --muted: #6b7280;
-  --text: #111827;
-  --border: #e5e7eb;
+  --bg: #F9FAFB;
+  --panel: #FFFFFF;
+  --muted: #6B7280;
+  --text: #1F2A44;
+  --border: #D1D5DB;
 
-  --primary: #008dda;
-  --primary-500: #41c9e2;
-  --primary-600: #1685bb;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
 
-  --tint-50: #f0fbfe;
-  --tint-100: #e9f6fb;
-  --tint-200: #ace2e1;
+  --tint-50: #FAFAFA;
+  --tint-100: #F3F4F6;
+  --tint-200: #E5E7EB;
 
-  --success: #16a34a;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-
-  --radius: 10px;
+  --radius: 5px;
 
   /* Table sizing */
   --row-h: 60px;
-  --rows-per-page: 10;
+  --rows-per-page: 12; /* ✅ Locked at 12 rows */
   --table-gap: 12px;
 
   /* Header sizing */
@@ -36,17 +37,12 @@
   --th-letter: 0.01em;
   --th-line: 1.25;
 
-  /* Z-Index scale */
+  /* Z-Index */
   --z-header: 10;
   --z-toolbar: 100;
   --z-select: 9000;
   --z-swal: 10000;
   --z-modal-overlay: 12000;
-
-  /* Status colors */
-  --completed-color: #2e8b57;
-  --processing-color: #ffa500;
-  --pending-color: #dc143c;
 }
 
 /* ---- Layout ---- */
@@ -65,13 +61,14 @@
   min-height: 100vh;
   background: var(--panel);
   color: var(--text);
-  border-radius: 0;
+  border-radius: var(--radius);
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 14px;
   flex: 1 1 auto;
   align-self: stretch;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 /* ---- Header ---- */
@@ -79,13 +76,18 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #D1D5DB;
 }
 
 .pageTitle {
   font-weight: 700;
   font-size: clamp(1.4rem, 2.2vw, 2rem);
   margin: 0;
-  /* color: var(--primary); */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text);
 }
 
 .titleGroup {
@@ -95,7 +97,7 @@
   flex-wrap: wrap;
 }
 
-/* ---- Toolbar (filters) ---- */
+/* ---- Toolbar ---- */
 .toolbar {
   position: relative;
   z-index: var(--z-toolbar);
@@ -104,10 +106,8 @@
   align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
-  border: 1px solid var(--tint-200);
-  border-radius: 12px;
-  padding: 12px;
-  background: #f6fbfd;
+  padding: 16px;
+  border-radius: var(--radius);
 }
 
 .filterGrid {
@@ -129,24 +129,26 @@
 
 .label {
   font-size: 0.85rem;
-  color: #374151;
+  color: var(--text);
   font-weight: 600;
 }
 
 .input {
   height: 40px;
-  border: 1px solid var(--tint-200);
+  border: 1px solid #D1D5DB;
   border-radius: 8px;
   padding: 0 12px;
   font-size: 0.95rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .input:focus {
-  outline: 2px solid var(--primary-500);
-  outline-offset: 1px;
+  outline: none;
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.filterGrid>.filterGroup:last-child {
+.filterGrid > .filterGroup:last-child {
   justify-self: end;
   width: 100%;
   max-width: 360px;
@@ -160,31 +162,44 @@
 }
 
 .ghostBtn {
-  background: #fff;
-  color: #374151;
-  border: 1px solid var(--tint-200);
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid #D1D5DB;
   border-radius: 8px;
   height: 40px;
   padding: 0 12px;
   cursor: pointer;
-}
-
-.ghostBtn:hover {
-  background: #e9f6fb;
-}
-
-.clearButton {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: var(--primary-600);
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ghostBtn:hover {
+  background: #F3F4F6;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.ghostBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.clearButton {
+  color: #3B82F6;
+  font-weight: 600;
+}
+
+.retryButton {
+  color: #3B82F6;
+  font-weight: 600;
 }
 
 /* ---- Table ---- */
 .tableSection {
-  border: 1px solid var(--tint-200);
   border-radius: var(--radius);
-  background: #fff;
+  background: #FFFFFF;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -194,15 +209,15 @@
 .tableGrid {
   display: grid;
   grid-template-columns:
-    minmax(100px, 1fr) /* วันที่ขอ */
-    minmax(100px, 1fr) /* PR No */
-    minmax(180px, 2fr) /* สินค้า */
+    minmax(120px, 1.2fr) /* วันที่ขอ */
+    minmax(100px, 1fr)   /* PR No */
+    minmax(180px, 2fr)   /* สินค้า */
     minmax(120px, 1.2fr) /* หมวดหมู่ */
-    minmax(90px, 0.8fr) /* จำนวน */
-    minmax(90px, 0.8fr) /* หน่วย */
-    minmax(90px, 0.8fr) /* รับแล้ว */
-    minmax(90px, 0.8fr) /* คงเหลือ */
-    minmax(100px, 1fr); /* สถานะ */
+    minmax(90px, 0.8fr)  /* จำนวน */
+    minmax(90px, 0.8fr)  /* หน่วย */
+    minmax(90px, 0.8fr)  /* รับแล้ว */
+    minmax(90px, 0.8fr)  /* คงเหลือ */
+    minmax(100px, 1.5fr); /* สถานะ */
   align-items: center;
 }
 
@@ -210,18 +225,19 @@
   position: sticky;
   top: 0;
   z-index: var(--z-header);
-  background: #eef9fc;
-  border-bottom: 1px solid var(--tint-200);
+  background: #f1f5f9;
   padding-block: var(--th-pad-y);
   padding-inline: var(--th-pad-x);
   font-weight: 700;
-  color: #374151;
+  color: #000000;
   font-size: var(--th-font);
   line-height: var(--th-line);
   min-height: var(--th-min-h);
 }
 
-.tableHeader .headerItem {
+.tableHeader .headerItem,
+.tableHeader > div {
+  font-weight: 700;
   display: flex;
   align-items: center;
   white-space: nowrap;
@@ -231,23 +247,37 @@
 .tableHeader .headerItem:nth-child(5),
 .tableHeader .headerItem:nth-child(6),
 .tableHeader .headerItem:nth-child(7),
-.tableHeader .headerItem:nth-child(8) {
+.tableHeader .headerItem:nth-child(8),
+.tableHeader .headerItem:nth-child(9) {
   justify-content: center;
   text-align: center;
 }
 
 .inventory {
-  min-height: calc(var(--row-h) * var(--rows-per-page));
   border: 0;
   border-radius: 0;
-  background: #fff;
+  background: #FFFFFF;
+  height: calc(var(--row-h) * var(--rows-per-page));
   overflow: hidden;
+}
+
+.inventory .tableRow:nth-child(odd) {
+  background: #FFFFFF;
+}
+
+.inventory .tableRow:nth-child(even) {
+  background: #f9fafb;
+}
+
+.tableRow:hover {
+  background: #E5E7EB;
 }
 
 .inventory .tableRow > .tableCell:nth-child(5),
 .inventory .tableRow > .tableCell:nth-child(6),
 .inventory .tableRow > .tableCell:nth-child(7),
-.inventory .tableRow > .tableCell:nth-child(8) {
+.inventory .tableRow > .tableCell:nth-child(8),
+.inventory .tableRow > .tableCell:nth-child(9) {
   display: flex;
   justify-content: center;
   text-align: center;
@@ -257,19 +287,16 @@
   box-sizing: border-box;
   height: var(--row-h);
   padding: 0 var(--th-pad-x);
-  border-top: 1px solid #deedf1;
+  border-top: 1px solid #e5e7eb;
   transition: background-color 0.2s ease;
-}
-
-.tableRow:hover {
-  background: var(--tint-100);
 }
 
 .tableRow:first-child {
   border-top: 0;
 }
 
-.tableCell {
+.tableCell,
+.cell {
   display: flex;
   align-items: center;
   padding: 4px 6px;
@@ -283,58 +310,91 @@
   justify-content: center;
 }
 
-.noDataMessage {
-  min-height: calc(var(--row-h) * var(--rows-per-page));
+.noDataMessage,
+.noData {
+  height: calc(var(--row-h) * var(--rows-per-page));
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--muted);
+  font-size: 1rem;
 }
 
-.actionButton {
-  display: inline-flex;
+/* Fill empty rows */
+.fillerRow {
+  pointer-events: none;
+}
+.fillerRow:hover {
+  background: inherit !important;
+}
+
+/* ---- Loading ---- */
+.loadingContainer {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  display: flex;
   align-items: center;
   justify-content: center;
-  background: #3b82f6;
-  color: #fff;
-  border-radius: 8px;
-  padding: 6px;
-  transition: background-color 0.2s ease, transform 0.15s ease;
+  color: var(--muted);
+  font-size: 1rem;
+  background: url('/loading-spinner.gif') no-repeat center;
 }
 
-.actionButton:hover {
-  background: #2563eb;
-  transform: scale(1.05);
+/* ---- Error ---- */
+.errorContainer {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--danger);
+  font-size: 1rem;
 }
 
-.actionButton:active {
-  transform: scale(0.95);
+/* ---- Pagination ---- */
+.paginationBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid #D1D5DB;
+  background: #FFFFFF;
 }
 
-/* Pagination */
+.paginationInfo {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
 .paginationControls {
   display: flex;
   list-style: none;
-  padding: 10px;
+  padding: 0;
   margin: 0;
   gap: 6px;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: center;
-  background: #fff;
+  background: transparent;
   border-top: 0;
 }
 
 .pageButton {
-  background: #fff;
-  border: 1px solid var(--tint-200);
-  border-radius: 8px;
-  padding: 6px 10px;
   min-width: 34px;
+  height: 40px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  background: #FFFFFF;
   cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1F2A44;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+  padding: 6px 10px;
 }
 
 .pageButton:hover:not(:disabled) {
-  background: #e9f6fb;
+  background: #F3F4F6;
+  transform: translateY(-1px);
 }
 
 .pageButton:disabled {
@@ -343,47 +403,18 @@
 }
 
 .activePage {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
+  background: #3B82F6;
+  color: #FFFFFF;
+  border-color: #3B82F6;
 }
 
 .ellipsis {
+  padding: 0 8px;
   color: var(--muted);
+  font-size: 1rem;
 }
 
-/* Loading and Error States */
-.loadingContainer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: calc(var(--row-h) * var(--rows-per-page));
-  gap: 8px;
-  color: var(--muted);
-}
-
-.errorContainer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: calc(var(--row-h) * var(--rows-per-page));
-  gap: 12px;
-  color: var(--danger);
-}
-
-.retryButton {
-  background: var(--primary);
-  color: #fff;
-  border-radius: 8px;
-  padding: 8px 16px;
-  cursor: pointer;
-}
-
-.retryButton:hover {
-  background: var(--primary-600);
-}
-
-/* Status Badges */
+/* ---- Stock Status Badges ---- */
 .stBadge {
   display: inline-flex;
   align-items: center;
@@ -395,32 +426,42 @@
   border: 1px solid transparent;
   min-width: 92px;
   line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.stBadge:hover {
+  transform: translateY(-1px);
 }
 
 .stCompleted {
-  color: var(--completed-color);
-  background: #d1fae5;
-  border-color: #86efac;
+  color: #065F46;
+  background: #D1FAE5;
+  border-color: #6EE7B7;
 }
 
 .stProcessing {
-  color: var(--processing-color);
-  background: #fffacd;
-  border-color: #f4e4a4;
+  color: #92400E;
+  background: #FEF3C7;
+  border-color: #FCD34D;
 }
 
 .stPending {
-  color: var(--pending-color);
-  background: #ffe4e1;
-  border-color: #fecdd3;
+  color: #1E40AF;
+  background: #DBEAFE;
+  border-color: #93C5FD;
 }
 
-/* Responsive Design */
+.stNeutral {
+  color: #374151;
+  background: #E5E7EB;
+  border-color: #D1D5DB;
+}
+
+/* ---- Responsive ---- */
 @media (max-width: 1024px) {
   .filterGrid {
     grid-template-columns: repeat(2, minmax(180px, 1fr));
   }
-
   .filterGrid > .filterGroup:last-child {
     justify-self: stretch;
     max-width: none;
@@ -435,11 +476,9 @@
     flex-wrap: wrap;
     row-gap: 6px;
   }
-
   .filterGrid {
     grid-template-columns: 1fr;
   }
-
   .filterGrid > .filterGroup:last-child {
     justify-self: stretch;
   }
@@ -452,13 +491,19 @@
     --th-pad-y: 10px;
     --table-gap: 10px;
   }
-
   .mainHome {
     padding: 12px;
   }
-
   .tableGrid {
     grid-template-columns:
-      100px 100px 180px 120px 90px 90px 90px 90px 100px ;
+      100px /* วันที่ขอ */
+      80px  /* PR No */
+      160px /* สินค้า */
+      100px /* หมวดหมู่ */
+      80px  /* จำนวน */
+      80px  /* หน่วย */
+      80px  /* รับแล้ว */
+      80px  /* คงเหลือ */
+      100px; /* สถานะ */
   }
 }

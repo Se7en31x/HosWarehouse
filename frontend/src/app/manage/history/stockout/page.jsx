@@ -1,4 +1,5 @@
-"use client";
+'use client';
+
 import { useEffect, useState, useMemo } from "react";
 import { manageAxios } from "@/app/utils/axiosInstance";
 import Swal from "sweetalert2";
@@ -8,7 +9,7 @@ import dynamic from "next/dynamic";
 
 const Select = dynamic(() => import("react-select"), { ssr: false });
 
-/* react-select styles (aligned with BorrowHistory) */
+/* react-select styles */
 const customSelectStyles = {
   control: (base, state) => ({
     ...base,
@@ -50,7 +51,7 @@ const typeMap = {
   expired_dispose: "จัดการหมดอายุ",
   adjust_out: "ปรับปรุงยอดตัดออก",
   return_lost: "สูญหาย (ตรวจนับ)",
-  damaged: "การชำรุด", // เพิ่มสถานะใหม่
+  damaged: "การชำรุด",
 };
 
 const CATEGORY_OPTIONS = [
@@ -63,18 +64,18 @@ const getTypeBadgeClass = (type) => {
   switch (type) {
     case "withdraw":
     case "borrow":
-      return "st-approved";
+      return "stAvailable";
     case "return_damaged":
     case "damaged_dispose":
     case "expired_dispose":
-    case "damaged": // เพิ่มสถานะใหม่
-      return "st-warning";
+    case "damaged":
+      return "stLow";
     case "return_lost":
-      return "st-rejected";
+      return "stOut";
     case "adjust_out":
-      return "st-default";
+      return "stHold";
     default:
-      return "st-default";
+      return "stHold";
   }
 };
 
@@ -170,27 +171,33 @@ export default function StockOutHistoryPage() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [details, setDetails] = useState([]);
-  const ROWS_PER_PAGE = 10;
+  const ROWS_PER_PAGE = 12; // ปรับให้ตรงกับ InventoryCheck
 
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
       setIsLoading(true);
       try {
         const res = await manageAxios.get("/history/stockout");
-        setRecords(Array.isArray(res.data) ? res.data : []);
+        if (isMounted) {
+          setRecords(Array.isArray(res.data) ? res.data : []);
+        }
       } catch (err) {
         console.error("Error fetching stockout history:", err);
         Swal.fire({
           icon: "error",
           title: "ข้อผิดพลาด",
           text: "ไม่สามารถโหลดข้อมูลได้",
-          confirmButtonColor: "#008dda",
+          confirmButtonColor: "#2563eb",
         });
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
     fetchData();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const filteredRecords = useMemo(() => {
@@ -207,10 +214,16 @@ export default function StockOutHistoryPage() {
   const totalPages = Math.max(1, Math.ceil(filteredRecords.length / ROWS_PER_PAGE));
   const start = (currentPage - 1) * ROWS_PER_PAGE;
   const pageRows = filteredRecords.slice(start, start + ROWS_PER_PAGE);
+  const startDisplay = filteredRecords.length ? start + 1 : 0;
+  const endDisplay = Math.min(start + ROWS_PER_PAGE, filteredRecords.length);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [typeFilter, search]);
+
+  useEffect(() => {
+    setCurrentPage((p) => Math.min(Math.max(1, p), totalPages));
+  }, [totalPages]);
 
   const getPageNumbers = () => {
     const pages = [];
@@ -244,22 +257,26 @@ export default function StockOutHistoryPage() {
         icon: "error",
         title: "ข้อผิดพลาด",
         text: "ไม่สามารถโหลดรายละเอียดได้",
-        confirmButtonColor: "#008dda",
+        confirmButtonColor: "#2563eb",
       });
       setDetails([]);
     }
   };
 
+  const fillersCount = Math.max(0, ROWS_PER_PAGE - (pageRows?.length || 0));
+
   return (
     <div className={styles.mainHome}>
       <div className={styles.infoContainer}>
         <div className={styles.pageBar}>
-          <h1 className={styles.pageTitle}>ประวัติการตัดออกจากคลัง</h1>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.pageTitle}>ประวัติการตัดออกจากคลัง</h1>
+          </div>
         </div>
 
         {/* Toolbar */}
-        <div className={styles.filterBar}>
-          <div className={styles.filterLeft}>
+        <div className={styles.toolbar}>
+          <div className={styles.filterGrid}>
             <div className={styles.filterGroup}>
               <label className={styles.label}>ประเภทเอกสาร</label>
               <Select
@@ -271,11 +288,9 @@ export default function StockOutHistoryPage() {
                 styles={customSelectStyles}
                 placeholder="เลือกประเภท..."
                 aria-label="กรองตามประเภทเอกสาร"
-                menuPortalTarget={typeof window !== "undefined" ? document.body : undefined}
+                menuPortalTarget={typeof window !== "undefined" ? document.body : null}
               />
             </div>
-          </div>
-          <div className={styles.filterRight}>
             <div className={styles.filterGroup}>
               <label className={styles.label}>ค้นหา</label>
               <div className={styles.searchBox}>
@@ -290,12 +305,14 @@ export default function StockOutHistoryPage() {
                 />
               </div>
             </div>
+          </div>
+          <div className={styles.searchCluster}>
             <button
               className={`${styles.ghostBtn} ${styles.clearButton}`}
               onClick={clearFilters}
               aria-label="ล้างตัวกรองทั้งหมด"
             >
-              <Trash2 size={16} /> ล้างตัวกรอง
+              <Trash2 size={18} /> ล้างตัวกรอง
             </button>
           </div>
         </div>
@@ -311,80 +328,102 @@ export default function StockOutHistoryPage() {
             <div className={`${styles.headerItem} ${styles.centerCell}`}>ตรวจสอบ</div>
           </div>
 
-          <div className={styles.inventory}>
+          <div className={styles.inventory} style={{ "--rows-per-page": ROWS_PER_PAGE }}>
             {isLoading ? (
-              <div className={styles.loadingContainer}>กำลังโหลดข้อมูล...</div>
+              <div className={styles.loadingContainer} />
             ) : filteredRecords.length === 0 ? (
               <div className={styles.noDataMessage}>ไม่พบข้อมูลการตัดออกจากคลัง</div>
             ) : (
-              pageRows.map((r) => (
-                <div key={r.stockout_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
-                  <div className={styles.tableCell}>{formatThaiDate(r.stockout_date)}</div>
-                  <div className={styles.tableCell}>{r.stockout_no || "-"}</div>
-                  <div className={styles.tableCell}>{r.user_name || "-"}</div>
-                  <div className={styles.tableCell}>
-                    <span className={`${styles.stBadge} ${styles[getTypeBadgeClass(r.stockout_type)]}`}>
-                      {typeMap[r.stockout_type] || "อื่น ๆ"}
-                    </span>
+              <>
+                {pageRows.map((r) => (
+                  <div key={r.stockout_id} className={`${styles.tableGrid} ${styles.tableRow}`} role="row">
+                    <div className={styles.tableCell} role="cell">{formatThaiDate(r.stockout_date)}</div>
+                    <div className={styles.tableCell} role="cell">{r.stockout_no || "-"}</div>
+                    <div className={styles.tableCell} role="cell">{r.user_name || "-"}</div>
+                    <div className={styles.tableCell} role="cell">
+                      <span className={`${styles.stBadge} ${styles[getTypeBadgeClass(r.stockout_type)]}`}>
+                        {typeMap[r.stockout_type] || "อื่น ๆ"}
+                      </span>
+                    </div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
+                      {r.total_items || 0} รายการ
+                    </div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
+                      <button
+                        className={styles.actionButton}
+                        onClick={() => handleShowDetail(r)}
+                        aria-label={`ดูรายละเอียดเอกสาร ${r.stockout_no || "ไม่ระบุ"}`}
+                        title="ดูรายละเอียด"
+                      >
+                        <Search size={18} />
+                      </button>
+                    </div>
                   </div>
-                  <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                    {r.total_items || 0} รายการ
+                ))}
+                {Array.from({ length: fillersCount }).map((_, i) => (
+                  <div
+                    key={`filler-${i}`}
+                    className={`${styles.tableGrid} ${styles.tableRow} ${styles.fillerRow}`}
+                    aria-hidden="true"
+                  >
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
                   </div>
-                  <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                    <button
-                      className={styles.actionButton}
-                      onClick={() => handleShowDetail(r)}
-                      aria-label={`ดูรายละเอียดเอกสาร ${r.stockout_no || "ไม่ระบุ"}`}
-                    >
-                      <Search size={18} />
-                    </button>
-                  </div>
-                </div>
-              ))
+                ))}
+              </>
             )}
           </div>
 
           {/* Pagination */}
-          <ul className={styles.paginationControls}>
-            <li>
-              <button
-                className={styles.pageButton}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                aria-label="หน้าก่อนหน้า"
-              >
-                <ChevronLeft size={16} />
-              </button>
-            </li>
-            {getPageNumbers().map((p, idx) =>
-              p === "..." ? (
-                <li key={`ellipsis-${idx}`} className={styles.ellipsis}>
-                  …
-                </li>
-              ) : (
-                <li key={`page-${p}`}>
-                  <button
-                    className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
-                    onClick={() => setCurrentPage(p)}
-                    aria-label={`หน้า ${p}`}
-                    aria-current={p === currentPage ? "page" : undefined}
-                  >
-                    {p}
-                  </button>
-                </li>
-              )
-            )}
-            <li>
-              <button
-                className={styles.pageButton}
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage >= totalPages}
-                aria-label="หน้าถัดไป"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </li>
-          </ul>
+          <div className={styles.paginationBar}>
+            <div className={styles.paginationInfo}>
+              กำลังแสดง {startDisplay}-{endDisplay} จาก {filteredRecords.length} รายการ
+            </div>
+            <ul className={styles.paginationControls}>
+              <li>
+                <button
+                  className={styles.pageButton}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  aria-label="หน้าก่อนหน้า"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+              </li>
+              {getPageNumbers().map((p, idx) =>
+                p === "..." ? (
+                  <li key={`ellipsis-${idx}`} className={styles.ellipsis}>
+                    …
+                  </li>
+                ) : (
+                  <li key={`page-${p}`}>
+                    <button
+                      className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
+                      onClick={() => setCurrentPage(p)}
+                      aria-label={`หน้า ${p}`}
+                      aria-current={p === currentPage ? "page" : undefined}
+                    >
+                      {p}
+                    </button>
+                  </li>
+                )
+              )}
+              <li>
+                <button
+                  className={styles.pageButton}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage >= totalPages}
+                  aria-label="หน้าถัดไป"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
 
         {/* Modal */}

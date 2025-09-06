@@ -1,10 +1,11 @@
 'use client';
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
-import {manageAxios} from '@/app/utils/axiosInstance';
+import { manageAxios } from '@/app/utils/axiosInstance';
 import dynamic from 'next/dynamic';
-import { Trash2, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { Trash2, ChevronLeft, ChevronRight, Settings, Search } from 'lucide-react';
 
 const Select = dynamic(() => import('react-select'), { ssr: false });
 
@@ -23,11 +24,15 @@ const customSelectStyles = {
     borderColor: state.isFocused ? '#2563eb' : '#e5e7eb',
     boxShadow: 'none',
     '&:hover': { borderColor: '#2563eb' },
+    zIndex: 20,
+    width: '100%',
+    maxWidth: '250px',
   }),
   menu: (base) => ({
     ...base,
     borderRadius: '0.5rem',
     marginTop: 6,
+    boxShadow: 'none',
     border: '1px solid #e5e7eb',
     zIndex: 9000,
   }),
@@ -37,7 +42,12 @@ const customSelectStyles = {
     backgroundColor: state.isFocused ? '#f1f5ff' : '#fff',
     color: '#111827',
     padding: '8px 12px',
+    textAlign: 'left',
   }),
+  placeholder: (base) => ({ ...base, color: '#9ca3af' }),
+  singleValue: (base) => ({ ...base, textAlign: 'left' }),
+  clearIndicator: (base) => ({ ...base, padding: 6 }),
+  dropdownIndicator: (base) => ({ ...base, padding: 6 }),
 };
 
 // helper: format date TH → ใช้เลขอารบิกทั้งหมด
@@ -45,11 +55,11 @@ const fdate = (d) => {
   if (!d) return '-';
   const dt = new Date(d);
   if (isNaN(dt)) return '-';
-  return new Intl.DateTimeFormat("th-TH-u-nu-latn", {
-    timeZone: "Asia/Bangkok",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
+  return new Intl.DateTimeFormat('th-TH-u-nu-latn', {
+    timeZone: 'Asia/Bangkok',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
   }).format(dt);
 };
 
@@ -83,16 +93,23 @@ export default function ManageReturnPage() {
   const [status, setStatus] = useState('all');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(null); // ถ้า API ส่งมาจะโชว์ “จาก N”
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
 
-  const limit = 10; // ปรับให้เท่ากับ ApprovalRequest
+  const limit = 12; // แถวต่อหน้า (ล็อคให้คงที่)
   const abortRef = useRef(null);
 
   const menuPortalTarget = useMemo(
     () => (typeof window !== 'undefined' ? document.body : null),
     []
   );
+
+  // auto-focus ช่องค้นหา
+  useEffect(() => {
+    const el = document.getElementById('q');
+    el?.focus();
+  }, []);
 
   // debounce 400ms
   const dq = useMemo(() => q.trim().toLowerCase(), [q]);
@@ -114,8 +131,12 @@ export default function ManageReturnPage() {
         params: { q: debouncedQ, status, page, limit },
         signal: controller.signal,
       });
-      setRows(Array.isArray(res?.data?.rows) ? res.data.rows : []);
-      setTotalPages(Number(res?.data?.totalPages) || 1);
+      const payload = res?.data || {};
+      setRows(Array.isArray(payload.rows) ? payload.rows : []);
+      setTotalPages(Number(payload.totalPages) || 1);
+      setTotalItems(
+        Number.isFinite(Number(payload.totalItems)) ? Number(payload.totalItems) : null
+      );
     } catch (e) {
       if (e.name === 'CanceledError' || e.name === 'AbortError') return;
       console.error(e);
@@ -125,9 +146,12 @@ export default function ManageReturnPage() {
     }
   };
 
+  useEffect(() => { fetchData(); }, [debouncedQ, status, page]);
+
+  // clamp หน้าเมื่อจำนวนหน้าลดลง (ป้องกันหลุดหน้า)
   useEffect(() => {
-    fetchData();
-  }, [debouncedQ, status, page]);
+    setPage((p) => Math.min(Math.max(1, p), totalPages || 1));
+  }, [totalPages]);
 
   const clearFilters = () => {
     setQ('');
@@ -141,22 +165,26 @@ export default function ManageReturnPage() {
     const currentPage = page;
     const pages = [];
     if (total <= 7) for (let i = 1; i <= total; i++) pages.push(i);
-    else if (currentPage <= 4)
-      pages.push(1, 2, 3, 4, 5, '...', total);
+    else if (currentPage <= 4) pages.push(1, 2, 3, 4, 5, '...', total);
     else if (currentPage >= total - 3)
       pages.push(1, '...', total - 4, total - 3, total - 2, total - 1, total);
-    else
-      pages.push(
-        1,
-        '...',
-        currentPage - 1,
-        currentPage,
-        currentPage + 1,
-        '...',
-        total
-      );
+    else pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', total);
     return pages;
   };
+
+  // เติมแถวว่างให้ครบ 12 เสมอ
+  const fillersCount = Math.max(0, limit - (rows?.length || 0));
+  const FillerRow = ({ i }) => (
+    <div className={`${styles.tableGrid} ${styles.tableRow} ${styles.fillerRow}`} aria-hidden="true" key={`filler-${i}`}>
+      {Array.from({ length: 7 }).map((_, j) => (
+        <div className={styles.tableCell} key={j}>&nbsp;</div>
+      ))}
+    </div>
+  );
+
+  // ช่วงข้อมูลที่แสดง
+  const startDisplay = rows.length ? (page - 1) * limit + 1 : 0;
+  const endDisplay = (page - 1) * limit + rows.length;
 
   return (
     <div className={styles.mainHome}>
@@ -188,13 +216,14 @@ export default function ManageReturnPage() {
                 menuPlacement="auto"
                 menuPosition="fixed"
                 menuPortalTarget={menuPortalTarget || undefined}
+                aria-label="เลือกสถานะการคืน"
               />
             </div>
           </div>
 
           <div className={styles.searchCluster}>
-            <div className={styles.filterGroup}>
-              <label className={styles.label} htmlFor="q">ค้นหา</label>
+            <div className={styles.searchBox}>
+              <Search size={18} className={styles.inputIcon} />
               <input
                 id="q"
                 className={styles.input}
@@ -205,9 +234,9 @@ export default function ManageReturnPage() {
                   setPage(1);
                 }}
                 placeholder="รหัสคำขอ, ชื่อผู้ขอ, แผนก, รายการพัสดุ…"
+                aria-label="ค้นหาด้วยรหัสคำขอ, ชื่อผู้ขอ, แผนก, หรือรายการพัสดุ"
               />
             </div>
-
             <button
               className={`${styles.ghostBtn} ${styles.clearButton}`}
               onClick={clearFilters}
@@ -221,9 +250,14 @@ export default function ManageReturnPage() {
 
         {/* Table */}
         {loading ? (
-          <div className={styles.loadingContainer}>กำลังโหลด...</div>
+          <div className={styles.loadingContainer}>
+            <div className={styles.spinner} />
+            <p className={styles.infoMessage}>กำลังโหลด...</p>
+          </div>
         ) : err ? (
-          <div className={styles.noDataMessage} style={{ color: 'red' }}>{err}</div>
+          <div className={styles.noDataMessage} style={{ color: 'var(--danger)' }}>
+            {err}
+          </div>
         ) : (
           <div className={styles.tableFrame}>
             <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
@@ -236,89 +270,93 @@ export default function ManageReturnPage() {
               <div className={`${styles.headerItem} ${styles.centerHeader}`}>การดำเนินการ</div>
             </div>
 
-            <div className={styles.inventory} style={{ '--rows-per-page': 10 }}>
+            <div className={styles.inventory} style={{ '--rows-per-page': limit }}>
               {rows.length ? (
-                rows.map((r) => {
-                  const statusKey = r.items_overdue > 0 ? 'overdue' : r.items_due_soon > 0 ? 'due_soon' : 'borrowed';
-                  const label = r.items_overdue > 0 
-                    ? `เกินกำหนด ${r.items_overdue} รายการ`
-                    : r.items_due_soon > 0 
-                      ? `ใกล้ครบ ${r.items_due_soon} รายการ`
-                      : 'ปกติ';
-                  return (
-                    <div
-                      key={r.request_id}
-                      className={`${styles.tableGrid} ${styles.tableRow}`}
-                    >
-                      <div className={styles.tableCell}>{r.request_code}</div>
-                      <div className={styles.tableCell}>{r.requester_name}</div>
-                      <div className={styles.tableCell}>{r.department}</div>
-                      <div className={styles.tableCell}>
-                        {fdate(r.earliest_due_date)}
+                <>
+                  {rows.map((r) => {
+                    const statusKey =
+                      r.items_overdue > 0 ? 'overdue' :
+                      r.items_due_soon > 0 ? 'due_soon' : 'borrowed';
+                    const label =
+                      r.items_overdue > 0 ? `เกินกำหนด ${r.items_overdue} รายการ` :
+                      r.items_due_soon > 0 ? `ใกล้ครบ ${r.items_due_soon} รายการ` : 'ปกติ';
+                    return (
+                      <div key={r.request_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                        <div className={styles.tableCell}>{r.request_code}</div>
+                        <div className={styles.tableCell}>{r.requester_name}</div>
+                        <div className={styles.tableCell}>{r.department}</div>
+                        <div className={styles.tableCell}>{fdate(r.earliest_due_date)}</div>
+                        <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                          <span className={`${styles.stBadge} ${styles[statusClass(statusKey)]}`}>{label}</span>
+                        </div>
+                        <div className={styles.tableCell}>
+                          {r.returned_items ?? 0}/{r.total_items ?? 0}
+                        </div>
+                        <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                          <Link href={`/manage/manageReturn/${r.request_id}`}>
+                            <button className={styles.actionButton} title="จัดการการคืน" aria-label="จัดการการคืน">
+                              <Settings size={16} /> จัดการ
+                            </button>
+                          </Link>
+                        </div>
                       </div>
-                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                        <span className={`${styles.stBadge} ${styles[statusClass(statusKey)]}`}>
-                          {label}
-                        </span>
-                      </div>
-                      <div className={styles.tableCell}>
-                        {r.returned_items ?? 0}/{r.total_items ?? 0}
-                      </div>
-                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                        <Link href={`/manage/manageReturn/${r.request_id}`}>
-                          <button className={styles.actionButton}>
-                            <Settings size={16} /> จัดการ
-                          </button>
-                        </Link>
-                      </div>
-                    </div>
-                  );
-                })
+                    );
+                  })}
+                  {Array.from({ length: fillersCount }).map((_, i) => <FillerRow i={i} key={i} />)}
+                </>
               ) : (
                 <div className={styles.noDataMessage}>ไม่พบรายการ</div>
               )}
             </div>
 
-            {totalPages > 1 && (
-              <ul className={styles.paginationControls}>
-                <li>
-                  <button
-                    className={styles.pageButton}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    aria-label="หน้าก่อนหน้า"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                </li>
-                {getPageNumbers().map((p, idx) =>
-                  p === '...' ? (
-                    <li key={idx} className={styles.ellipsis}>
-                      …
-                    </li>
-                  ) : (
-                    <li key={idx}>
-                      <button
-                        className={`${styles.pageButton} ${p === page ? styles.activePage : ''}`}
-                        onClick={() => setPage(p)}
-                      >
-                        {p}
-                      </button>
-                    </li>
-                  )
-                )}
-                <li>
-                  <button
-                    className={styles.pageButton}
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page >= totalPages}
-                    aria-label="หน้าถัดไป"
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                </li>
-              </ul>
-            )}
+            {/* แถบสรุป + ตัวควบคุมหน้า */}
+            <div className={styles.paginationBar}>
+              <div className={styles.paginationInfo}>
+                {totalItems != null
+                  ? <>กำลังแสดง {startDisplay}-{endDisplay} จาก {totalItems} รายการ</>
+                  : <>กำลังแสดง {startDisplay}-{endDisplay} (หน้า {page}/{totalPages})</>}
+              </div>
+              {totalPages > 1 && (
+                <ul className={styles.paginationControls}>
+                  <li>
+                    <button
+                      className={styles.pageButton}
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      aria-label="หน้าก่อนหน้า"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                  </li>
+                  {getPageNumbers().map((p, idx) =>
+                    p === '...' ? (
+                      <li key={idx} className={styles.ellipsis}>…</li>
+                    ) : (
+                      <li key={idx}>
+                        <button
+                          className={`${styles.pageButton} ${p === page ? styles.activePage : ''}`}
+                          onClick={() => setPage(p)}
+                          aria-label={`ไปยังหน้า ${p}`}
+                          aria-current={p === page ? 'page' : undefined}
+                        >
+                          {p}
+                        </button>
+                      </li>
+                    )
+                  )}
+                  <li>
+                    <button
+                      className={styles.pageButton}
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={page >= totalPages}
+                      aria-label="หน้าถัดไป"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </li>
+                </ul>
+              )}
+            </div>
           </div>
         )}
       </div>

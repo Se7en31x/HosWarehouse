@@ -1,5 +1,4 @@
-// WithdrawHistory.js
-"use client";
+'use client';
 
 import { useState, useEffect, useMemo } from "react";
 import Swal from "sweetalert2";
@@ -110,25 +109,25 @@ const getStatusBadgeClass = (status) => {
     case "approved_all":
     case "approved":
     case "completed":
-      return "st-approved";
+      return "stAvailable";
     case "approved_partial":
     case "approved_partial_and_rejected_partial":
     case "waiting_approval":
     case "waiting_approval_detail":
     case "in_progress":
-      return "st-warning";
+      return "stLow";
     case "rejected_all":
     case "rejected":
     case "canceled":
-      return "st-rejected";
+      return "stOut";
     case "draft":
     case "pending":
     default:
-      return "st-default";
+      return "stHold";
   }
 };
 
-const getUrgentBadgeClass = (isUrgent) => (isUrgent ? "st-urgent" : "st-default");
+const getUrgentBadgeClass = (isUrgent) => (isUrgent ? "stOut" : "stHold");
 
 const getOverallProcessingStatus = (req) => {
   if (["canceled", "rejected_all"].includes(req.request_status)) {
@@ -271,7 +270,7 @@ export default function WithdrawHistory() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const rowsPerPage = 10;
+  const rowsPerPage = 12; // ปรับให้ตรงกับ InventoryCheck (12 รายการต่อหน้า)
 
   // --- Data Fetching ---
   useEffect(() => {
@@ -288,7 +287,7 @@ export default function WithdrawHistory() {
           icon: "error",
           title: "ข้อผิดพลาด",
           text: "ไม่สามารถโหลดข้อมูลได้",
-          confirmButtonColor: "#008dda",
+          confirmButtonColor: "#2563eb",
         });
       } finally {
         if (isMounted) setIsLoading(false);
@@ -324,9 +323,15 @@ export default function WithdrawHistory() {
     return filteredData.slice(start, start + rowsPerPage);
   }, [filteredData, currentPage]);
 
+  // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [filterStatus, filterUrgent, searchText]);
+
+  // Clamp current page when total pages change
+  useEffect(() => {
+    setCurrentPage((p) => Math.min(Math.max(1, p), totalPages));
+  }, [totalPages]);
 
   const getPageNumbers = () => {
     const pages = [];
@@ -355,6 +360,11 @@ export default function WithdrawHistory() {
     setShowDetailModal(true);
   };
 
+  // --- Pagination Info ---
+  const start = (currentPage - 1) * rowsPerPage;
+  const startDisplay = filteredData.length ? start + 1 : 0;
+  const endDisplay = Math.min(start + rowsPerPage, filteredData.length);
+
   // --- Render ---
   return (
     <div className={styles.mainHome}>
@@ -367,8 +377,8 @@ export default function WithdrawHistory() {
         </div>
 
         {/* Toolbar */}
-        <div className={styles.filterBar}>
-          <div className={styles.filterLeft}>
+        <div className={styles.toolbar}>
+          <div className={styles.filterGrid}>
             <div className={styles.filterGroup}>
               <label className={styles.label}>สถานะ</label>
               <Select
@@ -395,8 +405,6 @@ export default function WithdrawHistory() {
                 aria-label="กรองตามความเร่งด่วน"
               />
             </div>
-          </div>
-          <div className={styles.filterRight}>
             <div className={styles.filterGroup}>
               <label className={styles.label}>ค้นหา</label>
               <div className={styles.searchBox}>
@@ -411,12 +419,14 @@ export default function WithdrawHistory() {
                 />
               </div>
             </div>
+          </div>
+          <div className={styles.searchCluster}>
             <button
               className={`${styles.ghostBtn} ${styles.clearButton}`}
               onClick={clearFilters}
               aria-label="ล้างตัวกรองทั้งหมด"
             >
-              <Trash2 size={16} /> ล้างตัวกรอง
+              <Trash2 size={18} /> ล้างตัวกรอง
             </button>
           </div>
         </div>
@@ -435,13 +445,13 @@ export default function WithdrawHistory() {
             <div className={`${styles.headerItem} ${styles.centerCell}`}>ตรวจสอบ</div>
           </div>
 
-          <div className={styles.inventory}>
+          <div className={styles.inventory} style={{ "--rows-per-page": `${rowsPerPage}` }}>
             {isLoading ? (
-              <div className={styles.loadingContainer}>กำลังโหลดข้อมูล...</div>
+              <div className={styles.loadingContainer} />
             ) : paginatedRows.length === 0 ? (
               <div className={styles.noDataMessage}>ไม่พบข้อมูลคำขอเบิก</div>
             ) : (
-              paginatedRows.map((req) => (
+              paginatedRows.map((req, index) => (
                 <div key={req.request_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
                   <div className={styles.tableCell}>{formatThaiDate(req.request_date)}</div>
                   <div className={styles.tableCell}>{req.request_code || "-"}</div>
@@ -476,49 +486,72 @@ export default function WithdrawHistory() {
                 </div>
               ))
             )}
+            {/* เติมแถวว่างให้ครบ 12 แถว */}
+            {Array.from({ length: paginatedRows.length > 0 ? Math.max(0, rowsPerPage - paginatedRows.length) : 0 }).map((_, i) => (
+              <div
+                key={`filler-${i}`}
+                className={`${styles.tableGrid} ${styles.tableRow} ${styles.fillerRow}`}
+                aria-hidden="true"
+              >
+                <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                <div className={styles.tableCell}>&nbsp;</div>
+                <div className={styles.tableCell}>&nbsp;</div>
+                <div className={styles.tableCell}>&nbsp;</div>
+                <div className={styles.tableCell}>&nbsp;</div>
+                <div className={styles.tableCell}>&nbsp;</div>
+                <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+              </div>
+            ))}
           </div>
 
-          {/* Pagination */}
-          <ul className={styles.paginationControls}>
-            <li>
-              <button
-                className={styles.pageButton}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                aria-label="หน้าก่อนหน้า"
-              >
-                <ChevronLeft size={16} />
-              </button>
-            </li>
-            {getPageNumbers().map((p, idx) =>
-              p === "..." ? (
-                <li key={`ellipsis-${idx}`} className={styles.ellipsis}>
-                  …
-                </li>
-              ) : (
-                <li key={`page-${p}`}>
-                  <button
-                    className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
-                    onClick={() => setCurrentPage(p)}
-                    aria-label={`หน้า ${p}`}
-                    aria-current={p === currentPage ? "page" : undefined}
-                  >
-                    {p}
-                  </button>
-                </li>
-              )
-            )}
-            <li>
-              <button
-                className={styles.pageButton}
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage >= totalPages}
-                aria-label="หน้าถัดไป"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </li>
-          </ul>
+          {/* Pagination Bar */}
+          <div className={styles.paginationBar}>
+            <div className={styles.paginationInfo}>
+              กำลังแสดง {startDisplay}-{endDisplay} จาก {filteredData.length} รายการ
+            </div>
+            <ul className={styles.paginationControls}>
+              <li>
+                <button
+                  className={styles.pageButton}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  aria-label="หน้าก่อนหน้า"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+              </li>
+              {getPageNumbers().map((p, idx) =>
+                p === "..." ? (
+                  <li key={`ellipsis-${idx}`} className={styles.ellipsis}>
+                    …
+                  </li>
+                ) : (
+                  <li key={`page-${p}`}>
+                    <button
+                      className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
+                      onClick={() => setCurrentPage(p)}
+                      aria-label={`หน้า ${p}`}
+                      aria-current={p === currentPage ? "page" : undefined}
+                    >
+                      {p}
+                    </button>
+                  </li>
+                )
+              )}
+              <li>
+                <button
+                  className={styles.pageButton}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage >= totalPages}
+                  aria-label="หน้าถัดไป"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
 
         {/* Modal */}

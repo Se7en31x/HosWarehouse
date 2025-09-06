@@ -84,7 +84,8 @@ export default function InventoryCheck() {
   const [allItems, setAllItems] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
-  const ITEMS_PER_PAGE = 10;
+
+  const ITEMS_PER_PAGE = 12; // ⬅️ ล็อค 12 แถวเสมอ
 
   const menuPortalTarget = useMemo(
     () => (typeof window !== "undefined" ? document.body : null),
@@ -116,7 +117,7 @@ export default function InventoryCheck() {
     }
   };
 
-  // -------------------- ✅ ส่วนที่ต้องแก้ไข --------------------
+  // -------------------- ✅ โหลด+subscribe แบบ real-time --------------------
   useEffect(() => {
     let isMounted = true;
 
@@ -125,7 +126,7 @@ export default function InventoryCheck() {
         const res = await manageAxios.get("/inventoryCheck/all");
         if (isMounted) {
           setAllItems(Array.isArray(res.data) ? res.data.filter(Boolean) : []);
-          setIsLoading(false); // ควรกำหนด isLoading ที่นี่
+          setIsLoading(false);
         }
       } catch (err) {
         console.error("❌ โหลดข้อมูลเริ่มต้นไม่สำเร็จ:", err);
@@ -139,26 +140,14 @@ export default function InventoryCheck() {
     const socket = connectSocket();
 
     const handleItemUpdate = () => {
-      // เมื่อได้รับ Event ที่เกี่ยวข้องกับการอัปเดตข้อมูล ให้ดึงข้อมูลใหม่ทั้งหมด
-      console.log("📦 ได้รับการอัปเดตจาก Socket.IO, กำลังดึงข้อมูลใหม่...");
-      if (isMounted) {
-        fetchInitialData();
-      }
+      if (isMounted) fetchInitialData();
     };
 
-    // 🟢 ฟัง Event เมื่อรายการสินค้าถูกเพิ่ม
     socket.on("itemAdded", handleItemUpdate);
-
-    // 🟡 ฟัง Event เมื่อข้อมูลสินค้าเดิมถูกแก้ไข (รวมถึงข้อมูลรายละเอียด)
     socket.on("itemUpdated", handleItemUpdate);
-
-    // 🟡 ฟัง Event เมื่อข้อมูล Lot สินค้าถูกอัปเดต
     socket.on("itemLotUpdated", handleItemUpdate);
-
-    // 🔴 ฟัง Event เมื่อรายการสินค้าถูกลบ
     socket.on("itemDeleted", handleItemUpdate);
 
-    // Cleanup function
     return () => {
       isMounted = false;
       socket.off("itemAdded", handleItemUpdate);
@@ -168,7 +157,7 @@ export default function InventoryCheck() {
       disconnectSocket();
     };
   }, []);
-  // ----------------------------------------------------
+  // -----------------------------------------------------------------------
 
   const filteredInventory = useMemo(() => {
     const f = searchText.toLowerCase();
@@ -179,7 +168,7 @@ export default function InventoryCheck() {
       const matchUnit = selectedUnit ? item.item_unit === selectedUnit : true;
       const matchSearchText = searchText
         ? (item.item_name || "").toLowerCase().includes(f) ||
-        (getItemCode(item) || "").toLowerCase().includes(f)
+          (getItemCode(item) || "").toLowerCase().includes(f)
         : true;
       return matchCategory && matchUnit && matchSearchText;
     });
@@ -199,36 +188,36 @@ export default function InventoryCheck() {
     return items;
   }, [allItems, selectedCategory, selectedUnit, searchText]);
 
-
   const totalPages = Math.max(1, Math.ceil(filteredInventory.length / ITEMS_PER_PAGE));
   const paginatedItems = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredInventory.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredInventory, currentPage]);
 
+  // ⬇️ จำนวนแถวว่างที่ต้องเติมให้ครบ 12 แถวเสมอ
+  const fillersCount = Math.max(0, ITEMS_PER_PAGE - (paginatedItems?.length || 0));
+
+  // รีเซ็ตหน้าเมื่อฟิลเตอร์เปลี่ยน
   useEffect(() => {
     setCurrentPage(1);
   }, [searchText, selectedCategory, selectedUnit]);
+
+  // คลัมป์หน้าปัจจุบันเมื่อจำนวนหน้าลดลง (กันหน้าเกินแล้วว่าง)
+  useEffect(() => {
+    setCurrentPage((p) => Math.min(Math.max(1, p), totalPages));
+  }, [totalPages]);
 
   const goToPreviousPage = () => currentPage > 1 && setCurrentPage((c) => c - 1);
   const goToNextPage = () =>
     currentPage * ITEMS_PER_PAGE < filteredInventory.length && setCurrentPage((c) => c + 1);
   const getPageNumbers = () => {
     const pages = [];
-    if (totalPages <= 7) {
+    if (totalPages <= 4) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else if (currentPage <= 4) {
-      pages.push(1, 2, 3, 4, 5, "...", totalPages);
+      pages.push(1, 2, 3, 4, "...", totalPages);
     } else if (currentPage >= totalPages - 3) {
-      pages.push(
-        1,
-        "...",
-        totalPages - 4,
-        totalPages - 3,
-        totalPages - 2,
-        totalPages - 1,
-        totalPages
-      );
+      pages.push(1, "...", totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
     } else {
       pages.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
     }
@@ -246,18 +235,23 @@ export default function InventoryCheck() {
     try {
       return d
         ? new Date(d).toLocaleString("th-TH", {
-          timeZone: "Asia/Bangkok",
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-        })
+            timeZone: "Asia/Bangkok",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
         : "-";
     } catch {
       return "-";
     }
   };
+
+  // ค่าข้อมูลหน้า
+  const start = (currentPage - 1) * ITEMS_PER_PAGE;
+  const startDisplay = filteredInventory.length ? start + 1 : 0;
+  const endDisplay = Math.min(start + ITEMS_PER_PAGE, filteredInventory.length);
 
   return (
     <div className={styles.mainHome}>
@@ -265,7 +259,7 @@ export default function InventoryCheck() {
         <div className={styles.pageBar}>
           <div className={styles.titleGroup}>
             <h1 className={styles.pageTitle}>
-              <PackageCheck size={28} /> {/* เปลี่ยนไอคอนตรงนี้ */}
+              <PackageCheck size={28} />
               ตรวจสอบยอดคงคลัง
             </h1>
           </div>
@@ -337,10 +331,13 @@ export default function InventoryCheck() {
               <div className={styles.headerItem}>การดำเนินการ</div>
             </div>
 
-            <div className={styles.inventory} style={{ "--rows-per-page": ITEMS_PER_PAGE }}>
+            <div
+              className={styles.inventory}
+              style={{ "--rows-per-page": `${ITEMS_PER_PAGE}` }}
+            >
               {paginatedItems.length > 0 ? (
                 paginatedItems.map((item, index) => (
-                  <div key={item.item_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                  <div key={item.item_id ?? `${getItemCode(item)}-${index}`} className={`${styles.tableGrid} ${styles.tableRow}`}>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>
                       {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
                     </div>
@@ -363,8 +360,8 @@ export default function InventoryCheck() {
                     <div className={styles.tableCell}>
                       {categoryThaiMap[item.item_category?.toLowerCase()] || item.item_category}
                     </div>
-                    <div className={styles.tableCell}>{item.total_on_hand_qty}</div>
-                    <div className={styles.tableCell}>{item.item_unit}</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>{item.total_on_hand_qty}</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>{item.item_unit}</div>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>
                       {(() => {
                         const st = getStockStatus(item);
@@ -375,11 +372,12 @@ export default function InventoryCheck() {
                         );
                       })()}
                     </div>
-                    <div className={styles.tableCell}>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
                       <Link
                         href={`/manage/inventoryCheck/${item.item_id}/inventoryDetail`}
                         className={styles.actionButton}
                         title="ตรวจสอบ"
+                        aria-label={`ตรวจสอบ ${item.item_name || ''}`}
                       >
                         <Search size={18} />
                       </Link>
@@ -389,45 +387,70 @@ export default function InventoryCheck() {
               ) : (
                 <div className={styles.noDataMessage}>ไม่พบข้อมูล</div>
               )}
+
+              {/* เติมแถวว่างให้ครบ 12 แถวเสมอ */}
+              {Array.from({ length: paginatedItems.length > 0 ? fillersCount : 0 }).map((_, i) => (
+                <div
+                  key={`filler-${i}`}
+                  className={`${styles.tableGrid} ${styles.tableRow} ${styles.fillerRow}`}
+                  aria-hidden="true"
+                >
+                  <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                  <div className={styles.tableCell}>&nbsp;</div>
+                  <div className={`${styles.tableCell} ${styles.imageCell}`}>&nbsp;</div>
+                  <div className={styles.tableCell}>&nbsp;</div>
+                  <div className={styles.tableCell}>&nbsp;</div>
+                  <div className={styles.tableCell}>&nbsp;</div>
+                  <div className={styles.tableCell}>&nbsp;</div>
+                  <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                  <div className={styles.tableCell}>&nbsp;</div>
+                </div>
+              ))}
             </div>
 
-            <ul className={styles.paginationControls}>
-              <li>
-                <button
-                  className={styles.pageButton}
-                  onClick={goToPreviousPage}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft size={16} />
-                </button>
-              </li>
-              {getPageNumbers().map((p, idx) =>
-                p === "..." ? (
-                  <li key={`ellipsis-${idx}`} className={styles.ellipsis}>
-                    …
-                  </li>
-                ) : (
-                  <li key={`page-${p}`}>
-                    <button
-                      className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""
-                        }`}
-                      onClick={() => setCurrentPage(p)}
-                    >
-                      {p}
-                    </button>
-                  </li>
-                )
-              )}
-              <li>
-                <button
-                  className={styles.pageButton}
-                  onClick={goToNextPage}
-                  disabled={currentPage >= totalPages}
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </li>
-            </ul>
+            {/* แถบข้อมูลหน้า + ปุ่มเปลี่ยนหน้า (คงโครง UL เดิมไว้) */}
+            <div className={styles.paginationBar}>
+              <div className={styles.paginationInfo}>
+                กำลังแสดง {startDisplay}-{endDisplay} จาก {filteredInventory.length} รายการ
+              </div>
+              <ul className={styles.paginationControls}>
+                <li>
+                  <button
+                    className={styles.pageButton}
+                    onClick={goToPreviousPage}
+                    disabled={currentPage === 1}
+                    aria-label="หน้าก่อนหน้า"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                </li>
+                {getPageNumbers().map((p, idx) =>
+                  p === "..." ? (
+                    <li key={`ellipsis-${idx}`} className={styles.ellipsis}>…</li>
+                  ) : (
+                    <li key={`page-${p}`}>
+                      <button
+                        className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
+                        onClick={() => setCurrentPage(p)}
+                        aria-current={p === currentPage ? "page" : undefined}
+                      >
+                        {p}
+                      </button>
+                    </li>
+                  )
+                )}
+                <li>
+                  <button
+                    className={styles.pageButton}
+                    onClick={goToNextPage}
+                    disabled={currentPage >= totalPages}
+                    aria-label="หน้าถัดไป"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </li>
+              </ul>
+            </div>
           </div>
         )}
       </div>
