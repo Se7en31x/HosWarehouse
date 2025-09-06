@@ -1,9 +1,10 @@
 const { pool } = require("../config/db");
 const { generateDocNo } = require("../utils/docCounter");
+
 // ✅ ดึงรายการสินค้า (ใช้ในหน้าเลือกสั่งซื้อ)
 async function getItems() {
   const { rows } = await pool.query(
-    `SELECT i.item_id, i.item_name, i.item_category, i.item_unit, i.item_min, i.item_max,item_img,
+    `SELECT i.item_id, i.item_name, i.item_category, i.item_unit, i.item_min, i.item_max, i.item_img,
             COALESCE(SUM(il.qty_remaining), 0) AS current_stock
      FROM items i
      LEFT JOIN item_lots il ON i.item_id = il.item_id
@@ -18,14 +19,14 @@ async function getItems() {
 async function getAllPurchaseRequests() {
   const { rows } = await pool.query(
     `SELECT pr.pr_id, pr.pr_no, pr.status, pr.created_at,
-       u.user_fname, u.user_lname,
+       u.firstname, u.lastname,
        pri.pr_item_id, pri.qty_requested, pri.unit, pri.note,
        i.item_name, i.item_category
      FROM purchase_requests pr
      JOIN purchase_request_items pri ON pr.pr_id = pri.pr_id
      JOIN items i ON pri.item_id = i.item_id
-     LEFT JOIN users u ON pr.requester_id = u.user_id
-     WHERE pr.status = 'รอดำเนินการ'   -- ✅ เพิ่ม filter
+     LEFT JOIN "Admin".users u ON pr.requester_id = u.user_id
+     WHERE pr.status = 'รอดำเนินการ'   -- ✅ filter
      ORDER BY pr.created_at DESC;`
   );
   return rows;
@@ -39,8 +40,8 @@ async function getAllPurchaseRequestItems() {
        pr.pr_no,
        pr.status,
        pr.created_at,
-       u.user_fname,
-       u.user_lname,
+       u.firstname,
+       u.lastname,
        pri.pr_item_id,
        pri.qty_requested,
        pri.unit,
@@ -50,7 +51,7 @@ async function getAllPurchaseRequestItems() {
      FROM purchase_requests pr
      JOIN purchase_request_items pri ON pr.pr_id = pri.pr_id
      JOIN items i ON pri.item_id = i.item_id
-     LEFT JOIN users u ON pr.requester_id = u.user_id
+     LEFT JOIN "Admin".users u ON pr.requester_id = u.user_id
      ORDER BY pr.created_at DESC`
   );
   return rows;
@@ -59,9 +60,9 @@ async function getAllPurchaseRequestItems() {
 // ✅ ดึงคำขอทีละตัว (header + items)
 async function getPurchaseRequestById(pr_id) {
   const { rows: header } = await pool.query(
-    `SELECT pr.*, u.user_fname, u.user_lname
+    `SELECT pr.*, u.firstname, u.lastname
      FROM purchase_requests pr
-     LEFT JOIN users u ON pr.requester_id = u.user_id
+     LEFT JOIN "Admin".users u ON pr.requester_id = u.user_id
      WHERE pr.pr_id = $1`,
     [pr_id]
   );

@@ -24,7 +24,9 @@ const ManageReturnModel = {
 
     const baseQuery = `
       FROM requests r
-      JOIN users u ON u.user_id = r.user_id
+      JOIN "Admin".users u ON u.user_id = r.user_id
+      LEFT JOIN "Admin".user_departments ud ON u.user_id = ud.user_id
+      LEFT JOIN "Admin".departments d ON ud.department_id = d.department_id
       JOIN request_details rd ON rd.request_id = r.request_id
       LEFT JOIN (
         SELECT request_detail_id, COALESCE(SUM(return_qty), 0)::int AS returned_total
@@ -59,7 +61,7 @@ const ManageReturnModel = {
       where += `
         AND (
           LOWER(COALESCE(r.request_code,'')) LIKE $${idx}
-          OR LOWER(COALESCE(u.user_fname,'') || ' ' || COALESCE(u.user_lname,'')) LIKE $${idx}
+          OR LOWER(COALESCE(u.firstname,'') || ' ' || COALESCE(u.lastname,'')) LIKE $${idx}
           OR EXISTS (
             SELECT 1
             FROM request_details rd2
@@ -85,8 +87,8 @@ const ManageReturnModel = {
       SELECT
         r.request_id,
         r.request_code,
-        (COALESCE(u.user_fname,'') || ' ' || COALESCE(u.user_lname,'')) AS requester_name,
-        u.department,
+        (COALESCE(u.firstname,'') || ' ' || COALESCE(u.lastname,'')) AS requester_name,
+        d.department_name_th AS department_name,
 
         MIN(rd.expected_return_date) FILTER (
           WHERE GREATEST(COALESCE(rd.actual_deducted_qty, rd.approved_qty, 0) - COALESCE(br.returned_total, 0), 0) > 0
@@ -118,7 +120,7 @@ const ManageReturnModel = {
 
       ${baseQuery}
       ${where}
-      GROUP BY r.request_id, r.request_code, requester_name, u.department
+      GROUP BY r.request_id, r.request_code, requester_name, d.department_name_th
       ORDER BY earliest_due_date NULLS LAST, r.request_id
       OFFSET $${idx++} LIMIT $${idx++};
     `;
@@ -137,10 +139,12 @@ const ManageReturnModel = {
       const sumSql = `
         SELECT
           r.request_id, r.request_code, r.request_date, r.request_type,
-          (COALESCE(u.user_fname,'') || ' ' || COALESCE(u.user_lname,'')) AS user_name,
-          u.department
+          (COALESCE(u.firstname,'') || ' ' || COALESCE(u.lastname,'')) AS user_name,
+          d.department_name_th AS department_name
         FROM requests r
-        LEFT JOIN users u ON u.user_id = r.user_id
+        LEFT JOIN "Admin".users u ON u.user_id = r.user_id
+        LEFT JOIN "Admin".user_departments ud ON u.user_id = ud.user_id
+        LEFT JOIN "Admin".departments d ON ud.department_id = d.department_id
         WHERE r.request_id = $1
         LIMIT 1;
       `;
@@ -193,7 +197,6 @@ const ManageReturnModel = {
       `;
       const itemsRes = await client.query(itemsSql, [requestId]);
 
-      // 🟢 historySql แก้ไข: join เอา item_name, approved_qty มาด้วย
       const historySql = `
         SELECT
           br.return_code,
@@ -203,13 +206,13 @@ const ManageReturnModel = {
           br.return_qty AS returned_this_time,
           br.return_status,
           br.condition,
-          (COALESCE(u.user_fname,'') || ' ' || COALESCE(u.user_lname,'')) AS inspected_by_name,
+          (COALESCE(u.firstname,'') || ' ' || COALESCE(u.lastname,'')) AS inspected_by_name,
           i.item_name,
           rd.approved_qty
         FROM borrow_returns br
         JOIN request_details rd ON rd.request_detail_id = br.request_detail_id
         JOIN items i ON i.item_id = rd.item_id
-        LEFT JOIN users u ON u.user_id = br.inspected_by
+        LEFT JOIN "Admin".users u ON u.user_id = br.inspected_by
         WHERE br.request_detail_id IN (SELECT request_detail_id FROM request_details WHERE request_id = $1)
         ORDER BY br.return_date DESC, br.return_id DESC;
       `;
@@ -221,7 +224,6 @@ const ManageReturnModel = {
     }
   },
 
-
   /**
    * บันทึกรับคืน
    */
@@ -232,7 +234,7 @@ const ManageReturnModel = {
 
       const requestDetailId = parseInt(returnData.request_detail_id, 10);
       const qty = parseInt(returnData.return_qty ?? returnData.qty_return, 10);
-      const inspectedBy = parseInt(returnData.inspected_by ?? userId, 10);
+      const inspectedBy = parseInt(userId, 10);  // ✅ ใช้ token เท่านั้น
       const condition = (returnData.condition || 'normal').toLowerCase();
 
       if (!Number.isInteger(requestDetailId) || requestDetailId <= 0)
@@ -242,7 +244,6 @@ const ManageReturnModel = {
       if (!Number.isInteger(inspectedBy) || inspectedBy <= 0)
         throw new Error("Invalid userId");
 
-      // ดึง request_code
       const { rows: [reqInfo] } = await client.query(
         `SELECT r.request_code
          FROM request_details rd
@@ -252,10 +253,8 @@ const ManageReturnModel = {
       );
       const requestCode = reqInfo?.request_code || 'N/A';
 
-      // สร้าง return_code
       const returnCode = await generateReturnCode(client);
 
-      // Insert header borrow_returns
       const { rows: [header] } = await client.query(
         `INSERT INTO borrow_returns
          (request_detail_id, return_date, return_qty, return_status, inspected_by, return_note, condition, return_code)
@@ -265,7 +264,6 @@ const ManageReturnModel = {
       );
       const returnId = header.return_id;
 
-      // หา lots ที่คืนได้
       let qtyLeft = qty;
       const { rows: borrowLots } = await client.query(
         `SELECT bdl.borrow_detail_lot_id, bdl.lot_id, bdl.qty,
@@ -285,7 +283,6 @@ const ManageReturnModel = {
         throw new Error("ไม่มี lot ที่เหลือให้คืน");
       }
 
-      // ถ้าเป็นของปกติ → stockin
       let stockinId = null, stockinNo = null;
       if (condition === 'normal') {
         stockinNo = await generateStockinCode(client, 'return');
@@ -303,7 +300,6 @@ const ManageReturnModel = {
         const useQty = Math.min(lot.remaining_to_return, qtyLeft);
         qtyLeft -= useQty;
 
-        // Insert mapping return lot
         await client.query(
           `INSERT INTO borrow_return_lots
            (return_id, borrow_detail_lot_id, lot_id, qty)
@@ -311,7 +307,6 @@ const ManageReturnModel = {
           [returnId, lot.borrow_detail_lot_id, lot.lot_id, useQty]
         );
 
-        // Item detail
         const { rows: [lotInfo] } = await client.query(
           `SELECT il.item_id, i.item_unit
            FROM item_lots il
@@ -321,7 +316,6 @@ const ManageReturnModel = {
         );
 
         if (condition === 'normal') {
-          // update stock
           await client.query(
             `UPDATE item_lots
              SET qty_remaining = qty_remaining + $1, updated_at = NOW()
@@ -329,7 +323,6 @@ const ManageReturnModel = {
             [useQty, lot.lot_id]
           );
 
-          // stock_in_details
           await client.query(
             `INSERT INTO stock_in_details (stockin_id, item_id, lot_id, qty, unit, note)
              VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -337,7 +330,6 @@ const ManageReturnModel = {
              `คืนจาก ${requestCode}`]
           );
         } else {
-          // damaged/lost
           await client.query(
             `INSERT INTO damaged_items
              (source_type, source_ref_id, damaged_qty, damaged_date, damaged_status, damaged_note, reported_by, lot_id, item_id, damage_type)
@@ -351,7 +343,6 @@ const ManageReturnModel = {
         throw new Error("Invalid return_qty: มากกว่าจำนวนที่เหลือให้คืน");
       }
 
-      // check ครบหรือยัง
       const { rows: [check] } = await client.query(
         `SELECT
            (SELECT COALESCE(SUM(qty),0) FROM borrow_detail_lots WHERE request_detail_id=$1) AS borrowed_qty,

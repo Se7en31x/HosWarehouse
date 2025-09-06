@@ -48,7 +48,8 @@ exports.getPurchaseRequestById = async (req, res) => {
 
 exports.createPurchaseRequest = async (req, res) => {
   try {
-    const { requester_id, items_to_purchase } = req.body;
+    const requester_id = req.user?.user_id; // ✅ เอามาจาก token
+    const { items_to_purchase } = req.body;
 
     if (!requester_id || !items_to_purchase?.length) {
       return res.status(400).json({ message: "ข้อมูลไม่ครบ" });
@@ -68,7 +69,7 @@ exports.createPurchaseRequest = async (req, res) => {
 
     res.status(201).json({
       message: "สร้างคำขอสั่งซื้อสำเร็จ",
-      data: results, // ✅ จะได้ array ของ PR No ที่สร้าง
+      data: results,
     });
   } catch (err) {
     console.error("❌ createPurchaseRequest error:", err);

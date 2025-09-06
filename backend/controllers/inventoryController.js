@@ -53,7 +53,7 @@ exports.getItemById = async (req, res) => {
 exports.reportDamaged = async (req, res) => {
     try {
         const { lot_id, item_id, qty, note, damage_type, source_type, source_ref_id } = req.body;
-        const reported_by = req.user?.user_id || 1;
+        const reported_by = req.user?.id; // ✅ ใช้ id จาก JWT โดยตรง
 
         if (!lot_id || !item_id || !qty || qty <= 0 || !damage_type) {
             return res.status(400).json({ message: 'ข้อมูลที่ส่งมาไม่ครบถ้วนหรือไม่ถูกต้อง' });
@@ -79,7 +79,7 @@ exports.reportDamaged = async (req, res) => {
 exports.adjustInventory = async (req, res) => {
     try {
         const { lot_id, item_id, actual_qty, reason } = req.body;
-        const reported_by = req.user?.user_id || 1;
+        const reported_by = req.user?.id; // ✅
 
         if (!lot_id || !item_id || actual_qty === undefined || !reason) {
             return res.status(400).json({ message: 'ข้อมูลไม่ครบถ้วน' });
@@ -109,27 +109,4 @@ exports.adjustInventory = async (req, res) => {
         console.error('❌ Error in adjustInventory controller:', error);
         res.status(500).json({ message: error.message || 'เกิดข้อผิดพลาดในการปรับปรุงจำนวนสต็อก' });
     }
-};
-
-exports.cancelLot = async (req, res) => {
-  try {
-    const { lot_id, item_id, reason } = req.body;
-    const canceled_by = req.user?.user_id || 1;
-
-    if (!lot_id || !item_id) {
-      return res.status(400).json({ message: "lot_id และ item_id จำเป็นต้องระบุ" });
-    }
-
-    const result = await inventoryModel.cancelLot({
-      lot_id,
-      item_id,
-      reason: reason || "ยกเลิก Lot",
-      canceled_by,
-    });
-
-    res.status(200).json(result);
-  } catch (error) {
-    console.error("❌ Error cancelLot:", error);
-    res.status(500).json({ message: error.message || "ไม่สามารถยกเลิก Lot ได้" });
-  }
 };

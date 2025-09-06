@@ -39,14 +39,14 @@ exports.getGeneralOutflowReport = async (filters) => {
         i.item_name,
         COALESCE(i.item_category, '-') AS category,
         COALESCE(il.lot_no, '-') AS lot_no,
-        COALESCE(u.user_fname || ' ' || u.user_lname, '-') AS user_name,
+        COALESCE(u.firstname || ' ' || u.lastname, '-') AS user_name,
         COALESCE(so.note, '-') AS doc_note,
         so.user_id
       FROM stock_outs so
       JOIN stock_out_details sod ON so.stockout_id = sod.stockout_id
       JOIN items i ON i.item_id = sod.item_id
       LEFT JOIN item_lots il ON il.lot_id = sod.lot_id
-      LEFT JOIN users u ON u.user_id = so.user_id
+      LEFT JOIN "Admin".users u ON u.user_id = so.user_id
       WHERE so.stockout_type = 'withdraw'
 
       UNION ALL
@@ -61,14 +61,14 @@ exports.getGeneralOutflowReport = async (filters) => {
         i.item_name,
         COALESCE(i.item_category, '-') AS category,
         COALESCE(il.lot_no, '-') AS lot_no,
-        COALESCE(u.user_fname || ' ' || u.user_lname, '-') AS user_name,
+        COALESCE(u.firstname || ' ' || u.lastname, '-') AS user_name,
         COALESCE(so.note, '-') AS doc_note,
         so.user_id
       FROM stock_outs so
       JOIN stock_out_details sod ON so.stockout_id = sod.stockout_id
       JOIN items i ON i.item_id = sod.item_id
       LEFT JOIN item_lots il ON il.lot_id = sod.lot_id
-      LEFT JOIN users u ON u.user_id = so.user_id
+      LEFT JOIN "Admin".users u ON u.user_id = so.user_id
       WHERE so.stockout_type = 'damaged'
 
       UNION ALL
@@ -83,14 +83,14 @@ exports.getGeneralOutflowReport = async (filters) => {
         i.item_name,
         COALESCE(i.item_category, '-') AS category,
         COALESCE(il.lot_no, '-') AS lot_no,
-        COALESCE(u.user_fname || ' ' || u.user_lname, '-') AS user_name,
+        COALESCE(u.firstname || ' ' || u.lastname, '-') AS user_name,
         COALESCE(so.note, '-') AS doc_note,
         so.user_id
       FROM stock_outs so
       JOIN stock_out_details sod ON so.stockout_id = sod.stockout_id
       JOIN items i ON i.item_id = sod.item_id
       LEFT JOIN item_lots il ON il.lot_id = sod.lot_id
-      LEFT JOIN users u ON u.user_id = so.user_id
+      LEFT JOIN "Admin".users u ON u.user_id = so.user_id
       WHERE so.stockout_type = 'expired_dispose'
     ) AS combined_outflow
     ${whereClause}

@@ -17,7 +17,7 @@ async function getDeductionRequestDetails(req, res) {
   try {
     const { requestId } = req.params;
     // เรียกใช้ฟังก์ชันที่ถูกต้องจาก Model
-    const requestDetails = await stockDeductionModel.getRequestDetailsForProcessing(requestId); 
+    const requestDetails = await stockDeductionModel.getRequestDetailsForProcessing(requestId);
 
     if (!requestDetails) {
       return res.status(404).json({ message: 'Request not found.' });
@@ -33,13 +33,14 @@ async function getDeductionRequestDetails(req, res) {
 async function processStockDeduction(req, res) {
   try {
     const { requestId } = req.params;
-    const { updates, userId } = req.body;
+    const { updates } = req.body;
+    const userId = req.user?.user_id;   // ✅ ดึงจาก token
 
     if (!updates || !Array.isArray(updates) || updates.length === 0) {
       return res.status(400).json({ message: 'Invalid input: "updates" array is required and must not be empty.' });
     }
     if (!userId) {
-      return res.status(400).json({ message: 'Invalid input: "userId" is required.' });
+      return res.status(401).json({ message: 'Unauthorized: user not found in token.' });
     }
 
     const result = await stockDeductionModel.deductStock(requestId, updates, userId);
@@ -49,7 +50,6 @@ async function processStockDeduction(req, res) {
     res.status(500).json({ message: error.message || 'Failed to process stock deduction.' });
   }
 }
-
 module.exports = {
   getRequestsReadyForDeduction,
   getDeductionRequestDetails,

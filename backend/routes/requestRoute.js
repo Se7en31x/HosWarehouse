@@ -6,14 +6,14 @@ const authMiddleware = require("../middleware/auth");
 // ✅ staff: สำหรับสร้างคำขอใหม่
 router.post(
   "/requests",
-  authMiddleware(["staff", "doctor", "nurse", "pharmacist"]), 
+  authMiddleware([ "doctor", "nurse", "nurse_assistant", "pharmacist"]), 
   requestController.handleCreateRequest
 );
 
 // ✅ manage: สำหรับดึงคำขอทั้งหมด
 router.get(
   "/requests",
-  authMiddleware(["manage", "marehouse_manager"]), 
+  authMiddleware(["manage", "marehouse_manager","warehouse_manager"]), 
   requestController.getRequests
 );
 

@@ -23,7 +23,7 @@ router.get(
 // --------------------------------------------------------
 router.get(
   '/for-withdrawal',
-  authMiddleware(['staff', 'nurse', 'doctor', 'pharmacist']), // 🔐 staff และ role อื่น ๆ ที่มีสิทธิ์เบิก
+  authMiddleware(["doctor", "nurse", "nurse_assistant", "pharmacist"]), // 🔐 staff และ role อื่น ๆ ที่มีสิทธิ์เบิก
   inventoryController.getAllItemsForWithdrawal
 );
 

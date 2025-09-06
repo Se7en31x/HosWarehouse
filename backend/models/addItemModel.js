@@ -21,8 +21,8 @@ async function addBaseItem(client, data) {
       item_img, item_zone, item_barcode, item_sub_category,
       item_status, is_deleted,
       item_purchase_unit, item_conversion_rate,
-      is_borrowable
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+      is_borrowable, created_by
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
     RETURNING item_id;
   `;
   const vals = [
@@ -40,7 +40,8 @@ async function addBaseItem(client, data) {
     false,
     toNullOrValue(data.item_purchase_unit),
     toNullOrFloat(data.item_conversion_rate),
-    data.is_borrowable
+    data.is_borrowable === true || data.is_borrowable === "true", // ✅ แปลงเป็น boolean
+    data.created_by || null, // ✅ จาก token
   ];
   const { rows } = await client.query(sql, vals);
   return rows[0].item_id;

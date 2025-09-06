@@ -1,7 +1,7 @@
 const { pool } = require("../../config/db");
 
 const StockOutModel = {
-  // ✅ ดึงประวัติ Stock Out ทั้งหมด (เฉพาะเอกสารหลัก พร้อมนับจำนวนรายการ)
+  // ✅ ดึงประวัติ Stock Out ทั้งหมด
   async getAllStockoutHeaders() {
     try {
       const result = await pool.query(`
@@ -11,11 +11,11 @@ const StockOutModel = {
           so.stockout_date,
           so.stockout_type,
           so.note AS header_note,
-          u.user_fname || ' ' || u.user_lname AS user_name,
+          u.firstname || ' ' || u.lastname AS user_name,
           so.created_at,
           COUNT(sod.stockout_detail_id) AS total_items
         FROM stock_outs so
-        LEFT JOIN users u ON so.user_id = u.user_id
+        LEFT JOIN "Admin".users u ON so.user_id = u.user_id
         LEFT JOIN stock_out_details sod ON so.stockout_id = sod.stockout_id
         GROUP BY so.stockout_id, u.user_id
         ORDER BY so.stockout_date DESC, so.stockout_id DESC;
@@ -27,7 +27,7 @@ const StockOutModel = {
     }
   },
 
-  // ✅ ดึง Stock Out ตามช่วงเวลา (เฉพาะเอกสารหลัก พร้อมนับจำนวนรายการ)
+  // ✅ ดึง Stock Out ตามช่วงเวลา
   async getHeadersByDateRange(startDate, endDate) {
     try {
       const result = await pool.query(`
@@ -37,11 +37,11 @@ const StockOutModel = {
           so.stockout_date,
           so.stockout_type,
           so.note AS header_note,
-          u.user_fname || ' ' || u.user_lname AS user_name,
+          u.firstname || ' ' || u.lastname AS user_name,
           so.created_at,
           COUNT(sod.stockout_detail_id) AS total_items
         FROM stock_outs so
-        LEFT JOIN users u ON so.user_id = u.user_id
+        LEFT JOIN "Admin".users u ON so.user_id = u.user_id
         LEFT JOIN stock_out_details sod ON so.stockout_id = sod.stockout_id
         WHERE so.stockout_date BETWEEN $1 AND $2
         GROUP BY so.stockout_id, u.user_id
@@ -54,7 +54,7 @@ const StockOutModel = {
     }
   },
 
-  // ✅ ดึง Stock Out รายการเดียว (พร้อม detail ข้างในเอกสารนั้น)
+  // ✅ ดึง Stock Out รายการเดียว
   async getById(stockoutId) {
     try {
       const result = await pool.query(`
@@ -64,7 +64,7 @@ const StockOutModel = {
           so.stockout_date,
           so.stockout_type,
           so.note AS header_note,
-          u.user_fname || ' ' || u.user_lname AS user_name,
+          u.firstname || ' ' || u.lastname AS user_name,
           sod.stockout_detail_id,
           sod.item_id,
           i.item_name,
@@ -78,7 +78,7 @@ const StockOutModel = {
         JOIN stock_out_details sod ON so.stockout_id = sod.stockout_id
         JOIN items i ON sod.item_id = i.item_id
         LEFT JOIN item_lots il ON sod.lot_id = il.lot_id
-        LEFT JOIN users u ON so.user_id = u.user_id
+        LEFT JOIN "Admin".users u ON so.user_id = u.user_id
         WHERE so.stockout_id = $1
         ORDER BY sod.stockout_detail_id ASC;
       `, [stockoutId]);

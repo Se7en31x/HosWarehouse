@@ -15,11 +15,14 @@ exports.getAll = async (req, res) => {
 // Controller สำหรับการบันทึกการทิ้ง
 exports.addAction = async (req, res) => {
   try {
-    const { lot_id, item_id, action_qty, action_by, note } = req.body; // ✅ เพิ่ม item_id เพื่อรับค่าจาก request body
-    
-    // ตรวจสอบว่า item_id มีค่าหรือไม่
+    const { lot_id, item_id, action_qty, note } = req.body;
+    const action_by = req.user?.user_id; // ✅ ดึง user id จาก token
+
     if (!item_id) {
       return res.status(400).json({ error: 'Item ID is required and cannot be null' });
+    }
+    if (!action_by) {
+      return res.status(401).json({ error: 'Unauthorized: missing user id' });
     }
 
     await ExpiredModel.addAction({ lot_id, item_id, action_qty, action_by, note });

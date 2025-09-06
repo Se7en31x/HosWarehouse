@@ -12,24 +12,27 @@ function deleteUploadedFile(filePath) {
 
 exports.addNewItem = async (req, res) => {
   const file = req.file ? req.file.filename : null;
-  const data = { ...req.body, item_img: file };
+  const userId = req.user?.user_id; // ✅ จาก token
+  const data = { 
+    ...req.body, 
+    item_img: file,
+    created_by: userId || null 
+  };
 
   try {
     const result = await createItemWithDetail(data);
     console.log("DEBUG: createItemWithDetail result =", result);
 
-    // ✅ ส่ง response กลับทันที ป้องกัน 500 จากขั้นตอน emit
     res.status(201).json({
       success: true,
       item_id: result?.item_id ?? null,
       code: result?.detail_code ?? null,
     });
 
-    // emit แยก ไม่ให้กระทบ response
     try {
       const io = getIO();
       const allItems = await require('../models/inventoryModel').getAllItemsDetailed();
-      io.emit('itemsData', allItems);
+      io.emit('itemsUpdated', allItems); // 🔄 ใช้ชื่อ event เดียวกันกับ ManageDataPage
     } catch (emitErr) {
       console.error("Emit error:", emitErr.message);
     }

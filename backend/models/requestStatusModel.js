@@ -8,26 +8,29 @@ class RequestStatusModel {
     static async getRequestDetails(requestId) {
         try {
             const requestQuery = `
-                SELECT
-                    r.request_id,
-                    r.request_code,
-                    r.request_date,
-                    r.request_status,
-                    r.request_note,
-                    r.request_type,
-                    r.request_due_date,
-                    r.is_urgent,
-                    r.updated_at,
-                    u.user_fname || ' ' || u.user_lname AS user_name,
-                    -- ✅ รวม summary โดยนับเฉพาะที่อนุมัติแล้ว
-                    COUNT(rd.request_detail_id) FILTER (WHERE rd.approval_status = 'approved')::int AS total_details,
-                    COALESCE(SUM(CASE WHEN rd.processing_status = 'completed' AND rd.approval_status = 'approved' THEN 1 ELSE 0 END),0)::int AS completed_details
-                FROM requests r
-                JOIN users u ON r.user_id = u.user_id
-                LEFT JOIN request_details rd ON r.request_id = rd.request_id
-                WHERE r.request_id = $1
-                GROUP BY r.request_id, u.user_fname, u.user_lname;
-            `;
+      SELECT
+          r.request_id,
+          r.request_code,
+          r.request_date,
+          r.request_status,
+          r.request_note,
+          r.request_type,
+          r.request_due_date,
+          r.is_urgent,
+          r.updated_at,
+          (u.firstname || ' ' || u.lastname) AS user_name,
+          d.department_name_th AS department,
+          -- ✅ รวม summary โดยนับเฉพาะที่อนุมัติแล้ว
+          COUNT(rd.request_detail_id) FILTER (WHERE rd.approval_status = 'approved')::int AS total_details,
+          COALESCE(SUM(CASE WHEN rd.processing_status = 'completed' AND rd.approval_status = 'approved' THEN 1 ELSE 0 END),0)::int AS completed_details
+      FROM requests r
+      JOIN "Admin".users u ON r.user_id = u.user_id
+      LEFT JOIN "Admin".user_departments ud ON u.user_id = ud.user_id
+      LEFT JOIN "Admin".departments d ON ud.department_id = d.department_id
+      LEFT JOIN request_details rd ON r.request_id = rd.request_id
+      WHERE r.request_id = $1
+      GROUP BY r.request_id, u.firstname, u.lastname, d.department_name_th;
+    `;
             const requestResult = await pool.query(requestQuery, [requestId]);
             const request = requestResult.rows[0];
             if (!request) {
@@ -38,25 +41,25 @@ class RequestStatusModel {
             request.processing_summary = `${request.completed_details}/${request.total_details}`;
 
             const detailsQuery = `
-                SELECT
-                    rd.request_detail_id,
-                    rd.request_id,
-                    rd.item_id,
-                    rd.requested_qty,
-                    rd.approved_qty,
-                    rd.approval_status,
-                    rd.request_detail_note,
-                    rd.request_detail_type,
-                    rd.updated_at,
-                    rd.processing_status,
-                    rd.expected_return_date,
-                    i.item_name,
-                    i.item_unit
-                FROM request_details rd
-                JOIN items i ON rd.item_id = i.item_id
-                WHERE rd.request_id = $1
-                ORDER BY rd.request_detail_id ASC;
-            `;
+      SELECT
+          rd.request_detail_id,
+          rd.request_id,
+          rd.item_id,
+          rd.requested_qty,
+          rd.approved_qty,
+          rd.approval_status,
+          rd.request_detail_note,
+          rd.request_detail_type,
+          rd.updated_at,
+          rd.processing_status,
+          rd.expected_return_date,
+          i.item_name,
+          i.item_unit
+      FROM request_details rd
+      JOIN items i ON rd.item_id = i.item_id
+      WHERE rd.request_id = $1
+      ORDER BY rd.request_detail_id ASC;
+    `;
             const detailsResult = await pool.query(detailsQuery, [requestId]);
             const details = detailsResult.rows;
 
@@ -67,6 +70,7 @@ class RequestStatusModel {
         }
     }
 
+
     /**
      * ดึงรายการคำขอทั้งหมด หรือกรองตามสถานะที่ระบุ
      */
@@ -74,40 +78,42 @@ class RequestStatusModel {
         const client = await pool.connect();
         try {
             let query = `
-              SELECT
-                  r.request_id,
-                  r.request_code,
-                  r.request_date,
-                  r.request_status,
-                  r.request_type,
-                  r.updated_at,
-                  r.request_due_date,
-                  u.user_fname || ' ' || u.user_lname AS user_name,
-                  u.department,
-                  COUNT(rd.request_detail_id) FILTER (WHERE rd.approval_status = 'approved')::int AS total_details,
-                  COALESCE(SUM(CASE WHEN rd.processing_status = 'completed' AND rd.approval_status = 'approved' THEN 1 ELSE 0 END), 0)::int AS completed_details
-              FROM requests r
-              JOIN users u ON r.user_id = u.user_id
-              LEFT JOIN request_details rd ON r.request_id = rd.request_id
-            `;
+      SELECT
+          r.request_id,
+          r.request_code,
+          r.request_date,
+          r.request_status,
+          r.request_type,
+          r.updated_at,
+          r.request_due_date,
+          (u.firstname || ' ' || u.lastname) AS user_name,  -- ✅ ใช้ firstname + lastname
+          d.department_name_th AS department,              -- ✅ ดึงชื่อแผนกจากตาราง departments
+          COUNT(rd.request_detail_id) FILTER (WHERE rd.approval_status = 'approved')::int AS total_details,
+          COALESCE(SUM(CASE WHEN rd.processing_status = 'completed' AND rd.approval_status = 'approved' THEN 1 ELSE 0 END), 0)::int AS completed_details
+      FROM requests r
+      JOIN "Admin".users u ON r.user_id = u.user_id
+      LEFT JOIN "Admin".user_departments ud ON u.user_id = ud.user_id
+      LEFT JOIN "Admin".departments d ON ud.department_id = d.department_id
+      LEFT JOIN request_details rd ON r.request_id = rd.request_id
+    `;
+
             const values = [];
             if (allowedStatuses && allowedStatuses.length > 0) {
                 query += ` WHERE r.request_status = ANY($1)`;
                 values.push(allowedStatuses);
             }
+
             query += `
-              GROUP BY r.request_id, r.request_type, u.user_fname, u.user_lname, u.department
-              ORDER BY r.request_date DESC
-            `;
+      GROUP BY r.request_id, r.request_type, u.firstname, u.lastname, d.department_name_th
+      ORDER BY r.request_date DESC
+    `;
 
             const result = await client.query(query, values);
 
-            const rows = result.rows.map(row => ({
+            return result.rows.map(row => ({
                 ...row,
                 processing_summary: `${row.completed_details}/${row.total_details}`,
             }));
-
-            return rows;
         } catch (error) {
             console.error('Error in getRequestsByStatuses:', error);
             throw error;
@@ -115,6 +121,7 @@ class RequestStatusModel {
             client.release();
         }
     }
+
 
     /**
      * อัปเดตสถานะการดำเนินการของรายการคำขอหลายรายการแบบ Batch

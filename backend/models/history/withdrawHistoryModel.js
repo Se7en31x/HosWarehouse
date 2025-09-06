@@ -7,13 +7,14 @@ exports.getAll = async () => {
         r.request_code,
         r.request_date,
         r.request_status,
-        r.is_urgent, -- ✅ เพิ่มสถานะด่วน
+        r.is_urgent,
 
-        u.user_fname || ' ' || u.user_lname AS requester_name,
-        u.department,
+        -- ✅ ผู้ร้องขอ
+        u.firstname || ' ' || u.lastname AS requester_name,
+        d.department_name_th AS department_name,
 
         -- ✅ ข้อมูลผู้อนุมัติ
-        COALESCE(approver.user_fname || ' ' || approver.user_lname, '-') AS approved_by_name,
+        COALESCE(approver.firstname || ' ' || approver.lastname, '-') AS approved_by_name,
         r.approved_at,
 
         COUNT(rd.request_detail_id) AS total_items,
@@ -32,17 +33,19 @@ exports.getAll = async () => {
         ) AS details
 
     FROM requests r
-    JOIN users u ON r.user_id = u.user_id
+    JOIN "Admin".users u ON r.user_id = u.user_id
+    LEFT JOIN "Admin".user_departments ud ON u.user_id = ud.user_id
+    LEFT JOIN "Admin".departments d ON ud.department_id = d.department_id
     JOIN request_details rd ON r.request_id = rd.request_id
     JOIN items i ON rd.item_id = i.item_id
-    LEFT JOIN users approver ON r.approved_by = approver.user_id
+    LEFT JOIN "Admin".users approver ON r.approved_by = approver.user_id
 
     WHERE r.request_status NOT IN ('draft','canceled')
     GROUP BY 
         r.request_id, r.request_code, r.request_date, r.request_status, 
-        r.is_urgent, -- ✅ ต้องใส่ใน GROUP BY ด้วย
-        requester_name, u.department, 
-        approver.user_fname, approver.user_lname, 
+        r.is_urgent,
+        u.firstname, u.lastname, d.department_name_th,
+        approver.firstname, approver.lastname, 
         r.approved_at
     ORDER BY r.request_date DESC;
   `;

@@ -8,17 +8,17 @@ exports.getAllStockins = async () => {
         si.stockin_date,
         si.stockin_type,
         si.note AS stockin_note,
-        si.stockin_status, -- ✅ ใช้คอลัมน์จริง
+        si.stockin_status,
 
         -- แหล่งที่มา
         COALESCE(
             s.supplier_name,
             si.source_name,
-            (u.user_fname || ' ' || u.user_lname)
+            (u.firstname || ' ' || u.lastname)
         ) AS source_name,
 
         -- ผู้ทำรายการ
-        (u.user_fname || ' ' || u.user_lname) AS user_name,
+        (u.firstname || ' ' || u.lastname) AS user_name,
 
         -- หมายเหตุจาก goods_receipts (ถ้ามี)
         gr.import_note AS gr_note,
@@ -48,7 +48,7 @@ exports.getAllStockins = async () => {
     JOIN stock_in_details sid ON si.stockin_id = sid.stockin_id
     JOIN items it ON sid.item_id = it.item_id
     LEFT JOIN item_lots l ON sid.lot_id = l.lot_id
-    LEFT JOIN users u ON si.user_id = u.user_id
+    LEFT JOIN "Admin".users u ON si.user_id = u.user_id   -- ✅ เปลี่ยน schema
     LEFT JOIN goods_receipts gr ON si.gr_id = gr.gr_id
     LEFT JOIN purchase_orders po ON gr.po_id = po.po_id
     LEFT JOIN suppliers s ON po.supplier_id = s.supplier_id
@@ -56,7 +56,7 @@ exports.getAllStockins = async () => {
     GROUP BY 
       si.stockin_id, si.stockin_no, si.stockin_date, si.stockin_type,
       si.note, si.source_name, si.stockin_status,
-      u.user_fname, u.user_lname,
+      u.firstname, u.lastname,
       s.supplier_name, gr.import_note
 
     ORDER BY si.stockin_date DESC, si.stockin_id DESC;

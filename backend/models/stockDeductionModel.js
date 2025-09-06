@@ -11,8 +11,8 @@ async function getApprovedRequestsForDeduction() {
         r.request_id,
         r.request_code,
         r.request_date,
-        u.user_fname || ' ' || u.user_lname AS requester,
-        u.department AS department,
+        (u.firstname || ' ' || u.lastname) AS requester,
+        d.department_name_th AS department, -- ✅ ใช้ชื่อแผนกจริง
         r.request_type AS type,
         r.request_status AS status,
         COUNT(rd.request_detail_id) FILTER (WHERE rd.approval_status = 'approved') AS total_approved_count,
@@ -20,12 +20,14 @@ async function getApprovedRequestsForDeduction() {
         COUNT(rd.request_detail_id) FILTER (WHERE rd.approval_status = 'approved' AND rd.processing_status = 'preparing') AS preparing_count,
         COUNT(rd.request_detail_id) FILTER (WHERE rd.approval_status = 'approved' AND rd.processing_status = 'delivering') AS delivering_count
       FROM requests r
-      JOIN users u ON r.user_id = u.user_id
+      JOIN "Admin".users u ON r.user_id = u.user_id
+      LEFT JOIN "Admin".user_departments ud ON u.user_id = ud.user_id
+      LEFT JOIN "Admin".departments d ON ud.department_id = d.department_id
       JOIN request_details rd ON r.request_id = rd.request_id
       WHERE rd.approval_status = 'approved'
       GROUP BY
         r.request_id, r.request_code, r.request_date,
-        u.user_fname, u.user_lname, u.department,
+        u.firstname, u.lastname, d.department_name_th,
         r.request_type, r.request_status
       ORDER BY r.request_date DESC;
     `;
@@ -37,23 +39,27 @@ async function getApprovedRequestsForDeduction() {
   }
 }
 
+
 async function getRequestDetailsForProcessing(requestId) {
   try {
     const requestQuery = `
-      SELECT
-        r.request_id,
-        r.request_code,
-        r.request_date,
-        u.user_fname || ' ' || u.user_lname AS user_name,
-        u.department AS department_name,
-        r.request_type,
-        r.request_status,
-        r.updated_at,
-        r.request_note
-      FROM requests r
-      JOIN users u ON r.user_id = u.user_id
-      WHERE r.request_id = $1;
-    `;
+  SELECT
+    r.request_id,
+    r.request_code,
+    r.request_date,
+    (u.firstname || ' ' || u.lastname) AS user_name,
+    d.department_name_th AS department_name,
+    r.request_type,
+    r.request_status,
+    r.updated_at,
+    r.request_note
+  FROM requests r
+  JOIN "Admin".users u ON r.user_id = u.user_id
+  LEFT JOIN "Admin".user_departments ud ON u.user_id = ud.user_id
+  LEFT JOIN "Admin".departments d ON ud.department_id = d.department_id
+  WHERE r.request_id = $1;
+`;
+
     const { rows: requestRows } = await pool.query(requestQuery, [requestId]);
     if (requestRows.length === 0) return null;
     const request = requestRows[0];

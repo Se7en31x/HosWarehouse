@@ -1,4 +1,3 @@
-// models/myRequestModel.js
 const { pool } = require("../config/db");
 
 // ─────────────────────────────────────────────
@@ -28,16 +27,13 @@ exports.getMyRequests = async (userId) => {
     ORDER BY r.updated_at DESC;
   `;
 
-  // กัน NBSP เผลอๆ ในไฟล์
-  const sanitize = (s) => s.replace(/\u00A0/g, ' ').replace(/\r/g, '');
+  const sanitize = (s) => s.replace(/\u00A0/g, " ").replace(/\r/g, "");
   const result = await pool.query(sanitize(query), [userId]);
   return result.rows;
 };
 
 // ─────────────────────────────────────────────
 // 2. ดึงรายละเอียดคำขอ
-// ─────────────────────────────────────────────
-// 2. ดึงรายละเอียดคำขอ (เพิ่มสถานะการดำเนินการ)
 exports.getRequestDetailByUser = async (requestId, userId) => {
   const query = `
     SELECT 
@@ -47,8 +43,8 @@ exports.getRequestDetailByUser = async (requestId, userId) => {
       r.request_status,
       r.request_note,
       r.is_urgent,
-      u.user_name,
-      u.department,
+      u.username,
+      u.firstname || ' ' || u.lastname AS full_name,
       json_agg(
         json_build_object(
           'request_detail_id', rd.request_detail_id,
@@ -59,7 +55,7 @@ exports.getRequestDetailByUser = async (requestId, userId) => {
           'quantity', rd.requested_qty,
           'approved_qty', rd.approved_qty,
           'request_detail_type', rd.request_detail_type,
-          'processing_status', rd.processing_status,   -- ✅ เพิ่มตรงนี้
+          'processing_status', rd.processing_status,
           'expected_return_date', rd.expected_return_date,
           'returns', (
             SELECT COALESCE(
@@ -80,11 +76,11 @@ exports.getRequestDetailByUser = async (requestId, userId) => {
         )
       ) AS items
     FROM requests r
-    JOIN users u ON r.user_id = u.user_id
+    JOIN "Admin".users u ON r.user_id = u.user_id   -- ✅ ใช้ "Admin" (case-sensitive)
     LEFT JOIN request_details rd ON r.request_id = rd.request_id
     LEFT JOIN items i ON rd.item_id = i.item_id
     WHERE r.request_id = $1 AND r.user_id = $2
-    GROUP BY r.request_id, u.user_name, u.department;
+    GROUP BY r.request_id, u.username, u.firstname, u.lastname;
   `;
   const { rows } = await pool.query(query, [requestId, userId]);
   return rows[0];

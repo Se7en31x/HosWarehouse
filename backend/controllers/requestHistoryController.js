@@ -3,7 +3,11 @@ const requestHistoryModel = require("../models/requestHistoryModel");
 // ✅ GET /api/my-requests
 exports.getAllRequests = async (req, res) => {
   try {
-    const userId = req.user?.user_id || null; // สมมติว่ามี middleware auth
+    const userId = req.user?.id; // 🔧 ใช้ id จาก JWT
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
     const data = await requestHistoryModel.getAllRequests(userId);
     res.status(200).json(data);
   } catch (err) {
@@ -16,9 +20,14 @@ exports.getAllRequests = async (req, res) => {
 exports.getRequestById = async (req, res) => {
   try {
     const { id } = req.params;
-    const data = await requestHistoryModel.getRequestById(id);
+    const userId = req.user?.id; // 🔧 ตรงนี้ก็ใช้ id จาก JWT
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const data = await requestHistoryModel.getRequestById(id, userId); 
     if (!data) {
-      return res.status(404).json({ message: "ไม่พบคำขอ" });
+      return res.status(404).json({ message: "ไม่พบคำขอหรือคุณไม่มีสิทธิ์เข้าถึง" });
     }
     res.status(200).json(data);
   } catch (err) {

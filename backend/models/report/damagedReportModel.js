@@ -21,7 +21,10 @@ exports.getDamagedReport = async (filters) => {
     } else if (status === 'unmanaged') {
       whereConditions.push(`(COALESCE(di.repaired_qty, 0) + COALESCE(di.disposed_qty, 0)) = 0`);
     } else if (status === 'partially_managed') {
-      whereConditions.push(`(COALESCE(di.repaired_qty, 0) + COALESCE(di.disposed_qty, 0)) > 0 AND (COALESCE(di.repaired_qty, 0) + COALESCE(di.disposed_qty, 0)) < di.damaged_qty`);
+      whereConditions.push(`
+        (COALESCE(di.repaired_qty, 0) + COALESCE(di.disposed_qty, 0)) > 0 
+        AND (COALESCE(di.repaired_qty, 0) + COALESCE(di.disposed_qty, 0)) < di.damaged_qty
+      `);
     }
   }
 
@@ -40,7 +43,7 @@ exports.getDamagedReport = async (filters) => {
       di.damaged_qty,
       di.damaged_date,
       di.damage_type,
-      u.user_fname || ' ' || u.user_lname AS reported_by,
+      u.firstname || ' ' || u.lastname AS reported_by, -- ✅ เปลี่ยนเป็น Admin.users
       (COALESCE(di.repaired_qty,0) + COALESCE(di.disposed_qty,0)) AS managed_qty,
       GREATEST(di.damaged_qty - (COALESCE(di.repaired_qty,0) + COALESCE(di.disposed_qty,0)), 0) AS remaining_qty,
       CASE
@@ -59,7 +62,7 @@ exports.getDamagedReport = async (filters) => {
     FROM damaged_items di
     JOIN items i ON di.item_id = i.item_id
     JOIN item_lots l ON di.lot_id = l.lot_id
-    LEFT JOIN users u ON di.reported_by = u.user_id
+    LEFT JOIN "Admin".users u ON di.reported_by = u.user_id -- ✅ อ้าง Admin.users
     LEFT JOIN equipment_detail ed ON i.item_id = ed.item_id
     LEFT JOIN generalsup_detail gsd ON i.item_id = gsd.item_id
     LEFT JOIN meddevices_detail mdd ON i.item_id = mdd.item_id

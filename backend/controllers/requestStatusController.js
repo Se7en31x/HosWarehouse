@@ -52,31 +52,38 @@ class RequestStatusController {
     }
 
     static async updateProcessingStatusBatch(req, res) {
-        const { requestId } = req.params;
-        const { updates, userId } = req.body;
-        const parsedRequestId = parseInt(requestId, 10);
-        if (isNaN(parsedRequestId)) {
-            return res.status(400).json({ message: 'Invalid Request ID provided.' });
-        }
-        if (!updates || !Array.isArray(updates) || updates.length === 0) {
-            return res.status(400).json({ message: 'Updates array is required and must not be empty.' });
-        }
-        if (!userId) {
-            return res.status(400).json({ message: 'User ID is required for logging history.' });
-        }
-        try {
-            await RequestStatusModel.updateProcessingStatusbatch(
-                parsedRequestId,
-                updates,
-                userId
-            );
-            const io = getIO();
-            io.emit('requestUpdated', { request_id: parsedRequestId });
-            res.status(200).json({ message: 'Processing statuses updated successfully.' });
-        } catch (error) {
-            console.error('Error in RequestStatusController.updateProcessingStatusBatch:', error);
-            res.status(500).json({ message: 'Failed to update processing statuses.', error: error.message });
-        }
+    const { requestId } = req.params;
+    const { updates } = req.body;
+    const parsedRequestId = parseInt(requestId, 10);
+
+    if (isNaN(parsedRequestId)) {
+        return res.status(400).json({ message: 'Invalid Request ID provided.' });
     }
+    if (!updates || !Array.isArray(updates) || updates.length === 0) {
+        return res.status(400).json({ message: 'Updates array is required and must not be empty.' });
+    }
+
+    // ✅ ดึง user id จาก token middleware
+    const userId = req.user?.user_id;
+    if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized: User ID not found in token.' });
+    }
+
+    try {
+        await RequestStatusModel.updateProcessingStatusbatch(
+            parsedRequestId,
+            updates,
+            userId
+        );
+
+        const io = getIO();
+        io.emit('requestUpdated', { request_id: parsedRequestId });
+
+        res.status(200).json({ message: 'Processing statuses updated successfully.' });
+    } catch (error) {
+        console.error('Error in RequestStatusController.updateProcessingStatusBatch:', error);
+        res.status(500).json({ message: 'Failed to update processing statuses.', error: error.message });
+    }
+}
 }
 module.exports = RequestStatusController;

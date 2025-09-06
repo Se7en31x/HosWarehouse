@@ -2,17 +2,19 @@ const RequestModel = require("../models/requestModel");
 
 /**
  * จัดการการสร้างคำขอใหม่และรายการย่อยที่เกี่ยวข้อง
- *
- * @param {object} req - Express request object.
- * @param {object} res - Express response object.
  */
 exports.handleCreateRequest = async (req, res) => {
   try {
-    const { user_id, note, urgent, date, type, items } = req.body;
+    const { note, urgent, date, type, items } = req.body;
+    const userId = parseInt(req.user?.id, 10); // ✅ ใช้ id จาก token และแปลงเป็น int
 
-    // 1. สร้างคำขอหลักโดยเรียกใช้ Model
+    if (!userId || isNaN(userId)) {
+      return res.status(401).json({ error: "Unauthorized: missing or invalid user id" });
+    }
+
+    // 1. สร้างคำขอหลัก
     const requestResult = await RequestModel.createRequest({
-      user_id,
+      user_id: userId,
       note,
       urgent,
       date,
@@ -25,7 +27,7 @@ exports.handleCreateRequest = async (req, res) => {
 
     const { request_id, request_code } = requestResult;
 
-    // 2. เพิ่มรายการย่อยทั้งหมดโดยเรียกใช้ Model
+    // 2. เพิ่มรายการย่อย
     if (items && Array.isArray(items)) {
       for (const item of items) {
         const itemExpectedReturnDate =
@@ -36,14 +38,11 @@ exports.handleCreateRequest = async (req, res) => {
           item_id: item.id || item.item_id,
           quantity: item.quantity,
           request_detail_type: item.action || "withdraw",
-          user_id: user_id,
+          user_id: userId, // ✅ ใช้ user token เหมือนกัน
           expected_return_date: itemExpectedReturnDate,
         });
       }
     }
-
-    // ❌ ตัด io.emit ออก
-    // ✅ ปล่อยให้ Notification system ดูแลการแจ้งเตือน
 
     res.status(201).json({
       requestId: request_id,
@@ -57,9 +56,6 @@ exports.handleCreateRequest = async (req, res) => {
 
 /**
  * ดึงคำขอตามพารามิเตอร์ query สำหรับสถานะ
- *
- * @param {object} req - Express request object.
- * @param {object} res - Express response object.
  */
 exports.getRequests = async (req, res) => {
   try {

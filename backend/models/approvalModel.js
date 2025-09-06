@@ -16,14 +16,19 @@ const getUserIdByRequestDetailId = async (request_detail_id) => {
  * @returns {Promise<object>} ข้อมูลคำขอหลักพร้อมชื่อผู้ใช้และแผนก
  */
 exports.getRequestForApproval = async (request_id) => {
-    const query = `
-        SELECT r.*, u.user_name, u.department
-        FROM requests r
-        JOIN users u ON r.user_id = u.user_id
-        WHERE r.request_id = $1
-    `;
-    const result = await pool.query(query, [request_id]);
-    return result.rows[0];
+  const query = `
+    SELECT 
+      r.*,
+      (u.firstname || ' ' || u.lastname) AS user_name, -- ✅ ใช้ firstname/lastname
+      d.department_name_th AS department   -- ✅ join แผนก
+    FROM requests r
+    JOIN "Admin".users u ON r.user_id = u.user_id
+    LEFT JOIN "Admin".user_departments ud ON u.user_id = ud.user_id
+    LEFT JOIN "Admin".departments d ON ud.department_id = d.department_id
+    WHERE r.request_id = $1
+  `;
+  const result = await pool.query(query, [request_id]);
+  return result.rows[0];
 };
 
 /**

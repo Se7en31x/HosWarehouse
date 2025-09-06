@@ -16,7 +16,7 @@ const DamagedModel = {
         di.damage_type,
         di.damaged_note AS note,
         di.damaged_date,
-        u.user_fname || ' ' || u.user_lname AS reporter_name,
+        u.firstname || ' ' || u.lastname AS reporter_name,
         -- เหลือให้ดำเนินการ
         GREATEST(
           COALESCE(di.damaged_qty, 0)
@@ -30,7 +30,7 @@ const DamagedModel = {
         br.return_date,
         br.condition AS return_condition,
         br.return_status,
-        iu.user_fname || ' ' || iu.user_lname AS inspected_by_name,
+        iu.firstname || ' ' || iu.lastname AS inspected_by_name,
         -- 🔹 ดึง actions ทั้งหมดแบบ array
         COALESCE(
           json_agg(
@@ -40,7 +40,7 @@ const DamagedModel = {
               'action_qty', a.action_qty,
               'action_date', a.action_date,
               'note', a.note,
-              'action_by_name', au.user_fname || ' ' || au.user_lname
+              'action_by_name', au.firstname || ' ' || au.lastname
             )
             ORDER BY a.action_date DESC
           ) FILTER (WHERE a.action_id IS NOT NULL),
@@ -48,15 +48,15 @@ const DamagedModel = {
         ) AS actions
       FROM damaged_items di
       JOIN items i ON di.item_id = i.item_id
-      LEFT JOIN users u ON di.reported_by = u.user_id
+      LEFT JOIN "Admin".users u ON di.reported_by = u.user_id
       LEFT JOIN borrow_returns br
         ON di.source_type = 'borrow_return' AND di.source_ref_id = br.return_id
-      LEFT JOIN users iu ON br.inspected_by = iu.user_id
+      LEFT JOIN "Admin".users iu ON br.inspected_by = iu.user_id
       LEFT JOIN damaged_actions a ON di.damaged_id = a.damaged_id
-      LEFT JOIN users au ON a.action_by = au.user_id
+      LEFT JOIN "Admin".users au ON a.action_by = au.user_id
       WHERE di.damage_type = 'damaged'
-      GROUP BY di.damaged_id, i.item_name, i.item_unit, u.user_fname, u.user_lname,
-               br.return_date, br.condition, br.return_status, iu.user_fname, iu.user_lname
+      GROUP BY di.damaged_id, i.item_name, i.item_unit, u.firstname, u.lastname,
+               br.return_date, br.condition, br.return_status, iu.firstname, iu.lastname
       ORDER BY di.damaged_date DESC
       `);
       return result.rows;
@@ -156,9 +156,9 @@ const DamagedModel = {
   // ดึงประวัติการดำเนินการของ damaged_id
   async getActionsByDamagedId(damaged_id) {
     const query = `
-      SELECT a.*, u.user_fname || ' ' || u.user_lname AS action_by_name
+      SELECT a.*, u.firstname || ' ' || u.lastname AS action_by_name
       FROM damaged_actions a
-      LEFT JOIN users u ON a.action_by = u.user_id
+      LEFT JOIN "Admin".users u ON a.action_by = u.user_id
       WHERE damaged_id = $1
       ORDER BY action_date DESC
     `;

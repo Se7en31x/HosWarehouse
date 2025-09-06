@@ -138,6 +138,8 @@ exports.updateBaseItem = async (id, data, file) => {
     const isBorrowable =
       data.is_borrowable === true || data.is_borrowable === 'true' ? true : false;
 
+    const updatedBy = data.updated_by || null; // ✅ มาจาก req.user.user_id ที่ controller ส่งมา
+
     let query;
     let values;
 
@@ -157,8 +159,9 @@ exports.updateBaseItem = async (id, data, file) => {
           item_purchase_unit = $11,
           item_conversion_rate = $12,
           is_borrowable = $13,
-          updated_at = CURRENT_TIMESTAMP
-        WHERE item_id = $14
+          updated_at = CURRENT_TIMESTAMP,
+          updated_by = $14
+        WHERE item_id = $15
         RETURNING *;
       `;
       values = [
@@ -175,6 +178,7 @@ exports.updateBaseItem = async (id, data, file) => {
         toNullOrValue(data.item_purchase_unit),
         toNullOrFloat(data.item_conversion_rate),
         isBorrowable,
+        updatedBy,
         Number(id),
       ];
     } else if (data.item_img) {
@@ -193,8 +197,9 @@ exports.updateBaseItem = async (id, data, file) => {
           item_purchase_unit = $11,
           item_conversion_rate = $12,
           is_borrowable = $13,
-          updated_at = CURRENT_TIMESTAMP
-        WHERE item_id = $14
+          updated_at = CURRENT_TIMESTAMP,
+          updated_by = $14
+        WHERE item_id = $15
         RETURNING *;
       `;
       values = [
@@ -211,6 +216,7 @@ exports.updateBaseItem = async (id, data, file) => {
         toNullOrValue(data.item_purchase_unit),
         toNullOrFloat(data.item_conversion_rate),
         isBorrowable,
+        updatedBy,
         Number(id),
       ];
     } else {
@@ -228,8 +234,9 @@ exports.updateBaseItem = async (id, data, file) => {
           item_purchase_unit = $10,
           item_conversion_rate = $11,
           is_borrowable = $12,
-          updated_at = CURRENT_TIMESTAMP
-        WHERE item_id = $13
+          updated_at = CURRENT_TIMESTAMP,
+          updated_by = $13
+        WHERE item_id = $14
         RETURNING *;
       `;
       values = [
@@ -245,12 +252,10 @@ exports.updateBaseItem = async (id, data, file) => {
         toNullOrValue(data.item_purchase_unit),
         toNullOrFloat(data.item_conversion_rate),
         isBorrowable,
+        updatedBy,
         Number(id),
       ];
     }
-
-    console.log('✅ updateBaseItem Query:', query);
-    console.log('✅ updateBaseItem Values:', values);
 
     const result = await pool.query(query, values);
     return result.rows[0];

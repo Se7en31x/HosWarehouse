@@ -11,10 +11,10 @@ exports.getReturnReport = async (filters) => {
     console.log('Filtering by department:', department);
     if (department && department !== "all") {
         params.push(department);
-        whereClause += ` AND u.department = $${params.length}`;
+        whereClause += ` AND d.department_id = $${params.length}`;
     }
 
-    // จุดที่แก้ไข: เปลี่ยนจาก r.request_date เป็น br.return_date
+    // ใช้ br.return_date แทน r.request_date
     console.log('Filtering by return date range:', { start, end });
     if (start && end) {
         console.log('Date range start:', start);
@@ -46,17 +46,19 @@ exports.getReturnReport = async (filters) => {
           WHEN COALESCE(SUM(brl.qty), 0) < rd.approved_qty THEN 'คืนบางส่วน'
           ELSE 'คืนครบ'
         END AS return_status,
-        u.department,
-        (u.user_fname || ' ' || u.user_lname) AS borrower_name,
+        d.department_name_th AS department,
+        (u.firstname || ' ' || u.lastname) AS borrower_name,
         MAX(br.return_note) AS return_note
       FROM request_details rd
       JOIN requests r ON rd.request_id = r.request_id
       JOIN items i ON rd.item_id = i.item_id
-      JOIN users u ON r.user_id = u.user_id
+      JOIN "Admin".users u ON r.user_id = u.user_id
+      LEFT JOIN "Admin".user_departments ud ON u.user_id = ud.user_id
+      LEFT JOIN "Admin".departments d ON ud.department_id = d.department_id
       LEFT JOIN borrow_returns br ON rd.request_detail_id = br.request_detail_id
       LEFT JOIN borrow_return_lots brl ON br.return_id = brl.return_id
       ${whereClause}
-      GROUP BY r.request_code, i.item_name, rd.approved_qty, rd.approval_status, rd.expected_return_date, u.department, borrower_name
+      GROUP BY r.request_code, i.item_name, rd.approved_qty, rd.approval_status, rd.expected_return_date, d.department_name_th, borrower_name
       ORDER BY last_return_date DESC NULLS LAST;
     `;
 

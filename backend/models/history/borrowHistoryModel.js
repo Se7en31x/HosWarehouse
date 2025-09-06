@@ -1,9 +1,5 @@
 const { pool } = require("../../config/db");
 
-/**
- * ดึงข้อมูลประวัติการยืม/คืนทั้งหมด
- * @returns {Promise<Array>} รายการประวัติการยืม
- */
 exports.getAllBorrow = async () => {
   const query = `
     SELECT
@@ -15,14 +11,17 @@ exports.getAllBorrow = async () => {
       r.request_due_date,
       r.request_type, 
       r.request_note,
-      u.user_fname || ' ' || u.user_lname AS requester_name,
-      u.department,
+
+      -- ✅ ผู้ร้องขอ
+      u.firstname || ' ' || u.lastname AS requester_name,
+      ud.department_id,
+      d.department_name_th AS department_name,
 
       -- ✅ ผู้อนุมัติ
-      approver.user_fname || ' ' || approver.user_lname AS approved_by_name,
+      approver.firstname || ' ' || approver.lastname AS approved_by_name,
       r.approved_at,
       
-      -- ✅ ดึงรายละเอียดรายการยืม (รวมถึง lot, การคืน, และสรุปสถานะ)
+      -- ✅ ดึงรายละเอียดรายการยืม
       json_agg(
           json_build_object(
               'request_detail_id', rd.request_detail_id,
@@ -69,31 +68,33 @@ exports.getAllBorrow = async () => {
                               'qty', br.return_qty,
                               'condition', br.condition,
                               'return_note', br.return_note,
-                              'inspected_by_name', inspector.user_fname || ' ' || inspector.user_lname
+                              'inspected_by_name', inspector.firstname || ' ' || inspector.lastname
                           )
                           ORDER BY br.return_date DESC
                       )
                   FROM borrow_returns br
-                  LEFT JOIN users inspector ON br.inspected_by = inspector.user_id
+                  LEFT JOIN "Admin".users inspector ON br.inspected_by = inspector.user_id
                   WHERE br.request_detail_id = rd.request_detail_id
               )
           ) ORDER BY i.item_name
       ) AS details
 
     FROM requests r
-    JOIN users u ON r.user_id = u.user_id
-    LEFT JOIN users approver ON r.approved_by = approver.user_id 
+    JOIN "Admin".users u ON r.user_id = u.user_id
+    LEFT JOIN "Admin".user_departments ud ON u.user_id = ud.user_id
+    LEFT JOIN "Admin".departments d ON ud.department_id = d.department_id
+    LEFT JOIN "Admin".users approver ON r.approved_by = approver.user_id 
     JOIN request_details rd ON r.request_id = rd.request_id
     JOIN items i ON rd.item_id = i.item_id
 
-    -- ✅ กรองเฉพาะคำขอประเภท 'borrow'
     WHERE r.request_type = 'borrow'
       AND r.request_status NOT IN ('draft', 'canceled')
 
     GROUP BY 
       r.request_id, r.request_code, r.request_date, r.request_status, r.request_type, 
-      r.is_urgent, u.user_fname, u.user_lname, u.department,
-      approver.user_fname, approver.user_lname, r.approved_at
+      r.is_urgent, r.request_due_date, r.request_note,
+      u.firstname, u.lastname, ud.department_id, d.department_name_th,
+      approver.firstname, approver.lastname, r.approved_at
     
     ORDER BY r.request_date DESC;
   `;

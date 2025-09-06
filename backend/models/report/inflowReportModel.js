@@ -36,17 +36,15 @@ exports.getInflowReport = async (filters) => {
       i.item_name,
       i.item_category AS category,
       il.lot_no,
-      -- ✅ แก้ไขตรงนี้: ใช้ COALESCE เพื่อดึงชื่อผู้ขายจาก purchase_orders
       COALESCE(po.supplier_name, s.supplier_name) AS supplier_name,
-      u.user_fname || ' ' || u.user_lname AS user_name
+      u.firstname || ' ' || u.lastname AS user_name
     FROM stock_in_details sid
     JOIN stock_ins si ON si.stockin_id = sid.stockin_id
     JOIN items i ON i.item_id = sid.item_id
     LEFT JOIN item_lots il ON sid.lot_id = il.lot_id
-    -- ✅ เชื่อมต่อกับ purchase_orders และ suppliers โดยตรง
     LEFT JOIN purchase_orders po ON po.po_id = si.po_id
     LEFT JOIN suppliers s ON s.supplier_id = po.supplier_id
-    LEFT JOIN users u ON u.user_id = si.user_id
+    LEFT JOIN "Admin".users u ON u.user_id = si.user_id
     ${whereClause}
     ORDER BY si.stockin_date DESC;
   `;

@@ -25,14 +25,17 @@ exports.getManageReturnDetail = async (req, res) => {
 
 exports.receiveReturn = async (req, res) => {
   try {
-    let { request_detail_id, qty_return, condition, note, inspected_by } = req.body || {};
+    let { request_detail_id, qty_return, condition, note } = req.body || {};
     request_detail_id = Number(request_detail_id);
-    const return_qty = Number(qty_return); // รองรับชื่อฟิลด์จาก frontend เดิม
-    inspected_by = inspected_by ? Number(inspected_by) : null;
+    const return_qty = Number(qty_return);
+    const inspected_by = req.user?.user_id || null;   // ✅ ใช้ user จาก token
     condition = (condition || 'normal').toLowerCase();
 
     if (!Number.isInteger(request_detail_id) || !Number.isFinite(return_qty) || return_qty <= 0) {
       return res.status(400).json({ message: 'Invalid request_detail_id or qty_return' });
+    }
+    if (!inspected_by) {
+      return res.status(401).json({ message: 'Unauthorized: inspected_by missing from token' });
     }
 
     const result = await manageReturnModel.receiveReturn({
@@ -59,3 +62,4 @@ exports.receiveReturn = async (req, res) => {
     return res.status(500).json({ message: 'Internal error' });
   }
 };
+
