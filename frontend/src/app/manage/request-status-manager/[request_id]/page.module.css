@@ -2,17 +2,17 @@
 
 /* ---- Variables (aligned with StockOutHistoryPage, DamagedHistoryPage, RequestPurchasePage) ---- */
 :root {
-  --bg: #f0fbfe;
-  --panel: #ffffff;
-  --muted: #6b7280;
-  --text: #111827;
-  --border: #e5e7eb;
-  --primary: #008dda;
-  --primary-500: #41c9e2;
-  --primary-600: #1685bb;
-  --tint-50: #f0fbfe;
-  --tint-100: #e9f6fb;
-  --tint-200: #ace2e1;
+  --bg: #F9FAFB;
+  --panel: #FFFFFF;
+  --muted: #6B7280;
+  --text: #1F2A44;
+  --border: #D1D5DB;
+  --primary: #3B82F6;
+  --primary-500: #3B82F6;
+  --primary-600: #2563EB;
+  --tint-50: #FAFAFA;
+  --tint-100: #F3F4F6;
+  --tint-200: #E5E7EB;
   --success: #16a34a;
   --danger: #ef4444;
   --warning: #f59e0b;
@@ -173,29 +173,26 @@
   color: #374151;
 }
 
-/* ---- Table ---- */
+/* ---- Table (colors adjusted) ---- */
 .tableContainer {
   max-height: calc(var(--row-h) * 8);
-  /* Limit to 8 rows */
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  /* Hide scrollbar in Firefox */
+  border: 1px solid #E7EEF6;       /* soft outer border */
+  border-radius: 10px;
+  background: #FFFFFF;
 }
-
-.tableContainer::-webkit-scrollbar {
-  display: none;
-  /* Hide scrollbar in WebKit browsers */
-}
+.tableContainer::-webkit-scrollbar { display: none; }
 
 .table {
   width: 100%;
-  background: #fff;
-  border: 1px solid var(--tint-200); /* กรอบด้านนอก */
-  border-radius: 10px; /* มุมโค้ง */
-  border-collapse: separate; /* เปลี่ยนจาก collapse เป็น separate */
-  border-spacing: 0; /* ลบช่องว่างระหว่างเซลล์ */
-  overflow: hidden; /* ป้องกันเนื้อหาล้นกรอบโค้ง */
+  background: #FFFFFF;
+  border: 1px solid #E7EEF6;       /* outer border of table */
+  border-radius: 10px;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
 }
 
 .table th,
@@ -203,20 +200,20 @@
   padding: 12px;
   text-align: left;
   font-size: 0.95rem;
-  border-bottom: 1px solid var(--tint-200);
+  border-bottom: 1px solid #E7EEF6; /* row separators */
 }
 
 .table th {
-  background: #eef9fc;
+  background: #EAF6FB;             /* header blue tint */
+  color: #1F2A44;
   font-weight: 600;
-  color: #374151;
   position: sticky;
   top: 0;
   z-index: var(--z-header);
 }
 
 .table tr:hover {
-  background: var(--tint-100);
+  background: #F3F8FE;             /* lighter blue on hover */
 }
 
 .pendingChangeRow {
@@ -377,13 +374,8 @@
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .loadingText,
@@ -429,25 +421,13 @@
 
 /* ---- Responsive ---- */
 @media (max-width: 1024px) {
-  .contentGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .rightPanel {
-    margin-top: 24px;
-  }
+  .contentGrid { grid-template-columns: 1fr; }
+  .rightPanel { margin-top: 24px; }
 }
 
 @media (max-width: 768px) {
-  .infoContainer {
-    padding: 16px;
-  }
-
-  .table th,
-  .table td {
-    padding: 8px;
-    font-size: 0.9rem;
-  }
+  .infoContainer { padding: 16px; }
+  .table th, .table td { padding: 8px; font-size: 0.9rem; }
 }
 
 @media (max-width: 640px) {
@@ -458,29 +438,21 @@
     --table-gap: 10px;
   }
 
-  .mainHome {
-    padding: 12px;
-  }
+  .mainHome { padding: 12px; }
 
   .tableContainer {
-    border: 2px solid var(--tint-200); /* รักษากรอบในหน้าจอขนาดเล็ก */
+    border: 2px solid #E7EEF6; /* keep soft frame on small screens */
     border-radius: var(--radius);
     padding: 8px;
   }
 
-  .table {
-    display: block;
-    border: none; /* ป้องกันกรอบซ้ำซ้อนในหน้าจอขนาดเล็กถ้าใช้กรอบที่ .tableContainer */
-  }
-
-  .table thead {
-    display: none;
-  }
+  .table { display: block; border: none; }
+  .table thead { display: none; }
 
   .table tbody tr {
     display: block;
     margin-bottom: 12px;
-    border: 1px solid var(--tint-200);
+    border: 1px solid #E7EEF6;
     border-radius: 8px;
     padding: 8px;
   }
@@ -500,16 +472,8 @@
     flex: 1;
   }
 
-  .table td:not(:last-child) {
-    border-bottom: 1px solid #e5e7eb;
-  }
+  .table td:not(:last-child) { border-bottom: 1px solid #E7EEF6; }
 
-  .actionButtonContainer {
-    flex-direction: column;
-  }
-
-  .backButton,
-  .saveAllButton {
-    width: 100%;
-  }
+  .actionButtonContainer { flex-direction: column; }
+  .backButton, .saveAllButton { width: 100%; }
 }

@@ -8,10 +8,10 @@
     min-width: 180px;
     max-width: 280px;
     height: 100%;
-    background-color: #ffffff;
-    color: #333;
+    background-color: #fafafa; /* ขาวอมเทาอ่อน */
+    color: #444;
     border-radius: 12px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     padding-top: 20px;
     padding-bottom: 20px;
@@ -35,12 +35,11 @@
     justify-content: space-between;
     align-items: center;
     padding: 0 18px;
-    /* margin-bottom: 25px; */
 }
 
 .headerIcon {
     font-size: 20px;
-    color: #888;
+    color: #aaa;
 }
 
 .searchButton,
@@ -54,7 +53,7 @@
 
 .searchButton:hover .headerIcon,
 .collapseButton:hover .headerIcon {
-    color: #41c9e2;
+    color: #6ec9e5; /* ฟ้าอ่อน */
 }
 
 .collapseButton:active,
@@ -64,7 +63,7 @@
 
 .divider {
     border: none;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid #ebebeb;
     margin: 8px 0;
     transition: all 0.3s ease-in-out;
 }
@@ -97,7 +96,7 @@
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.06em;
-    color: #a0a0a0;
+    color: #b5b5b5;
     text-transform: uppercase;
     padding: 10px 8px 4px;
     margin: 4px 0 2px;
@@ -119,7 +118,7 @@
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease-in-out;
-    color: #555; /* สีข้อความปกติ */
+    color: #666;
     text-decoration: none;
 }
 
@@ -129,28 +128,27 @@
 }
 
 .sidebarItem:hover {
-    background-color: #ace2e1; /* ใช้สีอ่อนที่ให้มา */
-    color: #008dda;
-    transform: translateX(3px);
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.03);
+    background-color: #eaf8f8;
+    color: #0a84b5;
+    transform: translateX(2px);
+    box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.02);
 }
 
 .sidebarItem.active {
-    /* กลับไปใช้ linear-gradient ตามสีที่ให้มา */
-    background: linear-gradient(to right, #008dda, #41c9e2);
-    color: #ffffff;
-    font-weight: 700;
-    box-shadow: 2px 2px 8px rgba(0, 137, 218, 0.2);
+    background-color: #e0f3f9; /* ✅ จางลงกว่าปกติ */
+    color: #0a84b5;
+    font-weight: 600; /* ลด bold ลง */
+    box-shadow: none; /* ตัดเงาออกให้ดู soft */
 }
 
 .sidebarItem.active .sidebarIcon {
-    color: #ffffff;
+    color: #0a84b5;
 }
 
 .sidebarIcon {
     font-size: 20px;
     margin-right: 14px;
-    color: #555; /* สีไอคอนปกติ */
+    color: #777;
     transition: margin-right 0.3s ease-in-out, color 0.2s ease-in-out;
 }
 
@@ -159,12 +157,12 @@
 }
 
 .sidebarItem:hover .sidebarIcon {
-    color: #008dda; /* ให้สีไอคอนเปลี่ยนตาม */
+    color: #0a84b5;
 }
 
 .sidebarText {
     font-size: 15px;
-    font-weight:600;
+    font-weight: 600;
     white-space: nowrap;
     opacity: 1;
     transition: opacity 0.3s ease-in-out, width 0.3s ease-in-out;
@@ -199,7 +197,7 @@
         height: 100vh;
         z-index: 1000;
         transform: translateX(-100%);
-        box-shadow: 10px 0 20px rgba(0, 0, 0, 0.15);
+        box-shadow: 8px 0 15px rgba(0, 0, 0, 0.1);
     }
     .sidebar.open {
         transform: translateX(0);
@@ -213,7 +211,6 @@
         max-height: calc(100vh - 110px);
     }
 }
-
 
 /* ซ่อนปุ่ม/แผงค้นหาเมื่อ sidebar พับ */
 .sidebar.collapsed .searchButton,

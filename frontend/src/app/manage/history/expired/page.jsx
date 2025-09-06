@@ -1,5 +1,4 @@
-// ExpiredHistoryPage.js
-"use client";
+'use client';
 
 import { useState, useEffect, useMemo } from "react";
 import Swal from "sweetalert2";
@@ -87,13 +86,13 @@ const getStatusKey = (expiredQty, disposedQty) => {
 const getStatusBadgeClass = (status) => {
   switch (status?.toLowerCase()) {
     case "done":
-      return "st-approved";
+      return "stAvailable";
     case "partial":
-      return "st-warning";
+      return "stLow";
     case "pending":
-      return "st-rejected";
+      return "stOut";
     default:
-      return "st-default";
+      return "stHold";
   }
 };
 
@@ -108,7 +107,7 @@ const DetailModal = ({ show, onClose, data }) => {
       <div className={styles.modalContent}>
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>รายละเอียด Lot {data.lot_no || "-"}</h2>
-          <button onClick={onClose} className={styles.modalCloseBtn}>
+          <button onClick={onClose} className={styles.modalCloseBtn} aria-label="ปิดหน้าต่างรายละเอียด">
             <X size={24} />
           </button>
         </div>
@@ -123,7 +122,7 @@ const DetailModal = ({ show, onClose, data }) => {
                 <b>Lot No:</b> {data.lot_no || "-"}
               </div>
               <div className={styles.modalItem}>
-                <b>พัสดุ:</b> {data.item_name || "-"}
+                <b>รายการ:</b> {data.item_name || "-"}
               </div>
               <div className={styles.modalItem}>
                 <b>จำนวนรับเข้า:</b> {data.qty_imported || 0} {data.item_unit || "-"}
@@ -175,7 +174,7 @@ export default function ExpiredHistoryPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
-  const rowsPerPage = 10;
+  const rowsPerPage = 12; // ปรับให้ตรงกับ InventoryCheck
 
   // --- Data Fetching ---
   useEffect(() => {
@@ -192,7 +191,7 @@ export default function ExpiredHistoryPage() {
           icon: "error",
           title: "ข้อผิดพลาด",
           text: "ไม่สามารถโหลดข้อมูลจากเซิร์ฟเวอร์ได้",
-          confirmButtonColor: "#008dda",
+          confirmButtonColor: "#2563eb",
         });
       } finally {
         if (isMounted) setIsLoading(false);
@@ -219,23 +218,27 @@ export default function ExpiredHistoryPage() {
 
   // --- Pagination ---
   const totalPages = Math.max(1, Math.ceil(filteredData.length / rowsPerPage));
-  const paginatedRows = useMemo(() => {
-    const start = (currentPage - 1) * rowsPerPage;
-    return filteredData.slice(start, start + rowsPerPage);
-  }, [filteredData, currentPage]);
+  const start = (currentPage - 1) * rowsPerPage;
+  const paginatedRows = filteredData.slice(start, start + rowsPerPage);
+  const startDisplay = filteredData.length ? start + 1 : 0;
+  const endDisplay = Math.min(start + rowsPerPage, filteredData.length);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [statusFilter, search]);
 
+  useEffect(() => {
+    setCurrentPage((p) => Math.min(Math.max(1, p), totalPages));
+  }, [totalPages]);
+
   const getPageNumbers = () => {
     const pages = [];
-    if (totalPages <= 4) {
+    if (totalPages <= 7) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else if (currentPage <= 4) {
-      pages.push(1, 2, 3, 4, "...", totalPages);
+      pages.push(1, 2, 3, 4, 5, "...", totalPages);
     } else if (currentPage >= totalPages - 3) {
-      pages.push(1, "...", totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      pages.push(1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
     } else {
       pages.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
     }
@@ -254,6 +257,8 @@ export default function ExpiredHistoryPage() {
     setShowDetailModal(true);
   };
 
+  const fillersCount = Math.max(0, rowsPerPage - (paginatedRows?.length || 0));
+
   // --- Render ---
   return (
     <div className={styles.mainHome}>
@@ -266,8 +271,8 @@ export default function ExpiredHistoryPage() {
         </div>
 
         {/* Toolbar */}
-        <div className={styles.filterBar}>
-          <div className={styles.filterLeft}>
+        <div className={styles.toolbar}>
+          <div className={styles.filterGrid}>
             <div className={styles.filterGroup}>
               <label className={styles.label}>สถานะ</label>
               <Select
@@ -279,10 +284,9 @@ export default function ExpiredHistoryPage() {
                 styles={customSelectStyles}
                 placeholder="เลือกสถานะ..."
                 aria-label="กรองตามสถานะ"
+                menuPortalTarget={typeof window !== "undefined" ? document.body : null}
               />
             </div>
-          </div>
-          <div className={styles.filterRight}>
             <div className={styles.filterGroup}>
               <label className={styles.label}>ค้นหา</label>
               <div className={styles.searchBox}>
@@ -290,19 +294,21 @@ export default function ExpiredHistoryPage() {
                 <input
                   type="text"
                   className={styles.input}
-                  placeholder="Lot No / ชื่อพัสดุ"
+                  placeholder="Lot No / รายการ"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  aria-label="ค้นหา Lot No หรือชื่อพัสดุ"
+                  aria-label="ค้นหา Lot No หรือชื่อรายการ"
                 />
               </div>
             </div>
+          </div>
+          <div className={styles.searchCluster}>
             <button
               className={`${styles.ghostBtn} ${styles.clearButton}`}
               onClick={clearFilters}
               aria-label="ล้างตัวกรองทั้งหมด"
             >
-              <Trash2 size={16} /> ล้างตัวกรอง
+              <Trash2 size={18} /> ล้างตัวกรอง
             </button>
           </div>
         </div>
@@ -312,7 +318,7 @@ export default function ExpiredHistoryPage() {
           <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
             <div className={styles.headerItem}>วันที่บันทึก</div>
             <div className={styles.headerItem}>Lot No</div>
-            <div className={styles.headerItem}>พัสดุ</div>
+            <div className={styles.headerItem}>รายการ</div>
             <div className={styles.headerItem}>รับเข้า</div>
             <div className={styles.headerItem}>หมดอายุ</div>
             <div className={styles.headerItem}>คงเหลือ</div>
@@ -321,100 +327,125 @@ export default function ExpiredHistoryPage() {
             <div className={`${styles.headerItem} ${styles.centerCell}`}>ตรวจสอบ</div>
           </div>
 
-          <div className={styles.inventory}>
+          <div className={styles.inventory} style={{ "--rows-per-page": rowsPerPage }}>
             {isLoading ? (
-              <div className={styles.loadingContainer}>กำลังโหลดข้อมูล...</div>
+              <div className={styles.loadingContainer} />
             ) : paginatedRows.length === 0 ? (
               <div className={styles.noDataMessage}>ไม่พบข้อมูลของหมดอายุ</div>
             ) : (
-              paginatedRows.map((r) => {
-                const statusKey = getStatusKey(r.expired_qty, r.disposed_qty);
-                return (
+              <>
+                {paginatedRows.map((r) => {
+                  const statusKey = getStatusKey(r.expired_qty, r.disposed_qty);
+                  return (
+                    <div
+                      key={r.expired_id}
+                      className={`${styles.tableGrid} ${styles.tableRow}`}
+                      role="row"
+                    >
+                      <div className={styles.tableCell} role="cell">
+                        {formatThaiDate(r.expired_date)}
+                      </div>
+                      <div className={styles.tableCell} role="cell">{r.lot_no || "-"}</div>
+                      <div className={styles.tableCell} role="cell">{r.item_name || "-"}</div>
+                      <div className={styles.tableCell} role="cell">
+                        {r.qty_imported || 0} {r.item_unit || ""}
+                      </div>
+                      <div className={styles.tableCell} role="cell">
+                        {r.expired_qty || 0} {r.item_unit || ""}
+                      </div>
+                      <div className={styles.tableCell} role="cell">
+                        {(r.expired_qty || 0) - (r.disposed_qty || 0)} {r.item_unit || ""}
+                      </div>
+                      <div className={styles.tableCell} role="cell">
+                        {formatThaiDate(r.exp_date)}
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
+                        <span
+                          className={`${styles.stBadge} ${styles[getStatusBadgeClass(statusKey)]}`}
+                        >
+                          {statusMap[statusKey]}
+                        </span>
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
+                        <button
+                          className={styles.actionButton}
+                          onClick={() => handleShowDetail(r)}
+                          title="ดูรายละเอียด"
+                          aria-label={`ดูรายละเอียด Lot ${r.lot_no}`}
+                        >
+                          <Search size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+                {Array.from({ length: fillersCount }).map((_, i) => (
                   <div
-                    key={r.expired_id}
-                    className={`${styles.tableGrid} ${styles.tableRow}`}
+                    key={`filler-${i}`}
+                    className={`${styles.tableGrid} ${styles.tableRow} ${styles.fillerRow}`}
+                    aria-hidden="true"
                   >
-                    <div className={styles.tableCell}>
-                      {formatThaiDate(r.expired_date)}
-                    </div>
-                    <div className={styles.tableCell}>{r.lot_no || "-"}</div>
-                    <div className={styles.tableCell}>{r.item_name || "-"}</div>
-                    <div className={styles.tableCell}>
-                      {r.qty_imported || 0} {r.item_unit || ""}
-                    </div>
-                    <div className={styles.tableCell}>
-                      {r.expired_qty || 0} {r.item_unit || ""}
-                    </div>
-                    <div className={styles.tableCell}>
-                      {(r.expired_qty || 0) - (r.disposed_qty || 0)} {r.item_unit || ""}
-                    </div>
-                    <div className={styles.tableCell}>
-                      {formatThaiDate(r.exp_date)}
-                    </div>
-                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                      <span
-                        className={`${styles.stBadge} ${styles[getStatusBadgeClass(statusKey)]}`}
-                      >
-                        {statusMap[statusKey]}
-                      </span>
-                    </div>
-                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                      <button
-                        className={styles.actionButton}
-                        onClick={() => handleShowDetail(r)}
-                        title="ดูรายละเอียด"
-                        aria-label={`ดูรายละเอียด Lot ${r.lot_no}`}
-                      >
-                        <Search size={18} />
-                      </button>
-                    </div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
                   </div>
-                );
-              })
+                ))}
+              </>
             )}
           </div>
 
           {/* Pagination */}
-          <ul className={styles.paginationControls}>
-            <li>
-              <button
-                className={styles.pageButton}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                aria-label="หน้าก่อนหน้า"
-              >
-                <ChevronLeft size={16} />
-              </button>
-            </li>
-            {getPageNumbers().map((p, idx) =>
-              p === "..." ? (
-                <li key={`ellipsis-${idx}`} className={styles.ellipsis}>  
-                  …
-                </li>
-              ) : (
-                <li key={`page-${p}`}>
-                  <button
-                    className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
-                    onClick={() => setCurrentPage(p)}
-                    aria-label={`หน้า ${p}`}
-                    aria-current={p === currentPage ? "page" : undefined}
-                  >
-                    {p}
-                  </button>
-                </li>
-              )
-            )}
-            <li>
-              <button
-                className={styles.pageButton}
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage >= totalPages}
-                aria-label="หน้าถัดไป"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </li>
-          </ul>
+          <div className={styles.paginationBar}>
+            <div className={styles.paginationInfo}>
+              กำลังแสดง {startDisplay}-{endDisplay} จาก {filteredData.length} รายการ
+            </div>
+            <ul className={styles.paginationControls}>
+              <li>
+                <button
+                  className={styles.pageButton}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  aria-label="หน้าก่อนหน้า"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+              </li>
+              {getPageNumbers().map((p, idx) =>
+                p === "..." ? (
+                  <li key={`ellipsis-${idx}`} className={styles.ellipsis}>
+                    …
+                  </li>
+                ) : (
+                  <li key={`page-${p}`}>
+                    <button
+                      className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
+                      onClick={() => setCurrentPage(p)}
+                      aria-label={`หน้า ${p}`}
+                      aria-current={p === currentPage ? "page" : undefined}
+                    >
+                      {p}
+                    </button>
+                  </li>
+                )
+              )}
+              <li>
+                <button
+                  className={styles.pageButton}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage >= totalPages}
+                  aria-label="หน้าถัดไป"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
 
         {/* Modal */}

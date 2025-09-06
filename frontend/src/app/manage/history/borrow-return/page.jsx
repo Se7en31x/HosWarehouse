@@ -1,6 +1,5 @@
-// BorrowHistory.js
+'use client';
 
-"use client";
 import { useState, useEffect, useMemo } from "react";
 import { manageAxios } from "@/app/utils/axiosInstance";
 import Swal from "sweetalert2";
@@ -117,31 +116,30 @@ const getStatusBadgeClass = (status) => {
     case "approved_all":
     case "returned_complete":
     case "completed":
-      return "st-approved";
+      return "stAvailable";
     case "approved_partial":
     case "approved_partial_and_rejected_partial":
     case "waiting_approval":
     case "partially_returned":
-      return "st-warning";
+      return "stLow";
     case "rejected":
     case "canceled":
-      return "st-rejected";
+      return "stOut";
     case "not_returned":
     default:
-      return "st-default";
+      return "stHold";
   }
 };
-const getUrgentBadgeClass = (isUrgent) =>
-  isUrgent ? "st-urgent" : "st-default";
+const getUrgentBadgeClass = (isUrgent) => (isUrgent ? "stOut" : "stHold");
 const getConditionBadgeClass = (condition) => {
   switch (condition) {
     case "normal":
-      return "st-approved";
+      return "stAvailable";
     case "damaged":
     case "lost":
-      return "st-rejected";
+      return "stOut";
     default:
-      return "st-default";
+      return "stHold";
   }
 };
 
@@ -251,7 +249,6 @@ const DetailModal = ({ show, onClose, data }) => {
                       </p>
                     </div>
 
-                    {/* ✅ แสดงเฉพาะประวัติการคืน */}
                     <div className={styles.subDetailSection}>
                       <h6 className={styles.subDetailHeader}>
                         ประวัติการคืน
@@ -299,29 +296,35 @@ export default function BorrowHistory() {
   const [filterUrgent, setFilterUrgent] = useState("all");
   const [searchText, setSearchText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
+  const rowsPerPage = 12; // ปรับให้ตรงกับ InventoryCheck
 
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
       try {
         const res = await manageAxios.get("/history/borrow");
-        setData(Array.isArray(res.data) ? res.data : []);
+        if (isMounted) {
+          setData(Array.isArray(res.data) ? res.data : []);
+        }
       } catch (error) {
         console.error("Failed to fetch borrow history:", error);
         Swal.fire({
           icon: "error",
           title: "ข้อผิดพลาด",
           text: "ไม่สามารถโหลดข้อมูลได้",
-          confirmButtonColor: "#008dda",
+          confirmButtonColor: "#2563eb",
         });
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
     fetchData();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const filteredData = useMemo(() => {
@@ -371,13 +374,20 @@ export default function BorrowHistory() {
       });
   }, [data, filterStatus, filterReturn, filterUrgent, searchText]);
 
+  // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredData.length / rowsPerPage));
   const start = (currentPage - 1) * rowsPerPage;
   const pageRows = filteredData.slice(start, start + rowsPerPage);
+  const startDisplay = filteredData.length ? start + 1 : 0;
+  const endDisplay = Math.min(start + rowsPerPage, filteredData.length);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [filterStatus, filterReturn, filterUrgent, searchText]);
+
+  useEffect(() => {
+    setCurrentPage((p) => Math.min(Math.max(1, p), totalPages));
+  }, [totalPages]);
 
   const getPageNumbers = () => {
     const pages = [];
@@ -422,16 +432,20 @@ export default function BorrowHistory() {
     setShowDetailModal(true);
   };
 
+  const fillersCount = Math.max(0, rowsPerPage - (pageRows?.length || 0));
+
   return (
     <div className={styles.mainHome}>
       <div className={styles.infoContainer}>
         <div className={styles.pageBar}>
-          <h1 className={styles.pageTitle}>ประวัติการยืม/คืน</h1>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.pageTitle}>ประวัติการยืม/คืน</h1>
+          </div>
         </div>
 
         {/* Toolbar */}
-        <div className={styles.filterBar}>
-          <div className={styles.filterLeft}>
+        <div className={styles.toolbar}>
+          <div className={styles.filterGrid}>
             <div className={styles.filterGroup}>
               <label className={styles.label}>สถานะอนุมัติ</label>
               <Select
@@ -471,8 +485,6 @@ export default function BorrowHistory() {
                 aria-label="กรองตามความเร่งด่วน"
               />
             </div>
-          </div>
-          <div className={styles.filterRight}>
             <div className={styles.filterGroup}>
               <label className={styles.label}>ค้นหา</label>
               <div className={styles.searchBox}>
@@ -487,12 +499,14 @@ export default function BorrowHistory() {
                 />
               </div>
             </div>
+          </div>
+          <div className={styles.searchCluster}>
             <button
               className={`${styles.ghostBtn} ${styles.clearButton}`}
               onClick={clearFilters}
               aria-label="ล้างตัวกรองทั้งหมด"
             >
-              <Trash2 size={16} /> ล้างตัวกรอง
+              <Trash2 size={18} /> ล้างตัวกรอง
             </button>
           </div>
         </div>
@@ -505,138 +519,164 @@ export default function BorrowHistory() {
             <div className={styles.headerItem}>ผู้ยืม</div>
             <div className={styles.headerItem}>แผนก</div>
             <div className={styles.headerItem}>กำหนดคืน</div>
-            <div className={styles.headerItem}>ด่วน</div>
-            <div className={styles.headerItem}>สถานะอนุมัติ</div>
-            <div className={styles.headerItem}>สถานะการคืน</div>
+            <div className={`${styles.headerItem} ${styles.centerCell}`}>ด่วน</div>
+            <div className={`${styles.headerItem} ${styles.centerCell}`}>สถานะอนุมัติ</div>
+            <div className={`${styles.headerItem} ${styles.centerCell}`}>สถานะการคืน</div>
             <div className={styles.headerItem}>จำนวน</div>
-            <div className={`${styles.headerItem} ${styles.centerCell}`}>
-              ตรวจสอบ
-            </div>
+            <div className={`${styles.headerItem} ${styles.centerCell}`}>ตรวจสอบ</div>
           </div>
 
-          <div className={styles.inventory}>
+          <div className={styles.inventory} style={{ "--rows-per-page": rowsPerPage }}>
             {isLoading ? (
-              <div className={styles.loadingContainer}>กำลังโหลดข้อมูล...</div>
+              <div className={styles.loadingContainer} />
             ) : pageRows.length === 0 ? (
               <div className={styles.noDataMessage}>ไม่พบข้อมูลการยืม</div>
             ) : (
-              pageRows.map((req, idx) => {
-                const overallBorrow = req.overall_return_status;
-                return (
-                  <div
-                    key={req.request_id || `row-${idx}`}
-                    className={`${styles.tableGrid} ${styles.tableRow}`}
-                  >
-                    <div className={styles.tableCell}>
-                      {formatThaiDate(req.request_date)}
-                    </div>
-                    <div className={styles.tableCell}>
-                      {req.request_code || "-"}
-                    </div>
-                    <div className={styles.tableCell}>
-                      {req.requester_name || "-"}
-                    </div>
-                    <div className={styles.tableCell}>
-                      {req.department || "-"}
-                    </div>
-                    <div className={styles.tableCell}>
-                      {formatThaiDate(req.request_due_date)}
-                    </div>
-                    <div className={styles.tableCell}>
-                      <span
-                        className={`${styles.stBadge} ${styles[getUrgentBadgeClass(
-                          req.is_urgent
-                        )]}`}
-                      >
-                        {req.is_urgent ? urgentMap.true : urgentMap.false}
-                      </span>
-                    </div>
-                    <div className={styles.tableCell}>
-                      <span
-                        className={`${styles.stBadge} ${styles[getStatusBadgeClass(
-                          req.request_status
-                        )]}`}
-                      >
-                        {approvalStatusMap[req.request_status] ||
-                          req.request_status}
-                      </span>
-                    </div>
-                    <div className={styles.tableCell}>
-                      <span
-                        className={`${styles.stBadge} ${styles[getStatusBadgeClass(
-                          overallBorrow
-                        )]}`}
-                      >
-                        {borrowStatusMap[overallBorrow] || overallBorrow}
-                      </span>
-                    </div>
-                    <div className={styles.tableCell}>
-                      {req.details?.length ?? 0}
-                    </div>
+              <>
+                {pageRows.map((req, idx) => {
+                  const overallBorrow = req.overall_return_status;
+                  return (
                     <div
-                      className={`${styles.tableCell} ${styles.centerCell}`}
+                      key={req.request_id || `row-${idx}`}
+                      className={`${styles.tableGrid} ${styles.tableRow}`}
+                      role="row"
                     >
-                      <button
-                        className={styles.actionButton}
-                        onClick={() => handleShowDetail(req)}
-                        aria-label={`ดูรายละเอียดคำขอ ${req.request_code}`}
+                      <div className={styles.tableCell} role="cell">
+                        {formatThaiDate(req.request_date)}
+                      </div>
+                      <div className={styles.tableCell} role="cell">
+                        {req.request_code || "-"}
+                      </div>
+                      <div className={styles.tableCell} role="cell">
+                        {req.requester_name || "-"}
+                      </div>
+                      <div className={styles.tableCell} role="cell">
+                        {req.department || "-"}
+                      </div>
+                      <div className={styles.tableCell} role="cell">
+                        {formatThaiDate(req.request_due_date)}
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
+                        <span
+                          className={`${styles.stBadge} ${styles[getUrgentBadgeClass(
+                            req.is_urgent
+                          )]}`}
+                        >
+                          {req.is_urgent ? urgentMap.true : urgentMap.false}
+                        </span>
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
+                        <span
+                          className={`${styles.stBadge} ${styles[getStatusBadgeClass(
+                            req.request_status
+                          )]}`}
+                        >
+                          {approvalStatusMap[req.request_status] ||
+                            req.request_status}
+                        </span>
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
+                        <span
+                          className={`${styles.stBadge} ${styles[getStatusBadgeClass(
+                            overallBorrow
+                          )]}`}
+                        >
+                          {borrowStatusMap[overallBorrow] || overallBorrow}
+                        </span>
+                      </div>
+                      <div className={styles.tableCell} role="cell">
+                        {req.details?.length ?? 0}
+                      </div>
+                      <div
+                        className={`${styles.tableCell} ${styles.centerCell}`}
+                        role="cell"
                       >
-                        <Search size={18} />
-                      </button>
+                        <button
+                          className={styles.actionButton}
+                          onClick={() => handleShowDetail(req)}
+                          aria-label={`ดูรายละเอียดคำขอ ${req.request_code}`}
+                          title="ดูรายละเอียด"
+                        >
+                          <Search size={18} />
+                        </button>
+                      </div>
                     </div>
+                  );
+                })}
+                {Array.from({ length: fillersCount }).map((_, i) => (
+                  <div
+                    key={`filler-${i}`}
+                    className={`${styles.tableGrid} ${styles.tableRow} ${styles.fillerRow}`}
+                    aria-hidden="true"
+                  >
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
                   </div>
-                );
-              })
+                ))}
+              </>
             )}
           </div>
 
           {/* Pagination */}
-          <ul className={styles.paginationControls}>
-            <li>
-              <button
-                className={styles.pageButton}
-                onClick={() =>
-                  setCurrentPage((p) => Math.max(1, p - 1))
-                }
-                disabled={currentPage === 1}
-                aria-label="หน้าก่อนหน้า"
-              >
-                <ChevronLeft size={16} />
-              </button>
-            </li>
-            {getPageNumbers().map((p, idx) =>
-              p === "..." ? (
-                <li key={`ellipsis-${idx}`} className={styles.ellipsis}>
-                  …
-                </li>
-              ) : (
-                <li key={`page-${p}`}>
-                  <button
-                    className={`${styles.pageButton} ${
-                      p === currentPage ? styles.activePage : ""
-                    }`}
-                    onClick={() => setCurrentPage(p)}
-                    aria-label={`หน้า ${p}`}
-                    aria-current={p === currentPage ? "page" : undefined}
-                  >
-                    {p}
-                  </button>
-                </li>
-              )
-            )}
-            <li>
-              <button
-                className={styles.pageButton}
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
-                disabled={currentPage >= totalPages}
-                aria-label="หน้าถัดไป"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </li>
-          </ul>
+          <div className={styles.paginationBar}>
+            <div className={styles.paginationInfo}>
+              กำลังแสดง {startDisplay}-{endDisplay} จาก {filteredData.length} รายการ
+            </div>
+            <ul className={styles.paginationControls}>
+              <li>
+                <button
+                  className={styles.pageButton}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.max(1, p - 1))
+                  }
+                  disabled={currentPage === 1}
+                  aria-label="หน้าก่อนหน้า"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+              </li>
+              {getPageNumbers().map((p, idx) =>
+                p === "..." ? (
+                  <li key={`ellipsis-${idx}`} className={styles.ellipsis}>
+                    …
+                  </li>
+                ) : (
+                  <li key={`page-${p}`}>
+                    <button
+                      className={`${styles.pageButton} ${
+                        p === currentPage ? styles.activePage : ""
+                      }`}
+                      onClick={() => setCurrentPage(p)}
+                      aria-label={`หน้า ${p}`}
+                      aria-current={p === currentPage ? "page" : undefined}
+                    >
+                      {p}
+                    </button>
+                  </li>
+                )
+              )}
+              <li>
+                <button
+                  className={styles.pageButton}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  disabled={currentPage >= totalPages}
+                  aria-label="หน้าถัดไป"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
       <DetailModal

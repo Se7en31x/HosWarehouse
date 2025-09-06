@@ -1,12 +1,15 @@
-"use client";
+'use client';
+
 import { useState, useEffect, useMemo } from "react";
 import styles from "./page.module.css";
 import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 import { manageAxios } from "@/app/utils/axiosInstance";
 import { Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const Select = dynamic(() => import("react-select"), { ssr: false });
+const MySwal = withReactContent(Swal);
 
 /* react-select styles */
 const customSelectStyles = {
@@ -18,7 +21,7 @@ const customSelectStyles = {
     boxShadow: "none",
     "&:hover": { borderColor: "#2563eb" },
     fontSize: "0.9rem",
-    width: "250px",
+    width: "200px",
   }),
   menu: (base) => ({
     ...base,
@@ -85,7 +88,7 @@ const getStatusBadgeClass = (status) => {
   }
 };
 
-// ✅ ฟังก์ชันช่วย render extra info แบบเรียบง่าย
+/* render extra info */
 const renderExtraInfo = (row) => {
   switch (row.stockin_type) {
     case "purchase":
@@ -103,9 +106,11 @@ export default function ImportHistory() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
-  const rowsPerPage = 10;
+  const [error, setError] = useState(null);
+  const rowsPerPage = 12;
 
   const menuPortalTarget = useMemo(
     () => (typeof window !== "undefined" ? document.body : null),
@@ -116,19 +121,19 @@ export default function ImportHistory() {
   useEffect(() => {
     let isMounted = true;
     const fetchData = async () => {
+      setIsLoading(true);
       try {
         const res = await manageAxios.get("/history/stockin");
+        const fetchedData = Array.isArray(res.data) ? res.data.filter(Boolean) : [];
         if (isMounted) {
-          setData(Array.isArray(res.data) ? res.data.filter(Boolean) : []);
+          setData(fetchedData);
+          setError(null);
         }
       } catch (err) {
         console.error("Error fetching stockin history:", err);
-        Swal.fire({
-          icon: "error",
-          title: "ข้อผิดพลาด",
-          text: "ไม่สามารถโหลดข้อมูลจากเซิร์ฟเวอร์ได้",
-          confirmButtonColor: "#008dda",
-        });
+        if (isMounted) {
+          setError("ไม่สามารถโหลดข้อมูลจากเซิร์ฟเวอร์ได้: " + (err?.response?.data?.message || err.message));
+        }
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -138,6 +143,12 @@ export default function ImportHistory() {
       isMounted = false;
     };
   }, []);
+
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search.trim().toLowerCase()), 350);
+    return () => clearTimeout(t);
+  }, [search]);
 
   const formatDate = (dateStr) =>
     dateStr
@@ -151,54 +162,50 @@ export default function ImportHistory() {
 
   // filter
   const filtered = useMemo(() => {
-    return data.filter((row) => {
+    const result = data.filter((row) => {
       const okType = typeFilter === "all" || row.stockin_type === typeFilter;
-      const okStatus =
-        statusFilter === "all" || row.stockin_status === statusFilter;
+      const okStatus = statusFilter === "all" || row.stockin_status === statusFilter;
       const okSearch =
-        search === "" ||
-        row.stockin_no?.toLowerCase().includes(search.toLowerCase()) ||
-        row.user_name?.toLowerCase().includes(search.toLowerCase());
+        debouncedSearch === "" ||
+        row.stockin_no?.toLowerCase().includes(debouncedSearch) ||
+        row.user_name?.toLowerCase().includes(debouncedSearch);
       return okType && okStatus && okSearch;
     });
-  }, [data, typeFilter, statusFilter, search]);
+    return result;
+  }, [data, typeFilter, statusFilter, debouncedSearch]);
 
   // pagination
   const totalPages = Math.max(1, Math.ceil(filtered.length / rowsPerPage));
   const paginatedRows = useMemo(() => {
     const start = (currentPage - 1) * rowsPerPage;
-    return filtered.slice(start, start + rowsPerPage);
+    const result = filtered.slice(start, start + rowsPerPage);
+    return result;
   }, [filtered, currentPage]);
 
+  // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [typeFilter, statusFilter, search]);
+  }, [typeFilter, statusFilter, debouncedSearch]);
+
+  // Clamp current page when total pages change
+  useEffect(() => {
+    setCurrentPage((p) => Math.min(Math.max(1, p), totalPages));
+  }, [totalPages]);
+
+  const fillersCount = Math.max(0, rowsPerPage - (paginatedRows?.length || 0));
+  const startDisplay = filtered.length ? (currentPage - 1) * rowsPerPage + 1 : 0;
+  const endDisplay = Math.min((currentPage - 1) * rowsPerPage + paginatedRows.length, filtered.length);
 
   const getPageNumbers = () => {
     const pages = [];
-    if (totalPages <= 4) {
+    if (totalPages <= 7) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else if (currentPage <= 4) {
-      pages.push(1, 2, 3, 4, "...", totalPages);
+      pages.push(1, 2, 3, 4, 5, "...", totalPages);
     } else if (currentPage >= totalPages - 3) {
-      pages.push(
-        1,
-        "...",
-        totalPages - 3,
-        totalPages - 2,
-        totalPages - 1,
-        totalPages
-      );
+      pages.push(1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
     } else {
-      pages.push(
-        1,
-        "...",
-        currentPage - 1,
-        currentPage,
-        currentPage + 1,
-        "...",
-        totalPages
-      );
+      pages.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
     }
     return pages;
   };
@@ -215,51 +222,60 @@ export default function ImportHistory() {
     const detailsHtml = row.details
       ?.map(
         (item, index) => `
-          <tr style="border-bottom: 1px solid #e5e7eb;">
-            <td style="padding: 12px 8px;">${index + 1}</td>
-            <td style="padding: 12px 8px;">${item.item_name || "-"}</td>
-            <td style="padding: 12px 8px; text-align: right;">
-              ${item.qty || 0} ${item.unit || "-"}
-            </td>
-            <td style="padding: 12px 8px;">${item.lot_no || "-"}</td>
-            <td style="padding: 12px 8px;">${item.note || "-"}</td>
-          </tr>
+          <div class="${styles.tableGrid} ${styles.tableRow}">
+            <div class="${styles.tableCell}">${index + 1}</div>
+            <div class="${styles.tableCell}">${item.item_name || "-"}</div>
+            <div class="${styles.tableCell} ${styles.rightCell}">${item.qty || 0} ${item.unit || "-"}</div>
+            <div class="${styles.tableCell}">${item.lot_no || "-"}</div>
+            <div class="${styles.tableCell}">${item.note || "-"}</div>
+          </div>
         `
       )
       .join("");
 
-    Swal.fire({
-      title: `<h2 style="font-size: 1.5rem; color: #1f2937;">รายละเอียดการนำเข้า</h2>`,
+    MySwal.fire({
+      title: `รายละเอียดการนำเข้า`,
       html: `
-        <div style="display: grid; grid-template-columns: repeat(2,1fr); gap: 1rem; margin-bottom: 1rem;">
-          <p><b>เลขที่เอกสาร:</b> ${row.stockin_no || "-"}</p>
-          <p><b>วันที่นำเข้า:</b> ${formatDate(row.stockin_date)}</p>
-          <p><b>ประเภท:</b> ${stockinTypeMap[row.stockin_type] || row.stockin_type}</p>
-          <p><b>สถานะ:</b> ${stockinStatusMap[row.stockin_status] || row.stockin_status}</p>
-          <p><b>ผู้นำเข้า:</b> ${row.user_name || "-"}</p>
-          ${renderExtraInfo(row)}
+        <div class="${styles.detailContainer}">
+          <div class="${styles.detailGrid}">
+            <p><b>เลขที่เอกสาร:</b> ${row.stockin_no || "-"}</p>
+            <p><b>วันที่นำเข้า:</b> ${formatDate(row.stockin_date)}</p>
+            <p><b>ประเภท:</b> ${stockinTypeMap[row.stockin_type] || row.stockin_type || "-"}</p>
+            <p><b>สถานะ:</b> <span class="${styles.stBadge} ${styles[getStatusBadgeClass(row.stockin_status)]}">${stockinStatusMap[row.stockin_status] || row.stockin_status || "-"}</span></p>
+            <p><b>ผู้นำเข้า:</b> ${row.user_name || "-"}</p>
+            ${renderExtraInfo(row)}
+          </div>
+          <h3 class="${styles.detailTitle}">รายการพัสดุ</h3>
+          <div class="${styles.tableSection}">
+            <div class="${styles.detailTable}">
+              <div class="${styles.tableGrid} ${styles.tableHeader}">
+                <div class="${styles.headerItem}">#</div>
+                <div class="${styles.headerItem}">ชื่อพัสดุ</div>
+                <div class="${styles.headerItem} ${styles.rightCell}">จำนวน</div>
+                <div class="${styles.headerItem}">Lot</div>
+                <div class="${styles.headerItem}">หมายเหตุ</div>
+              </div>
+              <div class="${styles.tableBody}">
+                ${
+                  detailsHtml ||
+                  `<div class="${styles.noDataMessage}">ไม่พบรายการ</div>`
+                }
+              </div>
+            </div>
+          </div>
         </div>
-        <h3 style="font-size:1.25rem;margin:1rem 0;">รายการพัสดุ</h3>
-        <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
-          <thead style="background:#f3f4f6;">
-            <tr>
-              <th style="padding:8px;text-align:left;">#</th>
-              <th style="padding:8px;text-align:left;">ชื่อพัสดุ</th>
-              <th style="padding:8px;text-align:right;">จำนวน</th>
-              <th style="padding:8px;text-align:left;">Lot</th>
-              <th style="padding:8px;text-align:left;">หมายเหตุ</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${
-              detailsHtml ||
-              `<tr><td colspan="5" style="text-align:center;color:#6b7280;">ไม่พบรายการ</td></tr>`
-            }
-          </tbody>
-        </table>
       `,
       width: "800px",
-      confirmButtonColor: "#008dda",
+      showCloseButton: true,
+      showConfirmButton: false,
+      showCancelButton: true,
+      cancelButtonText: "ปิด",
+      cancelButtonColor: "#2563eb",
+      customClass: {
+        container: styles.swalContainer,
+        popup: styles.swalPopup,
+        cancelButton: styles.swalCancelButton,
+      },
     });
   };
 
@@ -267,12 +283,14 @@ export default function ImportHistory() {
     <div className={styles.mainHome}>
       <div className={styles.infoContainer}>
         <div className={styles.pageBar}>
-          <h1 className={styles.pageTitle}>ประวัติการนำเข้า</h1>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.pageTitle}>ประวัติการนำเข้า</h1>
+          </div>
         </div>
 
         {/* toolbar */}
-        <div className={styles.filterBar}>
-          <div className={styles.filterLeft}>
+        <div className={styles.toolbar}>
+          <div className={styles.filterGrid}>
             <div className={styles.filterGroup}>
               <label className={styles.label}>ประเภท</label>
               <Select
@@ -284,6 +302,7 @@ export default function ImportHistory() {
                 styles={customSelectStyles}
                 menuPortalTarget={menuPortalTarget}
                 placeholder="เลือกประเภท..."
+                aria-label="เลือกประเภทการนำเข้า"
               />
             </div>
             <div className={styles.filterGroup}>
@@ -292,148 +311,181 @@ export default function ImportHistory() {
                 isClearable
                 isSearchable={false}
                 options={STATUS_OPTIONS}
-                value={
-                  STATUS_OPTIONS.find((o) => o.value === statusFilter) || null
-                }
+                value={STATUS_OPTIONS.find((o) => o.value === statusFilter) || null}
                 onChange={(opt) => setStatusFilter(opt?.value || "all")}
                 styles={customSelectStyles}
                 menuPortalTarget={menuPortalTarget}
                 placeholder="เลือกสถานะ..."
+                aria-label="เลือกสถานะการนำเข้า"
               />
             </div>
-          </div>
-          <div className={styles.filterRight}>
             <div className={styles.filterGroup}>
               <label className={styles.label}>ค้นหา</label>
               <div className={styles.searchBox}>
-                <Search size={14} className={styles.searchIcon} />
+                <Search size={14} className={styles.searchIcon} aria-hidden="true" />
                 <input
                   type="text"
                   className={styles.input}
                   placeholder="ค้นหาเลขที่เอกสารหรือผู้นำเข้า"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
+                  aria-label="ค้นหาเลขที่เอกสารหรือผู้นำเข้า"
                 />
               </div>
             </div>
+          </div>
+          <div className={styles.searchCluster}>
             <button
               className={`${styles.ghostBtn} ${styles.clearButton}`}
               onClick={clearFilters}
+              aria-label="ล้างตัวกรอง"
             >
-              <Trash2 size={16} /> ล้างตัวกรอง
+              <Trash2 size={18} /> ล้างตัวกรอง
             </button>
           </div>
         </div>
 
         {/* table */}
-        {isLoading ? (
-          <div className={styles.loadingContainer}>กำลังโหลด...</div>
+        {error ? (
+          <div className={styles.errorContainer}>
+            <span>{error}</span>
+            <button
+              onClick={() => {
+                setError(null);
+                setIsLoading(true);
+                setData([]);
+                manageAxios.get("/history/stockin").then((res) => {
+                  setData(Array.isArray(res.data) ? res.data.filter(Boolean) : []);
+                  setIsLoading(false);
+                }).catch((err) => {
+                  setError("ไม่สามารถโหลดข้อมูลจากเซิร์ฟเวอร์ได้: " + (err?.response?.data?.message || err.message));
+                  setIsLoading(false);
+                });
+              }}
+              className={`${styles.ghostBtn} ${styles.retryButton}`}
+              aria-label="ลองใหม่"
+            >
+              ลองใหม่
+            </button>
+          </div>
+        ) : isLoading ? (
+          <div className={styles.loadingContainer} />
         ) : (
-          <div className={styles.tableSection}>
+          <div className={styles.tableSection} role="region" aria-label="ตารางประวัติการนำเข้า">
             <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
               <div className={styles.headerItem}>วันที่</div>
               <div className={styles.headerItem}>เลขที่เอกสาร</div>
               <div className={styles.headerItem}>ประเภท</div>
               <div className={styles.headerItem}>ผู้นำเข้า</div>
-              <div className={`${styles.headerItem} ${styles.centerCell}`}>
-                สถานะ
-              </div>
-              <div className={`${styles.headerItem} ${styles.centerCell}`}>
-                ตรวจสอบ
-              </div>
+              <div className={`${styles.headerItem} ${styles.centerCell}`}>สถานะ</div>
+              <div className={`${styles.headerItem} ${styles.centerCell}`}>ตรวจสอบ</div>
             </div>
 
-            <div className={styles.inventory}>
+            <div className={styles.inventory} style={{ "--rows-per-page": rowsPerPage }}>
               {paginatedRows.length === 0 ? (
                 <div className={styles.noDataMessage}>ไม่พบข้อมูล</div>
               ) : (
-                paginatedRows.map((row) => (
-                  <div
-                    key={row.stockin_id}
-                    className={`${styles.tableGrid} ${styles.tableRow}`}
-                  >
-                    <div className={styles.tableCell}>
-                      {formatDate(row.stockin_date)}
-                    </div>
-                    <div className={styles.tableCell}>
-                      {row.stockin_no || "-"}
-                    </div>
-                    <div className={styles.tableCell}>
-                      {stockinTypeMap[row.stockin_type] || row.stockin_type}
-                    </div>
-                    <div className={styles.tableCell}>
-                      {row.user_name || "-"}
-                    </div>
+                <>
+                  {paginatedRows.map((row, idx) => (
                     <div
-                      className={`${styles.tableCell} ${styles.centerCell}`}
+                      key={row.stockin_id ?? `row-${idx}`}
+                      className={`${styles.tableGrid} ${styles.tableRow}`}
+                      role="row"
                     >
-                      <span
-                        className={`${styles.stBadge} ${styles[getStatusBadgeClass(
-                          row.stockin_status
-                        )]}`}
-                      >
-                        {stockinStatusMap[row.stockin_status] ||
-                          row.stockin_status}
-                      </span>
+                      <div className={styles.tableCell} role="cell">
+                        {formatDate(row.stockin_date)}
+                      </div>
+                      <div className={styles.tableCell} role="cell">
+                        {row.stockin_no || "-"}
+                      </div>
+                      <div className={styles.tableCell} role="cell">
+                        {stockinTypeMap[row.stockin_type] || row.stockin_type || "-"}
+                      </div>
+                      <div className={styles.tableCell} role="cell">
+                        {row.user_name || "-"}
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
+                        <span
+                          className={`${styles.stBadge} ${styles[getStatusBadgeClass(row.stockin_status)]}`}
+                        >
+                          {stockinStatusMap[row.stockin_status] || row.stockin_status || "-"}
+                        </span>
+                      </div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
+                        <button
+                          onClick={() => showDetail(row)}
+                          className={styles.actionButton}
+                          aria-label={`ดูรายละเอียด ${row.stockin_no || "การนำเข้า"}`}
+                          title="ดูรายละเอียด"
+                        >
+                          <Search size={18} />
+                        </button>
+                      </div>
                     </div>
+                  ))}
+                  {Array.from({ length: fillersCount }).map((_, i) => (
                     <div
-                      className={`${styles.tableCell} ${styles.centerCell}`}
+                      key={`filler-${i}`}
+                      className={`${styles.tableGrid} ${styles.tableRow} ${styles.fillerRow}`}
+                      aria-hidden="true"
                     >
-                      <button
-                        onClick={() => showDetail(row)}
-                        className={styles.actionButton}
-                      >
-                        <Search size={18} />
-                      </button>
+                      <div className={styles.tableCell}>&nbsp;</div>
+                      <div className={styles.tableCell}>&nbsp;</div>
+                      <div className={styles.tableCell}>&nbsp;</div>
+                      <div className={styles.tableCell}>&nbsp;</div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
                     </div>
-                  </div>
-                ))
+                  ))}
+                </>
               )}
             </div>
 
-            {/* pagination */}
-            <ul className={styles.paginationControls}>
-              <li>
-                <button
-                  className={styles.pageButton}
-                  onClick={() =>
-                    setCurrentPage((p) => Math.max(1, p - 1))
-                  }
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft size={16} />
-                </button>
-              </li>
-              {getPageNumbers().map((p, idx) =>
-                p === "..." ? (
-                  <li key={`ellipsis-${idx}`} className={styles.ellipsis}>
-                    …
-                  </li>
-                ) : (
-                  <li key={`page-${p}`}>
-                    <button
-                      className={`${styles.pageButton} ${
-                        p === currentPage ? styles.activePage : ""
-                      }`}
-                      onClick={() => setCurrentPage(p)}
-                    >
-                      {p}
-                    </button>
-                  </li>
-                )
-              )}
-              <li>
-                <button
-                  className={styles.pageButton}
-                  onClick={() =>
-                    setCurrentPage((p) => Math.min(totalPages, p + 1))
-                  }
-                  disabled={currentPage >= totalPages}
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </li>
-            </ul>
+            <div className={styles.paginationBar}>
+              <div className={styles.paginationInfo}>
+                กำลังแสดง {startDisplay}-{endDisplay} จาก {filtered.length} รายการ
+              </div>
+              <ul className={styles.paginationControls}>
+                <li>
+                  <button
+                    className={styles.pageButton}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    aria-label="หน้าก่อนหน้า"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                </li>
+                {getPageNumbers().map((p, idx) =>
+                  p === "..." ? (
+                    <li key={`ellipsis-${idx}`} className={styles.ellipsis}>
+                      …
+                    </li>
+                  ) : (
+                    <li key={`page-${p}`}>
+                      <button
+                        className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
+                        onClick={() => setCurrentPage(p)}
+                        aria-label={`หน้า ${p}`}
+                        aria-current={p === currentPage ? "page" : undefined}
+                      >
+                        {p}
+                      </button>
+                    </li>
+                  )
+                )}
+                <li>
+                  <button
+                    className={styles.pageButton}
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage >= totalPages}
+                    aria-label="หน้าถัดไป"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </li>
+              </ul>
+            </div>
           </div>
         )}
       </div>

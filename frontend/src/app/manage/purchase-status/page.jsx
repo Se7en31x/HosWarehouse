@@ -1,12 +1,11 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import {manageAxios} from "@/app/utils/axiosInstance";
+import { manageAxios } from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
 import dynamic from "next/dynamic";
 const Select = dynamic(() => import("react-select"), { ssr: false });
-import { ChevronLeft, ChevronRight, Search, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trash2, PackageCheck } from "lucide-react";
 import { toast } from "react-toastify";
-import Link from "next/link";
 
 // Filter options
 const statusOptions = [
@@ -25,7 +24,7 @@ const categoryOptions = [
   { value: "general", label: "ของใช้ทั่วไป" },
 ];
 
-// Custom styles for react-select (same as InventoryCheck)
+// react-select styles
 const customSelectStyles = {
   control: (base, state) => ({
     ...base,
@@ -62,43 +61,51 @@ export default function WarehousePurchaseStatus() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Filters + pagination
   const [filter, setFilter] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
-  const ITEMS_PER_PAGE = 10;
+
+  const ITEMS_PER_PAGE = 12;
+  const COLS = 9;
 
   const menuPortalTarget = useMemo(
     () => (typeof window !== "undefined" ? document.body : null),
     []
   );
 
-  // Load data from API
+  const safeTime = (d) => {
+    const t = new Date(d).getTime();
+    return Number.isFinite(t) ? t : 0;
+  };
+
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await manageAxios.get("/purchase-status");
+      setRows(Array.isArray(res.data) ? res.data.filter(Boolean) : []);
+    } catch (err) {
+      console.error("❌ โหลดข้อมูลไม่สำเร็จ:", err);
+      setError("ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่");
+      toast?.error?.("ไม่สามารถโหลดข้อมูลจากเซิร์ฟเวอร์ได้");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let isMounted = true;
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await manageAxios.get("/purchase-status");
-        if (isMounted) {
-          setRows(Array.isArray(res.data) ? res.data.filter(Boolean) : []);
-        }
-      } catch (err) {
-        console.error("❌ โหลดข้อมูลไม่สำเร็จ:", err);
-        if (isMounted) {
-          setError("ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่");
-          toast.error("ไม่สามารถโหลดข้อมูลจากเซิร์ฟเวอร์ได้");
-        }
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-    load();
-    return () => {
-      isMounted = false;
-    };
+    fetchData();
   }, []);
+
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search.trim().toLowerCase()), 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
   // Translate status with badge classes
   const translateStatus = (status) => {
@@ -110,7 +117,7 @@ export default function WarehousePurchaseStatus() {
       case "pending":
         return { text: "รอดำเนินการ", class: "stPending" };
       default:
-        return { text: status || "-", class: "" };
+        return { text: status || "-", class: "stNeutral" };
     }
   };
 
@@ -133,38 +140,42 @@ export default function WarehousePurchaseStatus() {
     }
   };
 
-  // Filter and sort rows
+  // Filter + sort
   const filteredRows = useMemo(() => {
+    const q = debouncedSearch;
     return rows
       .filter((r) => {
         const statusMatch = filter === "all" || r.status?.toLowerCase() === filter;
-        const categoryMatch =
-          filterCategory === "all" || r.item_category?.toLowerCase() === filterCategory;
+        const categoryMatch = filterCategory === "all" || r.item_category?.toLowerCase() === filterCategory;
         const searchMatch =
-          (r.item_name || "").toLowerCase().includes(search.toLowerCase()) ||
-          (r.pr_no || "").toLowerCase().includes(search.toLowerCase());
+          (r.item_name || "").toLowerCase().includes(q) ||
+          (r.pr_no || "").toLowerCase().includes(q);
         return statusMatch && categoryMatch && searchMatch;
       })
-      .sort((a, b) => {
-        const dateA = new Date(a.request_date);
-        const dateB = new Date(b.request_date);
-        return dateB - dateA; // Sort by date descending
-      });
-  }, [rows, filter, filterCategory, search]);
+      .sort((a, b) => safeTime(b.request_date) - safeTime(a.request_date));
+  }, [rows, filter, filterCategory, debouncedSearch]);
 
-  // Pagination
+  // Reset page on filter/search change
+  useEffect(() => {
+    setPage(1);
+  }, [filter, filterCategory, debouncedSearch]);
+
+  // Pagination math
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / ITEMS_PER_PAGE));
+  useEffect(() => {
+    setPage((p) => Math.min(Math.max(1, p), totalPages));
+  }, [totalPages]);
+
   const paginatedRows = useMemo(() => {
     const start = (page - 1) * ITEMS_PER_PAGE;
     return filteredRows.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredRows, page]);
 
-  // Reset page when filters change
-  useEffect(() => {
-    setPage(1);
-  }, [filter, filterCategory, search]);
+  const fillersCount = Math.max(0, ITEMS_PER_PAGE - (paginatedRows?.length || 0));
+  const startIndex = (page - 1) * ITEMS_PER_PAGE;
+  const startDisplay = filteredRows.length ? startIndex + 1 : 0;
+  const endDisplay = Math.min(startIndex + ITEMS_PER_PAGE, filteredRows.length);
 
-  // Pagination navigation
   const goToPreviousPage = () => page > 1 && setPage((p) => p - 1);
   const goToNextPage = () => page < totalPages && setPage((p) => p + 1);
   const getPageNumbers = () => {
@@ -181,7 +192,6 @@ export default function WarehousePurchaseStatus() {
     return pages;
   };
 
-  // Clear filters
   const clearFilters = () => {
     setFilter("all");
     setFilterCategory("all");
@@ -189,15 +199,16 @@ export default function WarehousePurchaseStatus() {
     setPage(1);
   };
 
-  // Format date
-  const formatDate = (date) => {
+  const formatDateTime = (d) => {
     try {
-      return date
-        ? new Date(date).toLocaleString("th-TH", {
+      return d
+        ? new Date(d).toLocaleString("th-TH", {
             timeZone: "Asia/Bangkok",
             year: "numeric",
             month: "2-digit",
             day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
           })
         : "-";
     } catch {
@@ -211,7 +222,10 @@ export default function WarehousePurchaseStatus() {
         {/* Header */}
         <div className={styles.pageBar}>
           <div className={styles.titleGroup}>
-            <h1 className={styles.pageTitle}>ติดตามสถานะคำขอซื้อ (ฝ่ายคลัง)</h1>
+            <h1 className={styles.pageTitle}>
+              <PackageCheck size={28} />
+              ติดตามสถานะคำขอซื้อ (ฝ่ายคลัง)
+            </h1>
           </div>
         </div>
 
@@ -252,11 +266,17 @@ export default function WarehousePurchaseStatus() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="ค้นหาด้วยชื่อสินค้า หรือ PR No..."
+                aria-label="ค้นหาด้วยชื่อสินค้า หรือ PR No"
               />
             </div>
           </div>
           <div className={styles.searchCluster}>
-            <button onClick={clearFilters} className={`${styles.ghostBtn} ${styles.clearButton}`}>
+            <button
+              onClick={clearFilters}
+              className={`${styles.ghostBtn} ${styles.clearButton}`}
+              title="ล้างตัวกรอง"
+              aria-label="ล้างตัวกรอง"
+            >
               <Trash2 size={18} /> ล้างตัวกรอง
             </button>
           </div>
@@ -266,20 +286,22 @@ export default function WarehousePurchaseStatus() {
         {error ? (
           <div className={styles.errorContainer}>
             <span>{error}</span>
-            <button onClick={() => load()} className={styles.retryButton}>
+            <button
+              onClick={fetchData}
+              className={`${styles.ghostBtn} ${styles.retryButton}`}
+              aria-label="ลองใหม่"
+            >
               ลองใหม่
             </button>
           </div>
         ) : loading ? (
-          <div className={styles.loadingContainer}>
-            <span>กำลังโหลดข้อมูล...</span>
-          </div>
+          <div className={styles.loadingContainer} />
         ) : (
           <div className={styles.tableSection} role="region" aria-label="ตารางสถานะคำขอซื้อ">
             <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
               <div className={styles.headerItem}>วันที่ขอ</div>
               <div className={styles.headerItem}>PR No</div>
-              <div className={styles.headerItem}>สินค้า</div>
+              <div className={styles.headerItem}>รายการ</div>
               <div className={styles.headerItem}>หมวดหมู่</div>
               <div className={`${styles.headerItem} ${styles.centerCell}`}>จำนวน</div>
               <div className={`${styles.headerItem} ${styles.centerCell}`}>หน่วย</div>
@@ -287,87 +309,121 @@ export default function WarehousePurchaseStatus() {
               <div className={`${styles.headerItem} ${styles.centerCell}`}>คงเหลือ</div>
               <div className={`${styles.headerItem} ${styles.centerCell}`}>สถานะ</div>
             </div>
+
             <div className={styles.inventory} style={{ "--rows-per-page": ITEMS_PER_PAGE }}>
               {paginatedRows.length > 0 ? (
-                paginatedRows.map((r, idx) => {
-                  const { text, class: statusClass } = translateStatus(r.status);
-                  return (
-                    <div key={idx} className={`${styles.tableGrid} ${styles.tableRow}`} role="row">
-                      <div className={styles.tableCell} role="cell">
-                        {formatDate(r.request_date)}
+                <>
+                  {paginatedRows.map((r, idx) => {
+                    const { text, class: statusClass } = translateStatus(r.status);
+                    return (
+                      <div
+                        key={`${r.pr_no || "-"}-${idx}`}
+                        className={`${styles.tableGrid} ${styles.tableRow}`}
+                        role="row"
+                      >
+                        <div className={styles.tableCell} role="cell">
+                          {formatDateTime(r.request_date)}
+                        </div>
+                        <div className={styles.tableCell} role="cell">
+                          {r.pr_no || "-"}
+                        </div>
+                        <div className={styles.tableCell} role="cell" title={r.item_name}>
+                          {r.item_name || "-"}
+                        </div>
+                        <div className={styles.tableCell} role="cell">
+                          {translateCategory(r.item_category)}
+                        </div>
+                        <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
+                          {r.qty_requested ?? 0}
+                        </div>
+                        <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
+                          {r.item_unit || "-"}
+                        </div>
+                        <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
+                          {r.received_qty ?? 0}
+                        </div>
+                        <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
+                          {r.remaining_qty ?? 0}
+                        </div>
+                        <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
+                          <span className={`${styles.stBadge} ${styles[statusClass]}`}>
+                            {text}
+                          </span>
+                        </div>
                       </div>
-                      <div className={styles.tableCell} role="cell">
-                        {r.pr_no || "-"}
-                      </div>
-                      <div className={styles.tableCell} role="cell" title={r.item_name}>
-                        {r.item_name || "-"}
-                      </div>
-                      <div className={styles.tableCell} role="cell">
-                        {translateCategory(r.item_category)}
-                      </div>
-                      <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
-                        {r.qty_requested || 0}
-                      </div>
-                      <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
-                        {r.item_unit || "-"}
-                      </div>
-                      <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
-                        {r.received_qty || 0}
-                      </div>
-                      <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
-                        {r.remaining_qty || 0}
-                      </div>
-                      <div className={`${styles.tableCell} ${styles.centerCell}`} role="cell">
-                        <span className={`${styles.stBadge} ${styles[statusClass]}`}>
-                          {text}
-                        </span>
-                      </div>
+                    );
+                  })}
+
+                  {/* Fill empty rows to maintain 12 rows */}
+                  {Array.from({ length: fillersCount }).map((_, i) => (
+                    <div
+                      key={`filler-${i}`}
+                      className={`${styles.tableGrid} ${styles.tableRow} ${styles.fillerRow}`}
+                      aria-hidden="true"
+                    >
+                      <div className={styles.tableCell}>&nbsp;</div>
+                      <div className={styles.tableCell}>&nbsp;</div>
+                      <div className={styles.tableCell}>&nbsp;</div>
+                      <div className={styles.tableCell}>&nbsp;</div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
                     </div>
-                  );
-                })
+                  ))}
+                </>
               ) : (
                 <div className={styles.noDataMessage}>ไม่พบข้อมูล</div>
               )}
             </div>
-            <ul className={styles.paginationControls}>
-              <li>
-                <button
-                  className={styles.pageButton}
-                  onClick={goToPreviousPage}
-                  disabled={page === 1}
-                  aria-label="ไปยังหน้าที่แล้ว"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-              </li>
-              {getPageNumbers().map((p, idx) =>
-                p === "..." ? (
-                  <li key={`ellipsis-${idx}`} className={styles.ellipsis}>
-                    …
-                  </li>
-                ) : (
-                  <li key={`page-${p}`}>
-                    <button
-                      className={`${styles.pageButton} ${p === page ? styles.activePage : ""}`}
-                      onClick={() => setPage(p)}
-                      aria-label={`ไปยังหน้า ${p}`}
-                    >
-                      {p}
-                    </button>
-                  </li>
-                )
-              )}
-              <li>
-                <button
-                  className={styles.pageButton}
-                  onClick={goToNextPage}
-                  disabled={page >= totalPages}
-                  aria-label="ไปยังหน้าถัดไป"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </li>
-            </ul>
+
+            {/* Pagination bar */}
+            <div className={styles.paginationBar}>
+              <div className={styles.paginationInfo}>
+                กำลังแสดง {startDisplay}-{endDisplay} จาก {filteredRows.length} รายการ
+              </div>
+              <ul className={styles.paginationControls}>
+                <li>
+                  <button
+                    className={styles.pageButton}
+                    onClick={goToPreviousPage}
+                    disabled={page === 1}
+                    aria-label="ไปยังหน้าที่แล้ว"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                </li>
+                {getPageNumbers().map((p, idx) =>
+                  p === "..." ? (
+                    <li key={`ellipsis-${idx}`} className={styles.ellipsis}>
+                      …
+                    </li>
+                  ) : (
+                    <li key={`page-${p}`}>
+                      <button
+                        className={`${styles.pageButton} ${p === page ? styles.activePage : ""}`}
+                        onClick={() => setPage(p)}
+                        aria-label={`ไปยังหน้า ${p}`}
+                        aria-current={p === page ? "page" : undefined}
+                      >
+                        {p}
+                      </button>
+                    </li>
+                  )
+                )}
+                <li>
+                  <button
+                    className={styles.pageButton}
+                    onClick={goToNextPage}
+                    disabled={page >= totalPages}
+                    aria-label="ไปยังหน้าถัดไป"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </li>
+              </ul>
+            </div>
           </div>
         )}
       </div>
