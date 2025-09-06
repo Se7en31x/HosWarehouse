@@ -1,5 +1,6 @@
 const inventoryModel = require('../models/inventoryModel');
 const damagedModel = require('../models/damagedModel');
+const rolePermissions = require('../config/rolePermissions'); // 👈 import permissions
 
 // --------------------------- REST API --------------------------- //
 
@@ -17,8 +18,17 @@ exports.getAllItems = async (req, res) => {
 // GET /inventory/for-withdrawal - สำหรับพนักงานทั่วไป
 exports.getAllItemsForWithdrawal = async (req, res) => {
     try {
+        const role = req.user?.role; // 👈 ได้มาจาก JWT
+        const allowed = rolePermissions[role] || [];
+
         const items = await inventoryModel.getAllItemsForWithdrawal();
-        res.status(200).json(items);
+
+        // ✅ กรองให้เหลือเฉพาะ category ที่ role มีสิทธิ์
+        const filteredItems = items.filter(item =>
+            allowed.includes('*') || allowed.includes(item.item_category)
+        );
+
+        res.status(200).json(filteredItems);
     } catch (error) {
         console.error('❌ Error getAllItemsForWithdrawal:', error);
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลสำหรับหน้าเบิก-ยืม' });

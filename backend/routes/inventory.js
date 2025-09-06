@@ -28,18 +28,17 @@ router.get(
 );
 
 // --------------------------------------------------------
-// ✅ ROUTES ใช้ร่วมกัน (Staff + Manager)
 // --------------------------------------------------------
 router.post(
   '/damaged',
-  authMiddleware(['marehouse_manager']), // 🔐 ทั้ง staff และ manage เข้าได้
+  authMiddleware(['marehouse_manager']), // 
   inventoryController.reportDamaged
 );
 
 
 router.post(
   '/inventory/adjust',
-  authMiddleware(['marehouse_manager']), // 🔐 ปรับจำนวน = เฉพาะ manager
+  authMiddleware(['marehouse_manager']), 
   inventoryController.adjustInventory
 );
 
