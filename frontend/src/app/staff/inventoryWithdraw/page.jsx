@@ -127,6 +127,7 @@ export default function InventoryWithdraw() {
       try {
         const res = await staffAxios.get('/for-withdrawal');
         if (isMounted) {
+          console.log("📌 Response จาก backend:", res.data); // 👈 log ตรงนี้
           setAllItems(Array.isArray(res.data) ? res.data.filter(item => item && item.item_id) : []);
         }
       } catch (err) {

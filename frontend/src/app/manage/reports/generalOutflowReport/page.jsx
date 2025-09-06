@@ -21,12 +21,12 @@ export default function GeneralOutflowReport() {
   const [customEnd, setCustomEnd] = useState("");
   const [loading, setLoading] = useState(false);
 
-const typeOptions = [
-  { value: "all", label: "ทั้งหมด" },
-  { value: "withdraw", label: "ตัดสต็อก" },
-  { value: "damaged", label: "ชำรุด" },
-  { value: "expired_dispose", label: "หมดอายุ" },
-];
+  const typeOptions = [
+    { value: "all", label: "ทั้งหมด" },
+    { value: "withdraw", label: "ตัดสต็อก" },
+    { value: "damaged", label: "ชำรุด" },
+    { value: "expired_dispose", label: "หมดอายุ" },
+  ];
 
   const dateOptions = [
     { value: "all", label: "ทุกช่วงเวลา" },
@@ -50,14 +50,15 @@ const typeOptions = [
     return map[cat] || cat || "-";
   };
 
-const translateOutflowType = (type) => {
-  const map = {
-    withdraw: "ตัดสต็อก",
-    damaged: "ชำรุด",
-    expired_dispose: "หมดอายุ",
+  const translateOutflowType = (type) => {
+    const map = {
+      withdraw: "ตัดสต็อกจากการเบิก", // ✅ แก้ไขแล้ว
+      damaged: "ชำรุด",
+      expired_dispose: "หมดอายุ",
+      borrow: "ตัดสต็อกจากการยืม", // ✅ เพิ่มแล้ว
+    };
+    return map[type] || type || "-";
   };
-  return map[type] || type || "-";
-};
 
   const formatDate = (iso) => {
     if (!iso) return "-";
@@ -93,19 +94,19 @@ const translateOutflowType = (type) => {
       const now = new Date();
 
       if (dateRange?.value === "today") {
-          start = now.toISOString().split("T")[0];
-          end = now.toISOString().split("T")[0];
+        start = now.toISOString().split("T")[0];
+        end = now.toISOString().split("T")[0];
       } else if (["1m", "3m", "6m", "9m", "12m"].includes(dateRange?.value)) {
-          const months = parseInt(dateRange.value.split('m')[0]);
-          const past = new Date();
-          past.setMonth(now.getMonth() - months);
-          start = past.toISOString().split("T")[0];
-          end = now.toISOString().split("T")[0];
+        const months = parseInt(dateRange.value.split('m')[0]);
+        const past = new Date();
+        past.setMonth(now.getMonth() - months);
+        start = past.toISOString().split("T")[0];
+        end = now.toISOString().split("T")[0];
       } else if (dateRange?.value === "custom") {
-          start = customStart || null;
-          end = customEnd || null;
+        start = customStart || null;
+        end = customEnd || null;
       }
-      
+
       const res = await manageAxios.get("/report/general-outflow", {
         params: {
           type: type?.value || "all",
@@ -268,7 +269,6 @@ const translateOutflowType = (type) => {
                 <th>จำนวน</th>
                 <th>หน่วย</th>
                 <th>ผู้ทำรายการ</th>
-                <th>หมายเหตุ</th>
               </tr>
             </thead>
             <tbody>
@@ -284,7 +284,6 @@ const translateOutflowType = (type) => {
                     <td>{item.qty}</td>
                     <td>{item.unit}</td>
                     <td>{item.user_name || "-"}</td>
-                    <td>{item.doc_note || "-"}</td>
                   </tr>
                 ))
               ) : (
