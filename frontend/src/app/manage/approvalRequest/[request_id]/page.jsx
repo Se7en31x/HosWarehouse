@@ -291,7 +291,87 @@ export default function ApprovalRequestPage() {
         </div>
 
         {/* ตารางแสดงรายการ */}
-        {/* ... เหมือนเดิม ... */}
+        <div className={styles.tableContainer}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>รูปภาพ</th>
+                <th>รายการ</th>
+                <th>ประเภท</th>
+                <th>จำนวนขอ</th>
+                <th>หน่วย</th>
+                <th>วันที่คืน</th>
+                <th>สถานะ</th>
+                <th>จำนวนอนุมัติ</th>
+                <th>การดำเนินการ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {details.length > 0 ? (
+                details.map(d => (
+                  <tr key={d.request_detail_id}>
+                    <td>
+                      <ItemImage item_img={d.item_img} alt={d.item_name} />
+                    </td>
+                    <td>{d.item_name}</td>
+                    <td>{d.request_detail_type === 'borrow' ? 'ยืม' : 'เบิก'}</td>
+                    <td>{d.requested_qty}</td>
+                    <td>{d.item_unit}</td>
+                    <td>{d.expected_return_date ? new Date(d.expected_return_date).toLocaleDateString('th-TH') : '-'}</td>
+                    <td>
+                      <span className={pillClassByStatus(draftDetails[d.request_detail_id]?.status || d.approval_status)}>
+                        {statusMap[draftDetails[d.request_detail_id]?.status || d.approval_status]}
+                      </span>
+                    </td>
+                    <td>
+                      <div className={styles.inputContainer}>
+                        <input
+                          type="number"
+                          value={draftDetails[d.request_detail_id]?.approved_qty}
+                          onChange={(e) => handleApprovedQtyChange(d.request_detail_id, e.target.value, d.requested_qty)}
+                          className={`${styles.input} ${itemErrors[d.request_detail_id] ? styles.inputError : ''}`}
+                          disabled={isOverallDisabled || draftDetails[d.request_detail_id]?.status === 'rejected'}
+                          min="0"
+                          max={d.requested_qty}
+                          required
+                        />
+                        {tooltip[d.request_detail_id]?.show && (
+                          <span className={styles.tooltip}>{tooltip[d.request_detail_id].message}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td>
+                      {isOverallDisabled ? (
+                        <span className={styles.disabledAction}>-</span>
+                      ) : (
+                        <div className={styles.actionButtons}>
+                          <button
+                            className={`${styles.actionButton} ${styles.approveButton}`}
+                            onClick={() => handleApproveOne(d)}
+                            disabled={draftDetails[d.request_detail_id]?.status === 'approved'}
+                          >
+                            อนุมัติ
+                          </button>
+                          <button
+                            className={`${styles.actionButton} ${styles.rejectButton}`}
+                            onClick={() => handleRejectOne(d)}
+                            disabled={draftDetails[d.request_detail_id]?.status === 'rejected'}
+                          >
+                            ปฏิเสธ
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="9" className={styles.noData}>ไม่พบรายการย่อยสำหรับคำขอนี้</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
         <div className={styles.actions}>
           <button

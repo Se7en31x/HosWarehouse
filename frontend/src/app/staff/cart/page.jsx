@@ -7,6 +7,17 @@ import Image from 'next/image';
 import { staffAxios } from '../../utils/axiosInstance';
 import Swal from 'sweetalert2';
 
+// ✅ Map รหัสแผนกเป็นชื่อ
+const departmentMap = {
+  "01": "แผนกเวชระเบียน",
+  "02": "แผนกผู้ป่วยใน",
+  "03": "แผนกจ่ายยา",
+  "04": "แผนกฉุกเฉิน",
+  "05": "แผนกผู้ป่วยนอก",
+  "06": "แผนกชีวาภิบาล",
+  "07": "แผนกคลัง",
+};
+
 export default function Cart() {
   const { cartItems, removeFromCart, clearCart, updateQuantity, updateReturnDate } =
     useContext(CartContext);
@@ -20,6 +31,10 @@ export default function Cart() {
   const [minReturnDate, setMinReturnDate] = useState('');
   const [maxReturnDate, setMaxReturnDate] = useState('');
 
+  // ✅ department state
+  const [departments, setDepartments] = useState([]);
+  const [selectedDept, setSelectedDept] = useState('');
+
   useEffect(() => {
     const todayDate = new Date();
     setMinReturnDate(todayDate.toISOString().split('T')[0]);
@@ -27,6 +42,20 @@ export default function Cart() {
     const maxDate = new Date();
     maxDate.setMonth(maxDate.getMonth() + 3);
     setMaxReturnDate(maxDate.toISOString().split('T')[0]);
+
+    // ✅ decode JWT token เพื่อเอา departments
+    const token = localStorage.getItem('authToken_staff');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.departments && payload.departments.length > 0) {
+          setDepartments(payload.departments);
+          setSelectedDept(payload.departments[0]); // ใช้อันแรกเป็นค่าเริ่มต้น
+        }
+      } catch (err) {
+        console.error('ไม่สามารถ decode token:', err);
+      }
+    }
   }, []);
 
   const translateCategory = (category) => {
@@ -75,8 +104,7 @@ export default function Cart() {
       await Swal.fire({
         icon: 'error',
         title: 'จำนวนไม่เพียงพอ',
-        text: `จำนวนที่ต้องการเกินกว่าจำนวนคงเหลือในคลัง (${itemInCart.item_qty} ${itemInCart.unit || ''
-          })`,
+        text: `จำนวนที่ต้องการเกินกว่าจำนวนคงเหลือในคลัง (${itemInCart.item_qty} ${itemInCart.unit || ''})`,
       });
       return;
     }
@@ -119,11 +147,11 @@ export default function Cart() {
   };
 
   const handleSubmit = async () => {
-    if (!requestDate || cartItems.length === 0) {
+    if (!requestDate || cartItems.length === 0 || !selectedDept) {
       await Swal.fire({
         icon: 'warning',
         title: 'กรุณากรอกข้อมูลให้ครบ',
-        text: 'กรุณาเลือกวันที่ และเพิ่มรายการเบิก/ยืม',
+        text: 'กรุณาเลือกวันที่, รายการ และแผนก',
       });
       return;
     }
@@ -155,7 +183,7 @@ export default function Cart() {
       urgent,
       date: requestDate,
       type: requestType,
-      // ❌ user_id ถูกตัดออกแล้ว
+      department_id: selectedDept, // ✅ ส่งไป backend
     };
 
     try {
@@ -310,8 +338,8 @@ export default function Cart() {
                       {item.action === 'borrow'
                         ? 'ยืม'
                         : item.action === 'withdraw'
-                          ? 'เบิก'
-                          : 'คืน'}
+                        ? 'เบิก'
+                        : 'คืน'}
                     </div>
                     <div className={styles.tableCell}>
                       {item.action === 'borrow' ? (
@@ -348,8 +376,61 @@ export default function Cart() {
           </div>
         </div>
 
+        {/* เพิ่มส่วนนี้เข้าไป */}
+        <div className={styles.requestOptions}>
+          <div className={styles.optionGroup}>
+            <label htmlFor="requestDate">วันที่นำส่ง:</label>
+            <input
+              type="date"
+              id="requestDate"
+              value={requestDate}
+              onChange={(e) => setRequestDate(e.target.value)}
+              disabled={isSubmitting}
+              className={styles.dateInput}
+            />
+          </div>
+          <div className={styles.optionGroup}>
+            <label htmlFor="urgent">
+              <input
+                type="checkbox"
+                id="urgent"
+                checked={urgent}
+                onChange={handleUrgentChange}
+                disabled={isSubmitting}
+              />
+              <span>เร่งด่วน</span>
+            </label>
+          </div>
+          <div className={styles.optionGroupFull}>
+            <label htmlFor="note">หมายเหตุ:</label>
+            <textarea
+              id="note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              disabled={isSubmitting}
+              className={styles.noteInput}
+              rows="3"
+            />
+          </div>
+        </div>
+
         {/* Footer actions */}
         <div className={styles.footerBar}>
+          <div className={styles.footerLeft}>
+            <label>เลือกแผนก: </label>
+            <select
+              value={selectedDept}
+              onChange={(e) => setSelectedDept(e.target.value)}
+              disabled={isSubmitting}
+            >
+              {departments.map((deptCode) => (
+                <option key={deptCode} value={deptCode}>
+                  {departmentMap[deptCode] || deptCode}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className={styles.footerActions}>
             <button
               className={`${styles.actionButton} ${styles.cancelBtn}`}

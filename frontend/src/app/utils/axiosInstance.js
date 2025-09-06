@@ -1,6 +1,6 @@
 // app/utils/axiosInstance.js
 import axios from "axios";
-import { jwtDecode } from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 
 const baseConfig = {
   baseURL: "http://localhost:5000/api", // 👉 backend HosWarehouse (แก้ตามจริงถ้า deploy)
