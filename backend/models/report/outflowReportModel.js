@@ -16,7 +16,7 @@ exports.getOutflowReport = async (filters) => {
   // กรองแผนก
   if (department && department !== "all") {
     params.push(department);
-    baseWhere += ` AND d.department_id = $${paramIndex++}`;
+    baseWhere += ` AND r.department_id = $${paramIndex++}`;
   }
 
   // กรองช่วงเวลา
@@ -40,15 +40,14 @@ exports.getOutflowReport = async (filters) => {
       END AS issued_qty,
       i.item_unit AS unit,
       r.request_type,
-      d.department_name_th AS department, -- ✅ ใช้ชื่อแผนกจาก Admin.departments
+      d.department_name_th AS department, -- ✅ แก้ใช้ r.department_id
       rd.approval_status,
       rd.processing_status
     FROM requests r
     JOIN request_details rd ON r.request_id = rd.request_id
     JOIN items i ON rd.item_id = i.item_id
     JOIN "Admin".users u ON r.user_id = u.user_id
-    LEFT JOIN "Admin".user_departments ud ON u.user_id = ud.user_id
-    LEFT JOIN "Admin".departments d ON ud.department_id = d.department_id
+    LEFT JOIN "Admin".departments d ON r.department_id = d.department_id
     LEFT JOIN borrow_detail_lots bdl ON rd.request_detail_id = bdl.request_detail_id
     ${baseWhere}
     GROUP BY

@@ -1,15 +1,19 @@
-const RequestModel = require("../models/requestModel"); 
+const RequestModel = require("../models/requestModel");
 
 /**
  * จัดการการสร้างคำขอใหม่และรายการย่อยที่เกี่ยวข้อง
  */
 exports.handleCreateRequest = async (req, res) => {
   try {
-    const { note, urgent, date, type, items } = req.body;
+    const { note, urgent, date, type, items, department_id } = req.body; // ✅ รับ department_id ด้วย
     const userId = parseInt(req.user?.id, 10); // ✅ ใช้ id จาก token และแปลงเป็น int
 
     if (!userId || isNaN(userId)) {
       return res.status(401).json({ error: "Unauthorized: missing or invalid user id" });
+    }
+
+    if (!department_id) {
+      return res.status(400).json({ error: "ต้องเลือกแผนก (department_id) ก่อนส่งคำขอ" });
     }
 
     // 1. สร้างคำขอหลัก
@@ -19,6 +23,7 @@ exports.handleCreateRequest = async (req, res) => {
       urgent,
       date,
       type,
+      department_id, // ✅ ส่งเข้าไป model
     });
 
     if (!requestResult || !requestResult.request_id) {

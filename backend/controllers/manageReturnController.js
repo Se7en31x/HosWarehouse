@@ -28,7 +28,7 @@ exports.receiveReturn = async (req, res) => {
     let { request_detail_id, qty_return, condition, note } = req.body || {};
     request_detail_id = Number(request_detail_id);
     const return_qty = Number(qty_return);
-    const inspected_by = req.user?.user_id || null;   // ✅ ใช้ user จาก token
+    const inspected_by = req.user?.id || null;   // ✅ ใช้ user จาก token
     condition = (condition || 'normal').toLowerCase();
 
     if (!Number.isInteger(request_detail_id) || !Number.isFinite(return_qty) || return_qty <= 0) {

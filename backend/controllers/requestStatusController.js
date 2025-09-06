@@ -64,7 +64,7 @@ class RequestStatusController {
     }
 
     // ✅ ดึง user id จาก token middleware
-    const userId = req.user?.user_id;
+    const userId = req.user?.id;
     if (!userId) {
         return res.status(401).json({ message: 'Unauthorized: User ID not found in token.' });
     }

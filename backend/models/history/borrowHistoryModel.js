@@ -14,7 +14,9 @@ exports.getAllBorrow = async () => {
 
       -- ✅ ผู้ร้องขอ
       u.firstname || ' ' || u.lastname AS requester_name,
-      ud.department_id,
+
+      -- ✅ แผนกที่เลือกตอนสร้าง request
+      r.department_id,
       d.department_name_th AS department_name,
 
       -- ✅ ผู้อนุมัติ
@@ -81,8 +83,7 @@ exports.getAllBorrow = async () => {
 
     FROM requests r
     JOIN "Admin".users u ON r.user_id = u.user_id
-    LEFT JOIN "Admin".user_departments ud ON u.user_id = ud.user_id
-    LEFT JOIN "Admin".departments d ON ud.department_id = d.department_id
+    LEFT JOIN "Admin".departments d ON r.department_id = d.department_id
     LEFT JOIN "Admin".users approver ON r.approved_by = approver.user_id 
     JOIN request_details rd ON r.request_id = rd.request_id
     JOIN items i ON rd.item_id = i.item_id
@@ -93,7 +94,7 @@ exports.getAllBorrow = async () => {
     GROUP BY 
       r.request_id, r.request_code, r.request_date, r.request_status, r.request_type, 
       r.is_urgent, r.request_due_date, r.request_note,
-      u.firstname, u.lastname, ud.department_id, d.department_name_th,
+      u.firstname, u.lastname, r.department_id, d.department_name_th,
       approver.firstname, approver.lastname, r.approved_at
     
     ORDER BY r.request_date DESC;

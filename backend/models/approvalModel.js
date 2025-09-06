@@ -19,12 +19,16 @@ exports.getRequestForApproval = async (request_id) => {
   const query = `
     SELECT 
       r.*,
-      (u.firstname || ' ' || u.lastname) AS user_name, -- ✅ ใช้ firstname/lastname
-      d.department_name_th AS department   -- ✅ join แผนก
+      (u.firstname || ' ' || u.lastname) AS user_name,
+      -- ✅ แก้ไขตรงนี้ให้ดึงชื่อแผนกจากตาราง departments โดยตรง
+      d.department_name_th AS department
     FROM requests r
     JOIN "Admin".users u ON r.user_id = u.user_id
-    LEFT JOIN "Admin".user_departments ud ON u.user_id = ud.user_id
-    LEFT JOIN "Admin".departments d ON ud.department_id = d.department_id
+    -- ✅ เอา LEFT JOIN สองบรรทัดนี้ออก
+    -- LEFT JOIN "Admin".user_departments ud ON u.user_id = ud.user_id
+    -- LEFT JOIN "Admin".departments d ON ud.department_id = d.department_id
+    -- ✅ และใช้ LEFT JOIN ไปที่ตาราง departments โดยตรง
+    LEFT JOIN "Admin".departments d ON r.department_id = d.department_id
     WHERE r.request_id = $1
   `;
   const result = await pool.query(query, [request_id]);

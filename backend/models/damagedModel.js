@@ -1,6 +1,5 @@
-// models/DamagedModel.js
 const { pool } = require('../config/db');
-const { generateStockinNo } = require('../utils/docCounter'); // ต้องมีฟังก์ชันนี้
+const { generateStockinCode } = require('../utils/stockinCounter');
 
 const DamagedModel = {
   // ดึงรายการของชำรุดทั้งหมด
@@ -71,19 +70,17 @@ const DamagedModel = {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
-
-      // Insert action log
-      await client.query(
-        `INSERT INTO damaged_actions (damaged_id, action_type, action_qty, action_by, note)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [damaged_id, action_type, action_qty, action_by, note]
-      );
-
-      // ✅ ดึงข้อมูล damaged item
+      
       const { rows: damagedRows } = await client.query(
         `SELECT item_id, lot_id FROM damaged_items WHERE damaged_id = $1`,
         [damaged_id]
       );
+      
+      // ✅ เพิ่มการตรวจสอบว่าพบข้อมูลหรือไม่
+      if (damagedRows.length === 0) {
+        throw new Error(`Damaged item with ID ${damaged_id} not found.`);
+      }
+      
       const item_id = damagedRows[0]?.item_id;
       const lot_id = damagedRows[0]?.lot_id;
 
@@ -107,15 +104,15 @@ const DamagedModel = {
         }
 
         // 3. ✅ สร้างเอกสาร Stock In สำหรับของที่ซ่อมเสร็จ
-        const stockinNo = await generateStockinNo(client, 'repair_return');
+        const stockinNo = await generateStockinCode(client, 'repair_return');
 
         // 4. ✅ บันทึก Header ใน stock_ins
         const { rows: stockinRows } = await client.query(
           `INSERT INTO stock_ins (
-            stockin_no, stockin_date, stockin_type, note, user_id, created_at
+             stockin_no, stockin_date, stockin_type, note, user_id, created_at
            )
            VALUES (
-            $1, NOW(), 'repair_return', $2, $3, NOW()
+           $1, NOW(), 'repair_return', $2, $3, NOW()
            )
            RETURNING stockin_id`,
           [stockinNo, `ของซ่อมเสร็จจาก Damaged ID: ${damaged_id}`, action_by]
@@ -127,6 +124,10 @@ const DamagedModel = {
         const { rows: [itemInfo] } = await client.query(`
           SELECT item_unit FROM items WHERE item_id = $1
         `, [item_id]);
+
+        if (!itemInfo) {
+          throw new Error(`Item with ID ${item_id} not found.`);
+        }
 
         await client.query(
           `INSERT INTO stock_in_details (stockin_id, item_id, lot_id, qty, unit, note)
@@ -143,8 +144,19 @@ const DamagedModel = {
           [action_qty, damaged_id]
         );
       }
-
+      
+      // บันทึกการดำเนินการลง damaged_actions
+      const { rows } = await client.query(
+        `INSERT INTO damaged_actions (
+          damaged_id, action_type, action_qty, action_by, note, action_date
+        )
+        VALUES ($1, $2, $3, $4, $5, NOW()::timestamp)
+        RETURNING *`,
+        [damaged_id, action_type, action_qty, action_by, note]
+      );
+      
       await client.query('COMMIT');
+      return rows[0];
     } catch (err) {
       await client.query('ROLLBACK');
       throw err;

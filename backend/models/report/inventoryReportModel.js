@@ -12,7 +12,7 @@ exports.getInventorySummary = async (filters) => {
   let params = [];
   let paramIndex = 1;
   let mainQueryConditions = [];
-  
+
   // 1. จัดการฟิลเตอร์ประเภท (Category)
   if (category && category !== "all") {
     params.push(category);
@@ -21,18 +21,20 @@ exports.getInventorySummary = async (filters) => {
 
   // สร้างเงื่อนไขสำหรับ Subquery "รับเข้า"
   let receivedQueryConditions = [`sin.item_id = i.item_id`];
-  
+
   // สร้างเงื่อนไขสำหรับ Subquery "เบิกออก"
   let issuedQueryConditions = [`sout.item_id = i.item_id`];
 
   // 2. จัดการฟิลเตอร์ช่วงเวลา (Date Range)
   if (start && end) {
-    params.push(start, end);
+    params.push(start);
     const dateStartParam = paramIndex++;
+    params.push(end);
     const dateEndParam = paramIndex++;
     receivedQueryConditions.push(`si.stockin_date BETWEEN $${dateStartParam} AND $${dateEndParam}`);
     issuedQueryConditions.push(`so.stockout_date BETWEEN $${dateStartParam} AND $${dateEndParam}`);
   }
+
 
   // 3. จัดการฟิลเตอร์แหล่งที่มา (Source) - ใช้เฉพาะกับ 'stock_ins'
   if (source && source !== "all") {
@@ -100,7 +102,7 @@ exports.getInventorySummary = async (filters) => {
       eq.equip_code
     ORDER BY i.item_name;
   `;
-  
+
   console.log("Final SQL Query:", query);
   console.log("Query Parameters:", params);
   console.log("-----------------------------------------");

@@ -16,7 +16,7 @@ exports.getAll = async (req, res) => {
 exports.addAction = async (req, res) => {
   try {
     const { lot_id, item_id, action_qty, note } = req.body;
-    const action_by = req.user?.user_id; // ✅ ดึง user id จาก token
+    const action_by = req.user?.id; // ✅ ดึง user id จาก token
 
     if (!item_id) {
       return res.status(400).json({ error: 'Item ID is required and cannot be null' });

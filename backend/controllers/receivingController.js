@@ -46,7 +46,7 @@ exports.handleFindItemByBarcode = async (req, res) => {
 exports.handleRecordReceiving = async (req, res) => {
   try {
     const { receiving_note, import_type, source_name, receivingItems } = req.body;
-    const userId = req.user?.user_id; // ✅ ใช้จาก token ที่ authMiddleware ใส่ให้
+    const userId = req.user?.id; // ✅ ใช้จาก token ที่ authMiddleware ใส่ให้
 
     // Validation หลัก
     if (!userId) {

@@ -71,56 +71,57 @@ class RequestStatusModel {
     }
 
 
-    /**
-     * ดึงรายการคำขอทั้งหมด หรือกรองตามสถานะที่ระบุ
-     */
-    static async getRequestsByStatuses(allowedStatuses) {
-        const client = await pool.connect();
-        try {
-            let query = `
-      SELECT
-          r.request_id,
-          r.request_code,
-          r.request_date,
-          r.request_status,
-          r.request_type,
-          r.updated_at,
-          r.request_due_date,
-          (u.firstname || ' ' || u.lastname) AS user_name,  -- ✅ ใช้ firstname + lastname
-          d.department_name_th AS department,              -- ✅ ดึงชื่อแผนกจากตาราง departments
-          COUNT(rd.request_detail_id) FILTER (WHERE rd.approval_status = 'approved')::int AS total_details,
-          COALESCE(SUM(CASE WHEN rd.processing_status = 'completed' AND rd.approval_status = 'approved' THEN 1 ELSE 0 END), 0)::int AS completed_details
-      FROM requests r
-      JOIN "Admin".users u ON r.user_id = u.user_id
-      LEFT JOIN "Admin".user_departments ud ON u.user_id = ud.user_id
-      LEFT JOIN "Admin".departments d ON ud.department_id = d.department_id
-      LEFT JOIN request_details rd ON r.request_id = rd.request_id
-    `;
+/**
+ * ดึงรายการคำขอทั้งหมด หรือกรองตามสถานะที่ระบุ
+ */
+static async getRequestsByStatuses(allowedStatuses) {
+    const client = await pool.connect();
+    try {
+        let query = `
+            SELECT
+                r.request_id,
+                r.request_code,
+                r.request_date,
+                r.request_status,
+                r.request_type,
+                r.updated_at,
+                r.request_due_date,
+                (u.firstname || ' ' || u.lastname) AS user_name,
+                -- ✅ แก้ไข: ดึงชื่อแผนกโดยตรงจาก r.department_id
+                d.department_name_th AS department,
+                COUNT(rd.request_detail_id) FILTER (WHERE rd.approval_status = 'approved')::int AS total_details,
+                COALESCE(SUM(CASE WHEN rd.processing_status = 'completed' AND rd.approval_status = 'approved' THEN 1 ELSE 0 END), 0)::int AS completed_details
+            FROM requests r
+            JOIN "Admin".users u ON r.user_id = u.user_id
+            -- ✅ แก้ไข: เปลี่ยนการ JOIN ไปที่ตาราง departments โดยตรง
+            LEFT JOIN "Admin".departments d ON r.department_id = d.department_id
+            LEFT JOIN request_details rd ON r.request_id = rd.request_id
+        `;
 
-            const values = [];
-            if (allowedStatuses && allowedStatuses.length > 0) {
-                query += ` WHERE r.request_status = ANY($1)`;
-                values.push(allowedStatuses);
-            }
-
-            query += `
-      GROUP BY r.request_id, r.request_type, u.firstname, u.lastname, d.department_name_th
-      ORDER BY r.request_date DESC
-    `;
-
-            const result = await client.query(query, values);
-
-            return result.rows.map(row => ({
-                ...row,
-                processing_summary: `${row.completed_details}/${row.total_details}`,
-            }));
-        } catch (error) {
-            console.error('Error in getRequestsByStatuses:', error);
-            throw error;
-        } finally {
-            client.release();
+        const values = [];
+        if (allowedStatuses && allowedStatuses.length > 0) {
+            query += ` WHERE r.request_status = ANY($1)`;
+            values.push(allowedStatuses);
         }
+
+        query += `
+            GROUP BY r.request_id, r.request_type, u.firstname, u.lastname, d.department_name_th
+            ORDER BY r.request_date DESC
+        `;
+
+        const result = await client.query(query, values);
+
+        return result.rows.map(row => ({
+            ...row,
+            processing_summary: `${row.completed_details}/${row.total_details}`,
+        }));
+    } catch (error) {
+        console.error('Error in getRequestsByStatuses:', error);
+        throw error;
+    } finally {
+        client.release();
     }
+}
 
 
     /**

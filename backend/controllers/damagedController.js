@@ -1,4 +1,3 @@
-// controllers/damagedController.js
 const DamagedModel = require('../models/damagedModel');
 const InventoryModel = require('../models/inventoryModel'); 
 const { getIO } = require('../socket'); 
@@ -19,7 +18,7 @@ exports.addDamagedAction = async (req, res) => {
   try {
     const { damaged_id } = req.params;
     const { action_type, action_qty, note } = req.body;
-    const action_by = req.user?.user_id; // ใช้ user จาก token เท่านั้น
+    const action_by = req.user?.id; // ใช้ user จาก token เท่านั้น
 
     if (!action_by) {
       return res.status(401).json({ error: 'Unauthorized: user not found in token' });
@@ -28,12 +27,14 @@ exports.addDamagedAction = async (req, res) => {
       return res.status(400).json({ error: 'Invalid action type' });
     }
 
+    // ✅ แก้ไข: ไม่ต้องเรียก DamagedModel.getDamagedItemById() แล้ว
+    // ให้ DamagedModel.addAction() เป็นผู้รับผิดชอบในการดึงข้อมูลเอง
     await DamagedModel.addAction({
       damaged_id,
       action_type,
       action_qty,
       action_by,
-      note
+      note,
     });
 
     // อัปเดตหน้า damaged
@@ -77,7 +78,8 @@ exports.reportDamaged = async (req, res) => {
       source_ref_id
     } = req.body;
 
-    const reported_by = req.user?.user_id; // ใช้ user จาก token เท่านั้น
+    // ✅ แก้ไข: ดึง user id จาก req.user?.id ให้ถูกต้อง
+    const reported_by = req.user?.id;
     if (!reported_by) {
       return res.status(401).json({ error: 'Unauthorized: user not found in token' });
     }

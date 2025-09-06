@@ -5,7 +5,7 @@ const RequestModel = {
   // -----------------------------
   // 1. สร้างคำขอหลัก
   // -----------------------------
-  async createRequest({ user_id, note, urgent, date, type }) {
+  async createRequest({ user_id, note, urgent, date, type, department_id }) {
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
@@ -15,10 +15,10 @@ const RequestModel = {
 
       const result = await client.query(
         `INSERT INTO requests
-          (request_code, user_id, request_status, request_note, is_urgent, request_due_date, request_date, request_type, is_deleted, updated_at)
-         VALUES ($1, $2, 'waiting_approval', $3, $4, $5, NOW(), $6, false, NOW())
+          (request_code, user_id, department_id, request_status, request_note, is_urgent, request_due_date, request_date, request_type, is_deleted, updated_at)
+         VALUES ($1, $2, $3, 'waiting_approval', $4, $5, $6, NOW(), $7, false, NOW())
          RETURNING request_id, request_code`,
-        [request_code, user_id, note, urgent, date, type]
+        [request_code, user_id, department_id, note, urgent, date, type]
       );
 
       const newRequestId = result.rows[0].request_id;
@@ -115,7 +115,7 @@ const RequestModel = {
         r.request_date,
         r.request_status,
         (u.firstname || ' ' || u.lastname) AS user_name,
-        d.department_name_th AS department,
+        d.department_name_th AS department,  -- ✅ ดึงชื่อแผนกโดยตรง
         STRING_AGG(DISTINCT
           CASE
             WHEN rd.request_detail_type = 'borrow' THEN 'ยืม'
@@ -127,8 +127,7 @@ const RequestModel = {
         COUNT(rd.request_detail_id) AS item_count
       FROM requests r
       JOIN "Admin".users u ON r.user_id = u.user_id
-      LEFT JOIN "Admin".user_departments ud ON u.user_id = ud.user_id
-      LEFT JOIN "Admin".departments d ON ud.department_id = d.department_id
+      LEFT JOIN "Admin".departments d ON r.department_id = d.department_id  -- ✅ join โดยตรง
       LEFT JOIN request_details rd ON r.request_id = rd.request_id
       WHERE r.request_status IN (${params})
       GROUP BY r.request_id, r.request_date, r.request_status, u.firstname, u.lastname, d.department_name_th

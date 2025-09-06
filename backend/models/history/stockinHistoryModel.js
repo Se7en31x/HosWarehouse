@@ -14,7 +14,8 @@ exports.getAllStockins = async () => {
         COALESCE(
             s.supplier_name,
             si.source_name,
-            (u.firstname || ' ' || u.lastname)
+            (u.firstname || ' ' || u.lastname),
+            '-'
         ) AS source_name,
 
         -- ผู้ทำรายการ
@@ -24,7 +25,7 @@ exports.getAllStockins = async () => {
         gr.import_note AS gr_note,
 
         -- รวมจำนวน
-        COUNT(sid.stockin_detail_id) AS total_items,
+        COUNT(DISTINCT sid.stockin_detail_id) AS total_items,
         COALESCE(SUM(sid.qty),0) AS total_qty,
 
         -- รายละเอียด
@@ -41,14 +42,14 @@ exports.getAllStockins = async () => {
             )
             ORDER BY sid.stockin_detail_id
           ) FILTER (WHERE sid.stockin_detail_id IS NOT NULL),
-          '[]'
+          '[]'::json
         ) AS details
 
     FROM stock_ins si
     JOIN stock_in_details sid ON si.stockin_id = sid.stockin_id
     JOIN items it ON sid.item_id = it.item_id
     LEFT JOIN item_lots l ON sid.lot_id = l.lot_id
-    LEFT JOIN "Admin".users u ON si.user_id = u.user_id   -- ✅ เปลี่ยน schema
+    LEFT JOIN "Admin".users u ON si.user_id = u.user_id
     LEFT JOIN goods_receipts gr ON si.gr_id = gr.gr_id
     LEFT JOIN purchase_orders po ON gr.po_id = po.po_id
     LEFT JOIN suppliers s ON po.supplier_id = s.supplier_id

@@ -1,4 +1,3 @@
-// controllers/itemController.js
 const { createItemWithDetail } = require('../models/addItemModel');
 const { getIO } = require('../socket');
 const fs = require('fs');
@@ -12,7 +11,8 @@ function deleteUploadedFile(filePath) {
 
 exports.addNewItem = async (req, res) => {
   const file = req.file ? req.file.filename : null;
-  const userId = req.user?.user_id; // ✅ จาก token
+  // ✅ แก้ไขให้ดึง user id จาก req.user.id ให้ถูกต้องตาม middleware
+  const userId = req.user?.id;
   const data = { 
     ...req.body, 
     item_img: file,

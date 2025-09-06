@@ -34,8 +34,7 @@ exports.getAll = async () => {
 
     FROM requests r
     JOIN "Admin".users u ON r.user_id = u.user_id
-    LEFT JOIN "Admin".user_departments ud ON u.user_id = ud.user_id
-    LEFT JOIN "Admin".departments d ON ud.department_id = d.department_id
+    LEFT JOIN "Admin".departments d ON r.department_id = d.department_id   -- ✅ ใช้ department_id จาก requests
     JOIN request_details rd ON r.request_id = rd.request_id
     JOIN items i ON rd.item_id = i.item_id
     LEFT JOIN "Admin".users approver ON r.approved_by = approver.user_id

@@ -13,11 +13,12 @@ const StockOutModel = {
           so.note AS header_note,
           u.firstname || ' ' || u.lastname AS user_name,
           so.created_at,
-          COUNT(sod.stockout_detail_id) AS total_items
+          COUNT(DISTINCT sod.stockout_detail_id) AS total_items,
+          COALESCE(SUM(sod.qty),0) AS total_qty   -- ✅ รวมจำนวนด้วย
         FROM stock_outs so
         LEFT JOIN "Admin".users u ON so.user_id = u.user_id
         LEFT JOIN stock_out_details sod ON so.stockout_id = sod.stockout_id
-        GROUP BY so.stockout_id, u.user_id
+        GROUP BY so.stockout_id, u.firstname, u.lastname
         ORDER BY so.stockout_date DESC, so.stockout_id DESC;
       `);
       return result.rows;
@@ -39,12 +40,13 @@ const StockOutModel = {
           so.note AS header_note,
           u.firstname || ' ' || u.lastname AS user_name,
           so.created_at,
-          COUNT(sod.stockout_detail_id) AS total_items
+          COUNT(DISTINCT sod.stockout_detail_id) AS total_items,
+          COALESCE(SUM(sod.qty),0) AS total_qty
         FROM stock_outs so
         LEFT JOIN "Admin".users u ON so.user_id = u.user_id
         LEFT JOIN stock_out_details sod ON so.stockout_id = sod.stockout_id
         WHERE so.stockout_date BETWEEN $1 AND $2
-        GROUP BY so.stockout_id, u.user_id
+        GROUP BY so.stockout_id, u.firstname, u.lastname
         ORDER BY so.stockout_date DESC, so.stockout_id DESC;
       `, [startDate, endDate]);
       return result.rows;

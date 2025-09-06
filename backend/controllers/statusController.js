@@ -3,7 +3,7 @@ const statusModel = require('../models/statusModel');
 
 exports.getStatus = async (req, res) => {
   try {
-    const userId = req.user?.user_id || 1; // mock user
+    const userId = req.user?.id; // mock user
     const { status } = req.query;
 
     const requests = await statusModel.getRequestsByStatus({ userId, status });

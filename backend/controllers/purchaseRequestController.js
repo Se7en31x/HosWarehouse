@@ -48,7 +48,7 @@ exports.getPurchaseRequestById = async (req, res) => {
 
 exports.createPurchaseRequest = async (req, res) => {
   try {
-    const requester_id = req.user?.user_id; // ✅ เอามาจาก token
+    const requester_id = req.user?.id; // ✅ เอามาจาก token
     const { items_to_purchase } = req.body;
 
     if (!requester_id || !items_to_purchase?.length) {
