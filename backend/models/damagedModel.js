@@ -53,7 +53,7 @@ const DamagedModel = {
       LEFT JOIN "Admin".users iu ON br.inspected_by = iu.user_id
       LEFT JOIN damaged_actions a ON di.damaged_id = a.damaged_id
       LEFT JOIN "Admin".users au ON a.action_by = au.user_id
-      WHERE di.damage_type = 'damaged'
+      WHERE di.damage_type IN ('damaged')
       GROUP BY di.damaged_id, i.item_name, i.item_unit, u.firstname, u.lastname,
                br.return_date, br.condition, br.return_status, iu.firstname, iu.lastname
       ORDER BY di.damaged_date DESC

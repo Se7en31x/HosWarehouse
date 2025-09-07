@@ -1,4 +1,3 @@
-// models/goodsReceiptModel.js
 const { pool } = require('../config/db');
 const { generateStockinCode } = require("../utils/stockinCounter");
 
@@ -28,8 +27,8 @@ async function generateLotNo(client, item_id) {
   // หา running ของวันนั้นสำหรับ item_id
   const { rows: cntRows } = await client.query(
     `SELECT COUNT(*)::int AS cnt 
-     FROM item_lots 
-     WHERE lot_no LIKE $1`,
+      FROM item_lots 
+      WHERE lot_no LIKE $1`,
     [`${prefix}-${item_id}-${today}%`]
   );
 
@@ -42,9 +41,10 @@ async function generateLotNo(client, item_id) {
 async function getAllGoodsReceipts() {
   const sql = `
     SELECT gr.gr_id, gr.gr_no, gr.gr_date, gr.status,
-           po.po_no, po.supplier_name, po.supplier_id
+           po.po_no, s.supplier_name, po.supplier_id
     FROM goods_receipts gr
     LEFT JOIN purchase_orders po ON gr.po_id = po.po_id
+    LEFT JOIN suppliers s ON po.supplier_id = s.supplier_id
     ORDER BY gr.created_at DESC
   `;
   const { rows } = await pool.query(sql);
@@ -54,10 +54,11 @@ async function getAllGoodsReceipts() {
 // ===== Get GR Detail =====
 async function getGoodsReceiptById(grId) {
   const sql = `
-    SELECT gr.*, po.po_no, po.supplier_name, po.supplier_address,
-           po.supplier_phone, po.supplier_email, po.supplier_tax_id
+    SELECT gr.*, po.po_no,
+           s.supplier_name, s.supplier_address, s.supplier_phone, s.supplier_email, s.supplier_tax_id
     FROM goods_receipts gr
     LEFT JOIN purchase_orders po ON gr.po_id = po.po_id
+    LEFT JOIN suppliers s ON po.supplier_id = s.supplier_id
     WHERE gr.gr_id = $1
   `;
   const { rows } = await pool.query(sql, [grId]);
@@ -171,8 +172,8 @@ async function createGoodsReceipt(client, grData) {
         // insert goods_receipt_items
         await client.query(
           `INSERT INTO goods_receipt_items 
-             (gr_id, po_item_id, item_id, qty_ordered, qty_received, lot_id, note, status)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+               (gr_id, po_item_id, item_id, qty_ordered, qty_received, lot_id, note, status)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
           [
             gr_id,
             item.po_item_id,

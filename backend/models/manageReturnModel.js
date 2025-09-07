@@ -25,8 +25,7 @@ const ManageReturnModel = {
     const baseQuery = `
       FROM requests r
       JOIN "Admin".users u ON u.user_id = r.user_id
-      LEFT JOIN "Admin".user_departments ud ON u.user_id = ud.user_id
-      LEFT JOIN "Admin".departments d ON ud.department_id = d.department_id
+      LEFT JOIN "Admin".departments d ON d.department_id = r.department_id
       JOIN request_details rd ON rd.request_id = r.request_id
       LEFT JOIN (
         SELECT request_detail_id, COALESCE(SUM(return_qty), 0)::int AS returned_total
@@ -143,8 +142,7 @@ const ManageReturnModel = {
           d.department_name_th AS department_name
         FROM requests r
         LEFT JOIN "Admin".users u ON u.user_id = r.user_id
-        LEFT JOIN "Admin".user_departments ud ON u.user_id = ud.user_id
-        LEFT JOIN "Admin".departments d ON ud.department_id = d.department_id
+        LEFT JOIN "Admin".departments d ON d.department_id = r.department_id
         WHERE r.request_id = $1
         LIMIT 1;
       `;
@@ -227,152 +225,152 @@ const ManageReturnModel = {
   /**
    * บันทึกรับคืน
    */
-  async receiveReturn(returnData, userId) {
-    const client = await pool.connect();
-    try {
-      await client.query("BEGIN");
+  async receiveReturn(returnData) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
 
-      const requestDetailId = parseInt(returnData.request_detail_id, 10);
-      const qty = parseInt(returnData.return_qty ?? returnData.qty_return, 10);
-      const inspectedBy = parseInt(userId, 10);  // ✅ ใช้ token เท่านั้น
-      const condition = (returnData.condition || 'normal').toLowerCase();
+    const requestDetailId = parseInt(returnData.request_detail_id, 10);
+    const qty = parseInt(returnData.return_qty ?? returnData.qty_return, 10);
+    const inspectedBy = Number(returnData.inspected_by);   // ✅ รับจาก controller
+    const condition = (returnData.condition || 'normal').toLowerCase();
 
-      if (!Number.isInteger(requestDetailId) || requestDetailId <= 0)
-        throw new Error("Invalid request_detail_id");
-      if (!Number.isInteger(qty) || qty <= 0)
-        throw new Error("Invalid qty_return: ต้องเป็นจำนวนเต็มบวก");
-      if (!Number.isInteger(inspectedBy) || inspectedBy <= 0)
-        throw new Error("Invalid userId");
+    if (!Number.isInteger(requestDetailId) || requestDetailId <= 0)
+      throw new Error("Invalid request_detail_id");
+    if (!Number.isInteger(qty) || qty <= 0)
+      throw new Error("Invalid qty_return: ต้องเป็นจำนวนเต็มบวก");
+    if (!Number.isInteger(inspectedBy) || inspectedBy <= 0)
+      throw new Error("Invalid userId");
 
-      const { rows: [reqInfo] } = await client.query(
-        `SELECT r.request_code
-         FROM request_details rd
-         JOIN requests r ON r.request_id = rd.request_id
-         WHERE rd.request_detail_id = $1`,
-        [requestDetailId]
-      );
-      const requestCode = reqInfo?.request_code || 'N/A';
+    const { rows: [reqInfo] } = await client.query(
+      `SELECT r.request_code
+       FROM request_details rd
+       JOIN requests r ON r.request_id = rd.request_id
+       WHERE rd.request_detail_id = $1`,
+      [requestDetailId]
+    );
+    const requestCode = reqInfo?.request_code || 'N/A';
 
-      const returnCode = await generateReturnCode(client);
+    const returnCode = await generateReturnCode(client);
 
-      const { rows: [header] } = await client.query(
-        `INSERT INTO borrow_returns
-         (request_detail_id, return_date, return_qty, return_status, inspected_by, return_note, condition, return_code)
-         VALUES ($1, NOW(), $2, 'completed', $3, $4, $5, $6)
-         RETURNING return_id, return_code`,
-        [requestDetailId, qty, inspectedBy, returnData.note || null, condition, returnCode]
-      );
-      const returnId = header.return_id;
+    const { rows: [header] } = await client.query(
+      `INSERT INTO borrow_returns
+       (request_detail_id, return_date, return_qty, return_status, inspected_by, return_note, condition, return_code)
+       VALUES ($1, NOW(), $2, 'completed', $3, $4, $5, $6)
+       RETURNING return_id, return_code`,
+      [requestDetailId, qty, inspectedBy, returnData.note || null, condition, returnCode]
+    );
+    const returnId = header.return_id;
 
-      let qtyLeft = qty;
-      const { rows: borrowLots } = await client.query(
-        `SELECT bdl.borrow_detail_lot_id, bdl.lot_id, bdl.qty,
-                 COALESCE(SUM(brl.qty),0) AS returned_qty,
-                 (bdl.qty - COALESCE(SUM(brl.qty),0)) AS remaining_to_return
-         FROM borrow_detail_lots bdl
-         LEFT JOIN borrow_return_lots brl
-           ON brl.borrow_detail_lot_id = bdl.borrow_detail_lot_id
-         WHERE bdl.request_detail_id = $1
-         GROUP BY bdl.borrow_detail_lot_id, bdl.lot_id, bdl.qty
-         HAVING (bdl.qty - COALESCE(SUM(brl.qty),0)) > 0
-         ORDER BY bdl.borrow_detail_lot_id`,
-        [requestDetailId]
-      );
+    let qtyLeft = qty;
+    const { rows: borrowLots } = await client.query(
+      `SELECT bdl.borrow_detail_lot_id, bdl.lot_id, bdl.qty,
+               COALESCE(SUM(brl.qty),0) AS returned_qty,
+               (bdl.qty - COALESCE(SUM(brl.qty),0)) AS remaining_to_return
+       FROM borrow_detail_lots bdl
+       LEFT JOIN borrow_return_lots brl
+         ON brl.borrow_detail_lot_id = bdl.borrow_detail_lot_id
+       WHERE bdl.request_detail_id = $1
+       GROUP BY bdl.borrow_detail_lot_id, bdl.lot_id, bdl.qty
+       HAVING (bdl.qty - COALESCE(SUM(brl.qty),0)) > 0
+       ORDER BY bdl.borrow_detail_lot_id`,
+      [requestDetailId]
+    );
 
-      if (borrowLots.length === 0) {
-        throw new Error("ไม่มี lot ที่เหลือให้คืน");
-      }
-
-      let stockinId = null, stockinNo = null;
-      if (condition === 'normal') {
-        stockinNo = await generateStockinCode(client, 'return');
-        const { rows: [stockinHeader] } = await client.query(
-          `INSERT INTO stock_ins (stockin_no, stockin_date, stockin_type, note, user_id, created_at)
-           VALUES ($1, NOW(), 'return', $2, $3, NOW())
-           RETURNING stockin_id, stockin_no`,
-          [stockinNo, `คืนจากการยืม (Request: ${requestCode}, Return: ${returnCode})`, inspectedBy]
-        );
-        stockinId = stockinHeader.stockin_id;
-      }
-
-      for (const lot of borrowLots) {
-        if (qtyLeft <= 0) break;
-        const useQty = Math.min(lot.remaining_to_return, qtyLeft);
-        qtyLeft -= useQty;
-
-        await client.query(
-          `INSERT INTO borrow_return_lots
-           (return_id, borrow_detail_lot_id, lot_id, qty)
-           VALUES ($1,$2,$3,$4)`,
-          [returnId, lot.borrow_detail_lot_id, lot.lot_id, useQty]
-        );
-
-        const { rows: [lotInfo] } = await client.query(
-          `SELECT il.item_id, i.item_unit
-           FROM item_lots il
-           JOIN items i ON il.item_id = i.item_id
-           WHERE il.lot_id = $1`,
-          [lot.lot_id]
-        );
-
-        if (condition === 'normal') {
-          await client.query(
-            `UPDATE item_lots
-             SET qty_remaining = qty_remaining + $1, updated_at = NOW()
-             WHERE lot_id = $2`,
-            [useQty, lot.lot_id]
-          );
-
-          await client.query(
-            `INSERT INTO stock_in_details (stockin_id, item_id, lot_id, qty, unit, note)
-             VALUES ($1, $2, $3, $4, $5, $6)`,
-            [stockinId, lotInfo.item_id, lot.lot_id, useQty, lotInfo.item_unit,
-             `คืนจาก ${requestCode}`]
-          );
-        } else {
-          await client.query(
-            `INSERT INTO damaged_items
-             (source_type, source_ref_id, damaged_qty, damaged_date, damaged_status, damaged_note, reported_by, lot_id, item_id, damage_type)
-             VALUES ('borrow_return',$1,$2,NOW(),'waiting',$3,$4,$5,$6,$7)`,
-            [returnId, useQty, `คืนผิดปกติจาก REQ: ${requestCode}, RTN: ${returnCode}`, inspectedBy, lot.lot_id, lotInfo.item_id, condition]
-          );
-        }
-      }
-
-      if (qtyLeft > 0) {
-        throw new Error("Invalid return_qty: มากกว่าจำนวนที่เหลือให้คืน");
-      }
-
-      const { rows: [check] } = await client.query(
-        `SELECT
-           (SELECT COALESCE(SUM(qty),0) FROM borrow_detail_lots WHERE request_detail_id=$1) AS borrowed_qty,
-           (SELECT COALESCE(SUM(brl.qty),0)
-              FROM borrow_return_lots brl
-              JOIN borrow_returns br ON br.return_id = brl.return_id
-             WHERE br.request_detail_id=$1) AS returned_qty`,
-        [requestDetailId]
-      );
-
-      if (check.returned_qty >= check.borrowed_qty) {
-        await client.query(
-          `UPDATE request_details
-           SET borrow_status = 'returned', updated_at = NOW()
-           WHERE request_detail_id = $1`,
-          [requestDetailId]
-        );
-      }
-
-      await client.query("COMMIT");
-      return { success: true, returnId, returnCode, status: condition };
-
-    } catch (err) {
-      await client.query("ROLLBACK");
-      console.error("❌ receiveReturn error:", err);
-      throw err;
-    } finally {
-      client.release();
+    if (borrowLots.length === 0) {
+      throw new Error("ไม่มี lot ที่เหลือให้คืน");
     }
+
+    let stockinId = null, stockinNo = null;
+    if (condition === 'normal') {
+      stockinNo = await generateStockinCode(client, 'return');
+      const { rows: [stockinHeader] } = await client.query(
+        `INSERT INTO stock_ins (stockin_no, stockin_date, stockin_type, note, user_id, created_at)
+         VALUES ($1, NOW(), 'return', $2, $3, NOW())
+         RETURNING stockin_id, stockin_no`,
+        [stockinNo, `คืนจากการยืม (Request: ${requestCode}, Return: ${returnCode})`, inspectedBy]
+      );
+      stockinId = stockinHeader.stockin_id;
+    }
+
+    for (const lot of borrowLots) {
+      if (qtyLeft <= 0) break;
+      const useQty = Math.min(lot.remaining_to_return, qtyLeft);
+      qtyLeft -= useQty;
+
+      await client.query(
+        `INSERT INTO borrow_return_lots
+         (return_id, borrow_detail_lot_id, lot_id, qty)
+         VALUES ($1,$2,$3,$4)`,
+        [returnId, lot.borrow_detail_lot_id, lot.lot_id, useQty]
+      );
+
+      const { rows: [lotInfo] } = await client.query(
+        `SELECT il.item_id, i.item_unit
+         FROM item_lots il
+         JOIN items i ON il.item_id = i.item_id
+         WHERE il.lot_id = $1`,
+        [lot.lot_id]
+      );
+
+      if (condition === 'normal') {
+        await client.query(
+          `UPDATE item_lots
+           SET qty_remaining = qty_remaining + $1, updated_at = NOW()
+           WHERE lot_id = $2`,
+          [useQty, lot.lot_id]
+        );
+
+        await client.query(
+          `INSERT INTO stock_in_details (stockin_id, item_id, lot_id, qty, unit, note)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [stockinId, lotInfo.item_id, lot.lot_id, useQty, lotInfo.item_unit,
+           `คืนจาก ${requestCode}`]
+        );
+      } else {
+        await client.query(
+          `INSERT INTO damaged_items
+           (source_type, source_ref_id, damaged_qty, damaged_date, damaged_status, damaged_note, reported_by, lot_id, item_id, damage_type)
+           VALUES ('borrow_return',$1,$2,NOW(),'waiting',$3,$4,$5,$6,$7)`,
+          [returnId, useQty, `คืนผิดปกติจาก REQ: ${requestCode}, RTN: ${returnCode}`, inspectedBy, lot.lot_id, lotInfo.item_id, condition]
+        );
+      }
+    }
+
+    if (qtyLeft > 0) {
+      throw new Error("Invalid return_qty: มากกว่าจำนวนที่เหลือให้คืน");
+    }
+
+    const { rows: [check] } = await client.query(
+      `SELECT
+         (SELECT COALESCE(SUM(qty),0) FROM borrow_detail_lots WHERE request_detail_id=$1) AS borrowed_qty,
+         (SELECT COALESCE(SUM(brl.qty),0)
+            FROM borrow_return_lots brl
+            JOIN borrow_returns br ON br.return_id = brl.return_id
+           WHERE br.request_detail_id=$1) AS returned_qty`,
+      [requestDetailId]
+    );
+
+    if (check.returned_qty >= check.borrowed_qty) {
+      await client.query(
+        `UPDATE request_details
+         SET borrow_status = 'returned', updated_at = NOW()
+         WHERE request_detail_id = $1`,
+        [requestDetailId]
+      );
+    }
+
+    await client.query("COMMIT");
+    return { success: true, returnId, returnCode, status: condition };
+
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("❌ receiveReturn error:", err);
+    throw err;
+  } finally {
+    client.release();
   }
+}
 };
 
 module.exports = ManageReturnModel;

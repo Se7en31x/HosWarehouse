@@ -112,10 +112,8 @@ async function deductStock(requestId, updates, userId) {
     );
     if (reqRows.length === 0) throw new Error(`Request ${requestId} not found`);
     const requestType = reqRows[0].request_type;
-    let stockoutType = "withdraw";
-    if (requestType === "borrow") stockoutType = "borrow";
+    let stockoutType = requestType === "borrow" ? "borrow" : "withdraw";
 
-    // ✅ โน้ตใน Header
     const { rows: stockoutRows } = await client.query(
       `INSERT INTO stock_outs (
           stockout_no, stockout_date, stockout_type, note, user_id, created_at
@@ -159,10 +157,10 @@ async function deductStock(requestId, updates, userId) {
 
         const { rows: lots } = await client.query(
           `SELECT lot_id, qty_remaining, exp_date
-            FROM item_lots
-            WHERE item_id = $1 AND qty_remaining > 0
-            ORDER BY exp_date ASC
-            FOR UPDATE`,
+           FROM item_lots
+           WHERE item_id = $1 AND qty_remaining > 0
+           ORDER BY exp_date ASC
+           FOR UPDATE`,
           [item_id]
         );
 
@@ -172,15 +170,15 @@ async function deductStock(requestId, updates, userId) {
           const deductQty = Math.min(remainingToDeduct, lot.qty_remaining);
           const newLotBalance = lot.qty_remaining - deductQty;
 
-          // 1. UPDATE ยอดคงเหลือใน lot
+          // 1. UPDATE lot balance
           await client.query(
             `UPDATE item_lots
-              SET qty_remaining = $1, updated_at = NOW()::timestamp
-              WHERE lot_id = $2`,
+             SET qty_remaining = $1, updated_at = NOW()::timestamp
+             WHERE lot_id = $2`,
             [newLotBalance, lot.lot_id]
           );
 
-          // 2. INSERT รายละเอียดการเบิกจ่ายลงใน stock_out_details
+          // 2. INSERT stock_out_details
           await client.query(
             `INSERT INTO stock_out_details (
                 stockout_id, item_id, lot_id, qty, unit, note
@@ -196,11 +194,20 @@ async function deductStock(requestId, updates, userId) {
             ]
           );
 
-          // 3. INSERT ข้อมูลการยืม หากเป็น request_type = 'borrow'
+          // ✅ 3. UPDATE actual_deducted_qty
+          await client.query(
+            `UPDATE request_details
+             SET actual_deducted_qty = COALESCE(actual_deducted_qty, 0) + $1,
+                 updated_at = NOW()::timestamp
+             WHERE request_detail_id = $2`,
+            [deductQty, request_detail_id]
+          );
+
+          // 4. INSERT borrow_detail_lots (ถ้าเป็นยืม)
           if (requestType === "borrow") {
             await client.query(
               `INSERT INTO borrow_detail_lots (request_detail_id, lot_id, qty)
-                VALUES ($1, $2, $3)`,
+               VALUES ($1, $2, $3)`,
               [request_detail_id, lot.lot_id, deductQty]
             );
           }
@@ -217,12 +224,12 @@ async function deductStock(requestId, updates, userId) {
         }
       }
 
-      // อัปเดตสถานะใน request_details + เก็บประวัติ
+      // INSERT history
       await client.query(
         `INSERT INTO request_status_history
           (request_id, request_detail_id, changed_by, changed_at,
            history_type, old_value_type, old_value, new_value, note)
-          VALUES ($1, $2, $3, NOW(),
+         VALUES ($1, $2, $3, NOW(),
            'processing_status_change', 'processing_status', $4, $5,
            $6)`,
         [
@@ -235,57 +242,31 @@ async function deductStock(requestId, updates, userId) {
         ]
       );
 
-      const resUpd = await client.query(
+      // UPDATE processing_status
+      await client.query(
         `UPDATE request_details
-          SET processing_status = $1, updated_at = NOW()::timestamp
-          WHERE request_detail_id = $2
-            AND approval_status = 'approved'
-            AND processing_status IS NOT DISTINCT FROM $3`,
+         SET processing_status = $1, updated_at = NOW()::timestamp
+         WHERE request_detail_id = $2
+           AND approval_status = 'approved'
+           AND processing_status IS NOT DISTINCT FROM $3`,
         [newStatus, request_detail_id, current_processing_status]
       );
-      if (resUpd.rowCount === 0) {
-        throw new Error(
-          `Failed to update processing status for detail ${request_detail_id}.`
-        );
-      }
 
+      // ถ้ามีเหตุผลบันทึก
       if (deduction_reason && deduction_reason.trim() !== "") {
         const reasonNote = `\n[${new Date().toLocaleString(
           "th-TH"
         )}] เหตุผลเบิกไม่ครบ: ${deduction_reason}`;
         await client.query(
           `UPDATE request_details
-            SET request_detail_note = COALESCE(request_detail_note, '') || $1
-            WHERE request_detail_id = $2`,
+           SET request_detail_note = COALESCE(request_detail_note, '') || $1
+           WHERE request_detail_id = $2`,
           [reasonNote, request_detail_id]
         );
       }
     }
 
     await client.query("COMMIT");
-
-    // Broadcast การอัปเดตไปยัง Client
-    const io = getIO();
-    if (io) {
-      const updatedItemsForStaff = await inventoryModel.getAllItemsForWithdrawal();
-      io.emit("itemsDataForWithdrawal", updatedItemsForStaff);
-
-      const updatedItemsDetailed = await inventoryModel.getAllItemsDetailed();
-      io.emit("itemsData", updatedItemsDetailed);
-
-      for (const update of updates) {
-        const updatedItem = await inventoryModel.getItemById(update.item_id);
-        if (updatedItem) {
-          io.emit("itemUpdated", {
-            item_id: updatedItem.item_id,
-            item_name: updatedItem.item_name,
-            item_unit: updatedItem.item_unit,
-            item_img: updatedItem.item_img,
-            current_stock: updatedItem.total_on_hand_qty,
-          });
-        }
-      }
-    }
 
     return {
       success: true,
@@ -294,9 +275,7 @@ async function deductStock(requestId, updates, userId) {
       stockout_type: stockoutType,
     };
   } catch (error) {
-    try {
-      await client.query("ROLLBACK");
-    } catch (e) {}
+    await client.query("ROLLBACK");
     console.error("Error during stock deduction transaction:", error);
     throw error;
   } finally {

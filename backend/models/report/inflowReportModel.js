@@ -36,7 +36,7 @@ exports.getInflowReport = async (filters) => {
       i.item_name,
       i.item_category AS category,
       il.lot_no,
-      COALESCE(po.supplier_name, s.supplier_name) AS supplier_name,
+      s.supplier_name AS supplier_name,   -- ✅ แก้ตรงนี้
       u.firstname || ' ' || u.lastname AS user_name
     FROM stock_in_details sid
     JOIN stock_ins si ON si.stockin_id = sid.stockin_id

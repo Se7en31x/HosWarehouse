@@ -31,6 +31,7 @@ async function createGoodsReceipt(req, res) {
   const client = await pool.connect();
   try {
     const grData = req.body;
+    const userId = req.user?.id || null; // ✅ ดึงจาก token
 
     // ✅ validate ก่อนเข้า model
     if (!grData.po_id) {
@@ -41,15 +42,16 @@ async function createGoodsReceipt(req, res) {
     }
 
     await client.query("BEGIN");
-    const newGr = await grModel.createGoodsReceipt(client, grData);
+    const newGr = await grModel.createGoodsReceipt(client, {
+      ...grData,
+      created_by: userId, // ✅ บันทึกผู้สร้าง
+    });
     await client.query("COMMIT");
 
     res.status(201).json(newGr);
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Error createGoodsReceipt:", err);
-
-    // ✅ ส่ง error dev-friendly ใน dev mode
     res.status(500).json({
       message: "ไม่สามารถสร้าง GR ได้",
       error: process.env.NODE_ENV === "development" ? err.message : undefined,
@@ -57,15 +59,16 @@ async function createGoodsReceipt(req, res) {
   } finally {
     client.release();
   }
-
 }
+
+// ===== POST: Receive More =====
 async function receiveMore(req, res) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const { id } = req.params; // GR id
     const { items } = req.body;
-    const userId = req.body.user_id || 1;
+    const userId = req.user?.id || null; // ✅ จาก token
 
     const result = await grModel.receiveMoreGoods(client, id, items, userId);
     await client.query("COMMIT");
@@ -78,6 +81,7 @@ async function receiveMore(req, res) {
     client.release();
   }
 }
+
 module.exports = {
   receiveMore,
   getAllGoodsReceipts,

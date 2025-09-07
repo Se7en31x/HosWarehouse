@@ -17,18 +17,20 @@ async function getAllPOs(status) {
         po.notes,
         po.created_at,
         po.updated_at,
-        po.supplier_name,
-        po.supplier_address,
-        po.supplier_phone,
-        po.supplier_email,
-        po.supplier_tax_id,
+        s.supplier_id,
+        s.supplier_name,
+        s.supplier_contact_name,
+        s.supplier_phone,
+        s.supplier_email,
+        s.supplier_address,
+        s.supplier_tax_id,
         COALESCE(
           json_agg(
             DISTINCT jsonb_build_object(
               'po_item_id', poi.po_item_id,
               'item_id', poi.item_id,
               'item_name', i.item_name,
-              'item_category', i.item_category,   -- ✅ เพิ่ม category
+              'item_category', i.item_category,
               'quantity', poi.quantity,
               'unit', poi.unit,
               'price', poi.price,
@@ -38,19 +40,15 @@ async function getAllPOs(status) {
           ) FILTER (WHERE poi.po_item_id IS NOT NULL), '[]'
         ) AS items
       FROM purchase_orders po
+      LEFT JOIN suppliers s ON po.supplier_id = s.supplier_id
       LEFT JOIN purchase_order_items poi ON po.po_id = poi.po_id
       LEFT JOIN items i ON poi.item_id = i.item_id
-      GROUP BY po.po_id
+      GROUP BY po.po_id, s.supplier_id
       ORDER BY po.created_at DESC
     `;
 
     if (status) {
-      query = `
-        SELECT * FROM (
-          ${query}
-        ) sub
-        WHERE sub.po_status = $1
-      `;
+      query = `SELECT * FROM (${query}) sub WHERE sub.po_status = $1`;
       const { rows } = await pool.query(query, [status]);
       return rows;
     } else {
@@ -80,18 +78,20 @@ async function getPOById(id) {
         po.notes,
         po.created_at,
         po.updated_at,
-        po.supplier_name,
-        po.supplier_address,
-        po.supplier_phone,
-        po.supplier_email,
-        po.supplier_tax_id,
+        s.supplier_id,
+        s.supplier_name,
+        s.supplier_contact_name,
+        s.supplier_phone,
+        s.supplier_email,
+        s.supplier_address,
+        s.supplier_tax_id,
         COALESCE(
           json_agg(
             DISTINCT jsonb_build_object(
               'po_item_id', poi.po_item_id,
               'item_id', poi.item_id,
               'item_name', i.item_name,
-              'item_category', i.item_category,   -- ✅ เพิ่ม category
+              'item_category', i.item_category,
               'quantity', poi.quantity,
               'unit', poi.unit,
               'price', poi.price,
@@ -113,11 +113,12 @@ async function getPOById(id) {
           ) FILTER (WHERE pf.file_id IS NOT NULL), '[]'
         ) AS attachments
       FROM purchase_orders po
+      LEFT JOIN suppliers s ON po.supplier_id = s.supplier_id
       LEFT JOIN purchase_order_items poi ON po.po_id = poi.po_id
       LEFT JOIN items i ON poi.item_id = i.item_id
       LEFT JOIN po_files pf ON po.po_id = pf.po_id
       WHERE po.po_id = $1
-      GROUP BY po.po_id
+      GROUP BY po.po_id, s.supplier_id
       `,
       [id]
     );
@@ -231,7 +232,7 @@ async function updatePO(id, { items, attachments, notes, status }) {
 }
 
 // ✅ สร้าง PO ใหม่
-async function createPO({ supplier_name, supplier_address, supplier_phone, supplier_email, supplier_tax_id, items, notes, created_by }) {
+async function createPO({ supplier_id, items, notes, created_by }) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -244,10 +245,10 @@ async function createPO({ supplier_name, supplier_address, supplier_phone, suppl
 
     const { rows } = await client.query(
       `INSERT INTO purchase_orders 
-        (po_no, po_date, supplier_name, supplier_address, supplier_phone, supplier_email, supplier_tax_id, status, notes, subtotal, vat_amount, grand_total, is_vat_included, created_by, created_at)
-        VALUES ($1, NOW(), $2,$3,$4,$5,$6,'รอดำเนินการ',$7,$8,$9,$10,false,$11,NOW())
+        (po_no, po_date, supplier_id, status, notes, subtotal, vat_amount, grand_total, is_vat_included, created_by, created_at)
+        VALUES ($1, NOW(), $2,'รอดำเนินการ',$3,$4,$5,$6,false,$7,NOW())
         RETURNING po_id`,
-      [po_no, supplier_name, supplier_address, supplier_phone, supplier_email, supplier_tax_id, notes, subtotal, vat_amount, grand_total, created_by]
+      [po_no, supplier_id, notes, subtotal, vat_amount, grand_total, created_by]
     );
 
     const po_id = rows[0].po_id;
@@ -332,19 +333,18 @@ async function updatePO(id, { items, attachments, notes, status }) {
   }
 }
 
-
+// ✅ สร้าง PO จาก RFQ
 // ✅ สร้าง PO จาก RFQ
 async function createPOFromRFQ({
   rfq_id,
-  supplier_name,
-  supplier_address,
-  supplier_phone,
-  supplier_email,
-  supplier_tax_id,
+  supplier_id,
   created_by,
   notes,
   items,
-  attachments
+  subtotal,
+  vat_amount,
+  grand_total,
+  is_vat_included
 }) {
   const client = await pool.connect();
   try {
@@ -352,21 +352,18 @@ async function createPOFromRFQ({
 
     const po_no = await generateDocNo(client, "purchase_order");
 
-    const subtotal = items?.reduce((s, it) => s + (it.qty * it.price), 0) || 0;
-    const vat_amount = subtotal * 0.07;
-    const grand_total = subtotal + vat_amount;
-
     const { rows } = await client.query(
       `INSERT INTO purchase_orders 
-        (po_no, po_date, rfq_id, supplier_name, supplier_address, supplier_phone, supplier_email, supplier_tax_id, status, notes, subtotal, vat_amount, grand_total, is_vat_included, created_by, created_at) 
-        VALUES ($1, NOW(), $2,$3,$4,$5,$6,$7,'รอดำเนินการ',$8,$9,$10,$11,false,$12,NOW())
+        (po_no, po_date, rfq_id, supplier_id, status, notes, subtotal, vat_amount, grand_total, is_vat_included, created_by, created_at) 
+        VALUES ($1, NOW(), $2, $3, 'รอดำเนินการ', $4, $5, $6, $7, $8, $9, NOW())
         RETURNING po_id`,
-      [po_no, rfq_id, supplier_name, supplier_address, supplier_phone, supplier_email, supplier_tax_id, notes || "", subtotal, vat_amount, grand_total, created_by]
+      [po_no, rfq_id, supplier_id, notes || "", subtotal, vat_amount, grand_total, is_vat_included, created_by]
     );
 
     const po_id = rows[0].po_id;
 
     for (const item of items || []) {
+      // ✅ เพิ่มโค้ดส่วนนี้กลับเข้ามาเพื่อตรวจสอบและค้นหา item_id
       let itemId = item.item_id;
 
       if (!itemId) {
@@ -377,41 +374,22 @@ async function createPOFromRFQ({
            WHERE ri.rfq_item_id = $1`,
           [item.rfq_item_id]
         );
-        if (itemRows[0]) itemId = itemRows[0].item_id;
+        if (itemRows[0]) {
+          itemId = itemRows[0].item_id;
+        }
       }
 
-      if (!itemId) throw new Error(`ไม่พบ item_id สำหรับ rfq_item_id ${item.rfq_item_id}`);
-
+      if (!itemId) {
+        throw new Error(`ไม่พบ item_id สำหรับ rfq_item_id ${item.rfq_item_id}`);
+      }
+      
       await client.query(
         `INSERT INTO purchase_order_items (po_id, item_id, quantity, unit, price, note)
-          VALUES ($1,$2,$3,$4,$5,$6)`,
+          VALUES ($1, $2, $3, $4, $5, $6)`,
         [po_id, itemId, item.qty, item.unit, item.price, item.note || ""]
       );
     }
-
-    // ✅ เพิ่มโค้ดส่วนนี้เพื่ออัปเดตสถานะของ RFQ
-    await client.query(
-      `UPDATE request_for_quotations
-       SET status = 'สร้าง PO แล้ว'
-       WHERE rfq_id = $1`,
-      [rfq_id]
-    );
-
-    for (const file of attachments || []) {
-      await client.query(
-        `INSERT INTO po_files (po_id, file_name, file_type, file_path, file_url, uploaded_by, uploaded_at)
-          VALUES ($1,$2,$3,$4,$5,$6,NOW())`,
-        [
-          po_id,
-          file.name,
-          file.type,
-          `/uploads/po/${file.name}`,
-          `http://localhost:5000/uploads/po/${file.name}`,
-          created_by
-        ]
-      );
-    }
-
+    
     await client.query("COMMIT");
     return await getPOById(po_id);
   } catch (err) {
@@ -422,7 +400,6 @@ async function createPOFromRFQ({
     client.release();
   }
 }
-
 async function addPOFiles(po_id, files, uploaded_by = 1) {
   const client = await pool.connect();
   try {
