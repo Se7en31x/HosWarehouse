@@ -181,7 +181,7 @@ const DetailModal = ({ show, onClose, data }) => {
                 <b>ผู้ยืม:</b> {data.requester_name || "-"}
               </div>
               <div className={styles.modalItem}>
-                <b>แผนก:</b> {data.department || "-"}
+                <b>แผนก:</b> {data.department_name || "-"}
               </div>
               <div className={styles.modalItem}>
                 <b>ผู้อนุมัติ:</b> {data.approved_by_name || "-"}
@@ -551,7 +551,7 @@ export default function BorrowHistory() {
                         {req.requester_name || "-"}
                       </div>
                       <div className={styles.tableCell} role="cell">
-                        {req.department || "-"}
+                        {req.department_name || "-"}
                       </div>
                       <div className={styles.tableCell} role="cell">
                         {formatThaiDate(req.request_due_date)}

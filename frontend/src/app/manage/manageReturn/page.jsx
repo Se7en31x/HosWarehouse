@@ -273,28 +273,39 @@ export default function ManageReturnPage() {
             <div className={styles.inventory} style={{ '--rows-per-page': limit }}>
               {rows.length ? (
                 <>
-                  {rows.map((r) => {
+                  {rows.map((r, idx) => {
                     const statusKey =
-                      r.items_overdue > 0 ? 'overdue' :
-                      r.items_due_soon > 0 ? 'due_soon' : 'borrowed';
+                      r.items_overdue > 0 ? "overdue" :
+                        r.items_due_soon > 0 ? "due_soon" : "borrowed";
+
                     const label =
                       r.items_overdue > 0 ? `เกินกำหนด ${r.items_overdue} รายการ` :
-                      r.items_due_soon > 0 ? `ใกล้ครบ ${r.items_due_soon} รายการ` : 'ปกติ';
+                        r.items_due_soon > 0 ? `ใกล้ครบ ${r.items_due_soon} รายการ` : "ปกติ";
+
                     return (
-                      <div key={r.request_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                      <div
+                        key={`${r.request_id}-${idx}`}   // ✅ unique key
+                        className={`${styles.tableGrid} ${styles.tableRow}`}
+                      >
                         <div className={styles.tableCell}>{r.request_code}</div>
                         <div className={styles.tableCell}>{r.requester_name}</div>
                         <div className={styles.tableCell}>{r.department}</div>
                         <div className={styles.tableCell}>{fdate(r.earliest_due_date)}</div>
                         <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                          <span className={`${styles.stBadge} ${styles[statusClass(statusKey)]}`}>{label}</span>
+                          <span className={`${styles.stBadge} ${styles[statusClass(statusKey)]}`}>
+                            {label}
+                          </span>
                         </div>
                         <div className={styles.tableCell}>
                           {r.returned_items ?? 0}/{r.total_items ?? 0}
                         </div>
                         <div className={`${styles.tableCell} ${styles.centerCell}`}>
                           <Link href={`/manage/manageReturn/${r.request_id}`}>
-                            <button className={styles.actionButton} title="จัดการการคืน" aria-label="จัดการการคืน">
+                            <button
+                              className={styles.actionButton}
+                              title="จัดการการคืน"
+                              aria-label="จัดการการคืน"
+                            >
                               <Settings size={16} /> จัดการ
                             </button>
                           </Link>

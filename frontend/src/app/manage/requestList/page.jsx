@@ -104,6 +104,23 @@ const dedupeByIdLatest = (list) => {
   return Array.from(map.values());
 };
 
+/* helper: แปลงประเภท → ภาษาไทย */
+/* helper: แปลงประเภท → ภาษาไทย */
+const mapTypeToThai = (t) => {
+  const raw = String(t).toLowerCase();
+  switch (raw) {
+    case "borrow":
+    case "ยืม":
+      return "ยืม";
+    case "withdraw":
+    case "เบิก":
+      return "เบิก";
+    default:
+      return "-";
+  }
+};
+
+
 export default function ApprovalRequest() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -113,7 +130,7 @@ export default function ApprovalRequest() {
   const [search, setSearch] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 12; // ⬅️ ล็อค 12 แถวต่อหน้า
+  const itemsPerPage = 12;
 
   const menuPortalTarget = useMemo(
     () => (typeof window !== "undefined" ? document.body : null),
@@ -158,7 +175,6 @@ export default function ApprovalRequest() {
     });
   }, [requests, status, search]);
 
-  /* ✅ dedupe เพื่อกัน key ซ้ำจาก backend (เช่น ได้หลายแถว id เดียวกันต่างสถานะ) */
   const uniqRequests = useMemo(() => dedupeByIdLatest(filteredRequests), [filteredRequests]);
 
   const totalPages = Math.max(1, Math.ceil(uniqRequests.length / itemsPerPage));
@@ -168,7 +184,6 @@ export default function ApprovalRequest() {
     return uniqRequests.slice(start, start + itemsPerPage);
   }, [uniqRequests, currentPage]);
 
-  // เติมแถวว่างให้ครบหน้า
   const fillersCount = Math.max(0, itemsPerPage - (currentItems?.length || 0));
 
   const handlePrevPage = () => currentPage > 1 && setCurrentPage((p) => p - 1);
@@ -189,10 +204,8 @@ export default function ApprovalRequest() {
   };
 
   useEffect(() => { setCurrentPage(1); }, [status, search]);
-  // คลัมป์หมายเลขหน้าเมื่อจำนวนหน้าลดลง
   useEffect(() => { setCurrentPage((p) => Math.min(Math.max(1, p), totalPages)); }, [totalPages]);
 
-  // ช่วงแสดงผล (info bar)
   const startIndex = (currentPage - 1) * itemsPerPage;
   const startDisplay = uniqRequests.length ? startIndex + 1 : 0;
   const endDisplay = Math.min(startIndex + itemsPerPage, uniqRequests.length);
@@ -273,35 +286,35 @@ export default function ApprovalRequest() {
               <div className={styles.noDataMessage}>ไม่พบข้อมูลที่ตรงกับเงื่อนไข</div>
             ) : (
               <>
-                {currentItems.map((item) => {
-                  const typeLabel = String(item.request_types).toLowerCase() === "borrow" ? "ยืม" : "เบิก";
-                  return (
-                    <div className={`${styles.tableGrid} ${styles.tableRow}`} key={stableKey(item)}>
-                      <div className={styles.tableCell}>{item.request_code || "-"}</div>
-                      <div className={styles.tableCell}>{item.user_name || "-"}</div>
-                      <div className={styles.tableCell}>{item.department || "-"}</div>
-                      <div className={styles.tableCell}>
-                        {item.request_date
-                          ? new Date(item.request_date).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })
-                          : "-"}
-                      </div>
-                      <div className={styles.tableCell}>{item.item_count ?? "-"}</div>
-                      <div className={styles.tableCell}>{typeLabel}</div>
-                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                        <span className={`${styles.stBadge} ${styles[statusClass(item.request_status)]}`}>
-                          {mapStatusToThai(item.request_status)}
-                        </span>
-                      </div>
-                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                        <Link href={`/manage/approvalRequest/${item.request_id}`}>
-                          <button className={styles.actionButton}>
-                            <Settings size={16} /> จัดการ
-                          </button>
-                        </Link>
-                      </div>
+                {currentItems.map((item) => (
+                  
+                  <div className={`${styles.tableGrid} ${styles.tableRow}`} key={stableKey(item)}>
+                    <div className={styles.tableCell}>{item.request_code || "-"}</div>
+                    <div className={styles.tableCell}>{item.user_name || "-"}</div>
+                    <div className={styles.tableCell}>{item.department || "-"}</div>
+                    <div className={styles.tableCell}>
+                      {item.request_date
+                        ? new Date(item.request_date).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })
+                        : "-"}
                     </div>
-                  );
-                })}
+                    <div className={styles.tableCell}>{item.item_count ?? "-"}</div>
+                    <div className={styles.tableCell}>
+                      {mapTypeToThai(item.request_type || item.request_types)}
+                    </div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      <span className={`${styles.stBadge} ${styles[statusClass(item.request_status)]}`}>
+                        {mapStatusToThai(item.request_status)}
+                      </span>
+                    </div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      <Link href={`/manage/requestList/approvalRequest/${item.request_id}`}>
+                        <button className={styles.actionButton}>
+                          <Settings size={16} /> จัดการ
+                        </button>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
 
                 {/* เติมแถวว่างให้ครบ 12 แถวเสมอ */}
                 {Array.from({ length: fillersCount }).map((_, i) => (

@@ -176,7 +176,7 @@ const DetailModal = ({ show, onClose, data }) => {
                 <b>วันที่:</b> {formatThaiDate(data.request_date) || "-"}
               </div>
               <div className={styles.modalItem}>
-                <b>แผนก:</b> {data.department || "-"}
+                <b>แผนก:</b> {data.department_name || "-"}
               </div>
               <div className={styles.modalItem}>
                 <b>ผู้ขอ:</b> {data.requester_name || "-"}
@@ -455,7 +455,7 @@ export default function WithdrawHistory() {
                 <div key={req.request_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
                   <div className={styles.tableCell}>{formatThaiDate(req.request_date)}</div>
                   <div className={styles.tableCell}>{req.request_code || "-"}</div>
-                  <div className={styles.tableCell}>{req.department || "-"}</div>
+                  <div className={styles.tableCell}>{req.department_name || "-"}</div>
                   <div className={styles.tableCell}>{req.requester_name || "-"}</div>
                   <div className={styles.tableCell}>{req.details?.length || 0}</div>
                   <div className={styles.tableCell}>{req.total_qty || 0}</div>

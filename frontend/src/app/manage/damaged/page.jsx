@@ -5,7 +5,7 @@ import { manageAxios } from '@/app/utils/axiosInstance';
 import Swal from 'sweetalert2';
 import styles from './page.module.css';
 import { connectSocket, disconnectSocket } from '@/app/utils/socket';
-import { ChevronLeft, ChevronRight, Wrench, Trash2, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Wrench, Trash2, Search, X } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
 const Select = dynamic(() => import('react-select'), { ssr: false });
@@ -98,6 +98,14 @@ export default function DamagedItemsPage() {
   const [showHistory, setShowHistory] = useState(false);
   const [selectedHistory, setSelectedHistory] = useState([]);
 
+  // action modal state
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [actionType, setActionType] = useState('');
+  const [actionAmount, setActionAmount] = useState(0);
+  const [actionNote, setActionNote] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const menuPortalTarget = typeof window !== 'undefined' ? document.body : undefined;
 
   const fetchDamaged = async () => {
@@ -116,6 +124,52 @@ export default function DamagedItemsPage() {
       setLoading(false);
     }
   };
+
+  const handleAction = (item, type) => {
+    setSelectedItem(item);
+    setActionType(type);
+    setActionAmount(item.remaining_qty);
+    setActionNote('');
+    setShowActionModal(true);
+  };
+
+  const submitAction = async () => {
+    if (actionAmount <= 0 || actionAmount > selectedItem.remaining_qty) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'ข้อมูลไม่ถูกต้อง',
+        text: `กรุณาระบุจำนวนที่ถูกต้อง (1 - ${selectedItem.remaining_qty})`,
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      await manageAxios.post(`/damaged/${selectedItem.damaged_id}/action`, {
+        action_type: actionType,
+        action_qty: Number(actionAmount),
+        note: actionNote,
+      });
+      Swal.fire({
+        icon: 'success',
+        title: 'บันทึกสำเร็จ',
+        text: `ดำเนินการ${actionType === 'repaired' ? 'ซ่อมแซม' : 'ทำลาย'}สำเร็จ`,
+      });
+      setShowActionModal(false);
+      fetchDamaged();
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'เกิดข้อผิดพลาด',
+        text: 'ไม่สามารถบันทึกการดำเนินการได้',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
 
   useEffect(() => {
     // โฟกัสช่องค้นหาอัตโนมัติ
@@ -318,8 +372,8 @@ export default function DamagedItemsPage() {
                       <div className={`${styles.tableCell} ${styles.centerCell}`}>{d.remaining_qty ?? 0}</div>
                       <div className={styles.tableCell}>
                         {d.damaged_date
-                          ? new Date(d.damaged_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })
-                          : '-' }
+                          ? new Date(d.damaged_date).toLocaleDateString('th-TH')
+                          : '-'}
                       </div>
                       <div className={styles.tableCell} title={d.reporter_name}>{d.reporter_name ?? '-'}</div>
                       <div className={`${styles.tableCell} ${styles.centerCell}`}>
@@ -333,7 +387,7 @@ export default function DamagedItemsPage() {
                           <div className={styles.actions}>
                             <button
                               className={`${styles.actionBtn} ${styles.btnRepair}`}
-                              onClick={() => handleAction(d.damaged_id, d.remaining_qty, 'repaired')}
+                              onClick={() => handleAction(d, 'repaired')}
                               aria-label="ซ่อมพัสดุ"
                               title="ซ่อมพัสดุ"
                             >
@@ -341,7 +395,7 @@ export default function DamagedItemsPage() {
                             </button>
                             <button
                               className={`${styles.actionBtn} ${styles.btnDispose}`}
-                              onClick={() => handleAction(d.damaged_id, d.remaining_qty, 'disposed')}
+                              onClick={() => handleAction(d, 'disposed')}
                               aria-label="ทำลายพัสดุ"
                               title="ทำลายพัสดุ"
                             >
@@ -445,11 +499,10 @@ export default function DamagedItemsPage() {
                       {a.action_date && (
                         <span className={styles.historyDate}>
                           {' '}(
-                          {new Date(a.action_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
+                          {new Date(a.action_date).toLocaleDateString('th-TH')}
                           )
                         </span>
                       )}
-                      {a.note && <div className={styles.historyNote}>หมายเหตุ: {a.note}</div>}
                     </li>
                   ))}
                 </ul>
@@ -465,6 +518,66 @@ export default function DamagedItemsPage() {
             </div>
           </div>
         )}
+
+        {showActionModal && (
+          <div className={styles.modalOverlay}>
+            <div className={styles.modal}>
+              <button className={styles.closeBtn} onClick={() => setShowActionModal(false)} aria-label="ปิด">
+                <X size={24} />
+              </button>
+              <h2 className={styles.modalTitle}>
+                {actionType === 'repaired' ? 'ซ่อมพัสดุ' : 'ทำลายพัสดุ'}
+              </h2>
+              <div className={styles.modalContent}>
+                <p>
+                  <span className={styles.modalLabel}>รายการ:</span> {selectedItem?.item_name}
+                </p>
+                <p>
+                  <span className={styles.modalLabel}>จำนวนคงเหลือ:</span> {selectedItem?.remaining_qty} ชิ้น
+                </p>
+                <div className={styles.modalInputGroup}>
+                  <label htmlFor="actionAmount" className={styles.modalLabel}>จำนวนที่ต้องการดำเนินการ</label>
+                  <input
+                    id="actionAmount"
+                    type="number"
+                    className={styles.modalInput}
+                    value={actionAmount}
+                    onChange={(e) => setActionAmount(Number(e.target.value))}
+                    min="1"
+                    max={selectedItem?.remaining_qty}
+                  />
+                </div>
+                <div className={styles.modalInputGroup}>
+                  <label htmlFor="actionNote" className={styles.modalLabel}>หมายเหตุ (ไม่บังคับ)</label>
+                  <textarea
+                    id="actionNote"
+                    className={styles.modalTextarea}
+                    value={actionNote}
+                    onChange={(e) => setActionNote(e.target.value)}
+                    placeholder="ระบุรายละเอียดการดำเนินการ"
+                  />
+                </div>
+              </div>
+              <div className={styles.modalActions}>
+                <button
+                  className={`${styles.btn} ${styles.btnPrimary}`}
+                  onClick={submitAction}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'กำลังบันทึก...' : 'บันทึก'}
+                </button>
+                <button
+                  className={`${styles.btn} ${styles.btnSecondary}`}
+                  onClick={() => setShowActionModal(false)}
+                  disabled={isSubmitting}
+                >
+                  ยกเลิก
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

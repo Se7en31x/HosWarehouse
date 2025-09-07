@@ -1,9 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import styles from "./page.module.css";
-import axiosInstance from "@/app/utils/axiosInstance";
+import { purchasingAxios } from "@/app/utils/axiosInstance";
 import { FaSearch, FaEye, FaFilePdf, FaTimes } from "react-icons/fa";
-import { PackageCheck } from "lucide-react"; // ใช้ไอคอนจาก lucide-react เพื่อความสม่ำเสมอ
+import { PackageCheck } from "lucide-react";
 import Swal from "sweetalert2";
 import exportPDF from "@/app/components/pdf/PDFExporter";
 
@@ -32,7 +32,7 @@ const RFQListPage = () => {
     const fetchRFQs = async () => {
       try {
         setLoading(true);
-        const res = await axiosInstance.get("/rfq");
+        const res = await purchasingAxios.get("/rfq");
         setRfqs(res.data);
       } catch (err) {
         Swal.fire({
@@ -65,7 +65,7 @@ const RFQListPage = () => {
             })],
           ],
           leftBlock: [
-            ["ผู้จัดทำ", `${rfq.user_fname} ${rfq.user_lname}`],
+            ["ผู้จัดทำ", `${rfq.firstname} ${rfq.lastname}`],
             ["หน่วยงาน", "งานคลังพัสดุ"],
           ],
           rightBlock: [
@@ -124,7 +124,7 @@ const RFQListPage = () => {
     (rfq) =>
       (filterStatus === "ทั้งหมด" || rfq.status?.toLowerCase() === filterStatus.toLowerCase()) &&
       (rfq.rfq_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        `${rfq.user_fname} ${rfq.user_lname}`.toLowerCase().includes(searchTerm.toLowerCase()))
+        `${rfq.firstname} ${rfq.lastname}`.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -132,9 +132,7 @@ const RFQListPage = () => {
       <div className={styles.infoContainer}>
         <div className={styles.pageBar}>
           <div className={styles.titleGroup}>
-            <h1 className={styles.pageTitle}>
-              รายการใบขอราคา (RFQ)
-            </h1>
+            <h1 className={styles.pageTitle}>รายการใบขอราคา (RFQ)</h1>
             <p className={styles.subtitle}>ดูและจัดการใบขอราคาที่สร้างแล้ว</p>
           </div>
         </div>
@@ -189,11 +187,9 @@ const RFQListPage = () => {
               <div className={styles.inventory}>
                 {filteredRfqs.map((rfq) => (
                   <div key={rfq.rfq_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
-                    <div className={`${styles.tableCell} ${styles.mono}`}>
-                      {rfq.rfq_no}
-                    </div>
+                    <div className={`${styles.tableCell} ${styles.mono}`}>{rfq.rfq_no}</div>
                     <div className={styles.tableCell}>
-                      {rfq.user_fname} {rfq.user_lname}
+                      {rfq.firstname} {rfq.lastname}
                     </div>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>
                       {new Date(rfq.created_at).toLocaleDateString("th-TH")}
@@ -227,17 +223,13 @@ const RFQListPage = () => {
             <div className={styles.modalContent}>
               <div className={styles.modalHeader}>
                 <h2>รายละเอียด RFQ: {selectedRFQ.rfq_no}</h2>
-                <button
-                  className={styles.closeButton}
-                  onClick={() => setSelectedRFQ(null)}
-                >
+                <button className={styles.closeButton} onClick={() => setSelectedRFQ(null)}>
                   <FaTimes size={18} />
                 </button>
               </div>
               <div className={styles.modalBody}>
                 <p>
-                  <strong>ผู้จัดทำ:</strong> {selectedRFQ.user_fname}{" "}
-                  {selectedRFQ.user_lname}
+                  <strong>ผู้จัดทำ:</strong> {selectedRFQ.firstname} {selectedRFQ.lastname}
                 </p>
                 <p>
                   <strong>วันที่:</strong>{" "}
@@ -253,13 +245,8 @@ const RFQListPage = () => {
                   </div>
                   <div className={styles.inventory}>
                     {selectedRFQ.items?.map((item) => (
-                      <div
-                        key={item.rfq_item_id}
-                        className={`${styles.tableGrid} ${styles.tableRow}`}
-                      >
-                        <div className={styles.tableCell}>
-                          {item.item_name || "-"}
-                        </div>
+                      <div key={item.rfq_item_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                        <div className={styles.tableCell}>{item.item_name || "-"}</div>
                         <div className={`${styles.tableCell} ${styles.centerCell}`}>
                           {item.qty || 0}
                         </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import axiosInstance from "@/app/utils/axiosInstance";
+import { purchasingAxios } from "@/app/utils/axiosInstance";
 import { FaSave, FaTimes } from "react-icons/fa";
 import { PackageCheck } from "lucide-react";
 import Swal from "sweetalert2";
@@ -26,7 +26,7 @@ const GoodsReceiptCreatePage = () => {
     const fetchPOs = async () => {
       try {
         setLoading(true);
-        const res = await axiosInstance.get("/po?status=รอดำเนินการ");
+        const res = await purchasingAxios.get("/po?status=รอดำเนินการ");
         setPoList(res.data);
       } catch (err) {
         Swal.fire({
@@ -56,7 +56,7 @@ const GoodsReceiptCreatePage = () => {
       return;
     }
     try {
-      const res = await axiosInstance.get(`/po/${id}`);
+      const res = await purchasingAxios.get(`/po/${id}`);
       setSelectedPO(res.data);
       const init = {};
       res.data.items.forEach((item) => {
@@ -182,7 +182,7 @@ const GoodsReceiptCreatePage = () => {
           })),
       };
 
-      const res = await axiosInstance.post("/gr", payload);
+      const res = await purchasingAxios.post("/gr", payload);
       Swal.fire({
         title: "สำเร็จ",
         text: `บันทึกรับสินค้า GR เลขที่ ${res.data.gr_no}`,

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { manageAxios } from '../../../utils/axiosInstance';
+import { manageAxios } from '../../../../utils/axiosInstance';
 import Swal from 'sweetalert2';
 import Image from 'next/image';
 import styles from './page.module.css';

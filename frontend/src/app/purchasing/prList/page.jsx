@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
 import styles from "./page.module.css";
-import axiosInstance from "@/app/utils/axiosInstance";
+// ✅ เปลี่ยนจาก axiosInstance เป็น purchasingAxios
+import { purchasingAxios } from "@/app/utils/axiosInstance";
 import { FaSearch, FaPlusCircle, FaTimes } from "react-icons/fa";
-import { PackageCheck } from "lucide-react"; 
+import { PackageCheck } from "lucide-react";
 import Swal from "sweetalert2";
 import exportPDF from "@/app/components/pdf/PDFExporter";
 
@@ -84,7 +85,8 @@ const PurchaseRequestPage = () => {
     const fetchRequests = async () => {
       try {
         setLoading(true);
-        const res = await axiosInstance.get("/pr");
+        // ✅ ใช้ purchasingAxios
+        const res = await purchasingAxios.get("/pr");
         setRequests(res.data.map((item) => ({ ...item, checked: false })));
       } catch (err) {
         Swal.fire({
@@ -155,8 +157,8 @@ const PurchaseRequestPage = () => {
     }
 
     try {
-      const res = await axiosInstance.post("/rfq", {
-        created_by: 1,
+      // ✅ ลบ created_by: 1 ออก เพราะหลังบ้านจะรับค่าจาก token แทน
+      const res = await purchasingAxios.post("/rfq", {
         items: selectedItems.map((item) => ({
           pr_id: item.pr_id,
           pr_item_id: item.pr_item_id,
@@ -294,7 +296,7 @@ const PurchaseRequestPage = () => {
         <div className={styles.pageBar}>
           <div className={styles.titleGroup}>
             <h1 className={styles.pageTitle}>
-               ระบบการสั่งซื้อ - ออกใบขอราคา
+              ระบบการสั่งซื้อ - ออกใบขอราคา
             </h1>
             <p className={styles.subtitle}>จัดการคำขอสั่งซื้อและสร้างใบขอราคา (RFQ)</p>
           </div>
@@ -396,7 +398,7 @@ const PurchaseRequestPage = () => {
                       {/* ✅ ใช้ translateCategory */}
                       <div className={styles.tableCell}>{translateCategory(item.item_category)}</div>
                       <div className={styles.tableCell}>
-                        {item.user_fname || ""} {item.user_lname || ""}
+                        {item.firstname || ""} {item.lastname || ""}
                       </div>
                       <div className={`${styles.tableCell} ${styles.centerCell}`}>
                         <StatusBadge status={item.status} />

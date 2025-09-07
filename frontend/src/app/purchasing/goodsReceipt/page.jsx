@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import styles from "./page.module.css";
-import axiosInstance from "@/app/utils/axiosInstance";
+import {purchasingAxios} from "@/app/utils/axiosInstance";
 import { FaSearch, FaPlusCircle, FaEye } from "react-icons/fa";
 import Swal from "sweetalert2";
 import Link from "next/link";
@@ -47,7 +47,7 @@ const GoodsReceiptListPage = () => {
     const fetchGRs = async () => {
       try {
         setLoading(true);
-        const res = await axiosInstance.get("/gr");
+        const res = await purchasingAxios.get("/gr");
         setGrList(res.data);
       } catch (err) {
         Swal.fire({

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import axiosInstance from "@/app/utils/axiosInstance";
+import { purchasingAxios } from "@/app/utils/axiosInstance";
 import Swal from "sweetalert2";
 import styles from "./page.module.css";
 import { PackageCheck } from "lucide-react";
@@ -33,7 +33,7 @@ const PoDetailsPage = ({ params }) => {
       if (!id) return;
       try {
         setLoading(true);
-        const res = await axiosInstance.get(`/po/${id}`);
+        const res = await purchasingAxios.get(`/po/${id}`);
         setPoData(res.data);
       } catch (err) {
         Swal.fire({
@@ -84,7 +84,7 @@ const PoDetailsPage = ({ params }) => {
 
       formData.append("existingAttachments", JSON.stringify(existingFileIdsToKeep));
 
-      const res = await axiosInstance.put(`/po/${poData.po_id}/attachments`, formData, {
+      const res = await purchasingAxios.put(`/po/${poData.po_id}/attachments`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

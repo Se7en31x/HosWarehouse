@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import axiosInstance from "@/app/utils/axiosInstance";
+import {purchasingAxios} from "@/app/utils/axiosInstance";
 import { FaSave, FaArrowLeft } from "react-icons/fa";
 import { PackageCheck } from "lucide-react";
 import Swal from "sweetalert2";
@@ -43,7 +43,7 @@ const GoodsReceiptDetailPage = () => {
   const fetchGR = async () => {
     try {
       setLoading(true);
-      const res = await axiosInstance.get(`/gr/${id}`);
+      const res = await purchasingAxios.get(`/gr/${id}`);
       setGrData(res.data);
 
       const initExtra = {};
@@ -115,7 +115,7 @@ const GoodsReceiptDetailPage = () => {
         return;
       }
 
-      await axiosInstance.post(`/gr/${id}/receive-more`, { items: itemsToUpdate });
+      await purchasingAxios.post(`/gr/${id}/receive-more`, { items: itemsToUpdate });
 
       Swal.fire({
         title: "สำเร็จ",

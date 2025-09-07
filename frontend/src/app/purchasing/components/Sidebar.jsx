@@ -1,4 +1,3 @@
-// src/app/components/Sidebar.jsx
 "use client";
 
 import { useState, useRef } from "react";
@@ -14,6 +13,7 @@ import {
     History,
     BarChart2,
     Settings,
+    Building2,   // ✅ ใช้ icon ร้านค้า/บริษัท
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -86,6 +86,14 @@ export default function Sidebar() {
                         <Link href="/purchasing/reportpo" className={styles.noStyleLink}>
                             <BarChart2 className={styles.sidebarIcon} />
                             <span className={styles.sidebarText}>ออกรายการ (Report PO)</span>
+                        </Link>
+                    </li>
+
+                    {/* ✅ เพิ่มเมนู ผู้ขาย */}
+                    <li className={`${styles.sidebarItem} ${isActive("/purchasing/suppliers") ? styles.active : ""}`}>
+                        <Link href="/purchasing/suppliers" className={styles.noStyleLink}>
+                            <Building2 className={styles.sidebarIcon} />
+                            <span className={styles.sidebarText}>ผู้ขาย (Suppliers)</span>
                         </Link>
                     </li>
 
