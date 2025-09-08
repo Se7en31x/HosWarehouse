@@ -128,6 +128,11 @@ async function getPendingRFQs() {
       FROM request_for_quotations r
       LEFT JOIN rfq_items ri ON r.rfq_id = ri.rfq_id
       WHERE r.status = 'รอดำเนินการ'
+        AND NOT EXISTS (
+          SELECT 1
+          FROM purchase_orders po
+          WHERE po.rfq_id = r.rfq_id
+        )
       GROUP BY r.rfq_id
       ORDER BY r.created_at DESC
     `);
@@ -137,5 +142,6 @@ async function getPendingRFQs() {
     throw new Error(`Failed to fetch pending RFQs: ${err.message}`);
   }
 }
+
 
 module.exports = { createRFQ, getAllRFQs, getRFQById, getPendingRFQs };

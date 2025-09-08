@@ -24,7 +24,7 @@ exports.getPOById = async (req, res) => {
   }
 };
 
-// ✅ POST /po (สร้างใหม่ → ใช้ user จาก token)
+// ✅ POST /po
 exports.createPO = async (req, res) => {
   try {
     const userId = req.user?.id || null;
@@ -39,7 +39,7 @@ exports.createPO = async (req, res) => {
   }
 };
 
-// ✅ PUT /po/:id (อัปเดต → ใช้ user จาก token)
+// ✅ PUT /po/:id
 exports.updatePO = async (req, res) => {
   try {
     const userId = req.user?.id || null;
@@ -54,7 +54,7 @@ exports.updatePO = async (req, res) => {
   }
 };
 
-// ✅ POST /po/from-rfq (สร้างจาก RFQ → ผูก user)
+// ✅ POST /po/from-rfq
 exports.createPOFromRFQ = async (req, res) => {
   try {
     const userId = req.user?.id || null;
@@ -79,15 +79,25 @@ exports.uploadPOFiles = async (req, res) => {
       return res.status(400).json({ message: "กรุณาเลือกไฟล์อัปโหลด" });
     }
 
-    const files = req.files.map((file) => ({
-      file_name: file.originalname,
-      file_type: file.mimetype,
-      file_path: file.path,
-      file_url: `${req.protocol}://${req.get("host")}/${file.path}`,
-    }));
+    // frontend ส่ง categories[] มาด้วย (แบบ array)
+    const categories = Array.isArray(req.body.categories)
+      ? req.body.categories
+      : [req.body.categories];
+
+    const files = req.files.map((file, idx) => {
+      const normalizedPath = file.path.replace(/\\/g, "/");
+      const safeFileName = Buffer.from(file.originalname, "latin1").toString("utf8");
+
+      return {
+        file_name: safeFileName,
+        file_type: file.mimetype,
+        file_category: categories[idx] || "other", // ✅ map category ให้ไฟล์
+        file_path: normalizedPath,
+        file_url: `${req.protocol}://${req.get("host")}/${normalizedPath}`,
+      };
+    });
 
     const updatedPO = await purchaseOrderModel.addPOFiles(po_id, files, userId);
-
     res.status(201).json(updatedPO);
   } catch (err) {
     console.error("❌ uploadPOFiles error:", err);
@@ -95,25 +105,36 @@ exports.uploadPOFiles = async (req, res) => {
   }
 };
 
+// ✅ Update Attachments
 exports.updatePOAttachments = async (req, res) => {
   try {
     const po_id = req.params.id;
     const userId = req.user?.id || null;
     const { existingAttachments } = req.body;
 
+    const categories = Array.isArray(req.body.categories)
+      ? req.body.categories
+      : [req.body.categories];
+
     const newFiles = req.files
-      ? req.files.map((file) => ({
-          file_name: file.originalname,
-          file_type: file.mimetype,
-          file_path: file.path,
-          file_url: `${req.protocol}://${req.get("host")}/${file.path}`,
-        }))
+      ? req.files.map((file, idx) => {
+          const normalizedPath = file.path.replace(/\\/g, "/");
+          const safeFileName = Buffer.from(file.originalname, "latin1").toString("utf8");
+
+          return {
+            file_name: safeFileName,
+            file_type: file.mimetype,
+            file_category: categories[idx] || "other", // ✅ ใช้ category ที่ส่งมาจาก frontend
+            file_path: normalizedPath,
+            file_url: `${req.protocol}://${req.get("host")}/${normalizedPath}`,
+          };
+        })
       : [];
 
     const updatedPO = await purchaseOrderModel.updatePOFiles(
       po_id,
       newFiles,
-      JSON.parse(existingAttachments),
+      JSON.parse(existingAttachments || "[]"),
       userId
     );
 
@@ -124,7 +145,7 @@ exports.updatePOAttachments = async (req, res) => {
   }
 };
 
-// ✅ mark ว่าใช้ใน GR แล้ว
+// ✅ Mark PO used in GR
 exports.markPOAsUsed = async (req, res) => {
   try {
     const po_id = req.params.id;
