@@ -67,7 +67,7 @@ export default function Sidebar() {
                     <li className={`${styles.sidebarItem} ${isActive("/purchasing/poList") ? styles.active : ""}`}>
                         <Link href="/purchasing/poList" className={styles.noStyleLink}>
                             <CheckCircle className={styles.sidebarIcon} />
-                            <span className={styles.sidebarText}>ใบสั่งซื้อ (PO)</span>
+                            <span className={styles.sidebarText}>ข้อมูลการสั่งซื้อ (PO data)</span>
                         </Link>
                     </li>
                     <li className={`${styles.sidebarItem} ${isActive("/purchasing/goodsReceipt") ? styles.active : ""}`}>
@@ -79,13 +79,13 @@ export default function Sidebar() {
                     <li className={`${styles.sidebarItem} ${isActive("/purchasing/historyPurchasing") ? styles.active : ""}`}>
                         <Link href="/purchasing/historyPurchasing" className={styles.noStyleLink}>
                             <History className={styles.sidebarIcon} />
-                            <span className={styles.sidebarText}>ประวัติการสั่งซื้อ</span>
+                            <span className={styles.sidebarText}>ประวัติ</span>
                         </Link>
                     </li>
-                    <li className={`${styles.sidebarItem} ${isActive("/purchasing/reportpo") ? styles.active : ""}`}>
-                        <Link href="/purchasing/reportpo" className={styles.noStyleLink}>
+                    <li className={`${styles.sidebarItem} ${isActive("/purchasing/reportpurchas") ? styles.active : ""}`}>
+                        <Link href="/purchasing/reportpurchas" className={styles.noStyleLink}>
                             <BarChart2 className={styles.sidebarIcon} />
-                            <span className={styles.sidebarText}>ออกรายการ (Report PO)</span>
+                            <span className={styles.sidebarText}>ออกรายการ</span>
                         </Link>
                     </li>
 

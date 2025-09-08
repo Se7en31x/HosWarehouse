@@ -1,45 +1,57 @@
 /* =============================
-   PurchaseRequestPage — page.module.css
-   Palette: #008dda, #41c9e2, #ace2e1, #1685bb
+   PurchaseRequest — page.module.css
+   New Palette: Blue-Gray and Teal
    ============================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /* ---- Variables ---- */
 :root {
-  --bg: #f0fbfe;
-  --panel: #ffffff;
-  --muted: #6b7280;
-  --text: #111827;
-  --border: #e5e7eb;
-  --primary: #008dda;
-  --primary-500: #41c9e2;
-  --primary-600: #1685bb;
-  --tint-50: #f0fbfe;
-  --tint-100: #e9f6fb;
-  --tint-200: #ace2e1;
-  --success: #16a34a;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --radius: 10px;
-  --row-h: 64px; /* ปรับจาก 60px เพื่อรองรับตัวอักษรใหญ่ขึ้น */
-  --rows-per-page: 10;
-  --th-font: 1.15rem; /* ปรับจาก 1.05rem เป็น 1.15rem */
-  --body-font: 1rem; /* เพิ่มตัวแปรสำหรับขนาดตัวอักษรใน body */
-  --th-min-h: 64px; /* ปรับจาก 60px เพื่อให้สมดุล */
-  --th-pad-y: 16px; /* ปรับจาก 14px เพื่อความสมดุล */
+  /* Colors (defined above) */
+  --bg: #F5F7FA;
+  --panel: #FFFFFF;
+  --text: #1E2A3C;
+  --muted: #64748B;
+  --border: #CBD5E1;
+  --primary: #2B6CB0;
+  --primary-hover: #1E4A7A;
+  --accent: #14B8A6;
+  --accent-hover: #0D9488;
+  --danger: #DC2626;
+  --warning: #F59E0B;
+  --tint-50: #F8FAFC;
+  --tint-100: #E2E8F0;
+  --tint-200: #CBD5E1;
+  --pending-bg: #E2E8F0;
+  --pending-text: #1E40AF;
+  --approved-bg: #CCFBF1;
+  --approved-text: #0D9488;
+  --completed-bg: #D1FAE5;
+  --completed-text: #065F46;
+  --canceled-bg: #FEE2E2;
+  --canceled-text: #991B1B;
+  
+  /* Existing sizing and layout */
+  --radius: 5px;
+  --row-h: 60px;
+  --rows-per-page: 12;
+  --th-font: 1.05rem;
+  --th-min-h: 60px;
+  --th-pad-y: 14px;
   --th-pad-x: 12px;
   --th-letter: 0.01em;
   --th-line: 1.25;
   --z-header: 10;
   --z-toolbar: 100;
-  --z-modal: 12000;
+  --z-select: 9000;
+  --z-swal: 10000;
+  --z-modal-overlay: 12000;
 }
 
 /* ---- Layout ---- */
 .mainHome {
   min-height: 100vh;
-  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans';
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
   display: flex;
   align-items: center;
   justify-content: center;
@@ -48,6 +60,7 @@
 
 .infoContainer {
   width: 100%;
+  max-width: none;
   min-height: 100vh;
   background: var(--panel);
   color: var(--text);
@@ -56,6 +69,9 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  flex: 1 1 auto;
+  align-self: stretch;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 /* ---- Header ---- */
@@ -63,6 +79,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
 }
 
 .pageTitle {
@@ -76,34 +94,33 @@
 }
 
 .subtitle {
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: var(--muted);
-  margin: 4px 0 0 0;
+  margin: 0;
 }
 
 .titleGroup {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
 /* ---- Toolbar ---- */
 .toolbar {
+  position: relative;
   z-index: var(--z-toolbar);
   display: flex;
   gap: 12px;
   align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
-  border: 1px solid var(--tint-200);
-  border-radius: 12px;
-  padding: 12px;
-  background: var(--tint-50);
+  padding: 16px;
+  border-radius: var(--radius);
 }
 
 .filterGrid {
   display: grid;
-  grid-template-columns: auto auto 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
   flex: 1;
 }
@@ -122,16 +139,17 @@
 
 .input {
   height: 40px;
-  border: 1px solid var(--tint-200);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 0 12px;
   font-size: 0.95rem;
-  background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .input:focus {
-  outline: 2px solid var(--primary-500);
-  outline-offset: 1px;
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(43, 108, 176, 0.1);
 }
 
 .searchBar {
@@ -157,67 +175,87 @@
   margin-left: auto;
 }
 
-/* ---- Buttons ---- */
 .ghostBtn {
-  background: #fff;
+  background: var(--panel);
   color: var(--text);
-  border: 1px solid var(--tint-200);
+  border: 1px solid var(--border);
   border-radius: 8px;
   height: 40px;
   padding: 0 12px;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.ghostBtn:hover:not(:disabled) {
+.ghostBtn:hover {
   background: var(--tint-100);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.ghostBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ghostBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .primaryButton {
   background: var(--primary);
-  color: #fff;
+  color: #FFFFFF;
   border: none;
   border-radius: 8px;
   height: 40px;
   padding: 0 12px;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.primaryButton:hover:not(:disabled) {
-  background: var(--primary-600);
+.primaryButton:hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
-.actionButton:disabled {
-  opacity: 0.5;
+.primaryButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.primaryButton:disabled {
+  background: var(--tint-200);
   cursor: not-allowed;
 }
 
 /* ---- Table ---- */
 .tableSection {
-  border: 1px solid var(--tint-200);
   border-radius: var(--radius);
-  background: #fff;
-  overflow-x: auto;
+  background: var(--panel);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .tableGrid {
   display: grid;
   grid-template-columns:
-    minmax(50px, 0.5fr) /* เลือก */
-    minmax(100px, 1fr) /* PR NO */
+    60px   /* เลือก */
+    120px  /* PR NO */
     minmax(180px, 2fr) /* ชื่อสินค้า */
-    minmax(90px, 0.8fr) /* จำนวน */
-    minmax(90px, 0.8fr) /* หน่วย */
-    minmax(120px, 1.2fr) /* ประเภท */
-    minmax(120px, 1.2fr) /* ผู้ขอ */
-    minmax(100px, 1fr) /* สถานะ */
-    minmax(100px, 1fr); /* วันที่ */
-  align-items: center;
+    80px   /* จำนวน */
+    80px   /* หน่วย */
+    120px  /* ประเภท */
+    150px  /* ผู้ขอ */
+    120px  /* สถานะ */
+    100px; /* วันที่ */
 }
 
 .tableHeader {
@@ -225,7 +263,6 @@
   top: 0;
   z-index: var(--z-header);
   background: var(--tint-50);
-  border-bottom: 1px solid var(--tint-200);
   padding: var(--th-pad-y) var(--th-pad-x);
   font-weight: 700;
   color: var(--text);
@@ -237,36 +274,49 @@
 .headerItem {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  white-space: nowrap;
   padding: 0;
 }
 
-.tableHeader .headerItem:nth-child(1),
-.tableHeader .headerItem:nth-child(4),
-.tableHeader .headerItem:nth-child(5),
-.tableHeader .headerItem:nth-child(8),
-.tableHeader .headerItem:nth-child(9) {
+.headerItem:nth-child(1),
+.headerItem:nth-child(4),
+.headerItem:nth-child(5),
+.headerItem:nth-child(8),
+.headerItem:nth-child(9) {
   justify-content: center;
+  text-align: center;
 }
 
 .inventory {
-  height: auto;
-  min-height: calc(var(--row-h) * var(--rows-per-page));
-  background: #fff;
+  border: 0;
+  border-radius: 0;
+  background: var(--panel);
+  height: calc(var(--row-h) * var(--rows-per-page));
+  overflow: hidden;
 }
 
 .tableRow {
+  box-sizing: border-box;
   height: var(--row-h);
   padding: 0 var(--th-pad-x);
   border-top: 1px solid var(--tint-200);
+  transition: background-color 0.2s ease;
+}
+
+.tableRow:nth-child(odd) {
+  background: var(--panel);
+}
+
+.tableRow:nth-child(even) {
+  background: var(--tint-50);
 }
 
 .tableRow:hover {
   background: var(--tint-100);
 }
 
-.tableRow:first-child {
-  border-top: 0;
+.rowSelected {
+  background: rgba(43, 108, 176, 0.1);
 }
 
 .tableCell {
@@ -276,22 +326,42 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: var(--body-font); /* เพิ่มขนาดตัวอักษรสำหรับเนื้อหาตาราง */
 }
 
-.tableCell.centerCell {
+.centerCell {
   justify-content: center;
 }
 
 .mono {
   font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9rem;
 }
 
-.rowSelected {
-  background: var(--tint-100);
+.noDataMessage {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 1rem;
 }
 
-/* ---- Status Badge ---- */
+.loadingContainer {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.spinner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---- Status Badges ---- */
 .stBadge {
   display: inline-flex;
   align-items: center;
@@ -299,16 +369,40 @@
   padding: 6px 10px;
   border-radius: 999px;
   font-weight: 700;
-  font-size: 0.9rem; /* ปรับจาก 0.85rem เพื่อให้สอดคล้องกับตัวอักษรที่ใหญ่ขึ้น */
+  font-size: 0.85rem;
   border: 1px solid transparent;
   min-width: 92px;
   line-height: 1;
+  transition: transform 0.2s ease;
 }
 
-.pending { color: #92400e; background: #fef3c7; border-color: #fde68a; }
-.approved { color: #166534; background: #dcfce7; border-color: #86efac; }
-.completed { color: #1e40af; background: #dbeafe; border-color: #93c5fd; }
-.canceled { color: #9f1239; background: #ffe4e6; border-color: #fecdd3; }
+.stBadge:hover {
+  transform: translateY(-1px);
+}
+
+.pending {
+  background: var(--pending-bg);
+  color: var(--pending-text);
+  border-color: var(--tint-200);
+}
+
+.approved {
+  background: var(--approved-bg);
+  color: var(--approved-text);
+  border-color: var(--accent);
+}
+
+.completed {
+  background: var(--completed-bg);
+  color: var(--completed-text);
+  border-color: var(--accent);
+}
+
+.canceled {
+  background: var(--canceled-bg);
+  color: var(--canceled-text);
+  border-color: var(--danger);
+}
 
 /* ---- Modal ---- */
 .modalOverlay {
@@ -318,35 +412,37 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
+  z-index: var(--z-modal-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: var(--z-modal);
+  padding: 16px;
 }
 
 .modalContent {
-  background: #fff;
+  background: var(--panel);
   border-radius: var(--radius);
-  width: 90%;
   max-width: 800px;
-  max-height: 80vh;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .modalHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid var(--tint-200);
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
 }
 
 .modalHeader h2 {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1.5rem;
+  color: var(--text);
 }
 
 .closeButton {
@@ -354,117 +450,94 @@
   border: none;
   cursor: pointer;
   color: var(--muted);
+  transition: color 0.2s ease;
 }
 
 .closeButton:hover {
-  color: var(--text);
+  color: var(--danger);
 }
 
 .modalBody {
-  padding: 16px;
-  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .modalBody h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0 0 12px;
-}
-
-.modalBody .tableGrid {
-  grid-template-columns:
-    minmax(100px, 1fr) /* PR NO */
-    minmax(180px, 2fr) /* ชื่อสินค้า */
-    minmax(90px, 0.8fr) /* จำนวน */
-    minmax(90px, 0.8fr) /* หน่วย */
-    minmax(150px, 1.5fr); /* คุณลักษณะ */
-}
-
-.modalBody .tableCell {
-  font-size: var(--body-font); /* ใช้ขนาดตัวอักษรเดียวกับตารางหลัก */
-}
-
-.modalBody .input {
-  width: 100%;
-  font-size: var(--body-font); /* ปรับขนาดตัวอักษรใน input */
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--text);
 }
 
 .modalFooter {
   display: flex;
+  gap: 12px;
   justify-content: flex-end;
-  gap: 10px;
-  padding: 16px;
-  border-top: 1px solid var(--tint-200);
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
 }
 
-/* ---- Loading and Empty States ---- */
-.loadingContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: calc(var(--row-h) * var(--rows-per-page));
-}
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+/* ---- Checkbox ---- */
+.tableCell input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  cursor: pointer;
 }
 
-.noDataMessage {
-  height: calc(var(--row-h) * var(--rows-per-page));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--muted);
-  font-size: var(--body-font); /* ปรับขนาดตัวอักษรให้สอดคล้อง */
+/* ---- SweetAlert2 Custom Button ---- */
+.swalButton {
+  background: var(--primary);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.swalButton:hover {
+  background: var(--primary-hover);
 }
 
 /* ---- Responsive ---- */
 @media (max-width: 1024px) {
   .filterGrid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 768px) {
-  .filterGrid {
-    grid-template-columns: 1fr;
-  }
   .searchCluster {
     width: 100%;
+    margin-left: 0;
     justify-content: flex-end;
     flex-wrap: wrap;
+    row-gap: 6px;
   }
 }
 
 @media (max-width: 640px) {
   :root {
-    --th-font: 1.1rem; /* ลดขนาดตัวอักษร header ในหน้าจอเล็ก */
-    --body-font: 0.95rem; /* ลดขนาดตัวอักษร body ในหน้าจอเล็ก */
-    --th-min-h: 58px;
-    --th-pad-y: 12px;
-    --row-h: 58px;
+    --th-font: 1rem;
+    --th-min-h: 54px;
+    --th-pad-y: 10px;
+  }
+  .mainHome {
+    padding: 12px;
   }
   .tableGrid {
     grid-template-columns:
-      40px
-      minmax(80px, 1fr)
-      minmax(120px, 1.5fr)
-      80px
-      80px
-      minmax(100px, 1fr)
-      minmax(100px, 1fr)
-      90px
-      90px;
-  }
-  .modalBody .tableGrid {
-    grid-template-columns:
-      minmax(80px, 1fr)
-      minmax(120px, 1.5fr)
-      80px
-      80px
-      minmax(120px, 1fr);
-  }
-  .modalContent {
-    width: 95%;
+      50px   /* เลือก */
+      100px  /* PR NO */
+      minmax(150px, 1fr) /* ชื่อสินค้า */
+      70px   /* จำนวน */
+      70px   /* หน่วย */
+      100px  /* ประเภท */
+      120px  /* ผู้ขอ */
+      100px  /* สถานะ */
+      90px;  /* วันที่ */
   }
 }

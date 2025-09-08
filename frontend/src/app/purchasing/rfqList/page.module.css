@@ -1,220 +1,249 @@
+
 /* =============================
    RFQListPage — page.module.css
-   Palette: #008dda, #41c9e2, #ace2e1, #1685bb
-   ============================= */
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
+   Beautiful buttons, adjusted first column spacing, no truncation
+   ============================= *
 /* ---- Variables ---- */
 :root {
-  --bg: #f0fbfe;
-  --panel: #ffffff;
-  --muted: #6b7280;
-  --text: #111827;
-  --border: #e5e7eb;
-  --primary: #008dda;
-  --primary-500: #41c9e2;
-  --primary-600: #1685bb;
-  --tint-50: #f0fbfe;
-  --tint-100: #e9f6fb;
-  --tint-200: #ace2e1;
-  --success: #16a34a;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --radius: 10px;
-  --row-h: 64px; /* ปรับจาก 60px เพื่อรองรับตัวอักษรใหญ่ */
-  --rows-per-page: 10;
-  --th-font: 1.15rem; /* ขนาดตัวอักษร header */
-  --body-font: 1rem; /* ขนาดตัวอักษร body */
-  --th-min-h: 64px;
-  --th-pad-y: 16px;
-  --th-pad-x: 12px;
-  --th-letter: 0.01em;
-  --th-line: 1.25;
+  /* Colors */
+  --bg: #F4F6F9; /* Light blue-gray background */
+  --panel: #FFFFFF; /* White panels */
+  --text: #1A2634; /* Dark blue-gray text */
+  --muted: #6B7280; /* Muted slate for secondary text */
+  --border: #D1DAE6; /* Light slate border */
+  --primary: #2563EB; /* Vibrant blue for buttons */
+  --primary-hover: #1E40AF; /* Darker blue for hover */
+  --primary-gradient: linear-gradient(135deg, #3B82F6, #1E40AF); /* Gradient for buttons */
+  --accent: #10B981; /* Teal for success states */
+  --accent-hover: #059669; /* Darker teal for hover */
+  --danger: #EF4444; /* Red for errors/cancellations */
+  --danger-hover: #B91C1C; /* Darker red for hover */
+  --warning: #F59E0B; /* Amber for warnings */
+  --tint-50: #F9FAFB; /* Lightest tint for backgrounds */
+  --tint-100: #E5E7EB; /* Light tint for hover/odd rows */
+  --tint-200: #D1D5DB; /* Medium tint for borders */
+  --pending-bg: #E5E7EB; /* Slate for pending */
+  --pending-text: #1E40AF;
+  --approved-bg: #D1FAE5; /* Teal for approved */
+  --approved-text: #065F46;
+  --completed-bg: #DBEAFE; /* Blue for completed */
+  --completed-text: #1E40AF;
+  --canceled-bg: #FEE2E2; /* Red for canceled */
+  --canceled-text: #991B1B;
+
+  /* Layout */
+  --radius: 12px; /* Smoother corners */
+  --row-h: 60px; /* Spacious row height */
+  --rows-per-page: 12;
+  --th-font: 0.95rem; /* Compact headers */
+  --th-min-h: 60px;
+  --th-pad-y: 14px;
+  --th-pad-x: 8px; /* Reduced for closer edge alignment */
+  --th-letter: 0.03em;
+  --th-line: 1.5;
+
+  /* Z-Index */
   --z-header: 10;
   --z-toolbar: 100;
-  --z-modal: 12000;
+  --z-select: 9000;
+  --z-swal: 10000;
+  --z-modal-overlay: 12000;
 }
 
 /* ---- Layout ---- */
 .mainHome {
   min-height: 100vh;
-  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans';
+  
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   background: var(--bg);
 }
 
 .infoContainer {
-  width: 100%;
-
+  width: 100%; /* Full width */
   min-height: 100vh;
   background: var(--panel);
   color: var(--text);
   border-radius: var(--radius);
-  padding: 24px;
+  padding: 32px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 28px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 /* ---- Header ---- */
 .pageBar {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
 }
 
 .pageTitle {
   font-weight: 700;
-  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  font-size: clamp(1.75rem, 2.5vw, 2.25rem);
   margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
   color: var(--text);
 }
 
 .subtitle {
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: var(--muted);
-  margin: 4px 0 0 0;
-}
-
-.titleGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  margin: 0;
+  line-height: 1.5;
 }
 
 /* ---- Toolbar ---- */
 .toolbar {
   z-index: var(--z-toolbar);
   display: flex;
-  gap: 12px;
-  align-items: flex-end;
-  justify-content: space-between;
   flex-wrap: wrap;
-  border: 1px solid var(--tint-200);
-  border-radius: 12px;
-  padding: 12px;
+  gap: 20px;
+  padding: 24px;
   background: var(--tint-50);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
 }
 
 .filterGrid {
   display: grid;
-  grid-template-columns: auto auto 1fr;
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
   flex: 1;
 }
 
 .filterGroup {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
 }
 
 .label {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--text);
   font-weight: 600;
 }
 
 .input {
-  height: 40px;
-  border: 1px solid var(--tint-200);
-  border-radius: 8px;
-  padding: 0 12px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 16px;
   font-size: 0.95rem;
-  background: #fff;
+  background: var(--panel);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .input:focus {
-  outline: 2px solid var(--primary-500);
-  outline-offset: 1px;
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .searchBar {
   position: relative;
-  display: flex;
-  align-items: center;
 }
 
 .searchIcon {
   position: absolute;
-  left: 12px;
+  top: 50%;
+  left: 16px;
+  transform: translateY(-50%);
   color: var(--muted);
 }
 
 .searchBar .input {
-  padding-left: 36px;
+  padding-left: 44px;
 }
 
 .searchCluster {
   display: flex;
-  align-items: flex-end;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 14px;
   margin-left: auto;
 }
 
 /* ---- Buttons ---- */
-.ghostBtn {
-  background: #fff;
-  color: var(--text);
-  border: 1px solid var(--tint-200);
-  border-radius: 8px;
-  height: 40px;
-  padding: 0 12px;
+.ghostBtn, .primaryButton, .actionButton {
+  height: 44px;
+  padding: 0 20px;
+  border-radius: var(--radius);
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.ghostBtn {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 .ghostBtn:hover:not(:disabled) {
   background: var(--tint-100);
+  transform: scale(1.02);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.ghostBtn:active {
+  transform: scale(1);
+  box-shadow: none;
+}
+
+.ghostBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .primaryButton {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-gradient);
+  color: #FFFFFF;
   border: none;
-  border-radius: 8px;
-  height: 40px;
-  padding: 0 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .primaryButton:hover:not(:disabled) {
-  background: var(--primary-600);
+  background: var(--primary-hover);
+  transform: scale(1.02);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }
 
-.actionButton:disabled {
-  opacity: 0.5;
+.primaryButton:active {
+  transform: scale(1);
+  box-shadow: none;
+}
+
+.primaryButton:disabled {
+  background: var(--tint-200);
   cursor: not-allowed;
 }
 
 /* ---- Table ---- */
 .tableSection {
-  border: 1px solid var(--tint-200);
+  width: 100%; /* Full width */
+  background: var(--panel);
   border-radius: var(--radius);
-  background: #fff;
-  overflow-x: auto;
+  overflow: hidden;
+  border: 1px solid var(--border);
 }
 
 .tableGrid {
   display: grid;
   grid-template-columns:
-    minmax(120px, 1.2fr) /* RFQ NO */
-    minmax(150px, 1.5fr) /* ผู้จัดทำ */
-    minmax(120px, 1fr) /* วันที่สร้าง */
-    minmax(100px, 1fr) /* สถานะ */
-    minmax(200px, 2fr); /* การกระทำ */
+    minmax(140px, 1.5fr) /* RFQ NO */
+    minmax(160px, 2fr)   /* ผู้จัดทำ */
+    160px                /* วันที่สร้าง */
+    160px                /* สถานะ */
+    minmax(240px, 1.2fr); /* การกระทำ */
   align-items: center;
+  gap: 12px; /* Balanced spacing */
+  width: 100%;
 }
 
 .tableHeader {
@@ -222,84 +251,144 @@
   top: 0;
   z-index: var(--z-header);
   background: var(--tint-50);
-  border-bottom: 1px solid var(--tint-200);
-  padding: var(--th-pad-y) var(--th-pad-x);
-  font-weight: 700;
+  padding: var(--th-pad-y) 0;
+  font-weight: 600;
   color: var(--text);
   font-size: var(--th-font);
   line-height: var(--th-line);
   min-height: var(--th-min-h);
+  border-bottom: 1px solid var(--border);
 }
 
 .headerItem {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding: 0;
+  justify-content: center;
+  padding: 0 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
-.tableHeader .headerItem:nth-child(3),
-.tableHeader .headerItem:nth-child(4),
-.tableHeader .headerItem:nth-child(5) {
-  justify-content: center;
+.headerItem:nth-child(1) { /* RFQ NO */
+  justify-content: flex-start;
+  padding-left: 8px; /* Closer to edge */
+}
+
+.headerItem:nth-child(2) { /* ผู้จัดทำ */
+  justify-content: flex-start;
 }
 
 .inventory {
-  height: auto;
-  min-height: calc(var(--row-h) * var(--rows-per-page));
-  background: #fff;
+  background: var(--panel);
 }
 
 .tableRow {
   height: var(--row-h);
-  padding: 0 var(--th-pad-x);
+  padding: 0;
   border-top: 1px solid var(--tint-200);
+  transition: background-color 0.2s ease;
+}
+
+.tableRow:nth-child(odd) {
+  background: var(--panel);
+}
+
+.tableRow:nth-child(even) {
+  background: var(--tint-50);
 }
 
 .tableRow:hover {
   background: var(--tint-100);
 }
 
-.tableRow:first-child {
-  border-top: 0;
-}
-
 .tableCell {
   display: flex;
   align-items: center;
-  padding: 4px 6px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: var(--body-font);
+  justify-content: center;
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  white-space: normal;
+  line-height: 1.4;
+  position: relative;
 }
 
-.tableCell.centerCell {
-  justify-content: center;
+.tableCell:nth-child(1) { /* RFQ NO */
+  justify-content: flex-start;
+  padding-left: 8px; /* Closer to edge */
+}
+
+.tableCell:nth-child(2) { /* ผู้จัดทำ */
+  justify-content: flex-start;
+}
+
+.tableCell:hover::after {
+  content: attr(data-fulltext);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: #FFFFFF;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  z-index: var(--z-select);
+  display: none;
+}
+
+.tableCell:hover[data-fulltext]::after {
+  display: block;
 }
 
 .mono {
   font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9rem;
 }
 
-/* ---- Status Badge ---- */
+/* ---- Status Badges ---- */
 .stBadge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 10px;
+  padding: 8px 16px;
   border-radius: 999px;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.9rem;
   border: 1px solid transparent;
-  min-width: 92px;
-  line-height: 1;
+  min-width: 110px;
+  line-height: 1.4;
+  transition: transform 0.2s ease;
 }
 
-.pending { color: #92400e; background: #fef3c7; border-color: #fde68a; }
-.approved { color: #166534; background: #dcfce7; border-color: #86efac; }
-.completed { color: #1e40af; background: #dbeafe; border-color: #93c5fd; }
-.canceled { color: #9f1239; background: #ffe4e6; border-color: #fecdd3; }
+.stBadge:hover {
+  transform: scale(1.02);
+}
+
+.pending {
+  background: var(--pending-bg);
+  color: var(--pending-text);
+  border-color: var(--tint-200);
+}
+
+.approved {
+  background: var(--approved-bg);
+  color: var(--approved-text);
+  border-color: var(--accent);
+}
+
+.completed {
+  background: var(--completed-bg);
+  color: var(--completed-text);
+  border-color: var(--primary);
+}
+
+.canceled {
+  background: var(--canceled-bg);
+  color: var(--canceled-text);
+  border-color: var(--danger);
+}
 
 /* ---- Modal ---- */
 .modalOverlay {
@@ -308,36 +397,40 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
+  z-index: var(--z-modal-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: var(--z-modal);
+  padding: 28px;
 }
 
 .modalContent {
-  background: #fff;
+  background: var(--panel);
   border-radius: var(--radius);
-  width: 90%;
-  max-width: 800px;
-  max-height: 80vh;
+  width: 100%; /* Full width */
+  max-width: 95%; /* Slight padding for large screens */
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .modalHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid var(--tint-200);
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--tint-50);
 }
 
 .modalHeader h2 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.6rem;
   font-weight: 600;
+  color: var(--text);
 }
 
 .closeButton {
@@ -345,117 +438,214 @@
   border: none;
   cursor: pointer;
   color: var(--muted);
+  padding: 10px;
+  transition: color 0.2s ease, transform 0.2s ease;
 }
 
 .closeButton:hover {
-  color: var(--text);
+  color: var(--danger);
+  transform: scale(1.1);
+}
+
+.closeButton:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .modalBody {
-  padding: 16px;
-  overflow-y: auto;
-}
-
-.modalBody h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0 0 12px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
 }
 
 .modalBody p {
-  margin: 8px 0;
-  font-size: var(--body-font);
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.modalBody strong {
+  font-weight: 600;
+}
+
+.modalBody h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
 }
 
 .modalBody .tableGrid {
   grid-template-columns:
-    minmax(180px, 2fr) /* ชื่อสินค้า */
-    minmax(90px, 0.8fr) /* จำนวน */
-    minmax(90px, 0.8fr) /* หน่วย */
-    minmax(150px, 1.5fr); /* คุณลักษณะ */
+    minmax(200px, 3fr) /* ชื่อสินค้า */
+    140px              /* จำนวน */
+    140px              /* หน่วย */
+    minmax(200px, 3fr); /* คุณลักษณะ */
+  gap: 12px;
 }
 
-.modalBody .tableCell {
-  font-size: var(--body-font);
+.modalBody .tableCell:nth-child(1), /* ชื่อสินค้า */
+.modalBody .tableCell:nth-child(4) { /* คุณลักษณะ */
+  justify-content: flex-start;
+  padding-left: 8px; /* Closer to edge */
 }
 
-.modalBody .tableHeader .headerItem:nth-child(2),
-.modalBody .tableHeader .headerItem:nth-child(3) {
-  justify-content: center;
+.modalBody .headerItem:nth-child(1), /* ชื่อสินค้า */
+.modalBody .headerItem:nth-child(4) { /* คุณลักษณะ */
+  justify-content: flex-start;
+  padding-left: 8px;
 }
 
 .modalFooter {
   display: flex;
+  gap: 14px;
   justify-content: flex-end;
-  gap: 10px;
-  padding: 16px;
-  border-top: 1px solid var(--tint-200);
+  padding: 24px 32px;
+  border-top: 1px solid var(--border);
+  background: var(--tint-50);
 }
 
-/* ---- Loading and Empty States ---- */
-.loadingContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: calc(var(--row-h) * var(--rows-per-page));
+/* ---- SweetAlert2 ---- */
+.swalButton {
+  background: var(--primary-gradient);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius);
+  padding: 12px 28px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.swalButton:hover {
+  background: var(--primary-hover);
+  transform: scale(1.02);
 }
 
+/* ---- No Data and Loading ---- */
 .noDataMessage {
   height: calc(var(--row-h) * var(--rows-per-page));
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--muted);
-  font-size: var(--body-font);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.loadingContainer {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 1rem;
+  gap: 14px;
+}
+
+.spinner::before {
+  content: '';
+  width: 26px;
+  height: 26px;
+  border: 3px solid var(--muted);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* ---- Responsive ---- */
 @media (max-width: 1024px) {
   .filterGrid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
+  }
+  .tableGrid {
+    grid-template-columns:
+      minmax(120px, 1.5fr) /* RFQ NO */
+      minmax(140px, 2fr)   /* ผู้จัดทำ */
+      140px                /* วันที่สร้าง */
+      140px                /* สถานะ */
+      minmax(200px, 1.2fr); /* การกระทำ */
+    gap: 10px;
+  }
+  .modalBody .tableGrid {
+    grid-template-columns:
+      minmax(160px, 3fr) /* ชื่อสินค้า */
+      120px              /* จำนวน */
+      120px              /* หน่วย */
+      minmax(160px, 3fr); /* คุณลักษณะ */
   }
 }
 
 @media (max-width: 768px) {
-  .filterGrid {
-    grid-template-columns: 1fr;
+  .mainHome {
+    padding: 20px;
   }
-  .searchCluster {
-    width: 100%;
-    justify-content: flex-end;
-    flex-wrap: wrap;
+  .infoContainer {
+    padding: 24px;
+  }
+  .toolbar {
+    padding: 20px;
+  }
+  .tableGrid {
+    grid-template-columns:
+      minmax(100px, 1.5fr) /* RFQ NO */
+      minmax(120px, 2fr)   /* ผู้จัดทำ */
+      120px                /* วันที่สร้าง */
+      120px                /* สถานะ */
+      minmax(180px, 1.2fr); /* การกระทำ */
+    gap: 8px;
+  }
+  .modalBody .tableGrid {
+    grid-template-columns:
+      minmax(140px, 3fr) /* ชื่อสินค้า */
+      100px              /* จำนวน */
+      100px              /* หน่วย */
+      minmax(140px, 3fr); /* คุณลักษณะ */
   }
 }
 
 @media (max-width: 640px) {
   :root {
-    --th-font: 1.1rem;
-    --body-font: 0.95rem;
-    --th-min-h: 58px;
-    --th-pad-y: 12px;
-    --row-h: 58px;
+    --th-font: 0.9rem;
+    --th-min-h: 52px;
+    --th-pad-y: 10px;
+    --th-pad-x: 6px;
+    --row-h: 52px;
+  }
+  .mainHome {
+    padding: 16px;
+  }
+  .infoContainer {
+    padding: 20px;
+  }
+  .tableSection {
+    overflow-x: auto;
   }
   .tableGrid {
+    min-width: 640px;
     grid-template-columns:
-      minmax(100px, 1fr)
-      minmax(120px, 1.2fr)
-      100px
-      90px
-      minmax(150px, 1.5fr);
-  }
-  .modalBody .tableGrid {
-    grid-template-columns:
-      minmax(120px, 1.5fr)
-      80px
-      80px
-      minmax(100px, 1fr);
+      minmax(90px, 1.5fr)  /* RFQ NO */
+      minmax(100px, 2fr)   /* ผู้จัดทำ */
+      100px                /* วันที่สร้าง */
+      100px                /* สถานะ */
+      minmax(160px, 1.2fr); /* การกระทำ */
+    gap: 6px;
   }
   .modalContent {
-    width: 95%;
+    max-width: 100%; /* Full width on mobile */
+  }
+  .modalBody .tableGrid {
+    min-width: 520px;
+    grid-template-columns:
+      minmax(120px, 3fr) /* ชื่อสินค้า */
+      90px               /* จำนวน */
+      90px               /* หน่วย */
+      minmax(120px, 3fr); /* คุณลักษณะ */
   }
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import styles from "./page.module.css";
-import {purchasingAxios} from "@/app/utils/axiosInstance";
+import { purchasingAxios } from "@/app/utils/axiosInstance";
 import { FaSearch, FaPlusCircle, FaTimes, FaEye } from "react-icons/fa";
 import { PackageCheck } from "lucide-react";
 import Swal from "sweetalert2";
@@ -219,7 +219,7 @@ const PoAndRfqPage = () => {
         subtotal,
         vat_amount: vat,
         grand_total: grandTotal,
-        is_vat_included: isVatInclusive, // ✅ เพิ่ม flag is_vat_included
+        is_vat_included: isVatInclusive,
         items: selectedRFQ?.items?.map((item) => ({
           rfq_item_id: item.rfq_item_id,
           item_id: item.item_id,
@@ -235,9 +235,10 @@ const PoAndRfqPage = () => {
 
       if (Object.keys(attachments).some((type) => attachments[type]?.length > 0)) {
         const formData = new FormData();
-        Object.values(attachments).forEach((filesArray) => {
+        Object.entries(attachments).forEach(([type, filesArray]) => {
           filesArray.forEach((file) => {
             formData.append("files", file);
+            formData.append("categories", type);
           });
         });
         await purchasingAxios.post(`/po/${newPo.po_id}/upload`, formData, {
@@ -257,7 +258,12 @@ const PoAndRfqPage = () => {
         { ...newPo, attachments: newPo.attachments || [] },
         ...prev,
       ]);
-      handleSelectRFQ("");
+
+      // ✅ รีโหลด RFQ pending ใหม่
+      const resRfq = await purchasingAxios.get("/rfq/pending");
+      setRfqs(resRfq.data);
+
+      handleSelectRFQ(""); // ปิดฟอร์ม
     } catch (err) {
       Swal.fire({
         title: "ผิดพลาด",
@@ -446,7 +452,7 @@ const PoAndRfqPage = () => {
                         <option key={s.supplier_id} value={s.supplier_id}>
                           {s.supplier_name}
                         </option>
-                    ))}
+                      ))}
                   </select>
 
                   <input type="text" placeholder="ที่อยู่" value={supplier.address} className={styles.input} disabled />

@@ -1,0 +1,85 @@
+/* ================================
+   Report Main Page
+   Theme: Modern Blue-Grey
+   ================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #f4f7fb;
+  --panel: #ffffff;
+  --primary: #008dda;
+  --primary-hover: #0077b6;
+  --accent: #41c9e2;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --radius: 14px;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.mainHome {
+  padding: 32px;
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+}
+
+.infoContainer {
+  width: 100%;
+  max-width: 960px;
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 32px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.pageTitle {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: var(--muted);
+  margin: 4px 0 0;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-top: 12px;
+}
+
+.card {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-decoration: none;
+  transition: all 0.25s ease-in-out;
+  box-shadow: var(--shadow);
+}
+
+.card:hover {
+  transform: translateY(-6px) scale(1.02);
+  background: linear-gradient(135deg, var(--primary-hover) 0%, var(--accent) 100%);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.card span {
+  flex: 1;
+}

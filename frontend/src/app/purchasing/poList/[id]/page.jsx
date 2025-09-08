@@ -72,9 +72,12 @@ const PoDetailsPage = ({ params }) => {
   const handleUpdateAttachments = async () => {
     try {
       const formData = new FormData();
-      Object.values(newAttachments).forEach((filesArray) => {
+
+      // ✅ ส่งทั้งไฟล์และ category มาด้วย
+      Object.entries(newAttachments).forEach(([type, filesArray]) => {
         filesArray.forEach((file) => {
           formData.append("files", file);
+          formData.append("categories", type); // << ส่ง category ตาม type ของไฟล์
         });
       });
 
@@ -82,11 +85,18 @@ const PoDetailsPage = ({ params }) => {
         .filter((file) => !deletedFileIds.includes(file.file_id))
         .map((file) => file.file_id);
 
-      formData.append("existingAttachments", JSON.stringify(existingFileIdsToKeep));
+      formData.append(
+        "existingAttachments",
+        JSON.stringify(existingFileIdsToKeep)
+      );
 
-      const res = await purchasingAxios.put(`/po/${poData.po_id}/attachments`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await purchasingAxios.put(
+        `/po/${poData.po_id}/attachments`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
 
       Swal.fire({
         title: "สำเร็จ",
@@ -109,6 +119,7 @@ const PoDetailsPage = ({ params }) => {
     }
   };
 
+
   const attachmentTypes = [
     { label: "ใบเสนอราคา", type: "quotation" },
     { label: "ใบส่งของ / ใบส่งมอบ", type: "delivery_note" },
@@ -124,10 +135,12 @@ const PoDetailsPage = ({ params }) => {
     return poData?.attachments
       ?.filter((file) => !deletedFileIds.includes(file.file_id))
       ?.reduce((acc, file) => {
-        acc[file.file_type] = [...(acc[file.file_type] || []), file];
+        const category = file.file_category || "other"; // ✅ ใช้ file_category
+        acc[category] = [...(acc[category] || []), file];
         return acc;
       }, {}) || {};
   }, [poData, deletedFileIds]);
+
 
   if (loading) {
     return (
