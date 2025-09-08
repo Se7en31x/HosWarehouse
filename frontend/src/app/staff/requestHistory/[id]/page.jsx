@@ -15,13 +15,12 @@ export default function RequestDetailPage() {
   // ===== Helpers =====
   const API_BASE = useMemo(() => {
     let fromAxios = staffAxios?.defaults?.baseURL?.replace(/\/+$/, "");
-    // Remove /api from baseURL if present
     if (fromAxios && fromAxios.endsWith("/api")) {
       fromAxios = fromAxios.replace(/\/api$/, "");
     }
     const base =
       fromAxios || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-    console.log("API_BASE:", base); // Debug API_BASE
+    console.log("API_BASE:", base);
     return base;
   }, []);
 
@@ -37,13 +36,12 @@ export default function RequestDetailPage() {
   };
 
   const imgUrl = (val) => {
-    console.log("imgUrl input:", val); // Debug input value
+    console.log("imgUrl input:", val);
     if (!val) {
       console.log("imgUrl output: default image (no value)");
       return `${API_BASE}/public/defaults/landscape.png`;
     }
     let s = String(val).trim().replace(/\\/g, "/");
-    // Check if the URL is an API endpoint or invalid
     if (s.includes("/api/my-requests/") || s.includes("/api/")) {
       console.warn(`Invalid image URL: ${s}, using default image`);
       return `${API_BASE}/public/defaults/landscape.png`;
@@ -79,7 +77,7 @@ export default function RequestDetailPage() {
         console.log(
           "API Response - item_img:",
           res.data?.details?.map((d) => d.item_img)
-        ); // Debug item_img
+        );
         setHeader(res.data?.header ?? null);
         setDetails(res.data?.details ?? []);
       } catch (err) {
@@ -124,7 +122,7 @@ export default function RequestDetailPage() {
     general: "ของใช้ทั่วไป",
   };
 
-  // ===== Badges ของ detail table เท่านั้น =====
+  // ===== Badges =====
   const getApprovalBadge = (st) => {
     let cls = `${styles.badge} `;
     if (st === "approved") cls += styles.apprApproved;
@@ -145,13 +143,16 @@ export default function RequestDetailPage() {
     return <span className={cls}>{processingStatusMap[st] || "-"}</span>;
   };
 
+  // ===== Pagination for consistent table height =====
+  const itemsPerPage = 10;
+
   return (
     <div className={styles.mainHome}>
       <div className={styles.infoContainer}>
         <h1 className={styles.pageTitle}>รายละเอียดคำขอ</h1>
 
         {loading ? (
-          <div className={styles.noDataCell}>⏳ กำลังโหลดข้อมูล...</div>
+          <div className={styles.loadingContainer}>⏳ กำลังโหลดข้อมูล...</div>
         ) : !header ? (
           <div className={styles.noDataCell}>❌ ไม่พบข้อมูลคำขอ</div>
         ) : (
@@ -193,11 +194,11 @@ export default function RequestDetailPage() {
             </div>
 
             {/* ===== TABLE ===== */}
-            <div className={styles.tableFrame}>
+            <div className={styles.tableFrame} style={{ "--rows-per-page": itemsPerPage }}>
               <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
                 <div>รูปภาพ</div>
                 <div>ชื่อรายการ</div>
-                <div>ประเภท</div>
+                <div>หมวดหมู่</div>
                 <div>จำนวนที่ขอ/อนุมัติ</div>
                 <div>หน่วย</div>
                 <div>สถานะการอนุมัติ</div>
@@ -207,47 +208,68 @@ export default function RequestDetailPage() {
 
               <div className={styles.tableBody}>
                 {details.length > 0 ? (
-                  details.map((d) => {
-                    const due =
-                      header?.request_type === "borrow"
-                        ? fmtDate(d.expected_return_date)
-                        : "-";
-                    return (
+                  <>
+                    {details.map((d) => {
+                      const due =
+                        header?.request_type === "borrow"
+                          ? fmtDate(d.expected_return_date)
+                          : "-";
+                      return (
+                        <div
+                          key={d.request_detail_id}
+                          className={`${styles.tableGrid} ${styles.tableRow}`}
+                        >
+                          <div className={`${styles.tableCell} ${styles.centerCell} ${styles.imageCell}`}>
+                            <img
+                              src={imgUrl(d.item_img)}
+                              alt={d.item_name || "item"}
+                              className={styles.imgThumb}
+                              onError={(e) => {
+                                const img = e.currentTarget;
+                                if (img.dataset.fallback !== "1") {
+                                  console.warn(
+                                    `Image failed to load: ${img.src}, using default`
+                                  );
+                                  img.src = `${API_BASE}/public/defaults/landscape.png`;
+                                  img.dataset.fallback = "1";
+                                }
+                              }}
+                            />
+                          </div>
+                          <div className={styles.tableCell} title={d.item_name}>{d.item_name || "-"}</div>
+                          <div className={styles.tableCell}>{categoryMap[d.item_category] || "-"}</div>
+                          <div className={`${styles.tableCell} ${styles.mono}`}>
+                            {(d.requested_qty ?? 0)} / {(d.approved_qty ?? 0)}
+                          </div>
+                          <div className={styles.tableCell}>{d.item_unit || "-"}</div>
+                          <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                            {getApprovalBadge(d.approval_status)}
+                          </div>
+                          <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                            {getProcessingBadge(d.processing_status)}
+                          </div>
+                          <div className={`${styles.tableCell} ${styles.mono}`}>{due}</div>
+                        </div>
+                      );
+                    })}
+                    {/* Filler rows เพื่อรักษาความสูงตาราง */}
+                    {Array.from({ length: Math.max(0, itemsPerPage - details.length) }).map((_, i) => (
                       <div
-                        key={d.request_detail_id}
-                        className={`${styles.tableGrid} ${styles.tableRow}`}
+                        key={`filler-${i}`}
+                        className={`${styles.tableGrid} ${styles.tableRow} ${styles.fillerRow}`}
+                        aria-hidden="true"
                       >
-                        <div>
-                          <img
-                            src={imgUrl(d.item_img)}
-                            alt={d.item_name || "item"}
-                            width={45}
-                            height={45}
-                            className={styles.imgThumb}
-                            onError={(e) => {
-                              const img = e.currentTarget;
-                              if (img.dataset.fallback !== "1") {
-                                console.warn(
-                                  `Image failed to load: ${img.src}, using default`
-                                );
-                                img.src = `${API_BASE}/public/defaults/landscape.png`;
-                                img.dataset.fallback = "1";
-                              }
-                            }}
-                          />
-                        </div>
-                        <div title={d.item_name}>{d.item_name || "-"}</div>
-                        <div>{categoryMap[d.item_category] || "-"}</div>
-                        <div className={styles.mono}>
-                          {(d.requested_qty ?? 0)} / {(d.approved_qty ?? 0)}
-                        </div>
-                        <div>{d.item_unit || "-"}</div>
-                        <div>{getApprovalBadge(d.approval_status)}</div>
-                        <div>{getProcessingBadge(d.processing_status)}</div>
-                        <div className={styles.mono}>{due}</div>
+                        <div className={`${styles.tableCell} ${styles.centerCell} ${styles.imageCell}`}>&nbsp;</div>
+                        <div className={styles.tableCell}>&nbsp;</div>
+                        <div className={styles.tableCell}>&nbsp;</div>
+                        <div className={styles.tableCell}>&nbsp;</div>
+                        <div className={styles.tableCell}>&nbsp;</div>
+                        <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                        <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                        <div className={styles.tableCell}>&nbsp;</div>
                       </div>
-                    );
-                  })
+                    ))}
+                  </>
                 ) : (
                   <div className={styles.noDataCell}>ไม่พบรายการ</div>
                 )}

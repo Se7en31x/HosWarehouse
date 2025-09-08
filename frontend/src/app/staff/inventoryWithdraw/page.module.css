@@ -1,41 +1,26 @@
-/* =============================
-   InventoryWithdraw — page.module.css
-   Palette: #008dda #41c9e2 #ace2e1 #1685bb
-   ============================= */
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* ---- Variables (single source of truth) ---- */
+/* ---- Variables ---- */
 :root {
-  /* Colors */
-  --bg: #f0fbfe;
-  /* very light tint */
+  /* Colors from InventoryCheck */
+  --bg: #f3f4f6; /* Background from InventoryCheck */
   --panel: #ffffff;
   --muted: #6b7280;
   --text: #111827;
   --border: #e5e7eb;
 
-  --primary: #008dda;
-  /* main */
-  --primary-500: #41c9e2;
-  /* focus / accent */
-  --primary-600: #1685bb;
-  /* darker hover */
-
-  --tint-50: #f0fbfe;
-  --tint-100: #e9f6fb;
-  --tint-200: #ace2e1;
-
+  --primary: #2563eb; /* Main blue from InventoryCheck */
+  --primary-dark: #1e40af; /* Darker blue for hover */
   --success: #16a34a;
-  --danger: #ef4444;
-  --warning: #f59e0b;
+  --success-dark: #15803d;
+  --danger: #dc2626;
+  --danger-dark: #b91c1c;
 
-  --radius: 10px;
+  --radius: 8px; /* Adjusted to match InventoryCheck */
 
   /* Table sizing */
   --row-h: 60px;
-  /* 56/60/64px */
-  --rows-per-page: 10;
+  --rows-per-page: 12;
   --table-gap: 12px;
 
   /* Header sizing */
@@ -46,45 +31,39 @@
   --th-letter: 0.01em;
   --th-line: 1.25;
 
-  /* Z-Index scale */
+  /* Z-Index */
   --z-header: 10;
-  /* sticky table header */
   --z-toolbar: 100;
-  /* filters bar */
   --z-select: 9000;
-  /* react-select menu/portal */
   --z-swal: 10000;
-  /* SweetAlert2 (ref) */
   --z-modal-overlay: 12000;
-  /* our modal overlay (top-most) */
 }
 
 /* ---- Layout ---- */
 .mainHome {
   min-height: 100vh;
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
-  /* padding: 24px; */
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--bg); /* #f3f4f6 */
 }
 
+/* ---- Container ---- */
 .infoContainer {
   width: 100%;
   max-width: none;
-  /* remove 1600px cap */
   min-height: 100vh;
-  /* match mainHome */
   background: var(--panel);
   color: var(--text);
   border-radius: 0;
   padding: 24px;
-  /* fixed unit */
   display: flex;
   flex-direction: column;
   gap: 14px;
   flex: 1 1 auto;
   align-self: stretch;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* From InventoryCheck */
 }
 
 /* ---- Header ---- */
@@ -92,12 +71,18 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border); /* #e5e7eb */
 }
 
 .pageTitle {
   font-weight: 700;
   font-size: clamp(1.4rem, 2.2vw, 2rem);
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text);
 }
 
 .titleGroup {
@@ -107,56 +92,34 @@
   flex-wrap: wrap;
 }
 
-/* (legacy segmented toggle — keep if still used elsewhere) */
-.typeToggle {
-  display: inline-flex;
-  background: #e9f6fb;
-  border: 1px solid var(--tint-200);
-  border-radius: 999px;
-  padding: 4px;
-}
-
-.toggleBtn {
-  background: transparent;
-  border: 0;
-  color: #374151;
-  padding: 8px 14px;
-  border-radius: 999px;
-  cursor: pointer;
-}
-
-.toggleBtn:hover {
-  background: #dff1f7;
-}
-
-.active {
-  background: var(--primary);
-  color: #fff;
-}
-
-/* ---- Toolbar (filters) ---- */
+/* ---- Toolbar (Filters) ---- */
 .toolbar {
   position: relative;
   z-index: var(--z-toolbar);
-  /* above sticky header */
   display: flex;
-  gap: 12px;
-  align-items: flex-end;
   justify-content: space-between;
+  align-items: flex-end;
   flex-wrap: wrap;
-  border: 1px solid var(--tint-200);
-  border-radius: 12px;
-  padding: 12px;
-  background: #f6fbfd;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius);
+  background: transparent; /* ✅ เปลี่ยนเป็นโปร่งใส */
 }
 
+/* ซ้าย = หมวดหมู่ + หน่วย */
 .filterGrid {
-  position: relative;
-  z-index: var(--z-toolbar);
-  display: grid;
-  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  display: flex;
   gap: 12px;
   flex: 1;
+  justify-content: flex-start; /* ← ชิดซ้าย */
+}
+
+/* ขวา = ค้นหา + ปุ่มล้าง */
+.searchCluster {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  justify-content: flex-end; /* ← ชิดขวา */
 }
 
 .filterGroup {
@@ -175,32 +138,60 @@
 
 .input {
   height: 40px;
-  border: 1px solid var(--tint-200);
+  border: 1px solid var(--border); /* #e5e7eb */
   border-radius: 8px;
   padding: 0 12px;
   font-size: 0.95rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .input:focus {
-  outline: 2px solid var(--primary-500);
-  outline-offset: 1px;
+  outline: none;
+  border-color: var(--primary); /* #2563eb */
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); /* From InventoryCheck */
 }
 
-/* cluster ขวา: ช่องค้นหา + ปุ่มล้าง */
+.filterGrid>.filterGroup:last-child {
+  justify-self: end;
+  width: 100%;
+  max-width: 360px;
+}
+
 .searchCluster {
   display: flex;
   align-items: flex-end;
-  /* align bottoms */
   gap: 10px;
   margin-left: auto;
-  /* push to right */
 }
 
-.searchCluster .clearButton {
+.ghostBtn {
+  background: #fff;
+  color: #374151;
+  border: 1px solid var(--border); /* #e5e7eb */
+  border-radius: 8px;
   height: 40px;
-  /* match input height */
+  padding: 0 12px;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ghostBtn:hover {
+  background: #f3f4f6; /* #f3f4f6 */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.ghostBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.clearButton {
+  color: var(--primary); /* #2563eb */
+  font-weight: 600;
 }
 
 /* ---- Buttons ---- */
@@ -211,172 +202,157 @@
   padding: 0 14px;
   font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 .actionButton:disabled {
-  opacity: .5;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* withdraw / primary */
-.primaryBtn,
 .withdrawButton {
-  background: #2196f3;
-  border-color: #2196f3;
+  background: var(--primary); /* #2563eb */
+  border-color: var(--primary);
   color: #fff;
 }
 
-.primaryBtn:hover,
 .withdrawButton:hover {
-  background: #1976d2;
-  border-color: #1976d2;
+  background: var(--primary-dark); /* #1e40af */
+  border-color: var(--primary-dark);
 }
 
-/* borrow / danger */
-.dangerBtnOutline,
 .borrowButton {
-  background: #f44336;
-  border-color: #f44336;
+  background: var(--danger); /* #dc2626 */
+  border-color: var(--danger);
   color: #fff;
 }
 
-.dangerBtnOutline:hover,
 .borrowButton:hover {
-  background: #d32f2f;
-  border-color: #d32f2f;
+  background: var(--danger-dark); /* #b91c1c */
+  border-color: var(--danger-dark);
 }
 
-/* success */
 .successBtn {
-  background: var(--success);
+  background: var(--success); /* #16a34a */
   color: #fff;
   border-color: var(--success);
 }
 
 .successBtn:hover {
-  background: #119046;
+  background: var(--success-dark); /* #15803d */
 }
 
-/* ghost */
-.ghostBtn {
-  background: #fff;
-  color: #374151;
-  border: 1px solid var(--tint-200);
-  border-radius: 8px;
-  height: 40px;
-  padding: 0 12px;
+.dangerBtnOutline {
+  background: var(--danger); /* #dc2626 */
+  border-color: var(--danger);
+  color: #fff;
 }
 
-.ghostBtn:hover {
-  background: #e9f6fb;
-}
-
-.clearButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--primary-600);
+.dangerBtnOutline:hover {
+  background: var(--danger-dark); /* #b91c1c */
+  border-color: var(--danger-dark);
 }
 
 /* ---- Table ---- */
-
-/* กรอบเดียวครอบทั้งหัวตารางและบอดี้ */
-.tableFrame {
-  border: 1px solid var(--tint-200);
+.tableSection {
   border-radius: var(--radius);
-  background: #fff;
+  background: #ffffff;
   overflow: hidden;
-  /* ให้มุมโค้งเนียน */
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
-/* ใช้ grid เดียวกันทั้ง header และ body */
 .tableGrid {
   display: grid;
   grid-template-columns:
-    minmax(44px, .5fr) minmax(100px, 1fr) minmax(80px, .8fr) minmax(200px, 2fr) minmax(120px, 1.2fr) minmax(90px, .9fr) minmax(90px, .9fr) minmax(100px, .8fr)
-    /* minmax(130px, 1.2fr)  */
-    minmax(100px, 1fr);
+    minmax(44px, 0.5fr)
+    minmax(100px, 1fr)
+    minmax(70px, 0.8fr)
+    minmax(180px, 2fr)
+    minmax(120px, 1.2fr)
+    minmax(90px, 0.8fr)
+    minmax(90px, 0.8fr)
+    minmax(100px, 1.5fr)
+    minmax(110px, 1fr);
   align-items: center;
 }
 
-/* Header อยู่ในกรอบเดียวกัน (ไม่มีขอบแยก) */
 .tableHeader {
   position: sticky;
   top: 0;
   z-index: var(--z-header);
-  background: #eef9fc;
-
-  /* ปรับให้เป็นส่วนหนึ่งของกรอบ */
-  margin: 0;
-  border: 0;
-  border-radius: 0;
-  border-bottom: 1px solid var(--tint-200);
-
-  /* ระยะให้ตรงกับแถวด้านล่าง */
+  background: #f9fafb; /* From InventoryCheck */
   padding-block: var(--th-pad-y);
   padding-inline: var(--th-pad-x);
-
   font-weight: 700;
   color: #374151;
   font-size: var(--th-font);
   line-height: var(--th-line);
   min-height: var(--th-min-h);
+  border-bottom: 1px solid var(--border); /* #e5e7eb */
 }
 
-.tableHeader.tableGrid>div,
-.tableHeader .headerItem {
+.tableHeader .headerItem,
+.tableHeader>div {
   font-weight: 700;
-  letter-spacing: var(--th-letter);
   display: flex;
   align-items: center;
   white-space: nowrap;
   padding: 0;
 }
 
-/* center header for last column */
-.tableHeader>div:last-child,
-.tableHeader .headerItem:last-child {
+.tableHeader .headerItem:nth-child(1),
+.tableHeader .headerItem:nth-child(3),
+.tableHeader .headerItem:nth-child(6),
+.tableHeader .headerItem:nth-child(7),
+.tableHeader .headerItem:nth-child(8),
+.tableHeader .headerItem:nth-child(9) {
   justify-content: center;
   text-align: center;
 }
 
-/* Body – ไม่ต้องมีกรอบเองแล้ว */
 .inventory {
   border: 0;
   border-radius: 0;
-  background: #fff;
+  background: #ffffff;
   height: calc(var(--row-h) * var(--rows-per-page));
-  /* fixed 10 rows */
   overflow: hidden;
+}
+
+.inventory .tableRow:nth-child(odd) {
+  background: #ffffff;
+}
+
+.inventory .tableRow:nth-child(even) {
+  background: #f9fafb;
+}
+
+.tableRow:hover {
+  background: #f3f4f6; /* #f3f4f6 */
 }
 
 .tableRow {
   box-sizing: border-box;
   height: var(--row-h);
   padding: 0 var(--th-pad-x);
-  /* ให้เท่ากับ header */
-  border-top: 1px solid #deedf1;
-  /* เส้นคั่นระหว่างแถว */
-}
-
-.tableRow:hover {
-  background: var(--tint-100);
+  border-top: 1px solid var(--border); /* #e5e7eb */
+  transition: background-color 0.2s ease;
 }
 
 .tableRow:first-child {
   border-top: 0;
 }
 
-/* ไม่ชนกับเส้นล่างของ header */
-.inventory .tableRow:last-child {
-  border-bottom: 0;
-}
-
+.tableCell,
 .cell {
+  display: flex;
+  align-items: center;
   padding: 4px 6px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 0.95rem;
 }
 
 .cellName {
@@ -391,108 +367,118 @@
 }
 
 .imageCell img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border); /* #e5e7eb */
   display: block;
+  margin: 0 auto;
+  transition: transform 0.2s ease;
 }
 
-/* index cell center (first column in body rows) */
-.inventory .tableRow>.tableCell:first-child,
-.inventory .tableRow>.cell:first-child {
-  justify-content: center;
-  text-align: center;
+.imageCell img:hover {
+  transform: scale(1.1);
 }
 
-/* No data */
-.noData,
-.noDataMessage {
+.noDataMessage,
+.noData {
   height: calc(var(--row-h) * var(--rows-per-page));
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--muted);
+  font-size: 1rem;
 }
 
-/* Badges */
-.badge {
-  display: inline-flex;
+.fillerRow {
+  pointer-events: none;
+}
+
+.fillerRow:hover {
+  background: inherit !important;
+}
+
+/* ---- Loading ---- */
+.loadingContainer {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  display: flex;
   align-items: center;
-  height: 24px;
-  border-radius: 999px;
-  padding: 0 10px;
-  font-size: 12px;
-  font-weight: 700;
-  border: 1px solid transparent;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 1rem;
+  background: url('/loading-spinner.gif') no-repeat center;
 }
 
-.badgeSuccess {
-  background: #ecfdf5;
-  color: #065f46;
-  border-color: #a7f3d0;
+/* ---- Pagination ---- */
+.paginationBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--border); /* #e5e7eb */
+  background: #ffffff;
 }
 
-.badgeWarning {
-  background: #fffbeb;
-  color: #92400e;
-  border-color: #fde68a;
+.paginationInfo {
+  font-size: 0.9rem;
+  color: var(--muted);
 }
 
-.badgeDanger {
-  background: #fef2f2;
-  color: #991b1b;
-  border-color: #fecaca;
-}
-
-.badgeNeutral {
-  background: #e7f6fb;
-  color: #0e7490;
-  border-color: #cbeaf3;
-}
-
-/* Pagination (locked just beneath fixed rows area) */
 .paginationControls {
   display: flex;
   list-style: none;
-  padding: 10px;
+  padding: 0;
   margin: 0;
   gap: 6px;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: center;
-  background: #fff;
+  background: transparent;
   border-top: 0;
 }
 
 .pageButton {
-  background: #fff;
-  border: 1px solid var(--tint-200);
-  border-radius: 8px;
-  padding: 6px 10px;
   min-width: 34px;
+  height: 40px;
+  border: 1px solid var(--border); /* #e5e7eb */
+  border-radius: 8px;
+  background: #ffffff;
   cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1f2a44;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+  padding: 6px 10px;
 }
 
 .pageButton:hover:not(:disabled) {
-  background: #e9f6fb;
+  background: #f3f4f6; /* #f3f4f6 */
+  transform: translateY(-1px);
 }
 
 .pageButton:disabled {
-  opacity: .5;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .activePage {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary); /* #2563eb */
+  color: #ffffff;
   border-color: var(--primary);
 }
 
 .ellipsis {
+  padding: 0 8px;
   color: var(--muted);
+  font-size: 1rem;
 }
 
-/* ---- Modal (top-most) ---- */
+/* ---- Modal ---- */
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, .5);
+  background: rgba(0, 0, 0, 0.5);
   display: grid;
   place-items: center;
   z-index: var(--z-modal-overlay);
@@ -504,7 +490,7 @@
   width: 94%;
   max-width: 560px;
   background: #fff;
-  border: 1px solid var(--tint-200);
+  border: 1px solid var(--border); /* #e5e7eb */
   border-radius: 14px;
   padding: 18px;
   display: flex;
@@ -516,21 +502,22 @@
   font-size: 1.25rem;
   font-weight: 800;
   margin: 0 0 2px;
+  color: var(--text);
 }
 
 .modalContentRow {
   display: flex;
   gap: 14px;
   align-items: flex-start;
-  border-top: 1px solid var(--tint-200);
-  border-bottom: 1px solid var(--tint-200);
+  border-top: 1px solid var(--border); /* #e5e7eb */
+  border-bottom: 1px solid var(--border);
   padding: 12px 0;
 }
 
 .modalDetails {
   display: grid;
   gap: 6px;
-  font-size: .95rem;
+  font-size: 0.95rem;
 }
 
 .modalForm {
@@ -544,7 +531,7 @@
   gap: 8px;
 }
 
-/* ---- Switch with text inside (switch2) ---- */
+/* ---- Switch ---- */
 .typeSwitch {
   display: inline-flex;
   align-items: center;
@@ -554,7 +541,7 @@
   position: relative;
   width: 120px;
   height: 36px;
-  border: 1px solid var(--tint-200);
+  border: 1px solid var(--border); /* #e5e7eb */
   border-radius: 999px;
   background: #fff;
   padding: 0;
@@ -574,7 +561,7 @@
   font-weight: 700;
   font-size: 0.9rem;
   user-select: none;
-  transition: color .25s ease;
+  transition: color 0.25s ease;
   z-index: 1;
 }
 
@@ -593,21 +580,20 @@
   width: calc(50% - 4px);
   height: calc(100% - 4px);
   border-radius: 999px;
-  background: #2196f3;
-  /* withdraw color */
-  transition: transform .28s cubic-bezier(.4, 0, .2, 1), background-color .28s ease;
+  background: var(--primary); /* #2563eb for withdraw */
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.28s ease;
   z-index: 0;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border); /* #e5e7eb */
 }
 
 .switch2:focus-visible {
-  outline: 2px solid var(--primary-500);
+  outline: 2px solid var(--primary); /* #2563eb */
   outline-offset: 2px;
 }
 
 .isWithdraw .switch2Thumb {
   transform: translateX(0);
-  background: #2196f3;
+  background: var(--primary); /* #2563eb */
 }
 
 .isWithdraw .switch2LabelLeft {
@@ -620,7 +606,7 @@
 
 .isBorrow .switch2Thumb {
   transform: translateX(calc(100% + 4px));
-  background: #f44336;
+  background: var(--danger); /* #dc2626 */
 }
 
 .isBorrow .switch2LabelLeft {
@@ -632,7 +618,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-
   .switch2Thumb,
   .switch2LabelLeft,
   .switch2LabelRight {
@@ -640,10 +625,51 @@
   }
 }
 
+/* ---- Stock Status Badges ---- */
+.stBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 1px solid transparent;
+  min-width: 92px;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.stBadge:hover {
+  transform: translateY(-1px);
+}
+
+.stAvailable {
+  color: #166534;
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
+.stOut {
+  color: #9f1239;
+  background: #ffe4e6;
+  border-color: #fecdd3;
+}
+
+.stHold {
+  color: #334155;
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
 /* ---- Responsive ---- */
 @media (max-width: 1024px) {
   .filterGrid {
     grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+  .filterGrid>.filterGroup:last-child {
+    justify-self: stretch;
+    max-width: none;
   }
 }
 
@@ -655,9 +681,11 @@
     flex-wrap: wrap;
     row-gap: 6px;
   }
-
-  .searchCluster .filterGroup {
-    flex: 1 1 260px;
+  .filterGrid {
+    grid-template-columns: 1fr;
+  }
+  .filterGrid>.filterGroup:last-child {
+    justify-self: stretch;
   }
 }
 
@@ -668,98 +696,19 @@
     --th-pad-y: 10px;
     --table-gap: 10px;
   }
-
   .mainHome {
     padding: 12px;
   }
-
-  .filterGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .toolbar {
-    gap: 10px;
-  }
-
   .tableGrid {
     grid-template-columns:
-      44px 100px 80px 200px 120px 90px 90px 100px 100px;
+      40px
+      100px
+      60px
+      180px
+      120px
+      90px
+      90px
+      120px
+      120px;
   }
 }
-
-.tableGrid .tableCell {
-  font-size: 0.95rem;
-}
-
-/* เพิ่มรองรับคลาส .cell ที่อาจใช้ในบางหน้า */
-.tableGrid .cell {
-  font-size: 0.95rem;
-}
-
-/* ==== Status badges (สถานะ) ==== */
-.stBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 26px;
-  padding: 0 12px;
-  border-radius: 999px;
-  font-size: 0.95rem;
-  /* เท่ากับ .tableCell */
-  font-weight: 700;
-  line-height: 1;
-  border: 1px solid transparent;
-  vertical-align: middle;
-}
-
-/* จุดสีเล็ก ๆ นำหน้า */
-.stBadge::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: .9;
-}
-
-/* พร้อมใช้งาน = เขียวอ่อน */
-.stAvailable {
-  color: #166534;
-  /* text */
-  background: #DCFCE7;
-  /* bg  */
-  border-color: #86EFAC;
-  /* border */
-}
-
-/* ใกล้หมด / ควรเติม = เหลือง/ส้ม (เตือน) */
-.stLow {
-  color: #92400e;
-  background: #FEF3C7;
-  border-color: #FDE68A;
-}
-
-/* หมดสต็อก = แดงอ่อน */
-.stOut {
-  color: #9F1239;
-  background: #FFE4E6;
-  border-color: #FECDD3;
-}
-
-/* พักใช้งาน = เทา */
-.stHold{
-  color:#334155;
-  background:#E2E8F0;
-  border-color:#CBD5E1;
-}
-
-
-/* (ถ้าตารางมีเส้นใต้ทุกเซลล์และอยากให้ป้ายชิดกลางแนวตั้ง) */
-.tableCell>.stBadge {
-  align-self: center;
-}
-
-.tableFrame .stBadge::before {
-  content: none;
-}
-

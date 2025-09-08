@@ -1,22 +1,21 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import dynamic from 'next/dynamic';
+import dynamic from "next/dynamic";
 import { ClipboardList, FileDown, Search } from "lucide-react";
 import { manageAxios } from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
+import { exportReturnPDF } from "@/app/components/pdf/templates/returnTemplate";
+import { exportReturnCSV } from "@/app/components/Csv/templates/returnCSV";
 
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import Papa from "papaparse";
-import { saveAs } from "file-saver";
-
-// ใช้ dynamic import เพื่อแก้ไข Hydration Error ที่เกิดจาก react-select
-const DynamicSelect = dynamic(() => import('react-select'), { ssr: false });
+// ใช้ dynamic import เพื่อแก้ Hydration Error ที่เกิดจาก react-select
+const DynamicSelect = dynamic(() => import("react-select"), { ssr: false });
 
 export default function ReturnReport() {
   const [department, setDepartment] = useState(null);
   const [dateRange, setDateRange] = useState(null);
   const [approvalStatus, setApprovalStatus] = useState(null);
+  const [customStart, setCustomStart] = useState("");   // ✅ state สำหรับ custom start
+  const [customEnd, setCustomEnd] = useState("");       // ✅ state สำหรับ custom end
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -36,6 +35,7 @@ export default function ReturnReport() {
     { value: "last9months", label: "9 เดือนที่ผ่านมา" },
     { value: "last12months", label: "12 เดือนที่ผ่านมา" },
     { value: "year", label: "ปีนี้" },
+    { value: "custom", label: "กำหนดเอง" },   // ✅ เพิ่ม option กำหนดเอง
   ];
 
   const approvalStatusOptions = [
@@ -79,7 +79,7 @@ export default function ReturnReport() {
   };
 
   const toISODate = (date) => {
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split("T")[0];
   };
 
   const fetchReport = useCallback(async () => {
@@ -90,7 +90,7 @@ export default function ReturnReport() {
       if (department?.value && department.value !== "all") {
         params.department = department.value;
       }
-      
+
       if (approvalStatus?.value && approvalStatus.value !== "all") {
         params.approvalStatus = approvalStatus.value;
       }
@@ -112,6 +112,11 @@ export default function ReturnReport() {
           start = new Date();
           start.setMonth(today.getMonth() - months);
           end = today;
+        } else if (option === "custom") {
+          if (customStart && customEnd) {
+            start = new Date(customStart);
+            end = new Date(customEnd);
+          }
         }
 
         if (start && end) {
@@ -127,61 +132,11 @@ export default function ReturnReport() {
     } finally {
       setLoading(false);
     }
-  }, [department, dateRange, approvalStatus]);
+  }, [department, dateRange, approvalStatus, customStart, customEnd]);
 
   useEffect(() => {
     fetchReport();
   }, [fetchReport]);
-
-  const exportCSV = useCallback(() => {
-    if (!data.length) return;
-    const csv = Papa.unparse(data);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    saveAs(blob, `return-report-${Date.now()}.csv`);
-  }, [data]);
-
-  const exportPDF = useCallback(() => {
-    if (!data.length) return;
-    const doc = new jsPDF();
-    doc.setFontSize(14);
-    doc.text("รายงานการคืน (Return Report)", 14, 15);
-
-    const tableData = data.map((item) => [
-      item.request_code,
-      item.department,
-      item.borrower_name,
-      item.item_name,
-      item.approved_qty,
-      item.returned_qty,
-      item.not_returned_qty,
-      item.return_status,
-      formatDate(item.last_return_date),
-      translateApprovalStatus(item.approval_status).text,
-      item.return_note || "-",
-    ]);
-
-    autoTable(doc, {
-      head: [
-        [
-          "เลขที่คำขอ",
-          "แผนก",
-          "ผู้ยืม",
-          "ชื่อพัสดุ",
-          "จำนวนอนุมัติ",
-          "คืนแล้ว",
-          "คงเหลือ",
-          "สถานะการคืน",
-          "วันคืนล่าสุด",
-          "สถานะอนุมัติ",
-          "หมายเหตุ",
-        ],
-      ],
-      body: tableData,
-      startY: 25,
-    });
-
-    doc.save(`return-report-${Date.now()}.pdf`);
-  }, [data]);
 
   return (
     <div className={styles.container}>
@@ -206,6 +161,26 @@ export default function ReturnReport() {
           onChange={setDateRange}
           placeholder="ช่วงเวลา"
         />
+
+        {/* ✅ ถ้าเลือกกำหนดเอง → แสดงช่องเลือกวันที่ */}
+        {dateRange?.value === "custom" && (
+          <div className={styles.dateInputs}>
+            <input
+              type="date"
+              value={customStart}
+              onChange={(e) => setCustomStart(e.target.value)}
+              className={styles.dateInput}
+            />
+            <span className={styles.dateSeparator}>ถึง</span>
+            <input
+              type="date"
+              value={customEnd}
+              onChange={(e) => setCustomEnd(e.target.value)}
+              className={styles.dateInput}
+            />
+          </div>
+        )}
+
         <DynamicSelect
           className={styles.selectBox}
           options={approvalStatusOptions}
@@ -214,15 +189,31 @@ export default function ReturnReport() {
           placeholder="สถานะอนุมัติ"
         />
 
-        <button className={styles.btnPrimary} onClick={fetchReport}>
+        <button className={styles.btnSecondary} onClick={fetchReport}>
           <Search size={16} style={{ marginRight: "6px" }} />
           ค้นหา
         </button>
-        <button className={styles.btnSecondary} onClick={exportPDF}>
+        <button
+          className={styles.btnSecondary}
+          onClick={() =>
+            exportReturnPDF({
+              data,
+              filters: {
+                departmentLabel: department?.label,
+                dateLabel: dateRange?.label,
+                dateValue: dateRange?.value,
+                start: customStart,
+                end: customEnd,
+                approvalLabel: approvalStatus?.label,
+              },
+              user: { user_fname: "วัชรพล", user_lname: "อินทร์ทอง" },
+            })
+          }
+        >
           <FileDown size={16} style={{ marginRight: "6px" }} />
           PDF
         </button>
-        <button className={styles.btnSecondary} onClick={exportCSV}>
+        <button className={styles.btnSecondary} onClick={() => exportReturnCSV({ data })}>
           <FileDown size={16} style={{ marginRight: "6px" }} />
           CSV
         </button>
@@ -270,12 +261,12 @@ export default function ReturnReport() {
                       <td>
                         <span
                           className={`${styles.badge} ${item.return_status === "ยังไม่คืน"
-                              ? styles.badgeRed
-                              : item.return_status === "คืนบางส่วน"
-                                ? styles.badgeOrange
-                                : item.return_status === "ปฏิเสธ"
-                                  ? styles.badgeGray
-                                  : styles.badgeGreen
+                            ? styles.badgeRed
+                            : item.return_status === "คืนบางส่วน"
+                              ? styles.badgeOrange
+                              : item.return_status === "ปฏิเสธ"
+                                ? styles.badgeGray
+                                : styles.badgeGreen
                             }`}
                         >
                           {item.return_status}

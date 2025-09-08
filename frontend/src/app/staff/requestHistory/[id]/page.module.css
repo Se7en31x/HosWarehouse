@@ -1,241 +1,366 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* ---- Variables ---- */
 .mainHome {
   --bg: #f3f4f6;
-  --panel: #fff;
+  --panel: #ffffff;
   --text: #111827;
   --muted: #6b7280;
   --border: #e5e7eb;
 
-  --row-h: 60px;
-  --rows-per-page: 12;
+  --primary: #2563eb;
+  --primary-dark: #1e40af;
+  --success: #16a34a;
+  --success-dark: #15803d;
+  --danger: #dc2626;
+  --danger-dark: #b91c1c;
 
-  --tbl-header-bg: #e9f6fb;
-  --tbl-header-text: #0f3a54;
-  --tbl-border: #cfeaf6;
-  --tbl-row-hover: #f0fbfe;
+  --radius: 8px;
+
+  --row-h: 60px;
+  --rows-per-page: 10;
+  --th-font: 1.05rem;
+  --th-min-h: 60px;
+  --th-pad-y: 14px;
+  --th-pad-x: 12px;
+  --th-letter: 0.01em;
+  --th-line: 1.25;
+
+  --z-header: 10;
 
   min-height: 100vh;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   background: var(--bg);
 }
 
-/* Container */
+/* ---- Container ---- */
 .infoContainer {
   width: 100%;
+  max-width: none;
   min-height: 100vh;
   background: var(--panel);
   color: var(--text);
+  border-radius: 0;
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  flex: 1 1 auto;
+  align-self: stretch;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
+/* ---- Header ---- */
 .pageTitle {
   font-weight: 700;
   font-size: clamp(1.4rem, 2.2vw, 2rem);
   margin: 0;
-}
-
-.summaryCard {
-  border: 1px solid var(--tbl-border);
-  border-radius: 12px;
-  padding: 16px 20px;
-  background: #fff;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* แถวข้อมูล */
-.summaryCard {
-  border: 1px solid var(--tbl-border);
-  border-radius: 12px;
-  padding: 16px 20px;
-  background: #fff;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* บรรทัดบน 4 ช่อง */
-.summaryRowTop {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);  /* ✅ 4 คอลัมน์ */
-  gap: 12px 24px;
-  width: 100%;
-}
-
-/* บรรทัดล่าง 2 ช่อง 
-   คอลัมน์ 2 จะขนานกับคอลัมน์ 2 ของบรรทัดบน (วันที่ขอ) */
-.summaryRowBottom {
-  display: grid;
-  grid-template-columns: 1fr 1fr 2fr; /* ✅ ช่อง 2 = สถานะ ตรงกับ วันที่ขอ */
-  gap: 12px 24px;
-  width: 100%;
-}
-
-.summaryNote {
-  font-size: 1rem;
-  line-height: 1.5;
   color: var(--text);
 }
 
-.summaryRowTop strong,
-.summaryRowBottom strong,
-.summaryNote strong {
-  font-weight: 600;
-  color: var(--tbl-header-text);
-}
-
-/* ===== Table ===== */
-.tableFrame {
-  border: 1px solid var(--tbl-border);
-  border-radius: 10px;
-  background: #fff;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(2, 132, 199, .08);
+/* ---- Summary Card ---- */
+.summaryCard {
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
   display: flex;
   flex-direction: column;
+  gap: 12px;
+}
+
+.summaryRowTop,
+.summaryRowBottom {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.summaryNote {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+/* ---- Table ---- */
+.tableFrame {
+  border-radius: var(--radius);
+  background: #ffffff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  /* ไม่มี box-shadow */
 }
 
 .tableGrid {
   display: grid;
   grid-template-columns:
-    minmax(100px, 1fr) 72px minmax(220px, 2fr) minmax(140px, 1.2fr) minmax(160px, 1.2fr) minmax(100px, 0.9fr) minmax(170px, 1.2fr) minmax(170px, 1.2fr) minmax(140px, 1fr);
+    minmax(60px, 0.8fr)
+    minmax(200px, 2fr)
+    minmax(120px, 1fr)
+    minmax(120px, 1fr)
+    minmax(80px, 0.8fr)
+    minmax(100px, 1fr)
+    minmax(100px, 1fr)
+    minmax(100px, 1fr);
   align-items: center;
 }
 
 .tableHeader {
   position: sticky;
   top: 0;
-  z-index: 10;
-  background: var(--tbl-header-bg);
-  color: var(--tbl-header-text);
-  border-bottom: 1px solid var(--tbl-border);
-  padding-block: 14px;
-  padding-inline: 12px;
+  z-index: var(--z-header);
+  background: #f9fafb;
+  padding-block: var(--th-pad-y);
+  padding-inline: var(--th-pad-x);
   font-weight: 700;
-  font-size: 1.05rem;
-  min-height: 60px;
+  color: #374151;
+  font-size: var(--th-font);
+  line-height: var(--th-line);
+  min-height: var(--th-min-h);
+  border-bottom: 1px solid var(--border);
+}
+
+.headerItem {
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* จัดกึ่งกลางทั้งแนวตั้งและแนวนอน */
+  height: 100%;
+  padding: 4px 6px;
+  white-space: nowrap;
+  text-align: center;
 }
 
 .tableBody {
-  min-height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(var(--row-h) * var(--rows-per-page));
+  overflow: hidden;
 }
 
 .tableRow {
   height: var(--row-h);
-  padding: 0 12px;
-  border-top: 1px solid var(--tbl-border);
-  transition: background .18s ease;
+  padding: 0 var(--th-pad-x);
+  border-top: 1px solid var(--border);
+  transition: background-color 0.2s ease;
+}
+
+.tableRow:nth-child(odd) {
+  background: #ffffff;
+}
+
+.tableRow:nth-child(even) {
+  background: #f9fafb;
 }
 
 .tableRow:hover {
-  background: var(--tbl-row-hover);
+  background: #f3f4f6;
 }
 
-.tableGrid>div {
-  padding: 0 6px;
+.tableRow:first-child {
+  border-top: 0;
+}
+
+.tableCell {
+  display: flex;
+  align-items: center;
+  padding: 4px 6px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 0.95rem;
 }
 
-.noDataCell {
-  min-height: calc(var(--row-h) * var(--rows-per-page));
+.centerCell {
+  justify-content: center;
+}
+
+.mono {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.9rem;
+}
+
+.imageCell {
+  width: 60px; /* ล็อคความกว้างของเซลล์รูปภาพ */
+  height: var(--row-h); /* ใช้ความสูงเดียวกับแถว */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.imgThumb {
+  width: 45px;
+  height: 45px;
+  border-radius: 4px;
+  object-fit: cover;
+  object-position: center;
+  flex-shrink: 0; /* ป้องกันการหด */
+  flex-grow: 0; /* ป้องกันการขยาย */
+}
+
+.fillerRow {
+  pointer-events: none;
+}
+
+.fillerRow:hover {
+  background: inherit !important;
+}
+
+/* ---- Loading ---- */
+.loadingContainer {
+  height: calc(var(--row-h) * var(--rows-per-page));
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--muted);
+  font-size: 1rem;
+  background: url('/loading-spinner.gif') no-repeat center;
 }
 
-/* รูป */
-.imgThumb {
-  width: 45px;
-  height: 45px;
-  object-fit: cover;
-  border-radius: 6px;
-  border: 1px solid var(--tbl-border);
-  background: #fff;
-  display: block;
+/* ---- No Data ---- */
+.noDataCell {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 1rem;
 }
 
-.mono {
-  font-variant-numeric: tabular-nums;
-}
-
-/* Badges (เฉพาะในตาราง) */
+/* ---- Badges ---- */
 .badge {
-  display: inline-block;
-  padding: .35rem .7rem;
-  font-size: .95rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
   font-weight: 700;
-  border-radius: 15px;
+  font-size: 0.85rem;
   border: 1px solid transparent;
+  min-width: 92px;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.badge:hover {
+  transform: translateY(-1px);
 }
 
 .apprApproved {
-  background: #ecfdf5;
-  color: #065f46;
-  border-color: #bbf7d0;
+  color: #166534;
+  background: #dcfce7;
+  border-color: #86efac;
 }
 
 .apprPartial {
-  background: #eef2ff;
-  color: #3730a3;
-  border-color: #c7d2fe;
+  color: #1e3a8a;
+  background: #dbeafe;
+  border-color: #93c5fd;
 }
 
 .apprRejected {
-  background: #fef2f2;
-  color: #b91c1c;
-  border-color: #fecaca;
+  color: #9f1239;
+  background: #ffe4e6;
+  border-color: #fecdd3;
 }
 
 .apprWaiting {
-  background: #fffbeb;
-  color: #92400e;
-  border-color: #fde68a;
+  color: #7c2d12;
+  background: #fef3c7;
+  border-color: #f59e0b;
 }
 
 .procPreparing {
-  background: #f0f9ff;
-  color: #075985;
-  border-color: #bae6fd;
+  color: #1e3a8a;
+  background: #dbeafe;
+  border-color: #93c5fd;
 }
 
 .procProcessing {
-  background: #f5f3ff;
-  color: #5b21b6;
-  border-color: #ddd6fe;
+  color: #1e3a8a;
+  background: #dbeafe;
+  border-color: #93c5fd;
 }
 
 .procCompleted {
-  background: #f0fdf4;
   color: #166534;
-  border-color: #bbf7d0;
+  background: #dcfce7;
+  border-color: #86efac;
 }
 
 .procReturned {
-  background: #f5fffa;
-  color: #065f46;
-  border-color: #a7f3d0;
+  color: #166534;
+  background: #dcfce7;
+  border-color: #86efac;
 }
 
 .procWaiting {
-  background: #fffbeb;
-  color: #92400e;
-  border-color: #fde68a;
+  color: #7c2d12;
+  background: #fef3c7;
+  border-color: #f59e0b;
 }
 
-@media (max-width:900px) {
-  .tableGrid {
-    min-width: 980px;
+/* ---- Responsive ---- */
+@media (max-width: 1024px) {
+  .summaryRowTop,
+  .summaryRowBottom {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .summaryRowTop,
+  .summaryRowBottom {
+    grid-template-columns: 1fr;
   }
 
-  .tableFrame {
-    overflow: auto;
+  .tableGrid {
+    grid-template-columns:
+      minmax(60px, 0.8fr)
+      minmax(200px, 2fr)
+      minmax(120px, 1fr)
+      minmax(100px, 1fr)
+      minmax(100px, 1fr);
+    grid-auto-rows: auto;
+    row-gap: 6px;
+  }
+
+  .tableHeader {
+    display: none;
+  }
+
+  .tableRow {
+    grid-template-columns:
+      minmax(60px, 0.8fr)
+      minmax(200px, 2fr)
+      minmax(120px, 1fr)
+      minmax(100px, 1fr)
+      minmax(100px, 1fr);
+    border-top: 1px solid var(--border);
+    padding: 12px;
+    height: auto;
+  }
+
+  .tableCell:nth-child(4), /* จำนวนที่ขอ/อนุมัติ */
+  .tableCell:nth-child(6), /* สถานะการอนุมัติ */
+  .tableCell:nth-child(7)  /* สถานะการดำเนินการ */ {
+    display: none;
+  }
+
+  .fillerRow {
+    display: none;
+  }
+
+  .imageCell {
+    width: 60px;
+    height: auto;
+  }
+
+  .imgThumb {
+    width: 45px;
+    height: 45px;
   }
 }

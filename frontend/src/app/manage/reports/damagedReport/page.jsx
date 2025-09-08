@@ -1,16 +1,14 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import dynamic from 'next/dynamic';
+import dynamic from "next/dynamic";
 import { ClipboardCheck, FileDown, Search } from "lucide-react";
 import { manageAxios } from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
 
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import Papa from "papaparse";
-import { saveAs } from "file-saver";
+import { exportDamagedPDF } from "@/app/components/pdf/templates/damagedTemplate";
+import { exportDamagedCSV } from "@/app/components/Csv/templates/damagedCSV";
 
-const DynamicSelect = dynamic(() => import('react-select'), { ssr: false });
+const DynamicSelect = dynamic(() => import("react-select"), { ssr: false });
 
 export default function DamagedReportPage() {
   const [data, setData] = useState([]);
@@ -19,6 +17,8 @@ export default function DamagedReportPage() {
   const [damageType, setDamageType] = useState(null);
   const [manageStatus, setManageStatus] = useState(null);
   const [dateRange, setDateRange] = useState(null);
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
 
   const categoryOptions = [
     { value: "all", label: "ทั้งหมด" },
@@ -41,7 +41,7 @@ export default function DamagedReportPage() {
     { value: "unmanaged", label: "ยังไม่จัดการ" },
     { value: "partially_managed", label: "จัดการบางส่วน" },
   ];
-  
+
   const dateOptions = [
     { value: "all", label: "ทั้งหมด" },
     { value: "today", label: "วันนี้" },
@@ -51,6 +51,7 @@ export default function DamagedReportPage() {
     { value: "last9months", label: "9 เดือนที่ผ่านมา" },
     { value: "last12months", label: "12 เดือนที่ผ่านมา" },
     { value: "year", label: "ปีนี้" },
+    { value: "custom", label: "กำหนดเอง" },
   ];
 
   const translateCategory = (cat) => {
@@ -65,64 +66,75 @@ export default function DamagedReportPage() {
   };
 
   const translateDamageType = (type) => {
-    const map = {
-      damaged: "ชำรุด",
-      lost: "สูญหาย",
-    };
+    const map = { damaged: "ชำรุด", lost: "สูญหาย" };
     return map[type] || type || "-";
   };
 
   const formatDate = (iso) => {
     if (!iso) return "-";
-    const d = new Date(iso);
-    return d.toLocaleDateString("th-TH", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString("th-TH", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+    } catch {
+      return "-";
+    }
   };
 
-  const toISODate = (date) => {
-    return date.toISOString().split('T')[0];
+  const translateManageStatus = (status) => {
+    switch (status) {
+      case "unmanaged":
+        return { text: "ยังไม่จัดการ", className: styles.badgeRed };
+      case "managed":
+        return { text: "จัดการแล้ว", className: styles.badgeGreen };
+      case "partially_managed":
+        return { text: "จัดการบางส่วน", className: styles.badgeOrange };
+      default:
+        // ✅ คืน object เสมอ ป้องกัน undefined
+        return { text: "-", className: styles.badgeGray || "" };
+    }
   };
+
+  const toISODate = (date) => date.toISOString().split("T")[0];
 
   const fetchReport = useCallback(async () => {
     try {
       setLoading(true);
       const params = {};
-
-      if (itemCategory?.value && itemCategory.value !== "all") {
+      if (itemCategory?.value && itemCategory.value !== "all")
         params.category = itemCategory.value;
-      }
-      if (damageType?.value && damageType.value !== "all") {
+      if (damageType?.value && damageType.value !== "all")
         params.damage_type = damageType.value;
-      }
-      if (manageStatus?.value && manageStatus.value !== "all") {
+      if (manageStatus?.value && manageStatus.value !== "all")
         params.status = manageStatus.value;
+
+      const today = new Date();
+      let start = null,
+        end = null;
+      const option = dateRange?.value;
+
+      if (option === "today") {
+        start = today;
+        end = today;
+      } else if (option === "year") {
+        start = new Date(today.getFullYear(), 0, 1);
+        end = new Date(today.getFullYear(), 11, 31);
+      } else if (option?.startsWith("last")) {
+        const months = parseInt(option.replace("last", "").replace("months", ""));
+        start = new Date();
+        start.setMonth(today.getMonth() - months);
+        end = today;
+      } else if (option === "custom" && customStart && customEnd) {
+        start = new Date(customStart);
+        end = new Date(customEnd);
       }
-      if (dateRange?.value && dateRange.value !== "all") {
-        const today = new Date();
-        let start = null;
-        let end = null;
-        const option = dateRange.value;
 
-        if (option === "today") {
-          start = today;
-          end = today;
-        } else if (option === "year") {
-          start = new Date(today.getFullYear(), 0, 1);
-          end = new Date(today.getFullYear(), 11, 31);
-        } else if (option.startsWith("last")) {
-          const months = parseInt(option.replace("last", "").replace("months", ""));
-          start = new Date();
-          start.setMonth(today.getMonth() - months);
-          end = today;
-        }
-
-        if (start && end) {
-          params.start_date = toISODate(start);
-          params.end_date = toISODate(end);
-        }
+      if (start && end) {
+        params.start_date = toISODate(start);
+        params.end_date = toISODate(end);
       }
 
       const res = await manageAxios.get("/report/damaged", { params });
@@ -132,87 +144,13 @@ export default function DamagedReportPage() {
     } finally {
       setLoading(false);
     }
-  }, [itemCategory, damageType, manageStatus, dateRange]);
+  }, [itemCategory, damageType, manageStatus, dateRange, customStart, customEnd]);
 
   useEffect(() => {
-    fetchReport();
-  }, [fetchReport]);
-
-  const translateManageStatus = (status) => {
-    switch (status) {
-      case 'unmanaged':
-        return { text: "ยังไม่จัดการ", className: styles.badgeRed };
-      case 'managed':
-        return { text: "จัดการแล้ว", className: styles.badgeGreen };
-      case 'partially_managed':
-        return { text: "จัดการบางส่วน", className: styles.badgeOrange };
-      default:
-        return { text: "-", className: styles.badgeGray };
+    if (dateRange?.value !== "custom" || (customStart && customEnd)) {
+      fetchReport();
     }
-  };
-
-  const exportCSV = useCallback(() => {
-    if (!data.length) return;
-    const csvData = data.map(item => ({
-        "ชื่อพัสดุ": item.item_name,
-        "รหัสพัสดุ": item.item_code,
-        "ประเภท": translateCategory(item.category),
-        "Lot No.": item.lot_no,
-        "วันรายงาน": formatDate(item.damaged_date),
-        "ผู้รายงาน": item.reported_by,
-        "ประเภทความเสียหาย": translateDamageType(item.damage_type),
-        "จำนวน": item.damaged_qty,
-        "จัดการแล้ว": item.managed_qty,
-        "คงเหลือ": item.remaining_qty,
-        "สถานะ": translateManageStatus(item.manage_status).text,
-    }));
-    const csv = Papa.unparse(csvData);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    saveAs(blob, `damaged-report-${Date.now()}.csv`);
-  }, [data]);
-
-  const exportPDF = useCallback(() => {
-    if (!data.length) return;
-    const doc = new jsPDF();
-    doc.setFontSize(14);
-    doc.text("รายงานพัสดุชำรุด/เสียหาย (Damaged Report)", 14, 15);
-
-    const tableData = data.map((item) => [
-      item.item_name,
-      item.item_code,
-      translateCategory(item.category),
-      item.lot_no,
-      formatDate(item.damaged_date),
-      item.reported_by,
-      translateDamageType(item.damage_type),
-      item.damaged_qty,
-      item.managed_qty,
-      item.remaining_qty,
-      translateManageStatus(item.manage_status).text,
-    ]);
-
-    autoTable(doc, {
-      head: [
-        [
-          "ชื่อพัสดุ",
-          "รหัสพัสดุ",
-          "ประเภท",
-          "Lot No.",
-          "วันรายงาน",
-          "ผู้รายงาน",
-          "ประเภทความเสียหาย",
-          "จำนวน",
-          "จัดการแล้ว",
-          "คงเหลือ",
-          "สถานะ",
-        ],
-      ],
-      body: tableData,
-      startY: 25,
-    });
-
-    doc.save(`damaged-report-${Date.now()}.pdf`);
-  }, [data]);
+  }, [fetchReport, dateRange, customStart, customEnd]);
 
   return (
     <div className={styles.container}>
@@ -250,17 +188,53 @@ export default function DamagedReportPage() {
           onChange={setDateRange}
           placeholder="ช่วงเวลา"
         />
+
+        {dateRange?.value === "custom" && (
+          <div className={styles.dateInputs}>
+            <input
+              type="date"
+              value={customStart}
+              onChange={(e) => setCustomStart(e.target.value)}
+              className={styles.dateInput}
+            />
+            <span>ถึง</span>
+            <input
+              type="date"
+              value={customEnd}
+              onChange={(e) => setCustomEnd(e.target.value)}
+              className={styles.dateInput}
+            />
+          </div>
+        )}
+
         <button className={styles.btnPrimary} onClick={fetchReport}>
-          <Search size={16} style={{ marginRight: "6px" }} />
-          ค้นหา
+          <Search size={16} style={{ marginRight: "6px" }} /> ค้นหา
         </button>
-        <button className={styles.btnSecondary} onClick={exportPDF}>
-          <FileDown size={16} style={{ marginRight: "6px" }} />
-          PDF
+        <button
+          className={styles.btnSecondary}
+          onClick={() =>
+            exportDamagedPDF({
+              data,
+              filters: {
+                categoryLabel: itemCategory?.label,
+                damageTypeLabel: damageType?.label,
+                statusLabel: manageStatus?.label,
+                dateLabel: dateRange?.label,
+                dateValue: dateRange?.value,
+                start: customStart,
+                end: customEnd,
+              },
+              user: { user_fname: "วัชรพล", user_lname: "อินทร์ทอง" },
+            })
+          }
+        >
+          <FileDown size={16} style={{ marginRight: "6px" }} /> PDF
         </button>
-        <button className={styles.btnSecondary} onClick={exportCSV}>
-          <FileDown size={16} style={{ marginRight: "6px" }} />
-          CSV
+        <button
+          className={styles.btnSecondary}
+          onClick={() => exportDamagedCSV({ data })}
+        >
+          <FileDown size={16} style={{ marginRight: "6px" }} /> CSV
         </button>
       </div>
 
@@ -301,8 +275,8 @@ export default function DamagedReportPage() {
                       <td style={{ textAlign: "right" }}>{item.managed_qty}</td>
                       <td style={{ textAlign: "right" }}>{item.remaining_qty}</td>
                       <td>
-                        <span className={`${styles.badge} ${status.className}`}>
-                          {status.text}
+                        <span className={`${styles.badge} ${status?.className || ""}`}>
+                          {status?.text || "-"}
                         </span>
                       </td>
                     </tr>

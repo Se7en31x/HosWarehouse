@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { staffAxios } from '../../utils/axiosInstance';
 import Swal from 'sweetalert2';
 
-// ✅ Map รหัสแผนกเป็นชื่อ
+// Map รหัสแผนกเป็นชื่อ
 const departmentMap = {
   "01": "แผนกเวชระเบียน",
   "02": "แผนกผู้ป่วยใน",
@@ -31,7 +31,7 @@ export default function Cart() {
   const [minReturnDate, setMinReturnDate] = useState('');
   const [maxReturnDate, setMaxReturnDate] = useState('');
 
-  // ✅ department state
+  // department state
   const [departments, setDepartments] = useState([]);
   const [selectedDept, setSelectedDept] = useState('');
 
@@ -43,14 +43,22 @@ export default function Cart() {
     maxDate.setMonth(maxDate.getMonth() + 3);
     setMaxReturnDate(maxDate.toISOString().split('T')[0]);
 
-    // ✅ decode JWT token เพื่อเอา departments
+    // decode JWT token เพื่อเอา departments
     const token = localStorage.getItem('authToken_staff');
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.departments && payload.departments.length > 0) {
-          setDepartments(payload.departments);
-          setSelectedDept(payload.departments[0]); // ใช้อันแรกเป็นค่าเริ่มต้น
+          // ✅ normalize: ถ้าเป็นชื่อเต็ม → แปลงกลับมาเป็น code
+          const deptCodes = payload.departments.map((dept) => {
+            const foundCode = Object.keys(departmentMap).find(
+              (code) => departmentMap[code] === dept
+            );
+            return foundCode || dept;
+          });
+
+          setDepartments(deptCodes);
+          setSelectedDept(deptCodes[0]); // ใช้อันแรกเป็นค่าเริ่มต้น
         }
       } catch (err) {
         console.error('ไม่สามารถ decode token:', err);
@@ -60,18 +68,12 @@ export default function Cart() {
 
   const translateCategory = (category) => {
     switch (category) {
-      case 'medicine':
-        return 'ยา';
-      case 'general':
-        return 'ของใช้ทั่วไป';
-      case 'meddevice':
-        return 'อุปกรณ์ทางการแพทย์';
-      case 'equipment':
-        return 'ครุภัณฑ์';
-      case 'medsup':
-        return 'เวชภัณฑ์';
-      default:
-        return category || '-';
+      case 'medicine': return 'ยา';
+      case 'general': return 'ของใช้ทั่วไป';
+      case 'meddevice': return 'อุปกรณ์ทางการแพทย์';
+      case 'equipment': return 'ครุภัณฑ์';
+      case 'medsup': return 'เวชภัณฑ์';
+      default: return category || '-';
     }
   };
 
@@ -183,7 +185,7 @@ export default function Cart() {
       urgent,
       date: requestDate,
       type: requestType,
-      department_id: selectedDept, // ✅ ส่งไป backend
+      department_id: selectedDept, // ✅ ส่งเป็น code เสมอ
     };
 
     try {
@@ -244,14 +246,10 @@ export default function Cart() {
 
   const translateAction = (action) => {
     switch (action) {
-      case 'withdraw':
-        return 'เบิก';
-      case 'borrow':
-        return 'ยืม';
-      case 'return':
-        return 'คืน';
-      default:
-        return action;
+      case 'withdraw': return 'เบิก';
+      case 'borrow': return 'ยืม';
+      case 'return': return 'คืน';
+      default: return action;
     }
   };
 
@@ -265,6 +263,9 @@ export default function Cart() {
     return `/uploads/${imgPath}`;
   };
 
+  // Pagination for consistent table height
+  const itemsPerPage = 10;
+
   return (
     <div className={styles.mainHome}>
       <div className={styles.infoContainer}>
@@ -274,54 +275,44 @@ export default function Cart() {
               รายการ{translateAction(cartItems[0]?.action || '')}
             </h2>
           </div>
-          <div className={styles.actionsRight}>
-            <button
-              className={`${styles.ghostBtn} ${styles.clearButton}`}
-              onClick={handleClearCart}
-              disabled={isSubmitting}
-            >
-              ล้างตะกร้า
-            </button>
-          </div>
         </div>
 
         {/* Table Section */}
-        <div className={styles.tableSection}>
-          <div className={`${styles.tableFrame} ${styles.scrollable}`}>
-            <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
-              <div className={styles.headerItem}>ลำดับ</div>
-              <div className={styles.headerItem}>รหัส</div>
-              <div className={styles.headerItem}>รูปภาพ</div>
-              <div className={styles.headerItem}>ชื่อ</div>
-              <div className={styles.headerItem}>จำนวน</div>
-              <div className={styles.headerItem}>หน่วย</div>
-              <div className={styles.headerItem}>หมวดหมู่</div>
-              <div className={styles.headerItem}>ประเภท</div>
-              <div className={styles.headerItem}>วันที่คืน</div>
-              <div className={styles.headerItem}>การดำเนินการ</div>
-            </div>
+        <div className={styles.tableFrame} style={{ '--rows-per-page': itemsPerPage }}>
+          <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+            <div className={styles.headerItem}>ลำดับ</div>
+            <div className={styles.headerItem}>รหัส</div>
+            <div className={styles.headerItem}>รูปภาพ</div>
+            <div className={styles.headerItem}>ชื่อ</div>
+            <div className={styles.headerItem}>จำนวน</div>
+            <div className={styles.headerItem}>หน่วย</div>
+            <div className={styles.headerItem}>หมวดหมู่</div>
+            <div className={styles.headerItem}>ประเภท</div>
+            <div className={styles.headerItem}>วันที่คืน</div>
+            <div className={styles.headerItem}>การดำเนินการ</div>
+          </div>
 
-            <div className={styles.inventory} style={{ '--rows-per-page': 10 }}>
-              {cartItems.length > 0 ? (
-                cartItems.map((item, index) => (
+          <div className={styles.tableBody}>
+            {cartItems.length > 0 ? (
+              <>
+                {cartItems.map((item, index) => (
                   <div key={item.id} className={`${styles.tableGrid} ${styles.tableRow}`}>
                     <div className={`${styles.tableCell} ${styles.centerCell}`}>{index + 1}</div>
                     <div className={styles.tableCell}>{item.code || '-'}</div>
-                    <div className={`${styles.tableCell} ${styles.imageCell}`}>
+                    <div className={`${styles.tableCell} ${styles.centerCell} ${styles.imageCell}`}>
                       <Image
                         src={getImageSrc(item.item_img)}
                         alt={item.name || 'no-image'}
-                        width={50}
-                        height={50}
-                        style={{
-                          objectFit: 'cover',
-                          borderRadius: 8,
-                          border: '1px solid #e5e7eb',
+                        width={45}
+                        height={45}
+                        className={styles.imgThumb}
+                        onError={(e) => {
+                          e.target.src = '/defaults/landscape.png';
                         }}
                       />
                     </div>
-                    <div className={styles.tableCell}>{item.name || '-'}</div>
-                    <div className={styles.tableCell}>
+                    <div className={styles.tableCell} title={item.name}>{item.name || '-'}</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
                       <input
                         type="number"
                         min={1}
@@ -332,16 +323,17 @@ export default function Cart() {
                         disabled={isSubmitting}
                       />
                     </div>
-                    <div className={styles.tableCell}>{item.unit || '-'}</div>
-                    <div className={styles.tableCell}>{translateCategory(item.type)}</div>
-                    <div className={styles.tableCell}>
+                    {/* ✅ Align กลางเพิ่มตรงนี้ */}
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>{item.unit || '-'}</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>{translateCategory(item.type)}</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
                       {item.action === 'borrow'
                         ? 'ยืม'
                         : item.action === 'withdraw'
-                        ? 'เบิก'
-                        : 'คืน'}
+                          ? 'เบิก'
+                          : 'คืน'}
                     </div>
-                    <div className={styles.tableCell}>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
                       {item.action === 'borrow' ? (
                         <input
                           type="date"
@@ -366,86 +358,116 @@ export default function Cart() {
                       </button>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className={styles.noDataMessage}>
-                  ไม่มีรายการในตะกร้า กรุณาเพิ่มรายการก่อนยืนยัน
-                </div>
-              )}
+                ))}
+                {/* Filler rows */}
+                {Array.from({ length: Math.max(0, itemsPerPage - cartItems.length) }).map((_, i) => (
+                  <div
+                    key={`filler-${i}`}
+                    className={`${styles.tableGrid} ${styles.tableRow} ${styles.fillerRow}`}
+                    aria-hidden="true"
+                  >
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell} ${styles.imageCell}`}>&nbsp;</div>
+                    <div className={styles.tableCell}>&nbsp;</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <div className={styles.noDataCell}>ไม่มีรายการในตะกร้า กรุณาเพิ่มรายการก่อนยืนยัน</div>
+            )}
+          </div>
+        </div>
+
+        {/* Request Section */}
+        <div className={styles.requestSection}>
+          <div className={styles.requestHeader}>
+            <h3 className={styles.requestTitle}>รายละเอียดคำขอ</h3>
+          </div>
+
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="requestDate">📅 วันที่นำส่ง</label>
+              <input
+                type="date"
+                id="requestDate"
+                value={requestDate}
+                onChange={(e) => setRequestDate(e.target.value)}
+                disabled={isSubmitting}
+                className={styles.inputField}
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="urgent">⚡ เร่งด่วน</label>
+              <div className={styles.checkboxRow}>
+                <input
+                  type="checkbox"
+                  id="urgent"
+                  checked={urgent}
+                  onChange={handleUrgentChange}
+                  disabled={isSubmitting}
+                />
+                <span>ต้องการเร่งด่วน</span>
+              </div>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="department">🏥 เลือกแผนก</label>
+              <select
+                id="department"
+                value={selectedDept}
+                onChange={(e) => setSelectedDept(e.target.value)}
+                disabled={isSubmitting}
+                className={styles.selectInput}
+              >
+                {departments.map((deptCode) => (
+                  <option key={deptCode} value={deptCode}>
+                    {departmentMap[deptCode] || deptCode}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
-        </div>
 
-        {/* เพิ่มส่วนนี้เข้าไป */}
-        <div className={styles.requestOptions}>
-          <div className={styles.optionGroup}>
-            <label htmlFor="requestDate">วันที่นำส่ง:</label>
-            <input
-              type="date"
-              id="requestDate"
-              value={requestDate}
-              onChange={(e) => setRequestDate(e.target.value)}
-              disabled={isSubmitting}
-              className={styles.dateInput}
-            />
-          </div>
-          <div className={styles.optionGroup}>
-            <label htmlFor="urgent">
-              <input
-                type="checkbox"
-                id="urgent"
-                checked={urgent}
-                onChange={handleUrgentChange}
+          <div className={styles.formRow}>
+            <div className={`${styles.formGroup} ${styles.noteBox}`}>
+              <label htmlFor="note">📝 หมายเหตุ</label>
+              <textarea
+                id="note"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
                 disabled={isSubmitting}
+                className={styles.textareaField}
+                rows="3"
+                placeholder="กรอกหมายเหตุเพิ่มเติม (ถ้ามี)"
               />
-              <span>เร่งด่วน</span>
-            </label>
-          </div>
-          <div className={styles.optionGroupFull}>
-            <label htmlFor="note">หมายเหตุ:</label>
-            <textarea
-              id="note"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              disabled={isSubmitting}
-              className={styles.noteInput}
-              rows="3"
-            />
-          </div>
-        </div>
-
-        {/* Footer actions */}
-        <div className={styles.footerBar}>
-          <div className={styles.footerLeft}>
-            <label>เลือกแผนก: </label>
-            <select
-              value={selectedDept}
-              onChange={(e) => setSelectedDept(e.target.value)}
-              disabled={isSubmitting}
-            >
-              {departments.map((deptCode) => (
-                <option key={deptCode} value={deptCode}>
-                  {departmentMap[deptCode] || deptCode}
-                </option>
-              ))}
-            </select>
+            </div>
           </div>
 
-          <div className={styles.footerActions}>
-            <button
-              className={`${styles.actionButton} ${styles.cancelBtn}`}
-              onClick={handleCancel}
-              disabled={isSubmitting}
-            >
-              ยกเลิก
-            </button>
-            <button
-              className={`${styles.actionButton} ${styles.successBtn}`}
-              onClick={handleSubmit}
-              disabled={isSubmitting || cartItems.length === 0 || !requestDate}
-            >
-              {isSubmitting ? 'กำลังส่ง...' : 'ยืนยัน'}
-            </button>
+          <div className={styles.footerBar}>
+            <div className={styles.footerActions}>
+              <button
+                className={`${styles.actionButton} ${styles.cancelBtn}`}
+                onClick={handleCancel}
+                disabled={isSubmitting}
+              >
+                ยกเลิก
+              </button>
+              <button
+                className={`${styles.actionButton} ${styles.successBtn}`}
+                onClick={handleSubmit}
+                disabled={isSubmitting || cartItems.length === 0 || !requestDate}
+              >
+                {isSubmitting ? 'กำลังส่ง...' : 'ยืนยัน'}
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -3,10 +3,8 @@ import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { Package, FileDown, Search } from "lucide-react";
 import { manageAxios } from "@/app/utils/axiosInstance";
-import {
-  exportInventoryPDF,
-  exportInventoryCSV,
-} from "@/app/utils/PDF_CSV/exportInventoryReport";
+import { exportInventoryPDF } from "@/app/components/pdf/templates/inventoryTemplate";
+import { exportInventoryCSV } from "@/app/components/Csv/templates/inventoryCSV";
 import styles from "./page.module.css";
 
 // ✅ react-select render ฝั่ง client เท่านั้น
@@ -92,15 +90,14 @@ export default function InventoryReport() {
       } else if (dateRange?.value === "custom") {
         start = customStart || null;
         end = customEnd || null;
+
+        // ✅ ถ้าเลือก custom แต่ยังไม่ได้กรอก start/end → ไม่ต้องยิง API
+        if (!start || !end) {
+          setLoading(false);
+          return;
+        }
       }
 
-      if (dateRange?.value === "custom" && (!start || !end)) {
-        console.error("Please select a valid date range.");
-        setLoading(false);
-        return;
-      }
-
-      // ✅ แก้ไขตรงนี้: ส่งค่า start และ end เป็นพารามิเตอร์ระดับบนสุด
       const params = {
         category: category?.value || "all",
         source: sourceType?.value || "all",
@@ -118,9 +115,12 @@ export default function InventoryReport() {
     }
   }, [category, dateRange, sourceType, customStart, customEnd]);
 
+  // ✅ call API เฉพาะกรณีที่เงื่อนไขครบ
   useEffect(() => {
-    fetchReport();
-  }, [fetchReport]);
+    if (dateRange?.value !== "custom" || (customStart && customEnd)) {
+      fetchReport();
+    }
+  }, [fetchReport, dateRange, customStart, customEnd]);
 
   return (
     <div className={styles.container}>
@@ -177,31 +177,33 @@ export default function InventoryReport() {
         </button>
 
         <button
-          className={styles.btnSecondary}
           onClick={() =>
             exportInventoryPDF({
               data,
               filters: {
                 categoryLabel: category?.label,
                 dateLabel: dateRange?.label,
+                dateValue: dateRange?.value,
+                start: customStart,
+                end: customEnd,
                 sourceLabel: sourceType?.label,
-                start: dateRange?.value === "custom" ? customStart : null,
-                end: dateRange?.value === "custom" ? customEnd : null,
               },
               user: mockUser,
             })
           }
         >
-          <FileDown size={16} style={{ marginRight: "6px" }} />
-          PDF
+          Export PDF
         </button>
 
         <button
-          className={styles.btnSecondary}
-          onClick={() => exportInventoryCSV({ data, user: mockUser })}
+          onClick={() =>
+            exportInventoryCSV({
+              data,
+              filename: "inventory_report.csv",
+            })
+          }
         >
-          <FileDown size={16} style={{ marginRight: "6px" }} />
-          CSV
+          Export CSV
         </button>
       </div>
 

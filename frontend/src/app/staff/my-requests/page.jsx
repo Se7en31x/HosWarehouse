@@ -14,23 +14,33 @@ const Select = dynamic(() => import("react-select"), { ssr: false });
 const customSelectStyles = {
   control: (base, state) => ({
     ...base,
-    borderRadius: "0.5rem",
-    minHeight: "2.5rem",
+    borderRadius: "8px",
+    minHeight: "40px",
     borderColor: state.isFocused ? "#2563eb" : "#e5e7eb",
     boxShadow: "none",
     "&:hover": { borderColor: "#2563eb" },
+    width: "250px",
   }),
   menu: (base) => ({
     ...base,
-    borderRadius: "0.5rem",
+    borderRadius: "8px",
     marginTop: 6,
+    boxShadow: "none",
     border: "1px solid #e5e7eb",
-    zIndex: 9999,
+    zIndex: 9000,
   }),
-  menuPortal: (base) => ({
+  menuPortal: (base) => ({ ...base, zIndex: 9000 }),
+  option: (base, state) => ({
     ...base,
-    zIndex: 9999,
+    backgroundColor: state.isFocused ? "#f3f4f6" : "#fff",
+    color: "#111827",
+    padding: "8px 12px",
+    textAlign: "left",
   }),
+  placeholder: (base) => ({ ...base, color: "#6b7280" }),
+  singleValue: (base) => ({ ...base, textAlign: "left" }),
+  clearIndicator: (base) => ({ ...base, padding: 6 }),
+  dropdownIndicator: (base) => ({ ...base, padding: 6 }),
 };
 
 /* ============================================================
@@ -85,8 +95,8 @@ function ItemImage({ item_img, alt }) {
     <img
       src={imgSrc}
       alt={alt || 'ไม่มีคำอธิบายภาพ'}
-      width={56}
-      height={56}
+      width={50}
+      height={50}
       className={styles.itemThumb}
       onError={() => setImgSrc(defaultImg)}
     />
@@ -228,15 +238,14 @@ function RequestDetailBody({ requestId }) {
 export default function MyRequestsPage() {
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const menuPortalTarget = typeof window !== "undefined" ? document.body : null;
-
   const [requests, setRequests] = useState([]);
   const [loadingList, setLoadingList] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 10;
   const [openId, setOpenId] = useState(null);
-
   const [query, setQuery] = useState('');
+  const ITEMS_PER_PAGE = 12; // ปรับตาม CSS (--rows-per-page: 12)
+
+  const menuPortalTarget = useMemo(() => typeof window !== "undefined" ? document.body : null, []);
 
   // ดึงคำขอ
   const fetchRequests = async () => {
@@ -324,12 +333,13 @@ export default function MyRequestsPage() {
 
   const renderStatus = (status) => {
     const s = String(status || '').toLowerCase();
-    let cls = styles.badgeNeutral;
-    if (s.includes('อนุมัติบางส่วน') || s.includes('approved_partial')) cls = styles.badgePartial;
-    else if (s.includes('รอ') || s.includes('pending') || s.includes('waiting') || s.includes('in_progress')) cls = styles.badgeWaiting ?? styles.badgeWarning;
-    else if (s.includes('อนุมัติทั้งหมด') || (s.includes('อนุมัติ') && !s.includes('บางส่วน')) || s.includes('approved_all') || s.includes('completed') || s.includes('complete') || s.includes('success') || s.includes('stock_deducted')) cls = styles.badgeSuccess;
-    else if (s.includes('ยกเลิก') || s.includes('ปฏิเสธ') || s.includes('cancel') || s.includes('reject')) cls = styles.badgeDanger;
-    return <span className={`${styles.badge} ${cls}`}>{translateStatus(status)}</span>;
+    let cls = styles.stBadge;
+    if (s.includes('อนุมัติบางส่วน') || s.includes('approved_partial')) cls += ` ${styles.stHold}`;
+    else if (s.includes('รอ') || s.includes('pending') || s.includes('waiting') || s.includes('in_progress')) cls += ` ${styles.stHold}`;
+    else if (s.includes('อนุมัติทั้งหมด') || (s.includes('อนุมัติ') && !s.includes('บางส่วน')) || s.includes('approved_all') || s.includes('completed') || s.includes('complete') || s.includes('success') || s.includes('stock_deducted')) cls += ` ${styles.stAvailable}`;
+    else if (s.includes('ยกเลิก') || s.includes('ปฏิเสธ') || s.includes('cancel') || s.includes('reject')) cls += ` ${styles.stOut}`;
+    else cls += ` ${styles.stHold}`;
+    return <span className={cls}>{translateStatus(status)}</span>;
   };
 
   const parseTypes = (types) => {
@@ -391,11 +401,14 @@ export default function MyRequestsPage() {
         String(r.request_status || '').toLowerCase().includes(q)
       );
     }
+    // เรียงลำดับตามวันที่ (ใหม่ไปเก่า)
+    list.sort((a, b) => new Date(b.request_date || 0) - new Date(a.request_date || 0));
     return list;
   }, [requests, statusFilter, typeFilter, query]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
   const paginatedRequests = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
   const handlePrev = () => setCurrentPage((p) => Math.max(1, p - 1));
   const handleNext = () => setCurrentPage((p) => Math.min(totalPages, p + 1));
 
@@ -413,157 +426,194 @@ export default function MyRequestsPage() {
   const openPopupView = (id) => { setOpenId(id); };
   const closePopup = () => setOpenId(null);
 
+  // รีเซ็ตหน้าเมื่อฟิลเตอร์เปลี่ยน
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, typeFilter, query]);
+
   return (
-    <div className={styles.page}>
-      <div className={styles.headerBar}>
-        <div>
-          <h1 className={styles.pageTitle}>คำขอของฉัน</h1>
-          <p className={styles.pageSubtitle}>ติดตามสถานะการเบิก/ยืม/คืน ได้ในหน้าจอนี้</p>
-        </div>
-      </div>
-
-      <div className={styles.summaryGrid}>
-        <div className={styles.statCard}>
-          <div className={styles.statLabel}>ทั้งหมด</div>
-          <div className={styles.statValue}>{stats.total}</div>
-        </div>
-        <div className={`${styles.statCard} ${styles.statWithdraw}`}>
-          <div className={styles.statLabel}>เบิก</div>
-          <div className={styles.statValue}>{stats.withdraw}</div>
-        </div>
-        <div className={`${styles.statCard} ${styles.statBorrow}`}>
-          <div className={styles.statLabel}>ยืม</div>
-          <div className={styles.statValue}>{stats.borrow}</div>
-        </div>
-      </div>
-      {/* Toolbar Filters */}
-      <div className={styles.toolbar}>
-        <div className={styles.filterGrid}>
-          <div className={styles.filterGroup}>
-            <label className={styles.label}>สถานะ</label>
-            <Select
-              inputId="statusFilter"
-              options={statusOptions}
-              isClearable
-              isSearchable={false}
-              placeholder="เลือกสถานะ..."
-              styles={customSelectStyles}
-              value={statusOptions.find(o => o.value === statusFilter) || null}
-              onChange={opt => setStatusFilter(opt?.value || '')}
-              menuPortalTarget={menuPortalTarget}
-            />
-          </div>
-          <div className={styles.filterGroup}>
-            <label className={styles.label}>ประเภท</label>
-            <Select
-              inputId="typeFilter"
-              options={typeOptions}
-              isClearable
-              isSearchable={false}
-              placeholder="เลือกประเภท..."
-              styles={customSelectStyles}
-              value={typeOptions.find(o => o.value === typeFilter) || null}
-              onChange={opt => setTypeFilter(opt?.value || '')}
-              menuPortalTarget={menuPortalTarget}
-            />
+    <div className={styles.mainHome}>
+      <div className={styles.infoContainer}>
+        <div className={styles.pageBar}>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.pageTitle}>คำขอของฉัน</h1>
           </div>
         </div>
-        <div className={styles.searchCluster}>
-          <div className={styles.filterGroup}>
-            <label htmlFor="filter" className={styles.label}>ค้นหา</label>
-            <input
-              id="filter"
-              className={styles.input}
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="สถานะ, ประเภท"
-            />
+
+        <div className={styles.summaryGrid}>
+          <div className={styles.statCard}>
+            <div className={styles.statLabel}>ทั้งหมด</div>
+            <div className={styles.statValue}>{stats.total}</div>
           </div>
-          <button className={`${styles.ghostBtn} ${styles.clearButton}`} onClick={() => { setQuery(''); setTypeFilter(''); setStatusFilter(''); }}>
-            <Trash2 size={18} /> ล้างตัวกรอง
-          </button>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className={styles.tableFrame}>
-        <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
-          <div className={styles.headerItem}>ลำดับ</div>
-          <div className={styles.headerItem}>รหัสคำขอ</div>
-          <div className={styles.headerItem}>วันที่/เวลา</div>
-          <div className={styles.headerItem}>ประเภท</div>
-          <div className={styles.headerItem}>จำนวน</div>
-          <div className={styles.headerItem}>สถานะ</div>
-          <div className={styles.headerItem}>การดำเนินการ</div>
+          <div className={`${styles.statCard} ${styles.statWithdraw}`}>
+            <div className={styles.statLabel}>เบิก</div>
+            <div className={styles.statValue}>{stats.withdraw}</div>
+          </div>
+          <div className={`${styles.statCard} ${styles.statBorrow}`}>
+            <div className={styles.statLabel}>ยืม</div>
+            <div className={styles.statValue}>{stats.borrow}</div>
+          </div>
         </div>
 
-        <div className={styles.inventory} style={{ '--rows-per-page': ITEMS_PER_PAGE }}>
-          {loadingList ? (
-            <div className={styles.noData}>กำลังโหลดข้อมูล…</div>
-          ) : paginatedRequests.length > 0 ? (
-            paginatedRequests.map((req, index) => {
-              const rowNo = (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
-              const status = String(req.request_status || '').toLowerCase();
-              return (
-                <div key={req.request_id ?? req.request_code ?? index} className={`${styles.tableGrid} ${styles.tableRow}`}>
-                  <div className={`${styles.tableCell} ${styles.centerCell}`}>{rowNo}</div>
-                  <div className={`${styles.tableCell} ${styles.codeCell}`}>#{req.request_code || '-'}</div>
-                  <div className={`${styles.tableCell} ${styles.muted}`}>{req.request_date ? formatDate(req.request_date) : '-'}</div>
-                  <div className={`${styles.tableCell} ${styles.typeCell}`}>{renderTypeChips(req.request_types)}</div>
-                  <div className={styles.tableCell}>{req.item_count ?? '-'}</div>
-                  <div className={styles.tableCell}>{renderStatus(req.request_status)}</div>
-                  <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                    <div className={styles.rowActions}>
-                      <button className={styles.btnIcon} onClick={() => openPopupView(req.request_id)} title="ดูรายละเอียด"><Eye size={16} /></button>
-                      {status.includes('รอ') || status.includes('pending') ? (
-                        <button className={styles.btnIconWarning} onClick={() => handleCancel(req.request_id)} title="ยกเลิก"><X size={16} /> <span>ยกเลิก</span></button>
-                      ) : null}
-                      {status === 'delivering' && (
-                        <button className={styles.btnIconSuccess} onClick={() => handleConfirmReceipt(req.request_id)} title="ยืนยันการรับของครบ"><CheckCircle size={16} /> <span>รับของแล้ว</span></button>
-                      )}
+        {/* Toolbar Filters */}
+        <div className={styles.toolbar}>
+          <div className={styles.filterGrid}>
+            <div className={styles.filterGroup}>
+              <label className={styles.label}>สถานะ</label>
+              <Select
+                inputId="statusFilter"
+                options={statusOptions}
+                isClearable
+                isSearchable={false}
+                placeholder="เลือกสถานะ..."
+                styles={customSelectStyles}
+                value={statusOptions.find(o => o.value === statusFilter) || null}
+                onChange={opt => setStatusFilter(opt?.value || '')}
+                menuPortalTarget={menuPortalTarget}
+              />
+            </div>
+            <div className={styles.filterGroup}>
+              <label className={styles.label}>ประเภท</label>
+              <Select
+                inputId="typeFilter"
+                options={typeOptions}
+                isClearable
+                isSearchable={false}
+                placeholder="เลือกประเภท..."
+                styles={customSelectStyles}
+                value={typeOptions.find(o => o.value === typeFilter) || null}
+                onChange={opt => setTypeFilter(opt?.value || '')}
+                menuPortalTarget={menuPortalTarget}
+              />
+            </div>
+          </div>
+          <div className={styles.searchCluster}>
+            <div className={styles.filterGroup}>
+              <label htmlFor="filter" className={styles.label}>ค้นหา</label>
+              <input
+                id="filter"
+                className={styles.input}
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="สถานะ, ประเภท"
+              />
+            </div>
+            <button
+              className={`${styles.ghostBtn} ${styles.clearButton}`}
+              onClick={() => { setQuery(''); setTypeFilter(''); setStatusFilter(''); }}
+            >
+              <Trash2 size={18} /> ล้างตัวกรอง
+            </button>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className={styles.tableSection}>
+          <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+            <div className={styles.headerItem}>ลำดับ</div>
+            <div className={styles.headerItem}>รหัสคำขอ</div>
+            <div className={styles.headerItem}>จำนวน</div>
+            <div className={styles.headerItem}>วันที่/เวลา</div>
+            <div className={styles.headerItem}>ประเภท</div>
+            <div className={styles.headerItem}>สถานะ</div>
+            <div className={styles.headerItem}>การดำเนินการ</div>
+          </div>
+
+          <div className={styles.inventory} style={{ '--rows-per-page': ITEMS_PER_PAGE }}>
+            {loadingList ? (
+              <div className={styles.loadingContainer}>กำลังโหลดข้อมูล…</div>
+            ) : paginatedRequests.length > 0 ? (
+              paginatedRequests.map((req, index) => {
+                const rowNo = (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
+                const status = String(req.request_status || '').toLowerCase();
+                return (
+                  <div key={req.request_id ?? req.request_code ?? index} className={`${styles.tableGrid} ${styles.tableRow}`}>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>{rowNo}</div>
+                    <div className={`${styles.tableCell} ${styles.cellName}`}>#{req.request_code || '-'}</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>{req.item_count ?? '-'}</div>
+                    <div className={`${styles.tableCell} ${styles.cell}`}>{req.request_date ? formatDate(req.request_date) : '-'}</div>
+                    <div className={`${styles.tableCell} ${styles.cell}`}>{renderTypeChips(req.request_types)}</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>{renderStatus(req.request_status)}</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                      <div className={styles.rowActions}>
+                        <button className={styles.actionButton} onClick={() => openPopupView(req.request_id)} title="ดูรายละเอียด"><Eye size={16} /></button>
+                        {status.includes('รอ') || status.includes('pending') ? (
+                          <button className={`${styles.actionButton} ${styles.dangerBtnOutline}`} onClick={() => handleCancel(req.request_id)} title="ยกเลิก"><X size={16} /> <span>ยกเลิก</span></button>
+                        ) : null}
+                        {status === 'delivering' && (
+                          <button className={`${styles.actionButton} ${styles.successBtn}`} onClick={() => handleConfirmReceipt(req.request_id)} title="ยืนยันการรับของครบ"><CheckCircle size={16} /> <span>รับของแล้ว</span></button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })
-          ) : (
-            <div className={styles.noData}>ไม่พบรายการ</div>
-          )}
-        </div>
-
-        {/* Pagination */}
-        <ul className={styles.paginationControls}>
-          <li>
-            <button className={styles.pageButton} onClick={handlePrev} disabled={currentPage === 1}><ChevronLeft size={16} /></button>
-          </li>
-          {getPageNumbers().map((p, idx) =>
-            p === '...' ? (
-              <li key={idx} className={styles.ellipsis}>…</li>
+                );
+              })
             ) : (
-              <li key={idx}>
-                <button className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ''}`} onClick={() => setCurrentPage(p)}>{p}</button>
-              </li>
-            )
-          )}
-          <li>
-            <button className={styles.pageButton} onClick={handleNext} disabled={currentPage >= totalPages}><ChevronRight size={16} /></button>
-          </li>
-        </ul>
-      </div>
+              <div className={styles.noData}>ไม่พบรายการ</div>
+            )}
+            {/* Fillers เพื่อให้ตารางคงความสูง */}
+            {Array.from({ length: Math.max(0, ITEMS_PER_PAGE - paginatedRequests.length) }).map((_, i) => (
+              <div
+                key={`filler-${i}`}
+                className={`${styles.tableGrid} ${styles.tableRow} ${styles.fillerRow}`}
+                aria-hidden="true"
+              >
+                <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+                <div className={styles.tableCell}>&nbsp;</div>
+                <div className={styles.tableCell}>&nbsp;</div>
+                <div className={styles.tableCell}>&nbsp;</div>
+                <div className={styles.tableCell}>&nbsp;</div>
+                <div className={styles.tableCell}>&nbsp;</div>
+                <div className={`${styles.tableCell} ${styles.centerCell}`}>&nbsp;</div>
+              </div>
+            ))}
+          </div>
 
-      {/* Popup */}
-      {openId && (
-        <div className={styles.modalOverlay} onClick={closePopup}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>รายละเอียดคำขอ</h3>
-              <button className={styles.modalClose} onClick={closePopup}><X size={18} /></button>
+          {/* Pagination */}
+          <div className={styles.paginationBar}>
+            <div className={styles.paginationInfo}>
+              กำลังแสดง {(currentPage - 1) * ITEMS_PER_PAGE + 1}-
+              {Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} จาก {filtered.length} รายการ
             </div>
-            <RequestDetailBody requestId={openId} />
+            <ul className={styles.paginationControls}>
+              <li>
+                <button className={styles.pageButton} onClick={handlePrev} disabled={currentPage === 1}><ChevronLeft size={16} /></button>
+              </li>
+              {getPageNumbers().map((p, idx) =>
+                p === '...' ? (
+                  <li key={idx} className={styles.ellipsis}>…</li>
+                ) : (
+                  <li key={idx}>
+                    <button
+                      className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ''}`}
+                      onClick={() => setCurrentPage(p)}
+                    >
+                      {p}
+                    </button>
+                  </li>
+                )
+              )}
+              <li>
+                <button className={styles.pageButton} onClick={handleNext} disabled={currentPage >= totalPages}><ChevronRight size={16} /></button>
+              </li>
+            </ul>
           </div>
         </div>
-      )}
+
+        {/* Popup */}
+        {openId && (
+          <div className={styles.modalOverlay} onClick={closePopup}>
+            <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.modalHeader}>
+                <h3 className={styles.modalTitle}>รายละเอียดคำขอ</h3>
+                <button className={styles.actionButton} onClick={closePopup}><X size={18} /></button>
+              </div>
+              <RequestDetailBody requestId={openId} />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

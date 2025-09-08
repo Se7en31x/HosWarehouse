@@ -4,10 +4,8 @@ import dynamic from "next/dynamic";
 import { Send, FileDown, Search } from "lucide-react";
 import { manageAxios } from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import Papa from "papaparse";
-import { saveAs } from "file-saver";
+import { exportGeneralOutflowPDF } from "@/app/components/pdf/templates/generalOutflowTemplate";
+import { exportGeneralOutflowCSV } from "@/app/components/Csv/templates/generalOutflowCSV";
 
 const Select = dynamic(() => import("react-select"), { ssr: false });
 
@@ -52,10 +50,10 @@ export default function GeneralOutflowReport() {
 
   const translateOutflowType = (type) => {
     const map = {
-      withdraw: "ตัดสต็อกจากการเบิก", // ✅ แก้ไขแล้ว
+      withdraw: "ตัดสต็อกจากการเบิก",
       damaged: "ชำรุด",
       expired_dispose: "หมดอายุ",
-      borrow: "ตัดสต็อกจากการยืม", // ✅ เพิ่มแล้ว
+      borrow: "ตัดสต็อกจากการยืม",
     };
     return map[type] || type || "-";
   };
@@ -72,12 +70,13 @@ export default function GeneralOutflowReport() {
     });
   };
 
+  /* ---------- Fetch Users ---------- */
   const fetchUsers = useCallback(async () => {
     try {
       const res = await manageAxios.get("/users");
-      const userOptions = res.data.map(u => ({
+      const userOptions = res.data.map((u) => ({
         value: u.user_id,
-        label: `${u.user_fname} ${u.user_lname}`
+        label: `${u.user_fname} ${u.user_lname}`,
       }));
       setUsers([{ value: "all", label: "ผู้ใช้งานทั้งหมด" }, ...userOptions]);
     } catch (err) {
@@ -85,6 +84,7 @@ export default function GeneralOutflowReport() {
     }
   }, []);
 
+  /* ---------- Fetch Report ---------- */
   const fetchReport = useCallback(async () => {
     try {
       setLoading(true);
@@ -97,7 +97,7 @@ export default function GeneralOutflowReport() {
         start = now.toISOString().split("T")[0];
         end = now.toISOString().split("T")[0];
       } else if (["1m", "3m", "6m", "9m", "12m"].includes(dateRange?.value)) {
-        const months = parseInt(dateRange.value.split('m')[0]);
+        const months = parseInt(dateRange.value.split("m")[0]);
         const past = new Date();
         past.setMonth(now.getMonth() - months);
         start = past.toISOString().split("T")[0];
@@ -128,66 +128,7 @@ export default function GeneralOutflowReport() {
     fetchReport();
   }, [fetchReport, fetchUsers]);
 
-  const exportCSV = useCallback(() => {
-    if (!data.length) return;
-    const csvData = data.map((item) => ({
-      'เลขที่เอกสาร': item.doc_no,
-      'วันที่': formatDate(item.doc_date),
-      'ประเภทการนำออก': translateOutflowType(item.outflow_type),
-      'ชื่อพัสดุ': item.item_name,
-      'ประเภท': translateCategory(item.category),
-      'Lot No': item.lot_no || "-",
-      'จำนวน': item.qty,
-      'หน่วย': item.unit,
-      'ผู้ทำรายการ': item.user_name || "-",
-      'หมายเหตุ': item.doc_note || "-",
-    }));
-    const csv = Papa.unparse(csvData, { header: true });
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    saveAs(blob, `general-outflow-report-${Date.now()}.csv`);
-  }, [data]);
-
-  const exportPDF = useCallback(() => {
-    if (!data.length) return;
-    const doc = new jsPDF();
-    doc.setFontSize(14);
-    doc.text("รายงานการนำออก (ตัดสต็อก, ชำรุด, หมดอายุ)", 14, 15);
-
-    const tableData = data.map((item) => [
-      item.doc_no,
-      formatDate(item.doc_date),
-      translateOutflowType(item.outflow_type),
-      item.item_name,
-      translateCategory(item.category),
-      item.lot_no || "-",
-      item.qty,
-      item.unit,
-      item.user_name || "-",
-      item.doc_note || "-",
-    ]);
-
-    autoTable(doc, {
-      head: [
-        [
-          "เลขที่เอกสาร",
-          "วันที่",
-          "ประเภทการนำออก",
-          "ชื่อพัสดุ",
-          "ประเภท",
-          "Lot No",
-          "จำนวน",
-          "หน่วย",
-          "ผู้ทำรายการ",
-          "หมายเหตุ",
-        ],
-      ],
-      body: tableData,
-      startY: 25,
-    });
-
-    doc.save(`general-outflow-report-${Date.now()}.pdf`);
-  }, [data]);
-
+  /* ---------- Render ---------- */
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -243,11 +184,37 @@ export default function GeneralOutflowReport() {
           <Search size={16} style={{ marginRight: "6px" }} />
           ค้นหา
         </button>
-        <button className={styles.btnSecondary} onClick={exportPDF}>
+
+        <button
+          className={styles.btnSecondary}
+          onClick={() =>
+            exportGeneralOutflowPDF({
+              data,
+              filters: {
+                typeLabel: type?.label,
+                dateLabel: dateRange?.label,
+                dateValue: dateRange?.value,
+                start: customStart,
+                end: customEnd,
+                userLabel: user?.label,
+              },
+              user: { user_fname: "วัชรพล", user_lname: "อินทร์ทอง" },
+            })
+          }
+        >
           <FileDown size={16} style={{ marginRight: "6px" }} />
           PDF
         </button>
-        <button className={styles.btnSecondary} onClick={exportCSV}>
+
+        <button
+          className={styles.btnSecondary}
+          onClick={() =>
+            exportGeneralOutflowCSV({
+              data,
+              filename: "general-outflow-report.csv",
+            })
+          }
+        >
           <FileDown size={16} style={{ marginRight: "6px" }} />
           CSV
         </button>

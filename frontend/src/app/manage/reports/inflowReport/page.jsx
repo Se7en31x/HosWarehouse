@@ -4,19 +4,17 @@ import dynamic from "next/dynamic";
 import { ClipboardList, FileDown, Search } from "lucide-react";
 import { manageAxios } from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import Papa from "papaparse";
-import { saveAs } from "file-saver";
+import { exportInflowPDF } from "@/app/components/pdf/templates/inflowTemplate";
+import { exportInflowCSV } from "@/app/components/Csv/templates/inflowCSV";
 
 const Select = dynamic(() => import("react-select"), { ssr: false });
 
 export default function InflowReport() {
   const [type, setType] = useState({ value: "all", label: "ทั้งหมด" });
-  const [data, setData] = useState([]);
   const [dateRange, setDateRange] = useState({ value: "all", label: "ทุกช่วงเวลา" });
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const typeOptions = [
@@ -90,23 +88,28 @@ export default function InflowReport() {
         case "last_3_months":
         case "last_6_months":
         case "last_9_months":
-        case "last_12_months":
-          const monthsAgo = parseInt(dateRange.value.split('_')[1]);
+        case "last_12_months": {
+          const monthsAgo = parseInt(dateRange.value.split("_")[1]); // ดึงเลขเดือน
           const d = new Date(now);
           d.setMonth(now.getMonth() - monthsAgo);
-          start = d.toISOString().split('T')[0];
-          end = now.toISOString().split('T')[0];
+          start = d.toISOString().split("T")[0];
+          end = now.toISOString().split("T")[0];
           break;
+        }
         case "custom":
           start = customStart || null;
           end = customEnd || null;
+          if (!start || !end) {
+            setLoading(false);
+            return; // ✅ ไม่ยิง API ถ้ายังไม่เลือกวัน
+          }
           break;
-        default: // 'all' หรือค่าอื่นๆ
+        default:
           start = null;
           end = null;
           break;
       }
-      
+
       const res = await manageAxios.get("/report/inflow", {
         params: {
           type: type?.value || "all",
@@ -123,68 +126,10 @@ export default function InflowReport() {
   }, [type, dateRange, customStart, customEnd]);
 
   useEffect(() => {
-    fetchReport();
-  }, [fetchReport]);
-
-  const exportCSV = useCallback(() => {
-    if (!data.length) return;
-    const csvData = data.map((item) => ({
-      'เลขที่เอกสาร': item.doc_no,
-      'วันที่': formatDate(item.doc_date),
-      'ประเภทการรับเข้า': translateInflowType(item.inflow_type),
-      'ชื่อพัสดุ': item.item_name,
-      'ประเภท': translateCategory(item.category),
-      'Lot No': item.lot_no || "-",
-      'จำนวน': item.qty,
-      'หน่วย': item.unit,
-      'ผู้ขาย/ซัพพลายเออร์': item.supplier_name || "-",
-      'ผู้ทำรายการ': item.user_name || "-",
-    }));
-    const csv = Papa.unparse(csvData, { header: true });
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    saveAs(blob, `inflow-report-${Date.now()}.csv`);
-  }, [data]);
-
-  const exportPDF = useCallback(() => {
-    if (!data.length) return;
-    const doc = new jsPDF();
-    doc.setFontSize(14);
-    doc.text("รายงานการรับเข้า (Inflow Report)", 14, 15);
-
-    const tableData = data.map((item) => [
-      item.doc_no,
-      formatDate(item.doc_date),
-      translateInflowType(item.inflow_type),
-      item.item_name,
-      translateCategory(item.category),
-      item.lot_no || "-",
-      item.qty,
-      item.unit,
-      item.supplier_name || "-",
-      item.user_name || "-",
-    ]);
-
-    autoTable(doc, {
-      head: [
-        [
-          "เลขที่เอกสาร",
-          "วันที่",
-          "ประเภทการรับเข้า",
-          "ชื่อพัสดุ",
-          "ประเภท",
-          "Lot No",
-          "จำนวน",
-          "หน่วย",
-          "ผู้ขาย/ซัพพลายเออร์",
-          "ผู้ทำรายการ",
-        ],
-      ],
-      body: tableData,
-      startY: 25,
-    });
-
-    doc.save(`inflow-report-${Date.now()}.pdf`);
-  }, [data]);
+    if (dateRange?.value !== "custom" || (customStart && customEnd)) {
+      fetchReport();
+    }
+  }, [fetchReport, dateRange, customStart, customEnd]);
 
   return (
     <div className={styles.container}>
@@ -210,8 +155,7 @@ export default function InflowReport() {
         />
 
         {dateRange?.value === "custom" && (
-          // ✅ ส่วนที่ปรับแต่งการแสดงผลของ Date Inputs
-          <div className={`${styles.dateInputs} ${styles.customDateRange}`}> 
+          <div className={`${styles.dateInputs} ${styles.customDateRange}`}>
             <input
               type="date"
               value={customStart}
@@ -232,11 +176,36 @@ export default function InflowReport() {
           <Search size={16} style={{ marginRight: "6px" }} />
           ค้นหา
         </button>
-        <button className={styles.btnSecondary} onClick={exportPDF}>
+
+        <button
+          className={styles.btnSecondary}
+          onClick={() =>
+            exportInflowPDF({
+              data,
+              filters: {
+                typeLabel: type?.label,
+                dateLabel: dateRange?.label,
+                dateValue: dateRange?.value,
+                start: customStart,
+                end: customEnd,
+              },
+              user: { user_fname: "วัชรพล", user_lname: "อินทร์ทอง" },
+            })
+          }
+        >
           <FileDown size={16} style={{ marginRight: "6px" }} />
           PDF
         </button>
-        <button className={styles.btnSecondary} onClick={exportCSV}>
+
+        <button
+          className={styles.btnSecondary}
+          onClick={() =>
+            exportInflowCSV({
+              data,
+              user: { user_fname: "วัชรพล", user_lname: "อินทร์ทอง" },
+            })
+          }
+        >
           <FileDown size={16} style={{ marginRight: "6px" }} />
           CSV
         </button>
