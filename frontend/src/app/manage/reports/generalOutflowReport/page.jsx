@@ -1,29 +1,44 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
-import { Send, FileDown, Search } from "lucide-react";
+import {
+  Send,
+  FileDown,
+  Search,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+} from "lucide-react";
 import { manageAxios } from "@/app/utils/axiosInstance";
 import styles from "./page.module.css";
 import { exportGeneralOutflowPDF } from "@/app/components/pdf/templates/generalOutflowTemplate";
 import { exportGeneralOutflowCSV } from "@/app/components/Csv/templates/generalOutflowCSV";
 
-const Select = dynamic(() => import("react-select"), { ssr: false });
+const DynamicSelect = dynamic(() => import("react-select"), { ssr: false });
 
 export default function GeneralOutflowReport() {
-  const [type, setType] = useState({ value: "all", label: "ทั้งหมด" });
+  const [type, setType] = useState(null);
   const [data, setData] = useState([]);
-  const [dateRange, setDateRange] = useState({ value: "all", label: "ทุกช่วงเวลา" });
+  const [dateRange, setDateRange] = useState(null);
   const [user, setUser] = useState(null);
   const [users, setUsers] = useState([]);
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const startDateRef = useRef(null);
+  const endDateRef = useRef(null);
+
+  const ITEMS_PER_PAGE = 12;
 
   const typeOptions = [
     { value: "all", label: "ทั้งหมด" },
     { value: "withdraw", label: "ตัดสต็อก" },
     { value: "damaged", label: "ชำรุด" },
     { value: "expired_dispose", label: "หมดอายุ" },
+    { value: "borrow", label: "ตัดสต็อกจากการยืม" },
   ];
 
   const dateOptions = [
@@ -34,6 +49,7 @@ export default function GeneralOutflowReport() {
     { value: "6m", label: "6 เดือนย้อนหลัง" },
     { value: "9m", label: "9 เดือนย้อนหลัง" },
     { value: "12m", label: "12 เดือนย้อนหลัง" },
+    { value: "year", label: "ปีนี้" },
     { value: "custom", label: "กำหนดเอง" },
   ];
 
@@ -45,29 +61,32 @@ export default function GeneralOutflowReport() {
       meddevice: "อุปกรณ์การแพทย์",
       medicine: "ยา",
     };
-    return map[cat] || cat || "-";
+    return map[cat] || "-";
   };
 
-  const translateOutflowType = (type) => {
+  const translateOutflowType = (t) => {
     const map = {
       withdraw: "ตัดสต็อกจากการเบิก",
       damaged: "ชำรุด",
       expired_dispose: "หมดอายุ",
       borrow: "ตัดสต็อกจากการยืม",
     };
-    return map[type] || type || "-";
+    return map[t] || "-";
   };
 
   const formatDate = (iso) => {
     if (!iso) return "-";
-    const d = new Date(iso);
-    return d.toLocaleString("th-TH", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    try {
+      return new Date(iso).toLocaleString("th-TH", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "-";
+    }
   };
 
   /* ---------- Fetch Users ---------- */
@@ -88,21 +107,24 @@ export default function GeneralOutflowReport() {
   const fetchReport = useCallback(async () => {
     try {
       setLoading(true);
-
       let start = null;
       let end = null;
       const now = new Date();
 
-      if (dateRange?.value === "today") {
+      const opt = dateRange?.value;
+      if (opt === "today") {
         start = now.toISOString().split("T")[0];
         end = now.toISOString().split("T")[0];
-      } else if (["1m", "3m", "6m", "9m", "12m"].includes(dateRange?.value)) {
-        const months = parseInt(dateRange.value.split("m")[0]);
+      } else if (opt === "year") {
+        start = new Date(now.getFullYear(), 0, 1).toISOString().split("T")[0];
+        end = new Date(now.getFullYear(), 11, 31).toISOString().split("T")[0];
+      } else if (["1m", "3m", "6m", "9m", "12m"].includes(opt)) {
+        const months = parseInt(opt.replace("m", ""));
         const past = new Date();
         past.setMonth(now.getMonth() - months);
         start = past.toISOString().split("T")[0];
         end = now.toISOString().split("T")[0];
-      } else if (dateRange?.value === "custom") {
+      } else if (opt === "custom") {
         start = customStart || null;
         end = customEnd || null;
       }
@@ -128,140 +150,259 @@ export default function GeneralOutflowReport() {
     fetchReport();
   }, [fetchReport, fetchUsers]);
 
+  /* ---------- Pagination ---------- */
+  const filteredData = useMemo(() => data, [data]);
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / ITEMS_PER_PAGE));
+  const paginatedItems = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredData.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredData, currentPage]);
+
+  const fillersCount = Math.max(0, ITEMS_PER_PAGE - (paginatedItems?.length || 0));
+
+  const goToPreviousPage = () => currentPage > 1 && setCurrentPage((c) => c - 1);
+  const goToNextPage = () =>
+    currentPage * ITEMS_PER_PAGE < filteredData.length && setCurrentPage((c) => c + 1);
+
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 4) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else if (currentPage <= 4) {
+      pages.push(1, 2, 3, 4, "...", totalPages);
+    } else if (currentPage >= totalPages - 3) {
+      pages.push(1, "...", totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+    } else {
+      pages.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
+    }
+    return pages;
+  };
+
+  const startDisplay = filteredData.length ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0;
+  const endDisplay = Math.min(
+    (currentPage - 1) * ITEMS_PER_PAGE + ITEMS_PER_PAGE,
+    filteredData.length
+  );
+
+  const clearFilters = () => {
+    setType(null);
+    setDateRange(null);
+    setUser(null);
+    setCustomStart("");
+    setCustomEnd("");
+    setCurrentPage(1);
+  };
+
   /* ---------- Render ---------- */
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <Send size={32} color="#f97316" />
-        <h1>รายงานการนำออก</h1>
-      </div>
-
-      <div className={styles.filterBar}>
-        <Select
-          className={styles.selectBox}
-          options={typeOptions}
-          value={type}
-          onChange={setType}
-          placeholder="ประเภทการนำออก"
-        />
-        <Select
-          className={styles.selectBox}
-          options={dateOptions}
-          value={dateRange}
-          onChange={setDateRange}
-          placeholder="ช่วงเวลา"
-        />
-
-        {dateRange?.value === "custom" && (
-          <div className={`${styles.dateInputs} ${styles.customDateRange}`}>
-            <input
-              type="date"
-              value={customStart}
-              onChange={(e) => setCustomStart(e.target.value)}
-              className={styles.dateInput}
-            />
-            <span className={styles.dateSeparator}>ถึง</span>
-            <input
-              type="date"
-              value={customEnd}
-              onChange={(e) => setCustomEnd(e.target.value)}
-              className={styles.dateInput}
-            />
+    <div className={styles.mainHome}>
+      <div className={styles.infoContainer}>
+        <div className={styles.pageBar}>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.pageTitle}>
+              <Send size={28} color="#f97316" />
+              รายงานการนำออก
+            </h1>
           </div>
-        )}
+          <div className={styles.searchCluster}>
+            <button
+              className={styles.btnSecondary}
+              onClick={() =>
+                exportGeneralOutflowPDF({
+                  data,
+                  filters: {
+                    typeLabel: type?.label,
+                    dateLabel: dateRange?.label,
+                    dateValue: dateRange?.value,
+                    start: customStart,
+                    end: customEnd,
+                    userLabel: user?.label,
+                  },
+                  user: { user_fname: "วัชรพล", user_lname: "อินทร์ทอง" },
+                })
+              }
+            >
+              <FileDown size={16} /> PDF
+            </button>
+            <button
+              className={styles.btnSecondary}
+              onClick={() =>
+                exportGeneralOutflowCSV({
+                  data,
+                  filename: "general-outflow-report.csv",
+                })
+              }
+            >
+              <FileDown size={16} /> CSV
+            </button>
+          </div>
+        </div>
 
-        {users.length > 0 && (
-          <Select
-            className={styles.selectBox}
-            options={users}
-            value={user}
-            onChange={setUser}
-            placeholder="ผู้ทำรายการ"
-          />
-        )}
+        {/* Toolbar */}
+        <div className={styles.toolbar}>
+          <div className={styles.filterGrid}>
+            <div className={styles.filterGroup}>
+              <label className={styles.label}>ประเภทการนำออก</label>
+              <DynamicSelect
+                options={typeOptions}
+                isClearable
+                value={type}
+                onChange={setType}
+                placeholder="เลือกประเภท..."
+              />
+            </div>
 
-        <button className={styles.btnPrimary} onClick={fetchReport}>
-          <Search size={16} style={{ marginRight: "6px" }} />
-          ค้นหา
-        </button>
+            <div className={styles.filterGroup}>
+              <label className={styles.label}>ช่วงเวลา</label>
+              <DynamicSelect
+                options={dateOptions}
+                isClearable
+                value={dateRange}
+                onChange={setDateRange}
+                placeholder="เลือกช่วงเวลา..."
+              />
+            </div>
 
-        <button
-          className={styles.btnSecondary}
-          onClick={() =>
-            exportGeneralOutflowPDF({
-              data,
-              filters: {
-                typeLabel: type?.label,
-                dateLabel: dateRange?.label,
-                dateValue: dateRange?.value,
-                start: customStart,
-                end: customEnd,
-                userLabel: user?.label,
-              },
-              user: { user_fname: "วัชรพล", user_lname: "อินทร์ทอง" },
-            })
-          }
-        >
-          <FileDown size={16} style={{ marginRight: "6px" }} />
-          PDF
-        </button>
+            {dateRange?.value === "custom" && (
+              <div className={styles.filterGroup}>
+                <label className={styles.label}>กำหนดวันที่</label>
+                <div className={styles.customDateBox}>
+                  <input
+                    type="date"
+                    value={customStart}
+                    onChange={(e) => setCustomStart(e.target.value)}
+                    className={styles.dateInput}
+                    ref={startDateRef}
+                  />
+                  <span className={styles.toLabel}>ถึง</span>
+                  <input
+                    type="date"
+                    value={customEnd}
+                    onChange={(e) => setCustomEnd(e.target.value)}
+                    className={styles.dateInput}
+                    ref={endDateRef}
+                  />
+                </div>
+              </div>
+            )}
 
-        <button
-          className={styles.btnSecondary}
-          onClick={() =>
-            exportGeneralOutflowCSV({
-              data,
-              filename: "general-outflow-report.csv",
-            })
-          }
-        >
-          <FileDown size={16} style={{ marginRight: "6px" }} />
-          CSV
-        </button>
-      </div>
+            {users.length > 0 && (
+              <div className={styles.filterGroup}>
+                <label className={styles.label}>ผู้ทำรายการ</label>
+                <DynamicSelect
+                  options={users}
+                  isClearable
+                  value={user}
+                  onChange={setUser}
+                  placeholder="เลือกผู้ใช้..."
+                />
+              </div>
+            )}
+          </div>
 
-      <div className={styles.card}>
+          <div className={styles.searchCluster}>
+            <button className={styles.btnPrimary} onClick={fetchReport}>
+              <Search size={16} /> ค้นหา
+            </button>
+            <button onClick={clearFilters} className={`${styles.ghostBtn} ${styles.clearButton}`}>
+              <Trash2 size={16} /> ล้างตัวกรอง
+            </button>
+          </div>
+        </div>
+
+        {/* Table */}
         {loading ? (
-          <p>⏳ กำลังโหลดข้อมูล...</p>
+          <div className={styles.loadingContainer}>⏳ กำลังโหลดข้อมูล...</div>
+        ) : filteredData.length === 0 ? (
+          <div className={styles.noDataMessage}>ไม่พบข้อมูล</div>
         ) : (
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>เลขที่เอกสาร</th>
-                <th>วันที่</th>
-                <th>ประเภทการนำออก</th>
-                <th>ชื่อพัสดุ</th>
-                <th>ประเภท</th>
-                <th>Lot No</th>
-                <th>จำนวน</th>
-                <th>หน่วย</th>
-                <th>ผู้ทำรายการ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.length > 0 ? (
-                data.map((item, idx) => (
-                  <tr key={idx}>
-                    <td>{item.doc_no}</td>
-                    <td>{formatDate(item.doc_date)}</td>
-                    <td>{translateOutflowType(item.outflow_type)}</td>
-                    <td>{item.item_name}</td>
-                    <td>{translateCategory(item.category)}</td>
-                    <td>{item.lot_no || "-"}</td>
-                    <td>{item.qty}</td>
-                    <td>{item.unit}</td>
-                    <td>{item.user_name || "-"}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="10" style={{ textAlign: "center", padding: "1rem" }}>
-                    ไม่พบข้อมูล
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          <div className={styles.tableSection}>
+            <div className={`${styles.tableGridOutflow} ${styles.tableHeader}`}>
+              <div className={styles.headerItem}>เลขที่เอกสาร</div>
+              <div className={styles.headerItem}>วันที่</div>
+              <div className={styles.headerItem}>ประเภทการนำออก</div>
+              <div className={styles.headerItem}>ชื่อพัสดุ</div>
+              <div className={styles.headerItem}>ประเภท</div>
+              <div className={styles.headerItem}>Lot No</div>
+              <div className={`${styles.headerItem} ${styles.centerCell}`}>จำนวน</div> {/* ✅ ตรงกลาง */}
+              <div className={styles.headerItem}>หน่วย</div>
+              <div className={styles.headerItem}>ผู้ทำรายการ</div>
+            </div>
+
+            <div className={styles.inventory} style={{ "--rows-per-page": ITEMS_PER_PAGE }}>
+              {paginatedItems.map((item, index) => (
+                <div key={index} className={`${styles.tableGridOutflow} ${styles.tableRow}`}>
+                  <div className={styles.tableCell}>{item.doc_no}</div>
+                  <div className={styles.tableCell}>{formatDate(item.doc_date)}</div>
+                  <div className={styles.tableCell}>{translateOutflowType(item.outflow_type)}</div>
+                  <div className={styles.tableCell}>{item.item_name}</div>
+                  <div className={styles.tableCell}>{translateCategory(item.category)}</div>
+                  <div className={styles.tableCell}>{item.lot_no || "-"}</div>
+                  <div className={`${styles.tableCell} ${styles.centerCell}`}>{item.qty}</div> {/* ✅ ตรงกลาง */}
+                  <div className={styles.tableCell}>{item.unit}</div>
+                  <div className={styles.tableCell}>{item.user_name || "-"}</div>
+                </div>
+              ))}
+
+              {Array.from({ length: fillersCount }).map((_, i) => (
+                <div
+                  key={`filler-${i}`}
+                  className={`${styles.tableGridOutflow} ${styles.tableRow} ${styles.fillerRow}`}
+                >
+                  {Array.from({ length: 9 }).map((__, c) => (
+                    <div
+                      key={c}
+                      className={`${styles.tableCell} ${c === 6 ? styles.centerCell : ""}`}  // ✅ filler ตรงกลางเฉพาะคอลัมน์จำนวน
+                    >
+                      &nbsp;
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+
+            <div className={styles.paginationBar}>
+              <div className={styles.paginationInfo}>
+                กำลังแสดง {startDisplay}-{endDisplay} จาก {filteredData.length} รายการ
+              </div>
+              <ul className={styles.paginationControls}>
+                <li>
+                  <button
+                    className={styles.pageButton}
+                    onClick={goToPreviousPage}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                </li>
+                {getPageNumbers().map((p, idx) =>
+                  p === "..." ? (
+                    <li key={`ellipsis-${idx}`} className={styles.ellipsis}>
+                      …
+                    </li>
+                  ) : (
+                    <li key={`page-${p}`}>
+                      <button
+                        className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
+                        onClick={() => setCurrentPage(p)}
+                      >
+                        {p}
+                      </button>
+                    </li>
+                  )
+                )}
+                <li>
+                  <button
+                    className={styles.pageButton}
+                    onClick={goToNextPage}
+                    disabled={currentPage >= totalPages}
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
         )}
       </div>
     </div>

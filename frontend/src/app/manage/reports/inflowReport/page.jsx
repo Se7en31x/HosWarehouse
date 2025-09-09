@@ -1,21 +1,58 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
-import { ClipboardList, FileDown, Search } from "lucide-react";
+import { ClipboardList, FileDown, Search, Trash2, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { manageAxios } from "@/app/utils/axiosInstance";
+import { toast } from "react-toastify";
 import styles from "./page.module.css";
 import { exportInflowPDF } from "@/app/components/pdf/templates/inflowTemplate";
 import { exportInflowCSV } from "@/app/components/Csv/templates/inflowCSV";
 
-const Select = dynamic(() => import("react-select"), { ssr: false });
+const DynamicSelect = dynamic(() => import("react-select"), { ssr: false });
+
+const customSelectStyles = {
+  control: (base, state) => ({
+    ...base,
+    borderRadius: "0.5rem",
+    minHeight: "2.5rem",
+    borderColor: state.isFocused ? "var(--accent)" : "var(--border)",
+    boxShadow: "none",
+    "&:hover": { borderColor: "var(--accent)" },
+    width: "200px",
+  }),
+  menu: (base) => ({
+    ...base,
+    borderRadius: "0.5rem",
+    marginTop: 6,
+    boxShadow: "none",
+    border: "1px solid var(--border)",
+    zIndex: 9000,
+  }),
+  menuPortal: (base) => ({ ...base, zIndex: 9000 }),
+};
 
 export default function InflowReport() {
-  const [type, setType] = useState({ value: "all", label: "ทั้งหมด" });
-  const [dateRange, setDateRange] = useState({ value: "all", label: "ทุกช่วงเวลา" });
+  const [type, setType] = useState(null);
+  const [dateRange, setDateRange] = useState(null);
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const ITEMS_PER_PAGE = 12;
+  const startDateRef = useRef(null);
+  const endDateRef = useRef(null);
+
+  const menuPortalTarget = useMemo(() => (typeof window !== "undefined" ? document.body : null), []);
+
+  const mockUser = {
+    user_id: 1,
+    user_fname: "วัชรพล",
+    user_lname: "อินทร์ทอง",
+    user_role: "เจ้าหน้าที่คลัง",
+    department: "คลังกลาง",
+  };
 
   const typeOptions = [
     { value: "all", label: "ทั้งหมด" },
@@ -27,13 +64,13 @@ export default function InflowReport() {
   ];
 
   const dateOptions = [
-    { value: "all", label: "ทุกช่วงเวลา" },
+    { value: "all", label: "ทั้งหมด" },
     { value: "today", label: "วันนี้" },
-    { value: "last_1_month", label: "ย้อนหลัง 1 เดือน" },
-    { value: "last_3_months", label: "ย้อนหลัง 3 เดือน" },
-    { value: "last_6_months", label: "ย้อนหลัง 6 เดือน" },
-    { value: "last_9_months", label: "ย้อนหลัง 9 เดือน" },
-    { value: "last_12_months", label: "ย้อนหลัง 12 เดือน" },
+    { value: "1m", label: "1 เดือนที่ผ่านมา" },
+    { value: "3m", label: "3 เดือนที่ผ่านมา" },
+    { value: "6m", label: "6 เดือนที่ผ่านมา" },
+    { value: "9m", label: "9 เดือนที่ผ่านมา" },
+    { value: "12m", label: "12 เดือนที่ผ่านมา" },
     { value: "custom", label: "กำหนดเอง" },
   ];
 
@@ -71,190 +108,267 @@ export default function InflowReport() {
     });
   };
 
+  const toISODate = (date) => date.toISOString().split("T")[0];
+
+  const handleCustomStartChange = (e) => {
+    const val = e.target.value;
+    if (customEnd && val > customEnd) {
+      toast.error("วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุด");
+      return;
+    }
+    setCustomStart(val);
+  };
+  const handleCustomEndChange = (e) => {
+    const val = e.target.value;
+    if (customStart && val < customStart) {
+      toast.error("วันที่สิ้นสุดต้องไม่น้อยกว่าวันที่เริ่มต้น");
+      return;
+    }
+    setCustomEnd(val);
+  };
+
   const fetchReport = useCallback(async () => {
     try {
       setLoading(true);
+      const params = {};
+      if (type?.value && type.value !== "all") params.type = type.value;
 
-      let start = null;
-      let end = null;
-      const now = new Date();
+      const today = new Date();
+      let start = null,
+        end = null;
+      const option = dateRange?.value;
 
-      switch (dateRange?.value) {
-        case "today":
-          start = now.toISOString().split("T")[0];
-          end = now.toISOString().split("T")[0];
-          break;
-        case "last_1_month":
-        case "last_3_months":
-        case "last_6_months":
-        case "last_9_months":
-        case "last_12_months": {
-          const monthsAgo = parseInt(dateRange.value.split("_")[1]); // ดึงเลขเดือน
-          const d = new Date(now);
-          d.setMonth(now.getMonth() - monthsAgo);
-          start = d.toISOString().split("T")[0];
-          end = now.toISOString().split("T")[0];
-          break;
-        }
-        case "custom":
-          start = customStart || null;
-          end = customEnd || null;
-          if (!start || !end) {
-            setLoading(false);
-            return; // ✅ ไม่ยิง API ถ้ายังไม่เลือกวัน
-          }
-          break;
-        default:
-          start = null;
-          end = null;
-          break;
+      if (option === "today") {
+        start = toISODate(today);
+        end = toISODate(today);
+      } else if (["1m", "3m", "6m", "9m", "12m"].includes(option)) {
+        const months = parseInt(option);
+        start = new Date();
+        start.setMonth(today.getMonth() - months);
+        params.start = toISODate(start);
+        params.end = toISODate(today);
+      } else if (option === "custom" && customStart && customEnd) {
+        params.start = customStart;
+        params.end = customEnd;
       }
 
-      const res = await manageAxios.get("/report/inflow", {
-        params: {
-          type: type?.value || "all",
-          start,
-          end,
-        },
-      });
-      setData(res.data);
+      const res = await manageAxios.get("/report/inflow", { params });
+      setData(Array.isArray(res.data) ? res.data.filter(Boolean) : []);
     } catch (err) {
       console.error("Error fetching inflow report:", err);
+      toast.error("ไม่สามารถโหลดข้อมูลจากเซิร์ฟเวอร์ได้");
     } finally {
       setLoading(false);
     }
   }, [type, dateRange, customStart, customEnd]);
 
   useEffect(() => {
-    if (dateRange?.value !== "custom" || (customStart && customEnd)) {
-      fetchReport();
-    }
-  }, [fetchReport, dateRange, customStart, customEnd]);
+    fetchReport();
+  }, [fetchReport]);
+
+  const filteredData = useMemo(() => data.sort((a, b) => new Date(b.doc_date) - new Date(a.doc_date)), [data]);
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / ITEMS_PER_PAGE));
+  const paginatedItems = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredData.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredData, currentPage]);
+
+  const fillersCount = Math.max(0, ITEMS_PER_PAGE - paginatedItems.length);
+
+  const startDisplay = filteredData.length ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0;
+  const endDisplay = Math.min((currentPage - 1) * ITEMS_PER_PAGE + ITEMS_PER_PAGE, filteredData.length);
+
+  const clearFilters = () => {
+    setType(null);
+    setDateRange(null);
+    setCustomStart("");
+    setCustomEnd("");
+    setCurrentPage(1);
+  };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <ClipboardList size={32} color="#2563eb" />
-        <h1>รายงานการรับเข้า</h1>
-      </div>
-
-      <div className={styles.filterBar}>
-        <Select
-          className={styles.selectBox}
-          options={typeOptions}
-          value={type}
-          onChange={setType}
-          placeholder="ประเภทการรับเข้า"
-        />
-        <Select
-          className={styles.selectBox}
-          options={dateOptions}
-          value={dateRange}
-          onChange={setDateRange}
-          placeholder="ช่วงเวลา"
-        />
-
-        {dateRange?.value === "custom" && (
-          <div className={`${styles.dateInputs} ${styles.customDateRange}`}>
-            <input
-              type="date"
-              value={customStart}
-              onChange={(e) => setCustomStart(e.target.value)}
-              className={styles.dateInput}
-            />
-            <span className={styles.dateSeparator}>ถึง</span>
-            <input
-              type="date"
-              value={customEnd}
-              onChange={(e) => setCustomEnd(e.target.value)}
-              className={styles.dateInput}
-            />
+    <div className={styles.mainHome}>
+      <div className={styles.infoContainer}>
+        {/* Page Header */}
+        <div className={styles.pageBar}>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.pageTitle}>
+              <ClipboardList size={28} /> รายงานการรับเข้า
+            </h1>
           </div>
-        )}
+          <div className={styles.searchCluster}>
+            <button
+              className={styles.btnSecondary}
+              onClick={() =>
+                exportInflowPDF({
+                  data,
+                  filters: {
+                    typeLabel: type?.label,
+                    dateValue: dateRange?.value,
+                    start: customStart,
+                    end: customEnd,
+                  },
+                  user: mockUser,
+                })
+              }
+            >
+              <FileDown size={16} style={{ marginRight: "6px" }} /> PDF
+            </button>
+            <button className={styles.btnSecondary} onClick={() => exportInflowCSV({ data })}>
+              <FileDown size={16} style={{ marginRight: "6px" }} /> CSV
+            </button>
+          </div>
+        </div>
 
-        <button className={styles.btnPrimary} onClick={fetchReport}>
-          <Search size={16} style={{ marginRight: "6px" }} />
-          ค้นหา
-        </button>
+        {/* Toolbar */}
+        <div className={styles.toolbar}>
+          <div className={styles.filterGrid}>
+            <div className={styles.filterGroup}>
+              <label className={styles.label}>ประเภทการรับเข้า</label>
+              <DynamicSelect
+                options={typeOptions}
+                isClearable
+                isSearchable={false}
+                placeholder="เลือกประเภท..."
+                styles={customSelectStyles}
+                value={type}
+                onChange={setType}
+                menuPortalTarget={menuPortalTarget}
+              />
+            </div>
+            <div className={styles.filterGroup}>
+              <label className={styles.label}>ช่วงเวลา</label>
+              <DynamicSelect
+                options={dateOptions}
+                isClearable
+                isSearchable={false}
+                placeholder="เลือกช่วงเวลา..."
+                styles={customSelectStyles}
+                value={dateRange}
+                onChange={(opt) => {
+                  setDateRange(opt);
+                  if (!opt || opt.value !== "custom") {
+                    setCustomStart("");
+                    setCustomEnd("");
+                  }
+                }}
+                menuPortalTarget={menuPortalTarget}
+              />
+            </div>
+            {dateRange?.value === "custom" && (
+              <div className={styles.filterGroup}>
+                <label className={styles.label}>กำหนดวันที่</label>
+                <div className={styles.customDateBox}>
+                  <div className={styles.dateField}>
+                    <input type="date" value={customStart} onChange={handleCustomStartChange} className={styles.dateInput} ref={startDateRef} />
+                    <button className={styles.calendarButton} onClick={() => startDateRef.current?.showPicker?.()}>
+                      <Calendar size={16} />
+                    </button>
+                  </div>
+                  <span className={styles.toLabel}>ถึง</span>
+                  <div className={styles.dateField}>
+                    <input type="date" value={customEnd} onChange={handleCustomEndChange} className={styles.dateInput} ref={endDateRef} />
+                    <button className={styles.calendarButton} onClick={() => endDateRef.current?.showPicker?.()}>
+                      <Calendar size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className={styles.searchCluster}>
+            <button className={styles.btnPrimary} onClick={fetchReport}>
+              <Search size={16} style={{ marginRight: "6px" }} /> ค้นหา
+            </button>
+            <button className={`${styles.ghostBtn} ${styles.clearButton}`} onClick={clearFilters}>
+              <Trash2 size={18} /> ล้างตัวกรอง
+            </button>
+          </div>
+        </div>
 
-        <button
-          className={styles.btnSecondary}
-          onClick={() =>
-            exportInflowPDF({
-              data,
-              filters: {
-                typeLabel: type?.label,
-                dateLabel: dateRange?.label,
-                dateValue: dateRange?.value,
-                start: customStart,
-                end: customEnd,
-              },
-              user: { user_fname: "วัชรพล", user_lname: "อินทร์ทอง" },
-            })
-          }
-        >
-          <FileDown size={16} style={{ marginRight: "6px" }} />
-          PDF
-        </button>
-
-        <button
-          className={styles.btnSecondary}
-          onClick={() =>
-            exportInflowCSV({
-              data,
-              user: { user_fname: "วัชรพล", user_lname: "อินทร์ทอง" },
-            })
-          }
-        >
-          <FileDown size={16} style={{ marginRight: "6px" }} />
-          CSV
-        </button>
-      </div>
-
-      <div className={styles.card}>
+        {/* Table */}
         {loading ? (
-          <p>⏳ กำลังโหลดข้อมูล...</p>
+          <div className={styles.loadingContainer} />
         ) : (
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>เลขที่เอกสาร</th>
-                <th>วันที่</th>
-                <th>ประเภทการรับเข้า</th>
-                <th>ชื่อพัสดุ</th>
-                <th>ประเภท</th>
-                <th>Lot No</th>
-                <th>จำนวน</th>
-                <th>หน่วย</th>
-                <th>ผู้ขาย/ซัพพลายเออร์</th>
-                <th>ผู้ทำรายการ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.length > 0 ? (
-                data.map((item, idx) => (
-                  <tr key={idx}>
-                    <td>{item.doc_no}</td>
-                    <td>{formatDate(item.doc_date)}</td>
-                    <td>{translateInflowType(item.inflow_type)}</td>
-                    <td>{item.item_name}</td>
-                    <td>{translateCategory(item.category)}</td>
-                    <td>{item.lot_no || "-"}</td>
-                    <td>{item.qty}</td>
-                    <td>{item.unit}</td>
-                    <td>{item.supplier_name || "-"}</td>
-                    <td>{item.user_name || "-"}</td>
-                  </tr>
+          <div className={styles.tableSection}>
+            <div className={`${styles.tableGridInventory} ${styles.tableHeader}`}>
+              <div className={styles.headerItem}>เลขที่เอกสาร</div>
+              <div className={styles.headerItem}>วันที่</div>
+              <div className={styles.headerItem}>ประเภทการรับเข้า</div>
+              <div className={styles.headerItem}>ชื่อพัสดุ</div>
+              <div className={styles.headerItem}>ประเภท</div>
+              <div className={styles.headerItem}>Lot No</div>
+              <div className={styles.headerItem}>จำนวน</div>
+              <div className={styles.headerItem}>หน่วย</div>
+              <div className={styles.headerItem}>ผู้ขาย/ซัพพลายเออร์</div>
+              <div className={styles.headerItem}>ผู้ทำรายการ</div>
+            </div>
+
+            <div className={styles.inventory} style={{ "--rows-per-page": ITEMS_PER_PAGE }}>
+              {paginatedItems.length > 0 ? (
+                paginatedItems.map((item, idx) => (
+                  <div key={idx} className={`${styles.tableGridInventory} ${styles.tableRow}`}>
+                    <div className={styles.tableCell}>{item.doc_no}</div>
+                    <div className={styles.tableCell}>{formatDate(item.doc_date)}</div>
+                    <div className={styles.tableCell}>{translateInflowType(item.inflow_type)}</div>
+                    <div className={styles.tableCell}>{item.item_name}</div>
+                    <div className={styles.tableCell}>{translateCategory(item.category)}</div>
+                    <div className={styles.tableCell}>{item.lot_no || "-"}</div>
+                    <div className={`${styles.tableCell} ${styles.centerCell}`}>{item.qty}</div>
+                    <div className={styles.tableCell}>{item.unit}</div>
+                    <div className={styles.tableCell}>{item.supplier_name || "-"}</div>
+                    <div className={styles.tableCell}>{item.user_name || "-"}</div>
+                  </div>
                 ))
               ) : (
-                <tr>
-                  <td colSpan="10" style={{ textAlign: "center", padding: "1rem" }}>
-                    ไม่พบข้อมูล
-                  </td>
-                </tr>
+                <div className={styles.noDataMessage}>ไม่พบข้อมูล</div>
               )}
-            </tbody>
-          </table>
+
+              {Array.from({ length: fillersCount }).map((_, i) => (
+                <div
+                  key={`filler-${i}`}
+                  className={`${styles.tableGridInventory} ${styles.tableRow} ${styles.fillerRow}`}
+                  aria-hidden="true"
+                >
+                  {Array.from({ length: 10 }).map((__, j) => (
+                    <div key={j} className={styles.tableCell}>&nbsp;</div>
+                  ))}
+                </div>
+              ))}
+            </div>
+
+            <div className={styles.paginationBar}>
+              <div className={styles.paginationInfo}>
+                กำลังแสดง {startDisplay}-{endDisplay} จาก {filteredData.length} รายการ
+              </div>
+              <ul className={styles.paginationControls}>
+                <li>
+                  <button className={styles.pageButton} disabled={currentPage === 1} onClick={() => setCurrentPage((c) => c - 1)}>
+                    <ChevronLeft size={16} />
+                  </button>
+                </li>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                  <li key={p}>
+                    <button
+                      className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""}`}
+                      onClick={() => setCurrentPage(p)}
+                    >
+                      {p}
+                    </button>
+                  </li>
+                ))}
+                <li>
+                  <button
+                    className={styles.pageButton}
+                    disabled={currentPage >= totalPages}
+                    onClick={() => setCurrentPage((c) => c + 1)}
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
         )}
       </div>
     </div>

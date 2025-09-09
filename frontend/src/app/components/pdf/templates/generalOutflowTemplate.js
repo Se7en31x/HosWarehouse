@@ -1,28 +1,6 @@
-// src/app/components/pdf/templates/generalOutflowTemplate.js
 import exportPDF from "../PDFExporter";
 
 /* ---------- Helpers ---------- */
-const translateCategory = (cat) => {
-  const map = {
-    general: "ของใช้ทั่วไป",
-    medsup: "เวชภัณฑ์",
-    equipment: "ครุภัณฑ์",
-    meddevice: "อุปกรณ์การแพทย์",
-    medicine: "ยา",
-  };
-  return map[cat] || cat || "-";
-};
-
-const translateOutflowType = (type) => {
-  const map = {
-    withdraw: "ตัดสต็อกจากการเบิก",
-    damaged: "ชำรุด",
-    expired_dispose: "หมดอายุ",
-    borrow: "ตัดสต็อกจากการยืม",
-  };
-  return map[type] || type || "-";
-};
-
 const formatDate = (iso) => {
   if (!iso) return "-";
   try {
@@ -38,27 +16,98 @@ const formatDate = (iso) => {
   }
 };
 
+const translateCategory = (cat) => {
+  const map = {
+    general: "ของใช้ทั่วไป",
+    medsup: "เวชภัณฑ์",
+    equipment: "ครุภัณฑ์",
+    meddevice: "อุปกรณ์การแพทย์",
+    medicine: "ยา",
+  };
+  return map[cat] || "-";
+};
+
+const translateOutflowType = (t) => {
+  const map = {
+    withdraw: "ตัดสต็อกจากการเบิก",
+    damaged: "ชำรุด",
+    expired_dispose: "หมดอายุ",
+    borrow: "ตัดสต็อกจากการยืม",
+  };
+  return map[t] || "-";
+};
+
+/* ---------- Date Range Label ---------- */
+const mapDateRangeLabel = (value, start, end) => {
+  const today = new Date();
+  let rangeStart, rangeEnd;
+
+  switch (value) {
+    case "today":
+      rangeStart = today;
+      rangeEnd = today;
+      break;
+    case "1m":
+      rangeStart = new Date(today);
+      rangeStart.setMonth(today.getMonth() - 1);
+      rangeEnd = today;
+      break;
+    case "3m":
+      rangeStart = new Date(today);
+      rangeStart.setMonth(today.getMonth() - 3);
+      rangeEnd = today;
+      break;
+    case "6m":
+      rangeStart = new Date(today);
+      rangeStart.setMonth(today.getMonth() - 6);
+      rangeEnd = today;
+      break;
+    case "9m":
+      rangeStart = new Date(today);
+      rangeStart.setMonth(today.getMonth() - 9);
+      rangeEnd = today;
+      break;
+    case "12m":
+      rangeStart = new Date(today);
+      rangeStart.setMonth(today.getMonth() - 12);
+      rangeEnd = today;
+      break;
+    case "year":
+      rangeStart = new Date(today.getFullYear(), 0, 1);
+      rangeEnd = new Date(today.getFullYear(), 11, 31);
+      break;
+    case "custom":
+      if (start && end) {
+        rangeStart = new Date(start);
+        rangeEnd = new Date(end);
+      }
+      break;
+    default:
+      return "ทั้งหมด";
+  }
+
+  if (rangeStart && rangeEnd) {
+    const startLabel = rangeStart.toLocaleDateString("th-TH", { dateStyle: "long" });
+    const endLabel = rangeEnd.toLocaleDateString("th-TH", { dateStyle: "long" });
+    return `${startLabel} - ${endLabel}`;
+  }
+  return "ทั้งหมด";
+};
+
 /* ---------- Main Export ---------- */
 export async function exportGeneralOutflowPDF({ data = [], filters = {}, user }) {
   const fullName = user ? `${user.user_fname} ${user.user_lname}` : "ไม่ระบุ";
-
-  /* ✅ Date Label */
-  let dateLabel = filters.dateLabel || "ทั้งหมด";
-  if (filters.dateValue === "custom" && filters.start && filters.end) {
-    const startDate = new Date(filters.start).toLocaleDateString("th-TH", { dateStyle: "long" });
-    const endDate = new Date(filters.end).toLocaleDateString("th-TH", { dateStyle: "long" });
-    dateLabel = `${startDate} - ${endDate}`;
-  }
+  const dateLabel = mapDateRangeLabel(filters.dateValue, filters.start, filters.end);
 
   /* ✅ Meta block */
   const meta = [
     [
       "วันที่ออกรายงาน",
       new Date().toLocaleDateString("th-TH", { dateStyle: "long" }),
-      "ช่วงเวลา",
-      dateLabel,
+      "ผู้ทำรายการ",
+      filters.userLabel || "ทั้งหมด",
     ],
-    ["ประเภทการนำออก", filters.typeLabel || "ทั้งหมด", "ผู้ทำรายการ", filters.userLabel || "ทั้งหมด"],
+    ["ช่วงเวลา", dateLabel, "ประเภทการนำออก", filters.typeLabel || "ทั้งหมด"],
     ["ผู้จัดทำรายงาน", fullName, "", ""],
   ];
 
@@ -70,11 +119,10 @@ export async function exportGeneralOutflowPDF({ data = [], filters = {}, user })
     "ประเภทการนำออก",
     "ชื่อพัสดุ",
     "ประเภท",
-    "Lot No",
+    "Lot No.",
     "จำนวน",
     "หน่วย",
     "ผู้ทำรายการ",
-    "หมายเหตุ",
   ];
 
   /* ✅ Table Rows */
@@ -89,20 +137,14 @@ export async function exportGeneralOutflowPDF({ data = [], filters = {}, user })
     (parseInt(item.qty, 10) || 0).toLocaleString("th-TH"),
     item.unit || "-",
     item.user_name || "-",
-    item.doc_note || "-",
   ]);
 
-  /* ✅ รวมยอดจำนวน */
+  /* ✅ รวมยอด */
   const totalQty = data.reduce((sum, i) => sum + (parseInt(i.qty, 10) || 0), 0);
-
   rows.push([
-    {
-      content: "รวมจำนวนทั้งหมด",
-      colSpan: 7,
-      styles: { halign: "right", fontStyle: "bold" },
-    },
+    { content: "รวมจำนวนทั้งหมด", colSpan: 7, styles: { halign: "right", fontStyle: "bold" } },
     totalQty.toLocaleString("th-TH"),
-    { content: "-", colSpan: 3 },
+    { content: "-", colSpan: 2 },
   ]);
 
   /* ✅ Export PDF */
@@ -120,14 +162,25 @@ export async function exportGeneralOutflowPDF({ data = [], filters = {}, user })
     rows,
     footerNote: "รายงานนี้จัดทำขึ้นเพื่อการตรวจสอบการนำออกจากคลังพัสดุ",
     options: {
+      page: { orientation: "landscape" },
       brand: {
         name: "โรงพยาบาลวัดห้วยปลากั้งเพื่อสังคม",
         address: "553 11 ตำบล บ้านดู่ อำเภอเมืองเชียงราย เชียงราย 57100",
+        logo: "/logos/logo.png",
       },
       signatures: {
         roles: ["ผู้จัดทำ", "ผู้ตรวจสอบ", "ผู้อำนวยการ"],
         names: [fullName, "", ""],
       },
+      colors: {
+        headFill: [255, 255, 255],
+        headText: [0, 0, 0],
+        gridLine: [0, 0, 0],
+        zebra: [255, 255, 255],
+      },
+      tableStyles: { lineWidth: 0.3, lineColor: [0, 0, 0] },
+      headStyles: { lineWidth: 0.6, lineColor: [0, 0, 0], fontStyle: "bold" },
+      bodyStyles: { lineWidth: { top: 0.6, right: 0.3, bottom: 0.6, left: 0.3 } },
     },
   });
 }

@@ -34,22 +34,71 @@ const translateManageStatus = (status) => {
   return map[status] || "-";
 };
 
+/* ✅ ฟังก์ชันแปลงช่วงเวลา */
+const mapDateRangeLabel = (value, start, end) => {
+  const today = new Date();
+  let rangeStart, rangeEnd;
+
+  switch (value) {
+    case "today":
+      rangeStart = today;
+      rangeEnd = today;
+      break;
+    case "1m":
+      rangeStart = new Date(today);
+      rangeStart.setMonth(today.getMonth() - 1);
+      rangeEnd = today;
+      break;
+    case "3m":
+      rangeStart = new Date(today);
+      rangeStart.setMonth(today.getMonth() - 3);
+      rangeEnd = today;
+      break;
+    case "6m":
+      rangeStart = new Date(today);
+      rangeStart.setMonth(today.getMonth() - 6);
+      rangeEnd = today;
+      break;
+    case "9m":
+      rangeStart = new Date(today);
+      rangeStart.setMonth(today.getMonth() - 9);
+      rangeEnd = today;
+      break;
+    case "12m":
+      rangeStart = new Date(today);
+      rangeStart.setMonth(today.getMonth() - 12);
+      rangeEnd = today;
+      break;
+    case "year":
+      rangeStart = new Date(today.getFullYear(), 0, 1);
+      rangeEnd = new Date(today.getFullYear(), 11, 31);
+      break;
+    case "custom":
+      if (start && end) {
+        rangeStart = new Date(start);
+        rangeEnd = new Date(end);
+      }
+      break;
+    default:
+      return "ทั้งหมด";
+  }
+
+  if (rangeStart && rangeEnd) {
+    const startLabel = rangeStart.toLocaleDateString("th-TH", { dateStyle: "long" });
+    const endLabel = rangeEnd.toLocaleDateString("th-TH", { dateStyle: "long" });
+    return `${startLabel} - ${endLabel}`;
+  }
+
+  return "ทั้งหมด";
+};
+
 export async function exportExpiredPDF({ data = [], filters = {}, user }) {
   const fullName = user ? `${user.user_fname} ${user.user_lname}` : "ไม่ระบุ";
 
-  /* ---- Meta block (ตาม baseline) ---- */
-  let dateLabel = filters.dateLabel || "ทั้งหมด";
+  // ✅ ใช้ mapDateRangeLabel
+  const dateLabel = mapDateRangeLabel(filters.dateValue, filters.start, filters.end);
 
-  if (filters.dateValue === "custom" && filters.start && filters.end) {
-    const startDate = new Date(filters.start).toLocaleDateString("th-TH", {
-      dateStyle: "long",
-    });
-    const endDate = new Date(filters.end).toLocaleDateString("th-TH", {
-      dateStyle: "long",
-    });
-    dateLabel = `${startDate} - ${endDate}`;
-  }
-
+  /* ---- Meta block ---- */
   const meta = [
     [
       "วันที่ออกรายงาน",
@@ -90,18 +139,9 @@ export async function exportExpiredPDF({ data = [], filters = {}, user }) {
   ]);
 
   /* ---- รวมยอดท้ายตาราง ---- */
-  const totalExpired = data.reduce(
-    (sum, i) => sum + (parseInt(i.expired_qty, 10) || 0),
-    0
-  );
-  const totalDisposed = data.reduce(
-    (sum, i) => sum + (parseInt(i.disposed_qty, 10) || 0),
-    0
-  );
-  const totalRemaining = data.reduce(
-    (sum, i) => sum + (parseInt(i.remaining_qty, 10) || 0),
-    0
-  );
+  const totalExpired = data.reduce((sum, i) => sum + (parseInt(i.expired_qty, 10) || 0), 0);
+  const totalDisposed = data.reduce((sum, i) => sum + (parseInt(i.disposed_qty, 10) || 0), 0);
+  const totalRemaining = data.reduce((sum, i) => sum + (parseInt(i.remaining_qty, 10) || 0), 0);
 
   rows.push([
     {
@@ -130,15 +170,25 @@ export async function exportExpiredPDF({ data = [], filters = {}, user }) {
     rows,
     footerNote: "รายงานนี้จัดทำขึ้นเพื่อการตรวจสอบพัสดุหมดอายุ",
     options: {
+      page: { orientation: "landscape" },
       brand: {
         name: "โรงพยาบาลวัดห้วยปลากั้งเพื่อสังคม",
-        address:
-          "553 11 ตำบล บ้านดู่ อำเภอเมืองเชียงราย เชียงราย 57100",
+        address: "553 11 ตำบล บ้านดู่ อำเภอเมืองเชียงราย เชียงราย 57100",
+        logo: "/logos/logo.png",
       },
       signatures: {
         roles: ["ผู้จัดทำ", "หัวหน้าแผนก", "ผู้อำนวยการ"],
         names: [fullName, "", ""],
       },
+      colors: {
+        headFill: [255, 255, 255],
+        headText: [0, 0, 0],
+        gridLine: [0, 0, 0],
+        zebra: [255, 255, 255],
+      },
+      tableStyles: { lineWidth: 0.3, lineColor: [0, 0, 0] },
+      headStyles: { lineWidth: 0.6, lineColor: [0, 0, 0], fontStyle: "bold" },
+      bodyStyles: { lineWidth: { top: 0.6, right: 0.3, bottom: 0.6, left: 0.3 } },
     },
   });
 }

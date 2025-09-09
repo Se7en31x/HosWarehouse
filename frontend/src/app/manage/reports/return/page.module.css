@@ -1,140 +1,399 @@
+/* =============================
+   ReturnReport — page.module.css
+   Based on Inventory/GeneralOutflow baseline
+   ============================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ---- Variables ---- */
 :root {
-  --bg: #f8fafc;
-  --panel: #ffffff;
-  --primary: #2563eb;
-  --primary-hover: #1e40af;
-  --secondary: #f3f4f6;
-  --border: #e5e7eb;
-  --text: #111827;
-  --muted: #6b7280;
-  --radius: 8px;
-  --shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  --bg: #F9FAFB;
+  --panel: #FFFFFF;
+  --muted: #6B7280;
+  --text: #1F2A44;
+  --border: #D1D5DB;
+  --accent: #2563EB;
+  --accent-hover: #1D4ED8;
+
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+
+  --tint-50: #FAFAFA;
+  --tint-100: #F3F4F6;
+  --tint-200: #E5E7EB;
+
+  --radius: 6px;
+  --radius-sm: 4px;
+
+  --row-h: 48px;
+  --rows-per-page: 12;
+
+  --z-header: 10;
+  --z-toolbar: 100;
+  --z-select: 9000;
+
+   --table-columns-return:
+    minmax(90px, 1fr)    /* เลขที่คำขอ */
+    minmax(80px, 0.8fr)  /* แผนก */
+    minmax(100px, 1fr)   /* ผู้ยืม */
+    minmax(120px, 1.5fr) /* ชื่อพัสดุ */
+    minmax(70px, 0.6fr)  /* จำนวนอนุมัติ */
+    minmax(70px, 0.6fr)  /* คืนแล้ว */
+    minmax(70px, 0.6fr)  /* คงเหลือ */
+    minmax(100px, 1fr)   /* สถานะการคืน */
+    minmax(120px, 1fr)   /* วันคืนล่าสุด */
+    minmax(110px, 1fr);  /* สถานะอนุมัติ */
 }
 
-.container {
+/* ---- Layout ---- */
+.mainHome {
   min-height: 100vh;
-  background: var(--bg);
-  padding: 2rem;
-  font-family: "Inter", sans-serif;
-}
-
-.header {
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans';
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  margin-bottom: 1.5rem;
+  justify-content: center;
+  background: var(--bg);
 }
 
-.header h1 {
-  font-size: 1.5rem;
+.infoContainer {
+  width: 100%;
+  min-height: 100vh;
+  background: var(--panel);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1 1 auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* ---- Header ---- */
+.pageBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pageTitle {
   font-weight: 700;
-  color: var(--primary);
+  font-size: clamp(1.2rem, 2vw, 1.8rem);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
 }
 
-.filterBar {
+/* ---- Toolbar ---- */
+.toolbar {
+  z-index: var(--z-toolbar);
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--tint-50);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.filterGrid {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.8rem;
-  margin-bottom: 1.2rem;
+  gap: 12px;
+  flex: 1;
+  align-items: flex-end;
 }
 
-.selectBox {
-  min-width: 180px;
-  font-size: 0.9rem;
-}
-
-.btnPrimary {
-  background: var(--primary);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius);
-  border: none;
-  cursor: pointer;
-  font-weight: 500;
+.filterGroup {
   display: flex;
-  align-items: center;
-  transition: background 0.2s;
-}
-.btnPrimary:hover {
-  background: var(--primary-hover);
-}
-
-.btnSecondary {
-  background: var(--secondary);
-  color: var(--text);
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  cursor: pointer;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  transition: background 0.2s;
-}
-.btnSecondary:hover {
-  background: #e5e7eb;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+  max-width: 200px;
+  flex: 1;
 }
 
-.card {
-  background: var(--panel);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 1rem;
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-}
-
-.table thead {
-  background: var(--secondary);
-}
-.table th,
-.table td {
-  padding: 0.75rem;
-  text-align: left; /* ✅ ชิดซ้าย */
-  vertical-align: middle;
-  border-bottom: 1px solid #e5e7eb;
-}
-.table th {
+.label {
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text);
 }
-.table tr:nth-child(even) {
-  background: #f9fafb;
+
+/* ---- Date Picker ---- */
+.customDateBox {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
-/* ===== Badge Base ===== */
-.badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 12px;
+.dateInput {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
   font-size: 0.85rem;
-  font-weight: 500;
-  text-align: center;
-  min-width: 90px;
+  color: var(--text);
+  background: var(--panel);
 }
 
-/* ===== Badge Colors ===== */
-.badgeGray {
-  background-color: #e5e7eb;
-  color: #374151;
+.dateInput:focus {
+  outline: 1px solid var(--accent);
 }
-.badgeBlue {
-  background-color: #dbeafe;
-  color: #1e40af;
+
+.toLabel {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 600;
 }
-.badgeOrange {
-  background-color: #ffedd5;
-  color: #9a3412;
+
+/* ---- Buttons ---- */
+.searchCluster {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
 }
-.badgeGreen {
-  background-color: #dcfce7;
-  color: #166534;
+
+.btnPrimary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  height: 40px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
 }
-.badgeRed {
-  background-color: #fee2e2;
-  color: #b91c1c;
+
+.btnPrimary:hover {
+  background: var(--accent-hover);
+}
+
+.btnSecondary {
+  background: #6B7280;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  height: 40px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.btnSecondary:hover {
+  background: #4B5563;
+}
+
+.ghostBtn {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  height: 40px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.ghostBtn:hover {
+  background: var(--tint-100);
+}
+
+.clearButton {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ---- Table ---- */
+.tableSection {
+  border-radius: var(--radius);
+  background: var(--panel);
+  overflow-x: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.tableGridReturn {
+  display: grid;
+  grid-template-columns: var(--table-columns-return);
+  align-items: center;
+  min-width: 1000px;
+}
+
+.tableHeader {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  background: var(--tint-100);
+  font-weight: 700;
+  font-size: 0.9rem;
+  min-height: var(--row-h);
+  border-bottom: 1px solid var(--border);
+}
+
+.tableRow {
+  height: var(--row-h);
+  border-top: 1px solid var(--tint-200);
+  transition: background 0.2s;
+}
+
+.tableRow:nth-child(even) {
+  background: var(--tint-50);
+}
+
+.tableRow:hover {
+  background: var(--tint-200);
+}
+
+.tableCell {
+  padding: 4px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  color: var(--text);
+  min-width: 0; /* สำคัญเพื่อให้ ellipsis ทำงานใน grid */
+}
+
+.centerCell {
+  justify-content: center;
+}
+
+/* ---- Inventory Rows ---- */
+.inventory {
+  display: grid;
+  grid-template-rows: repeat(var(--rows-per-page), var(--row-h));
+}
+
+/* ---- Badge ---- */
+.stBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.stAvailable {
+  background: #ecfdf5;
+  color: var(--success);
+}
+
+.stLow {
+  background: #fffbeb;
+  color: var(--warning);
+}
+
+.stOut {
+  background: #fef2f2;
+  color: var(--danger);
+}
+
+.stHold {
+  background: #f3f4f6;
+  color: var(--muted);
+}
+
+/* ---- No Data ---- */
+.noDataMessage {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* ---- Filler ---- */
+.fillerRow {
+  pointer-events: none;
+}
+
+.fillerRow:hover {
+  background: inherit !important;
+}
+
+/* ---- Loading ---- */
+.loadingContainer {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* ---- Pagination ---- */
+.paginationBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.paginationInfo {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.paginationControls {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pageButton {
+  min-width: 30px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.pageButton:hover:not(:disabled) {
+  background: var(--tint-100);
+}
+
+.pageButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.activePage {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.ellipsis {
+  padding: 0 6px;
+  color: var(--muted);
 }

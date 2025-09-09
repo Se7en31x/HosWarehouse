@@ -19,6 +19,19 @@ function bufferToBase64(buffer) {
 }
 
 /* ======================
+   Helper: Load image URL → DataURL
+====================== */
+async function loadDataUrl(url) {
+  const res = await fetch(url);
+  const blob = await res.blob();
+  return await new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
+  });
+}
+
+/* ======================
    Export PDF (Engine)
 ====================== */
 export default async function exportPDF({
@@ -31,14 +44,14 @@ export default async function exportPDF({
   options = {},
 }) {
   const opts = {
-    page: { orientation: "portrait", format: "a4", unit: "mm" },
+    page: { orientation: "landscape", format: "a4", unit: "mm" },
     margin: { left: 12, right: 12, bottom: 18, top: 22 },
-    font: { family: "Sarabun", size: { title: 16, body: 10, table: 9, footer: 8 } },
+    font: { family: "Sarabun", size: { title: 12, body: 10, table: 9, footer: 8 } },
     colors: {
-      headFill: [230, 230, 230],
-      headText: [0, 0, 0],
-      gridLine: [140, 140, 140],
-      zebra: [245, 245, 245],
+      headFill: [255, 255, 255],   // พื้นหลังหัวตาราง = ขาว
+      headText: [0, 0, 0],         // ตัวอักษรหัวตาราง = ดำ
+      gridLine: [0, 0, 0],         // เส้นตาราง = ดำ
+      zebra: [255, 255, 255],      // แถวสลับ = ขาว (ไม่มีแรเงา)
     },
     footer: { y: 290, showPageNumber: true },
     signatures: options.signatures ?? null,
@@ -69,9 +82,19 @@ export default async function exportPDF({
 
   const pageW = doc.internal.pageSize.getWidth();
 
-  /* ---- วาดหัวรายงาน (Brand Header) ---- */
+  /* ---- Brand Header + Logo ---- */
   let cursorY = opts.margin.top;
   if (opts.brand) {
+    // ✅ ถ้ามีโลโก้ ให้แสดงก่อน
+    if (opts.brand.logo) {
+      try {
+        const imgData = await loadDataUrl(opts.brand.logo);
+        doc.addImage(imgData, "PNG", opts.margin.left, 10, 25, 25); // x, y, w, h
+      } catch (e) {
+        console.error("โหลดโลโก้ไม่สำเร็จ:", e);
+      }
+    }
+
     const brandRes = await drawBrandHeader(doc, opts);
     cursorY = (brandRes.usedHeight || opts.margin.top) + 8;
   }
@@ -105,14 +128,13 @@ export default async function exportPDF({
   });
 
   // ✅ หลังวาดตารางแล้ว คำนวณตำแหน่ง Y ของตารางสุดท้าย
-  let afterTableY = doc.lastAutoTable.finalY + 15; // เพิ่มช่องว่าง 15 mm
+  let afterTableY = doc.lastAutoTable.finalY + 15;
 
   // ---- ลายเซ็น (optional) ----
   if (opts.signatures) {
     const pageW = doc.internal.pageSize.getWidth();
     const colWidth =
-      (pageW - opts.margin.left - opts.margin.right) /
-      opts.signatures.roles.length;
+      (pageW - opts.margin.left - opts.margin.right) / opts.signatures.roles.length;
 
     opts.signatures.roles.forEach((role, i) => {
       const x = opts.margin.left + i * colWidth + colWidth / 2;
@@ -127,8 +149,7 @@ export default async function exportPDF({
     });
   }
 
-  // ---- Page number (วาดตรงมุมล่าง) ----
-  // ✅ วาด footerNote พร้อม page number ใน loop เดียว
+  // ---- Page number + footer ----
   const pageCount = doc.internal.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);

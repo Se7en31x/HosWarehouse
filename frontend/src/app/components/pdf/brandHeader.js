@@ -12,7 +12,7 @@ export async function drawBrandHeader(doc, opts) {
 
   // 🏥 ชื่อโรงพยาบาล
   doc.setFont("Sarabun", "bold");
-  doc.setFontSize(14);
+  doc.setFontSize(16);
   doc.text(brand.name || "โรงพยาบาล", pageW / 2, cursorY, { align: "center" });
   cursorY += 6;
 

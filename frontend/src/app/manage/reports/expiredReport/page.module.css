@@ -1,143 +1,370 @@
 :root {
-  --bg: #f8fafc;
-  --panel: #ffffff;
-  --primary: #2563eb;
-  --primary-hover: #1e40af;
-  --secondary: #f3f4f6;
-  --border: #e5e7eb;
-  --text: #111827;
-  --muted: #6b7280;
-  --radius: 8px;
-  --shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  --bg: #F9FAFB;
+  --panel: #FFFFFF;
+  --muted: #6B7280;
+  --text: #1F2A44;
+  --border: #D1D5DB;
+  --accent: #2563EB;
+  --accent-hover: #1D4ED8;
+
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+
+  --tint-50: #FAFAFA;
+  --tint-100: #F3F4F6;
+  --tint-200: #E5E7EB;
+
+  --radius: 6px;
+  --radius-sm: 4px;
+
+  --row-h: 48px;
+  --rows-per-page: 12;
+
+  --table-columns-expired:
+    minmax(50px, 0.4fr)
+    /* ลำดับ */
+    minmax(120px, 1.5fr)
+    /* ชื่อพัสดุ */
+    minmax(100px, 1fr)
+    /* ประเภท */
+    minmax(90px, 0.8fr)
+    /* Lot No */
+    minmax(90px, 0.8fr)
+    /* จำนวนที่นำเข้า */
+    minmax(100px, 1fr)
+    /* วันหมดอายุ */
+    minmax(90px, 0.8fr)
+    /* จำนวนหมดอายุ */
+    minmax(90px, 0.8fr)
+    /* จัดการแล้ว */
+    minmax(90px, 0.8fr)
+    /* คงเหลือ */
+    minmax(100px, 1fr);
+  /* สถานะ */
 }
 
-.container {
+/* ---- Layout ---- */
+.mainHome {
   min-height: 100vh;
+  display: flex;
+  justify-content: center;
   background: var(--bg);
-  padding: 2rem;
-  font-family: "Inter", sans-serif;
 }
 
-.header {
+.infoContainer {
+  width: 100%;
+  min-height: 100vh;
+  background: var(--panel);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ---- Header ---- */
+.pageBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+.pageTitle {
+  font-weight: 700;
+  font-size: 1.4rem;
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  margin-bottom: 1.5rem;
+  gap: 10px;
 }
 
-.header h1 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--primary);
+/* ---- Toolbar ---- */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: var(--tint-50);
+  border-radius: var(--radius);
+  padding: 12px;
 }
 
-.filterBar {
+.filterGrid {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.8rem;
-  margin-bottom: 1.2rem;
+  gap: 12px;
+  flex: 1;
 }
 
-.selectBox {
-  min-width: 180px;
-  font-size: 0.9rem;
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+  max-width: 200px;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.customDateBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dateField {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+}
+
+.dateInput {
+  border: none;
+  background: transparent;
+}
+
+.toLabel {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.calendarButton {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--accent);
+}
+
+/* ---- Buttons ---- */
+.searchCluster {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
 }
 
 .btnPrimary {
-  background: var(--primary);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius);
+  background: var(--accent);
+  color: #fff;
   border: none;
-  cursor: pointer;
-  font-weight: 500;
-  display: flex;
+  border-radius: var(--radius-sm);
+  padding: 0 16px;
+  height: 40px;
+  display: inline-flex;
   align-items: center;
-  transition: background 0.2s;
+  gap: 6px;
 }
+
 .btnPrimary:hover {
-  background: var(--primary-hover);
+  background: var(--accent-hover);
 }
 
 .btnSecondary {
-  background: var(--secondary);
-  color: var(--text);
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  cursor: pointer;
-  font-weight: 500;
-  display: flex;
+  background: #6B7280;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0 16px;
+  height: 40px;
+  display: inline-flex;
   align-items: center;
+  gap: 6px;
+}
+
+.ghostBtn {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 16px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ghostBtn:hover {
+  background: var(--tint-100);
+}
+
+.clearButton {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ---- Table ---- */
+.tableSection {
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+
+.tableGridExpired {
+  display: grid;
+  grid-template-columns: var(--table-columns-expired);
+  align-items: center;
+  min-width: 900px;
+}
+
+.tableHeader {
+  font-weight: 700;
+  background: var(--tint-100);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  border-bottom: 1px solid var(--border);
+  min-height: calc(var(--row-h) + 8px);
+  /* สูงกว่า row ปกติ */
+  display: grid;
+  /* ✅ ใช้ grid แทน flex */
+  grid-template-columns: var(--table-columns-expired);
+  /* ✅ ให้ตรงกับตาราง */
+  align-items: center;
+}
+
+.tableHeader .tableCell {
+  padding: 8px 6px;
+  /* padding มากขึ้น */
+  font-size: 0.9rem;
+  /* ขยายตัวอักษรเล็กน้อย */
+}
+
+.tableRow {
+  height: var(--row-h);
+  border-top: 1px solid var(--tint-200);
   transition: background 0.2s;
 }
-.btnSecondary:hover {
-  background: #e5e7eb;
+
+.tableRow:nth-child(even) {
+  background: var(--tint-50);
 }
 
-.card {
+.tableRow:hover {
+  background: var(--tint-200);
+}
+
+.tableCell {
+  padding: 4px 6px;
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.centerCell {
+  justify-content: center;
+}
+
+/* ---- States ---- */
+.noDataMessage {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--muted);
+}
+
+.fillerRow {
+  pointer-events: none;
+}
+
+.loadingContainer {
+  height: calc(var(--row-h) * var(--rows-per-page));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--muted);
+}
+
+/* ---- Pagination ---- */
+.paginationBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
   background: var(--panel);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 1rem;
 }
 
-/* ===================== TABLE ===================== */
-.table {
-  width: 100%;
-  border-collapse: collapse;
+.paginationInfo {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.paginationControls {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pageButton {
+  min-width: 30px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  cursor: pointer;
   font-size: 0.9rem;
-}
-
-.table thead {
-  background: var(--secondary);
-}
-
-.table th,
-.table td {
-  padding: 0.75rem;
-  text-align: left;   /* ✅ ชิดซ้ายทุกคอลัมน์ */
-  vertical-align: middle;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.table th {
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text);
 }
 
-.table tr:nth-child(even) {
-  background: #f9fafb;
+.pageButton:hover:not(:disabled) {
+  background: var(--tint-100);
 }
 
-/* ===== Badge Base ===== */
-.badge {
+.pageButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.activePage {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.ellipsis {
+  padding: 0 6px;
+  color: var(--muted);
+}
+
+/* ---- Badge ---- */
+.stBadge {
   display: inline-block;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
   text-align: center;
-  min-width: 80px;
+  white-space: nowrap;
 }
 
-/* ===== Badge Colors ===== */
-.badgeGray {
-  background-color: #e5e7eb;
-  color: #374151;
+.stAvailable {
+  background: #ecfdf5;
+  color: var(--success);
 }
 
-.badgeBlue {
-  background-color: #dbeafe;
-  color: #1e40af;
+.stLow {
+  background: #fffbeb;
+  color: var(--warning);
 }
 
-.badgeOrange {
-  background-color: #ffedd5;
-  color: #9a3412;
+.stOut {
+  background: #fef2f2;
+  color: var(--danger);
 }
 
-.badgeGreen {
-  background-color: #dcfce7;
-  color: #166534;
+.stHold {
+  background: #f3f4f6;
+  color: var(--muted);
 }
