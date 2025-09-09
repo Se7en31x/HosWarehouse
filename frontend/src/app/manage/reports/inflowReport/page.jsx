@@ -1,4 +1,4 @@
-"use client";
+"use client"; 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { ClipboardList, FileDown, Search, Trash2, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
@@ -39,6 +39,7 @@ export default function InflowReport() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [user, setUser] = useState(null); // ✅ state สำหรับ user จริง
 
   const ITEMS_PER_PAGE = 12;
   const startDateRef = useRef(null);
@@ -46,13 +47,19 @@ export default function InflowReport() {
 
   const menuPortalTarget = useMemo(() => (typeof window !== "undefined" ? document.body : null), []);
 
-  const mockUser = {
-    user_id: 1,
-    user_fname: "วัชรพล",
-    user_lname: "อินทร์ทอง",
-    user_role: "เจ้าหน้าที่คลัง",
-    department: "คลังกลาง",
-  };
+  // ✅ โหลด user profile จาก backend
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const res = await manageAxios.get("/profile");
+        setUser(res.data);
+      } catch (err) {
+        console.error("โหลดข้อมูลผู้ใช้ล้มเหลว:", err);
+        toast.error("ไม่สามารถโหลดข้อมูลผู้ใช้");
+      }
+    };
+    fetchUserProfile();
+  }, []);
 
   const typeOptions = [
     { value: "all", label: "ทั้งหมด" },
@@ -208,9 +215,10 @@ export default function InflowReport() {
                     start: customStart,
                     end: customEnd,
                   },
-                  user: mockUser,
+                  user: user, // ✅ ใช้ user จริงจาก DB
                 })
               }
+              disabled={!user}
             >
               <FileDown size={16} style={{ marginRight: "6px" }} /> PDF
             </button>

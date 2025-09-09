@@ -52,6 +52,8 @@ export default function InventoryReport() {
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [user, setUser] = useState(null); // ✅ ใช้แทน mockUser
+
   const startDateRef = useRef(null);
   const endDateRef = useRef(null);
 
@@ -62,13 +64,19 @@ export default function InventoryReport() {
     []
   );
 
-  const mockUser = {
-    user_id: 1,
-    user_fname: "วัชรพล",
-    user_lname: "อินทร์ทอง",
-    user_role: "เจ้าหน้าที่คลัง",
-    department: "คลังกลาง",
-  };
+  // ✅ โหลดโปรไฟล์ผู้ใช้จาก backend
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const res = await manageAxios.get("/profile");
+        setUser(res.data);
+      } catch (err) {
+        console.error("โหลดข้อมูลผู้ใช้ล้มเหลว:", err);
+        toast.error("ไม่สามารถโหลดข้อมูลผู้ใช้");
+      }
+    };
+    fetchUserProfile();
+  }, []);
 
   const categoryOptions = [
     { value: "all", label: "ทั้งหมด" },
@@ -277,9 +285,10 @@ export default function InventoryReport() {
                     start: customStart,
                     end: customEnd,
                   },
-                  user: mockUser,
+                  user: user, // ✅ ใช้ข้อมูลจริงจาก DB
                 })
               }
+              disabled={!user}
             >
               <FileDown size={16} style={{ marginRight: "6px" }} /> PDF
             </button>

@@ -21,8 +21,9 @@ export default function GeneralOutflowReport() {
   const [type, setType] = useState(null);
   const [data, setData] = useState([]);
   const [dateRange, setDateRange] = useState(null);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null); // ✅ filter by user
   const [users, setUsers] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null); // ✅ ผู้ใช้จริงที่ login
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [loading, setLoading] = useState(false);
@@ -53,26 +54,20 @@ export default function GeneralOutflowReport() {
     { value: "custom", label: "กำหนดเอง" },
   ];
 
-  const translateCategory = (cat) => {
-    const map = {
-      general: "ของใช้ทั่วไป",
-      medsup: "เวชภัณฑ์",
-      equipment: "ครุภัณฑ์",
-      meddevice: "อุปกรณ์การแพทย์",
-      medicine: "ยา",
-    };
-    return map[cat] || "-";
-  };
+  const translateCategory = (cat) => ({
+    general: "ของใช้ทั่วไป",
+    medsup: "เวชภัณฑ์",
+    equipment: "ครุภัณฑ์",
+    meddevice: "อุปกรณ์การแพทย์",
+    medicine: "ยา",
+  }[cat] || "-");
 
-  const translateOutflowType = (t) => {
-    const map = {
-      withdraw: "ตัดสต็อกจากการเบิก",
-      damaged: "ชำรุด",
-      expired_dispose: "หมดอายุ",
-      borrow: "ตัดสต็อกจากการยืม",
-    };
-    return map[t] || "-";
-  };
+  const translateOutflowType = (t) => ({
+    withdraw: "ตัดสต็อกจากการเบิก",
+    damaged: "ชำรุด",
+    expired_dispose: "หมดอายุ",
+    borrow: "ตัดสต็อกจากการยืม",
+  }[t] || "-");
 
   const formatDate = (iso) => {
     if (!iso) return "-";
@@ -89,10 +84,24 @@ export default function GeneralOutflowReport() {
     }
   };
 
+  /* ---------- โหลด user profile (จริง) ---------- */
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await manageAxios.get("/profile");
+        setCurrentUser(res.data);
+      } catch (err) {
+        console.error("โหลดข้อมูลผู้ใช้ล้มเหลว:", err);
+      }
+    };
+    fetchProfile();
+  }, []);
+
   /* ---------- Fetch Users ---------- */
   const fetchUsers = useCallback(async () => {
     try {
-      const res = await manageAxios.get("/users");
+      // ✅ ตรวจสอบให้แน่ใจว่า backend มี route นี้
+      const res = await manageAxios.get("/user/all");
       const userOptions = res.data.map((u) => ({
         value: u.user_id,
         label: `${u.user_fname} ${u.user_lname}`,
@@ -179,10 +188,7 @@ export default function GeneralOutflowReport() {
   };
 
   const startDisplay = filteredData.length ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0;
-  const endDisplay = Math.min(
-    (currentPage - 1) * ITEMS_PER_PAGE + ITEMS_PER_PAGE,
-    filteredData.length
-  );
+  const endDisplay = Math.min((currentPage - 1) * ITEMS_PER_PAGE + ITEMS_PER_PAGE, filteredData.length);
 
   const clearFilters = () => {
     setType(null);
@@ -218,9 +224,10 @@ export default function GeneralOutflowReport() {
                     end: customEnd,
                     userLabel: user?.label,
                   },
-                  user: { user_fname: "วัชรพล", user_lname: "อินทร์ทอง" },
+                  user: currentUser, // ✅ ใช้ผู้ใช้จริง
                 })
               }
+              disabled={!currentUser}
             >
               <FileDown size={16} /> PDF
             </button>
@@ -237,7 +244,6 @@ export default function GeneralOutflowReport() {
             </button>
           </div>
         </div>
-
         {/* Toolbar */}
         <div className={styles.toolbar}>
           <div className={styles.filterGrid}>

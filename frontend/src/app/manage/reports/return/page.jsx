@@ -53,6 +53,7 @@ export default function ReturnReport() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentUser, setCurrentUser] = useState(null); // ✅ user จริง
 
   const startDateRef = useRef(null);
   const endDateRef = useRef(null);
@@ -130,7 +131,20 @@ export default function ReturnReport() {
   const toISODate = (date) => date.toISOString().split("T")[0];
   const openDatePicker = (ref) => ref.current?.showPicker?.();
 
-  /* ---- Fetch ---- */
+  /* ---- Fetch User ---- */
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await manageAxios.get("/profile");
+        setCurrentUser(res.data);
+      } catch (err) {
+        console.error("โหลดข้อมูลผู้ใช้ล้มเหลว:", err);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  /* ---- Fetch Report ---- */
   const fetchReport = useCallback(async () => {
     try {
       setLoading(true);
@@ -258,9 +272,17 @@ export default function ReturnReport() {
                     end: customEnd,
                     approvalLabel: approvalStatus?.label,
                   },
-                  user: { user_fname: "วัชรพล", user_lname: "อินทร์ทอง" },
+                  user: currentUser
+                    ? {
+                        user_fname: currentUser.user_fname,
+                        user_lname: currentUser.user_lname,
+                        role: currentUser.role,
+                        department: currentUser.department,
+                      }
+                    : { user_fname: "-", user_lname: "-", role: "-", department: "-" },
                 })
               }
+              disabled={!currentUser}
             >
               <FileDown size={16} /> PDF
             </button>

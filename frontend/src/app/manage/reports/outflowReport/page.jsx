@@ -27,10 +27,25 @@ export default function OutflowReport() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [user, setUser] = useState(null); // ✅ user จริงจาก API
 
   const ITEMS_PER_PAGE = 12;
   const startDateRef = useRef(null);
   const endDateRef = useRef(null);
+
+  /* ---- โหลด user profile ---- */
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const res = await manageAxios.get("/profile");
+        setUser(res.data);
+      } catch (err) {
+        console.error("โหลดข้อมูลผู้ใช้ล้มเหลว:", err);
+        toast.error("ไม่สามารถโหลดข้อมูลผู้ใช้");
+      }
+    };
+    fetchUserProfile();
+  }, []);
 
   /* ---- Options ---- */
   const typeOptions = [
@@ -56,41 +71,37 @@ export default function OutflowReport() {
     { value: "custom", label: "กำหนดเอง" },
   ];
 
-
   /* ---- Helpers ---- */
-  const translateCategory = (cat) => {
-    const map = {
-      general: "ของใช้ทั่วไป",
-      medsup: "เวชภัณฑ์",
-      equipment: "ครุภัณฑ์",
-      meddevice: "อุปกรณ์การแพทย์",
-      medicine: "ยา",
-    };
-    return map[cat] || "-";
-  };
+  const translateCategory = (cat) => ({
+    general: "ของใช้ทั่วไป",
+    medsup: "เวชภัณฑ์",
+    equipment: "ครุภัณฑ์",
+    meddevice: "อุปกรณ์การแพทย์",
+    medicine: "ยา",
+  }[cat] || "-");
 
   const translateRequestType = (t) => ({ withdraw: "เบิก", borrow: "ยืม" }[t] || "-");
 
   const translateApprovalStatus = (s) =>
-  ({
-    waiting_approval: "รออนุมัติ",
-    waiting_approval_detail: "รออนุมัติ",
-    approved: "อนุมัติ",
-    approved_in_queue: "อนุมัติรอดำเนินการ",
-    rejected: "ไม่อนุมัติ",
-    partial: "อนุมัติบางส่วน",
-  }[s] || "-");
+    ({
+      waiting_approval: "รออนุมัติ",
+      waiting_approval_detail: "รออนุมัติ",
+      approved: "อนุมัติ",
+      approved_in_queue: "อนุมัติรอดำเนินการ",
+      rejected: "ไม่อนุมัติ",
+      partial: "อนุมัติบางส่วน",
+    }[s] || "-");
 
   const translateProcessingStatus = (s) =>
-  ({
-    pending: "รอจ่าย",
-    preparing: "กำลังเตรียม",
-    delivering: "กำลังนำส่ง",
-    completed: "เสร็จสิ้น",
-    rejected: "ปฏิเสธ",
-    waiting_approval: "รออนุมัติ",
-    approved_in_queue: "อนุมัติรอดำเนินการ",
-  }[s] || "-");
+    ({
+      pending: "รอจ่าย",
+      preparing: "กำลังเตรียม",
+      delivering: "กำลังนำส่ง",
+      completed: "เสร็จสิ้น",
+      rejected: "ปฏิเสธ",
+      waiting_approval: "รออนุมัติ",
+      approved_in_queue: "อนุมัติรอดำเนินการ",
+    }[s] || "-");
 
   const formatDate = (iso) => {
     if (!iso) return "-";
@@ -151,7 +162,6 @@ export default function OutflowReport() {
     }
   }, [type, department, dateRange, customStart, customEnd]);
 
-
   useEffect(() => {
     fetchReport();
   }, [fetchReport]);
@@ -189,13 +199,10 @@ export default function OutflowReport() {
                     start: customStart,
                     end: customEnd,
                   },
-                  user: {
-                    user_fname: "วัชรพล",
-                    user_lname: "อินทร์ทอง",
-                    user_role: "เจ้าหน้าที่คลัง",
-                  },
+                  user: user, // ✅ ใช้ user จริง
                 })
               }
+              disabled={!user}
             >
               <FileDown size={16} /> PDF
             </button>
@@ -207,6 +214,7 @@ export default function OutflowReport() {
             </button>
           </div>
         </div>
+
 
         {/* Toolbar */}
         <div className={styles.toolbar}>

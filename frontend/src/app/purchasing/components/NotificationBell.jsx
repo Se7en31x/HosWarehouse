@@ -1,11 +1,11 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { Bell, Check, X, Eye, Trash2 } from "lucide-react"; 
+import { Bell, Check, Eye, Trash2 } from "lucide-react"; 
 import { useNotifications } from "../../context/NotificationContextPurchasing";
 import styles from "./NotificationBell.module.css";
 
 export default function NotificationBell() {
-  const { notifications, unreadCount, socket, setNotifications } = useNotifications();
+  const { notifications, unreadCount, socket, setNotifications, userId } = useNotifications();
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -35,17 +35,17 @@ export default function NotificationBell() {
 
   // ✅ อ่านทั้งหมด
   const handleMarkAllAsRead = () => {
-    if (socket) {
+    if (socket && userId) {
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-      socket.emit("markAllAsRead", 999);
+      socket.emit("markAllAsRead", userId); // 👈 ใช้ userId จริง
     }
   };
 
   // ✅ ลบทั้งหมด
   const handleClearAll = () => {
-    if (socket) {
+    if (socket && userId) {
       setNotifications([]);
-      socket.emit("clearNotifications", 999);
+      socket.emit("clearNotifications", userId); // 👈 ใช้ userId จริง
     }
   };
 
@@ -69,7 +69,7 @@ export default function NotificationBell() {
             <div className={styles.actions}>
               {unreadCount > 0 && (
                 <button onClick={handleMarkAllAsRead} className={styles.markAllBtn}>
-                  <Check size={16} /> อ่านทั้งหมด
+                  <Check size={16} /> อ่านทั้ง๐หมด
                 </button>
               )}
               {notifications.length > 0 && (

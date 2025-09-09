@@ -1,4 +1,3 @@
-// src/app/components/pdf/templates/expiredTemplate.js
 import exportPDF from "../PDFExporter";
 
 const formatDate = (iso) => {
@@ -94,6 +93,8 @@ const mapDateRangeLabel = (value, start, end) => {
 
 export async function exportExpiredPDF({ data = [], filters = {}, user }) {
   const fullName = user ? `${user.user_fname} ${user.user_lname}` : "ไม่ระบุ";
+  const role = user?.role || "ไม่ระบุตำแหน่ง";
+  const department = user?.department || "ไม่ระบุแผนก";
 
   // ✅ ใช้ mapDateRangeLabel
   const dateLabel = mapDateRangeLabel(filters.dateValue, filters.start, filters.end);
@@ -107,7 +108,8 @@ export async function exportExpiredPDF({ data = [], filters = {}, user }) {
       filters.categoryLabel || "ทั้งหมด",
     ],
     ["ช่วงเวลา", dateLabel, "สถานะ", filters.statusLabel || "ทั้งหมด"],
-    ["ผู้จัดทำรายงาน", fullName, "", ""],
+    ["ผู้จัดทำรายงาน", fullName, "ตำแหน่ง", role],
+    ["แผนก", department, "", ""],
   ];
 
   /* ---- Table Columns ---- */
@@ -159,13 +161,7 @@ export async function exportExpiredPDF({ data = [], filters = {}, user }) {
   await exportPDF({
     filename: "expired-report.pdf",
     title: "รายงานพัสดุหมดอายุ",
-    meta: {
-      range: dateLabel,
-      category: filters.categoryLabel || "ทั้งหมด",
-      status: filters.statusLabel || "ทั้งหมด",
-      created: new Date().toLocaleDateString("th-TH", { dateStyle: "long" }),
-      createdBy: fullName,
-    },
+    meta,
     columns,
     rows,
     footerNote: "รายงานนี้จัดทำขึ้นเพื่อการตรวจสอบพัสดุหมดอายุ",

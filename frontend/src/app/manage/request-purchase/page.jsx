@@ -1,23 +1,30 @@
 'use client';
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react"; // useRef is already there
+import { debounce } from 'lodash';
 import styles from "./page.module.css";
 import { manageAxios } from "@/app/utils/axiosInstance";
 import { FaPlus, FaTrashAlt, FaSearch, FaShoppingCart, FaMinus, FaPlus as FaPlusIcon } from "react-icons/fa";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { connectSocket, disconnectSocket } from "@/app/utils/socket";
-import Swal from "sweetalert2"; // เพิ่มการนำเข้า SweetAlert2
+import Swal from "sweetalert2";
+import localforage from "localforage";
+import dynamic from "next/dynamic"; // You already have this
 
+// Configure localforage
+localforage.config({
+  name: 'purchaseRequestApp',
+  storeName: 'cart',
+  description: 'Storage for purchase request cart items'
+});
+
+// ImageWithFallback component
 const ImageWithFallback = ({ item }) => {
   const fallbackUrl = "http://localhost:5000/public/defaults/landscape.png";
-
-  const initialUrl = item.item_img
-    ? item.item_img // ถ้าเป็น Supabase URL หรือ external URL ใช้ได้เลย
-    : fallbackUrl;
-
+  const initialUrl = item.item_img ? `http://localhost:5000/public/${item.item_img}` : fallbackUrl;
   const [imgSrc, setImgSrc] = useState(initialUrl);
 
   useEffect(() => {
-    setImgSrc(item.item_img ? item.item_img : fallbackUrl);
+    setImgSrc(item.item_img ? `http://localhost:5000/public/${item.item_img}` : fallbackUrl);
   }, [item.item_img]);
 
   return (
@@ -25,12 +32,15 @@ const ImageWithFallback = ({ item }) => {
       src={imgSrc}
       alt={item.item_name || "ไม่มีคำอธิบายภาพ"}
       className={styles.itemImage}
-      onError={() => setImgSrc(fallbackUrl)}
+      onError={() => {
+        console.warn(`Failed to load image for ${item.item_name}: ${imgSrc}`);
+        setImgSrc(fallbackUrl);
+      }}
     />
   );
 };
 
-
+// mapCategoryToThai function
 const mapCategoryToThai = (category) => {
   switch ((category || "").toLowerCase()) {
     case "medicine": return "ยา";
@@ -42,6 +52,7 @@ const mapCategoryToThai = (category) => {
   }
 };
 
+// QuantityModal component
 const QuantityModal = ({ isOpen, onClose, item, onConfirm, showToast }) => {
   const [quantity, setQuantity] = useState(1);
 
@@ -53,7 +64,7 @@ const QuantityModal = ({ isOpen, onClose, item, onConfirm, showToast }) => {
       return;
     }
     onConfirm(item, quantity);
-    setQuantity(1); // รีเซ็ตจำนวน
+    setQuantity(1);
     onClose();
   };
 
@@ -124,8 +135,10 @@ const QuantityModal = ({ isOpen, onClose, item, onConfirm, showToast }) => {
   );
 };
 
-const CartModal = ({ isOpen, onClose, selectedItems, setSelectedItems, handleSubmit, showToast }) => {
+// CartModal component
+const CartModal = ({ isOpen, onClose, selectedItems, setSelectedItems, handleSubmit, showToast, handleClearCart }) => {
   const [localItems, setLocalItems] = useState(selectedItems);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setLocalItems(selectedItems);
@@ -150,10 +163,17 @@ const CartModal = ({ isOpen, onClose, selectedItems, setSelectedItems, handleSub
     showToast("success", `${itemName} ถูกลบออกจากตะกร้า`);
   };
 
-  const handleConfirm = () => {
-    setSelectedItems(localItems);
-    handleSubmit(localItems);
-    onClose();
+  const handleConfirm = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await handleSubmit(localItems);
+      onClose();
+    } catch (err) {
+      showToast("error", `ไม่สามารถส่งคำขอได้: ${err.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -185,6 +205,7 @@ const CartModal = ({ isOpen, onClose, selectedItems, setSelectedItems, handleSub
                     onChange={(e) => handleQuantityChange(item.item_id, e.target.value)}
                     className={styles.inputField}
                     aria-label={`จำนวนของ ${item.item_name}`}
+                    disabled={isSubmitting}
                   />
                 </div>
                 <div className={styles.inputGroup}>
@@ -196,12 +217,14 @@ const CartModal = ({ isOpen, onClose, selectedItems, setSelectedItems, handleSub
                     placeholder="เพิ่มหมายเหตุ"
                     className={styles.inputField}
                     aria-label={`หมายเหตุสำหรับ ${item.item_name}`}
+                    disabled={isSubmitting}
                   />
                 </div>
                 <button
                   className={styles.removeBtn}
                   onClick={() => handleRemoveItem(item.item_id, item.item_name)}
                   aria-label={`ลบ ${item.item_name} ออกจากตะกร้า`}
+                  disabled={isSubmitting}
                 >
                   <FaTrashAlt size={14} />
                 </button>
@@ -215,11 +238,29 @@ const CartModal = ({ isOpen, onClose, selectedItems, setSelectedItems, handleSub
         </div>
         {selectedItems.length > 0 && (
           <div className={styles.submitRow}>
-            <button className={styles.cancelBtn} onClick={onClose} aria-label="ยกเลิก">
+            <button
+              className={styles.cancelBtn}
+              onClick={handleClearCart}
+              aria-label="ล้างตะกร้า"
+              disabled={isSubmitting}
+            >
+              ล้างตะกร้า
+            </button>
+            <button
+              className={styles.cancelBtn}
+              onClick={onClose}
+              aria-label="ยกเลิก"
+              disabled={isSubmitting}
+            >
               ยกเลิก
             </button>
-            <button className={styles.submitBtn} onClick={handleConfirm} aria-label="ส่งคำขอสั่งซื้อ">
-              ส่งคำขอสั่งซื้อ
+            <button
+              className={styles.submitBtn}
+              onClick={handleConfirm}
+              aria-label="ส่งคำขอสั่งซื้อ"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "กำลังส่ง..." : "ส่งคำขอสั่งซื้อ"}
             </button>
           </div>
         )}
@@ -228,6 +269,7 @@ const CartModal = ({ isOpen, onClose, selectedItems, setSelectedItems, handleSub
   );
 };
 
+// Toast component
 const Toast = ({ toasts, removeToast }) => {
   return (
     <div className={styles.toastContainer}>
@@ -236,6 +278,7 @@ const Toast = ({ toasts, removeToast }) => {
           {toast.type === "success" && <span aria-hidden="true">✅</span>}
           {toast.type === "warning" && <span aria-hidden="true">⚠️</span>}
           {toast.type === "error" && <span aria-hidden="true">❌</span>}
+          {toast.type === "info" && <span aria-hidden="true">ℹ️</span>}
           <span>{toast.message}</span>
         </div>
       ))}
@@ -243,6 +286,7 @@ const Toast = ({ toasts, removeToast }) => {
   );
 };
 
+// Main component
 export default function RequestPurchasePage() {
   const [items, setItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -257,13 +301,130 @@ export default function RequestPurchasePage() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [stockFilter, setStockFilter] = useState("all");
   const ITEMS_PER_PAGE = 10;
+  const toastIdRef = useRef(0); // Use a ref for a persistent counter
 
   const showToast = (type, message) => {
-    const id = Date.now();
+    toastIdRef.current += 1; // Increment the counter
+    const id = toastIdRef.current; // Use the new unique ID
     setToasts((prev) => [...prev, { id, type, message }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id));
     }, 3000);
+  };
+
+  // Debounce search input
+  const debouncedSetSearchQuery = useMemo(
+    () => debounce((value) => setSearchQuery(value), 300),
+    []
+  );
+
+  // Load cart from localforage on mount
+  useEffect(() => {
+    const loadCart = async () => {
+      try {
+        const storedData = await localforage.getItem('selectedItems');
+        if (storedData && Array.isArray(storedData)) {
+          console.log('Loaded cart from localforage:', storedData);
+          setSelectedItems(storedData);
+         
+        }
+      } catch (err) {
+        console.error('Error loading cart from localforage:', err);
+        showToast("error", "ไม่สามารถโหลดตะกร้าจากที่เก็บข้อมูลได้");
+      }
+    };
+    loadCart();
+  }, []);
+
+  // Validate and sync cart with items when items are loaded
+  useEffect(() => {
+    const syncCartWithItems = async () => {
+      if (items.length === 0) return;
+      try {
+        const storedData = await localforage.getItem('selectedItems');
+        if (storedData && Array.isArray(storedData)) {
+          const validItems = storedData
+            .filter((cartItem) => items.some((item) => item.item_id === cartItem.item_id))
+            .map((cartItem) => {
+              const currentItem = items.find((item) => item.item_id === cartItem.item_id);
+              return {
+                ...cartItem,
+                item_name: currentItem?.item_name || cartItem.item_name,
+                item_category: currentItem?.item_category || cartItem.item_category,
+                item_purchase_unit: currentItem?.item_purchase_unit || cartItem.item_purchase_unit,
+                item_unit: currentItem?.item_unit || cartItem.item_unit,
+                current_stock: currentItem?.current_stock || cartItem.current_stock,
+                item_img: currentItem?.item_img || cartItem.item_img,
+              };
+            });
+          console.log('Synced cart items:', validItems);
+          if (validItems.length !== storedData.length) {
+            await localforage.setItem('selectedItems', validItems);
+            if (validItems.length > 0) {
+              setSelectedItems(validItems);
+              showToast("info", "อัปเดตตะกร้า: ลบรายการที่ไม่ถูกต้อง");
+            } else {
+              await localforage.removeItem('selectedItems');
+              setSelectedItems([]);
+              showToast("info", "ตะกร้าเก่าไม่ถูกต้อง ล้างตะกร้าแล้ว");
+            }
+          } else {
+            setSelectedItems(validItems);
+          }
+        }
+      } catch (err) {
+        console.error('Error syncing cart with items:', err);
+        showToast("error", "ไม่สามารถซิงโครไนซ์ตะกร้าได้");
+      } finally {
+        setLoading(false);
+      }
+    };
+    syncCartWithItems();
+  }, [items]);
+
+  // Save cart to localforage with debounce
+  useEffect(() => {
+    const saveCart = async () => {
+      try {
+        if (selectedItems.length > 0) {
+          console.log('Saving cart to localforage:', selectedItems);
+          await localforage.setItem('selectedItems', selectedItems);
+        } else {
+          await localforage.removeItem('selectedItems');
+        }
+      } catch (err) {
+        console.error('Error saving cart to localforage:', err);
+        showToast("error", "ไม่สามารถบันทึกตะกร้าได้");
+      }
+    };
+    const timeout = setTimeout(saveCart, 500);
+    return () => clearTimeout(timeout);
+  }, [selectedItems]);
+
+  // Clear cart
+  const handleClearCart = async () => {
+    const result = await Swal.fire({
+      icon: "warning",
+      title: "ยืนยันการล้างตะกร้า",
+      text: "คุณต้องการล้างรายการทั้งหมดในตะกร้าหรือไม่?",
+      showCancelButton: true,
+      confirmButtonText: "ล้าง",
+      cancelButtonText: "ยกเลิก",
+      customClass: {
+        confirmButton: styles.submitBtn,
+        cancelButton: styles.cancelBtn,
+      },
+    });
+    if (result.isConfirmed) {
+      try {
+        await localforage.removeItem('selectedItems');
+        setSelectedItems([]);
+        showToast("success", "ล้างตะกร้าเรียบร้อย");
+      } catch (err) {
+        console.error('Error clearing cart:', err);
+        showToast("error", "ไม่สามารถล้างตะกร้าได้");
+      }
+    }
   };
 
   const fetchData = async () => {
@@ -289,25 +450,90 @@ export default function RequestPurchasePage() {
 
     const handleItemUpdate = () => {
       if (isMounted) {
-        console.log("ได้รับสัญญาณอัปเดตจาก Socket.IO กำลังดึงข้อมูลใหม่ทั้งหมด");
         fetchData();
       }
     };
 
+    const handleLowStockItem = async (lowStockData) => {
+      console.log('Received lowStockItem:', lowStockData);
+
+      const {
+        item_id,
+        item_name,
+        requested_qty,
+        note,
+        item_unit,
+        item_purchase_unit,
+        item_category,
+        current_stock,
+        item_img,
+      } = lowStockData;
+
+      if (!item_id || !item_name) return;
+
+      // 1) โหลด cart ปัจจุบัน
+      let storedCart = await localforage.getItem('selectedItems') || [];
+
+      // 2) เช็คซ้ำ
+      if (storedCart.some((i) => i.item_id === item_id)) {
+        console.log(`⏭️ ${item_name} already in cart`);
+        return;
+      }
+
+      // 3) สร้าง item ใหม่
+      const newItem = {
+        item_id,
+        item_name,
+        item_unit,
+        item_purchase_unit,
+        item_category,
+        current_stock,
+        requested_qty: requested_qty || 1,
+        note: note || "เพิ่มอัตโนมัติ: คงเหลือต่ำกว่าขั้นต่ำ",
+        item_img,
+      };
+
+      storedCart.push(newItem);
+
+      // 4) บันทึกกลับไปยัง localforage
+      await localforage.setItem('selectedItems', storedCart);
+
+      // 5) sync state
+      setSelectedItems(storedCart);
+
+      showToast("warning", `เพิ่ม ${item_name} ${requested_qty || 1} ${item_unit} ลงในตะกร้าเนื่องจากสต็อกต่ำ`);
+    };
+
+
+    const handleConnect = () => {
+      console.log("🟢 WebSocket reconnected");
+      socket.emit("joinRoom", "user_999"); // TODO: เปลี่ยนเป็น user_id จริง
+    };
+
+    const handleDisconnect = () => {
+      console.log("🔴 WebSocket disconnected, attempting to reconnect...");
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
     socket.on("itemAdded", handleItemUpdate);
     socket.on("itemUpdated", handleItemUpdate);
     socket.on("itemLotUpdated", handleItemUpdate);
     socket.on("itemDeleted", handleItemUpdate);
+    socket.on("lowStockItem", handleLowStockItem);
 
     return () => {
       isMounted = false;
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
       socket.off("itemAdded", handleItemUpdate);
       socket.off("itemUpdated", handleItemUpdate);
       socket.off("itemLotUpdated", handleItemUpdate);
       socket.off("itemDeleted", handleItemUpdate);
+      socket.off("lowStockItem", handleLowStockItem);
       disconnectSocket();
     };
-  }, []);
+  }, []); // Removed selectedItems from dependencies
 
   const filteredItems = useMemo(() => {
     let filtered = items.filter(
@@ -316,12 +542,10 @@ export default function RequestPurchasePage() {
         (item.item_purchase_unit || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    // กรองตามประเภท
     if (categoryFilter !== "all") {
       filtered = filtered.filter((item) => item.item_category?.toLowerCase() === categoryFilter);
     }
 
-    // กรองตามสถานะสต็อก
     if (stockFilter === "low") {
       filtered = filtered.filter((item) => item.item_min && item.current_stock < item.item_min);
     } else if (stockFilter === "near-low") {
@@ -356,6 +580,10 @@ export default function RequestPurchasePage() {
   };
 
   const handleAddItem = (item) => {
+    if (selectedItems.length >= 50) {
+      showToast("warning", "ตะกร้าเต็ม กรุณาส่งคำขอหรือลบรายการบางส่วน");
+      return;
+    }
     if (selectedItems.some((i) => i.item_id === item.item_id)) {
       showToast("warning", `${item.item_name} อยู่ในตะกร้าแล้ว`);
       return;
@@ -365,16 +593,18 @@ export default function RequestPurchasePage() {
   };
 
   const handleQuantityConfirm = (item, quantity) => {
-    setSelectedItems((prev) => [
-      ...prev,
-      { ...item, requested_qty: quantity, note: "" },
-    ]);
+    setSelectedItems((prev) => {
+      const newItem = { ...item, requested_qty: quantity, note: "" };
+      const updatedCart = [...prev, newItem];
+      console.log('Manually added to cart:', updatedCart); // Debug log
+      return updatedCart;
+    });
     showToast("success", `เพิ่ม ${item.item_name} ลงในตะกร้า`);
   };
 
   const handleSubmit = async (itemsToSubmit) => {
     if (!itemsToSubmit || !itemsToSubmit.length) {
-      Swal.fire({
+      await Swal.fire({
         icon: "warning",
         title: "คำเตือน",
         text: "กรุณาเลือกรายการอย่างน้อย 1 รายการ",
@@ -388,7 +618,7 @@ export default function RequestPurchasePage() {
 
     try {
       await manageAxios.post("/pr", {
-        requester_id: 1,
+        requester_id: 999, // TODO: แทนที่ด้วย user_id จริงจาก context หรือ auth
         items_to_purchase: itemsToSubmit.map((i) => ({
           item_id: i.item_id,
           qty: i.requested_qty,
@@ -397,7 +627,7 @@ export default function RequestPurchasePage() {
         })),
       });
 
-      Swal.fire({
+      await Swal.fire({
         icon: "success",
         title: "สำเร็จ",
         text: "ส่งคำขอสั่งซื้อเรียบร้อย",
@@ -405,11 +635,12 @@ export default function RequestPurchasePage() {
         customClass: {
           confirmButton: styles.submitBtn,
         },
-      }).then(() => {
-        setSelectedItems([]);
       });
+
+      setSelectedItems([]);
+      await localforage.removeItem('selectedItems');
     } catch (err) {
-      Swal.fire({
+      await Swal.fire({
         icon: "error",
         title: "เกิดข้อผิดพลาด",
         text: `ไม่สามารถส่งคำขอได้: ${err.response?.data?.message || err.message}`,
@@ -469,7 +700,6 @@ export default function RequestPurchasePage() {
                   <option value="near-low">ใกล้ต่ำสุด</option>
                 </select>
               </div>
-             
               <div className={styles.filterGroup}>
                 <div className={styles.searchBox}>
                   <FaSearch size={14} className={styles.searchIcon} aria-hidden="true" />
@@ -477,8 +707,7 @@ export default function RequestPurchasePage() {
                     type="text"
                     className={styles.input}
                     placeholder="ค้นหาสินค้า..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => debouncedSetSearchQuery(e.target.value)}
                     aria-label="ค้นหาสินค้าหรือหน่วยจัดซื้อ"
                   />
                 </div>
@@ -599,6 +828,7 @@ export default function RequestPurchasePage() {
           setSelectedItems={setSelectedItems}
           handleSubmit={handleSubmit}
           showToast={showToast}
+          handleClearCart={handleClearCart}
         />
         <QuantityModal
           isOpen={isQuantityOpen}

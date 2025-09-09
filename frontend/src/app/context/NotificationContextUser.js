@@ -1,16 +1,28 @@
 "use client";
 import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { connectSocket, disconnectSocket, joinUserRoom } from "../utils/socket";
+import { getUserIdFromToken } from "../utils/auth";
 
 const NotificationContext = createContext();
 
 export function NotificationProvider({ children }) {
     const [notifications, setNotifications] = useState([]);
+    const [userId, setUserId] = useState(null);
     const socketRef = useRef(null);
-    const userId = 1; // ภายหลังดึงจาก session/login
+
+    // ✅ ดึง userId หลังจาก mount (กัน SSR error)
+    useEffect(() => {
+        const id = getUserIdFromToken("staff");
+        if (id) {
+            console.log("🎯 Staff userId from token:", id);
+            setUserId(id);
+        }
+    }, []);
 
     useEffect(() => {
-        if (socketRef.current) return; // ✅ กันสร้างซ้ำ
+        if (!userId) return; // 👉 รอจนกว่าจะมี userId
+
+        if (socketRef.current) return; // 👉 กันสร้างซ้ำ
 
         const handlers = {
             onInitialNotifications: (data) => {
@@ -18,16 +30,18 @@ export function NotificationProvider({ children }) {
                 setNotifications(data || []);
             },
             onNewNotification: (noti) => {
-                console.log("📩 Context got new:", noti); // 👀 Debug ตรงนี้
-                setNotifications((prev) => [noti, ...prev]);
+                console.log("📩 Context got new:", noti);
+                setNotifications((prev) => {
+                    // ✅ กัน duplicate
+                    if (prev.some((n) => n.notification_id === noti.notification_id)) return prev;
+                    return [noti, ...prev];
+                });
             },
             onNotificationUpdated: (updated) => {
                 console.log("✏️ Context updated:", updated);
                 setNotifications((prev) =>
                     prev.map((n) =>
-                        Number(n.notification_id) === Number(updated.notification_id)
-                            ? updated
-                            : n
+                        Number(n.notification_id) === Number(updated.notification_id) ? updated : n
                     )
                 );
             },
@@ -52,7 +66,7 @@ export function NotificationProvider({ children }) {
 
         s.on("connect", () => {
             console.log("🟢 Connected, joining user_" + userId);
-            joinUserRoom(userId); // ✅ แค่ joinRoom พอ
+            joinUserRoom(userId);
         });
 
         return () => {
@@ -65,7 +79,13 @@ export function NotificationProvider({ children }) {
 
     return (
         <NotificationContext.Provider
-            value={{ notifications, unreadCount, socket: socketRef.current, setNotifications }}
+            value={{
+                notifications,
+                unreadCount,
+                socket: socketRef.current,
+                setNotifications,
+                userId, // ✅ export userId ด้วย
+            }}
         >
             {children}
         </NotificationContext.Provider>

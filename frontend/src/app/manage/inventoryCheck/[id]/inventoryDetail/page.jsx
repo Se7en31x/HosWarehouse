@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import styles from './page.module.css';
 import { manageAxios } from '../../../../utils/axiosInstance';
+import Image from 'next/image';
 
 // Components
 import BasicDetail from '../../../components/inventoryDetail/BasicDetail';
@@ -55,7 +56,10 @@ export default function InventoryDetail() {
     manageAxios
       .get(`/inventoryCheck/${id}`)
       .then((res) => alive && setItem(res.data))
-      .catch(() => alive && setError('ไม่สามารถโหลดข้อมูลพัสดุได้ กรุณาลองใหม่อีกครั้ง'))
+      .catch((err) => {
+        console.error('❌ โหลดข้อมูล error:', err);
+        alive && setError('ไม่สามารถโหลดข้อมูลพัสดุได้ กรุณาลองใหม่อีกครั้ง');
+      })
       .finally(() => alive && setLoading(false));
 
     return () => {
@@ -87,24 +91,21 @@ export default function InventoryDetail() {
   const handleDamaged = async (lot) => {
     Swal.fire({
       title: `แจ้งของชำรุด (Lot ${lot.lot_no || '-'})`,
-      html: `
-        <input id="damagedQty" class="swal2-input ${styles.swalInput}" 
-          type="number" 
-          min="1" 
-          max="${lot.remaining_qty ?? 0}" 
-          placeholder="จำนวน (สูงสุด ${lot.remaining_qty ?? 0})"
-          oninvalid="this.setCustomValidity('❌ จำนวนต้องไม่เกิน ${lot.remaining_qty ?? 0} และต้องมากกว่า 0')"
-          oninput="this.setCustomValidity('')"
-        />
-      `,
+      input: 'number',
+      inputLabel: `จำนวน (สูงสุด ${lot.remaining_qty ?? 0})`,
+      inputAttributes: {
+        min: 1,
+        max: lot.remaining_qty ?? 0,
+        step: 1,
+      },
       showCancelButton: true,
       confirmButtonText: 'บันทึก',
       cancelButtonText: 'ยกเลิก',
       confirmButtonColor: 'var(--primary)',
       cancelButtonColor: 'var(--muted)',
       customClass: { popup: styles.swalPopup },
-      preConfirm: () => {
-        const qty = Number(document.getElementById('damagedQty').value);
+      preConfirm: (value) => {
+        const qty = Number(value);
         if (!qty || qty <= 0) {
           Swal.showValidationMessage('❌ ต้องใส่จำนวนที่มากกว่า 0');
           return false;
@@ -126,23 +127,11 @@ export default function InventoryDetail() {
             source_type: 'stock_check',
             source_ref_id: lot.lot_id,
           });
-          Swal.fire({
-            title: 'สำเร็จ',
-            text: 'บันทึกของชำรุดแล้ว',
-            icon: 'success',
-            confirmButtonColor: 'var(--primary)',
-            customClass: { popup: styles.swalPopup },
-          });
+          Swal.fire('สำเร็จ', 'บันทึกของชำรุดแล้ว', 'success');
           const res = await manageAxios.get(`/inventoryCheck/${lot.item_id}`);
           setItem(res.data);
         } catch {
-          Swal.fire({
-            title: 'ผิดพลาด',
-            text: 'ไม่สามารถบันทึกได้',
-            icon: 'error',
-            confirmButtonColor: 'var(--primary)',
-            customClass: { popup: styles.swalPopup },
-          });
+          Swal.fire('ผิดพลาด', 'ไม่สามารถบันทึกได้', 'error');
         }
       }
     });
@@ -152,20 +141,16 @@ export default function InventoryDetail() {
     Swal.fire({
       title: `ปรับปรุงจำนวน (Lot ${lot.lot_no || '-'})`,
       html: `
-        <p>คงเหลือปัจจุบัน: <b>${lot.remaining_qty ?? '-'}</b></p>
-        <input id="newQty" class="swal2-input ${styles.swalInput}" 
-          type="number" 
-          value="${lot.remaining_qty ?? 0}" 
-          min="0" 
-          max="${lot.qty_imported ?? 0}" 
-          placeholder="จำนวน (สูงสุด ${lot.qty_imported ?? 0})"
-          oninvalid="this.setCustomValidity('❌ จำนวนต้องไม่เกิน ${lot.qty_imported ?? 0} และต้องไม่ต่ำกว่า 0')"
-          oninput="this.setCustomValidity('')"
-        />
-        <input id="reason" class="swal2-input ${styles.swalInput}" 
-          placeholder="เหตุผลในการปรับปรุง"
-        />
-      `,
+        <p>คงเหลือปัจจุบัน: <b>${lot.remaining_qty ?? '-'}</b></p>
+        <input id="newQty" class="swal2-input ${styles.swalInput}" 
+          type="number" 
+          value="${lot.remaining_qty ?? 0}" 
+          min="0" 
+          max="${lot.qty_imported ?? 0}" 
+          placeholder="จำนวน (สูงสุด ${lot.qty_imported ?? 0})"
+        />
+        <input id="reason" class="swal2-input ${styles.swalInput}" placeholder="เหตุผลในการปรับปรุง"/>
+      `,
       showCancelButton: true,
       confirmButtonText: 'ยืนยัน',
       cancelButtonText: 'ยกเลิก',
@@ -194,23 +179,11 @@ export default function InventoryDetail() {
             actual_qty: result.value.actual_qty,
             reason: result.value.reason,
           });
-          Swal.fire({
-            title: 'สำเร็จ',
-            text: 'ปรับปรุงจำนวนแล้ว',
-            icon: 'success',
-            confirmButtonColor: 'var(--primary)',
-            customClass: { popup: styles.swalPopup },
-          });
+          Swal.fire('สำเร็จ', 'ปรับปรุงจำนวนแล้ว', 'success');
           const res = await manageAxios.get(`/inventoryCheck/${lot.item_id}`);
           setItem(res.data);
         } catch {
-          Swal.fire({
-            title: 'ผิดพลาด',
-            text: 'ไม่สามารถปรับปรุงได้',
-            icon: 'error',
-            confirmButtonColor: 'var(--primary)',
-            customClass: { popup: styles.swalPopup },
-          });
+          Swal.fire('ผิดพลาด', 'ไม่สามารถปรับปรุงได้', 'error');
         }
       }
     });
@@ -239,6 +212,18 @@ export default function InventoryDetail() {
             {categoryMap[normalizeCategory(item.item_category)] || 'ไม่ระบุ'} | {item.item_code || '-'}
           </p>
         </div>
+        {item.item_img && (
+          <div className={styles.imageWrapper}>
+            <Image
+              src={item.item_img}
+              alt={item.item_name || 'no-img'}
+              width={80}
+              height={80}
+              style={{ objectFit: 'cover', borderRadius: 8, border: '1px solid #ccc' }}
+              unoptimized
+            />
+          </div>
+        )}
       </div>
 
       {/* ===== Details ===== */}

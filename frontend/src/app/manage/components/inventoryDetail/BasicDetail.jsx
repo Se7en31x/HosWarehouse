@@ -17,11 +17,21 @@ export default function BasicDetail({ form = {} }) {
         item_img = null,
     } = form;
 
-    const isBorrowableText = typeof is_borrowable === 'boolean'
-        ? is_borrowable
-            ? 'สามารถยืมได้ (ต้องนำมาคืน)'
-            : 'ใช้แล้วหมดไป (เบิกใช้)'
-        : '-';
+    const isBorrowableText =
+        typeof is_borrowable === 'boolean'
+            ? is_borrowable
+                ? 'สามารถยืมได้ (ต้องนำมาคืน)'
+                : 'ใช้แล้วหมดไป (เบิกใช้)'
+            : '-';
+
+    // ✅ ฟังก์ชันหาว่าจะใช้ path ไหน
+    const getImageSrc = (img) => {
+        if (!img) return null;
+        if (img.startsWith('http')) return img; // full URL (Supabase หรือ CDN)
+        return `http://localhost:5000/uploads/${img}`; // local upload
+    };
+
+    const imgSrc = getImageSrc(item_img);
 
     return (
         <div className={styles.detailContainer}>
@@ -29,7 +39,9 @@ export default function BasicDetail({ form = {} }) {
                 <legend className={styles.legend}>ข้อมูลทั่วไป</legend>
                 <div className={styles.grid}>
                     <div className={styles.field}>
-                        <label htmlFor="item_category" className={styles.label}>หมวดหมู่หลัก</label>
+                        <label htmlFor="item_category" className={styles.label}>
+                            หมวดหมู่หลัก
+                        </label>
                         <input
                             id="item_category"
                             value={item_category}
@@ -39,7 +51,9 @@ export default function BasicDetail({ form = {} }) {
                         />
                     </div>
                     <div className={styles.field}>
-                        <label htmlFor="item_name" className={styles.label}>ชื่อพัสดุ</label>
+                        <label htmlFor="item_name" className={styles.label}>
+                            ชื่อพัสดุ
+                        </label>
                         <input
                             id="item_name"
                             value={item_name}
@@ -49,7 +63,9 @@ export default function BasicDetail({ form = {} }) {
                         />
                     </div>
                     <div className={styles.field}>
-                        <label htmlFor="item_sub_category" className={styles.label}>หมวดหมู่ย่อย</label>
+                        <label htmlFor="item_sub_category" className={styles.label}>
+                            หมวดหมู่ย่อย
+                        </label>
                         <input
                             id="item_sub_category"
                             value={item_sub_category}
@@ -59,7 +75,9 @@ export default function BasicDetail({ form = {} }) {
                         />
                     </div>
                     <div className={styles.field}>
-                        <label htmlFor="item_location" className={styles.label}>ตำแหน่งจัดเก็บ</label>
+                        <label htmlFor="item_location" className={styles.label}>
+                            ตำแหน่งจัดเก็บ
+                        </label>
                         <input
                             id="item_location"
                             value={item_location}
@@ -69,7 +87,9 @@ export default function BasicDetail({ form = {} }) {
                         />
                     </div>
                     <div className={styles.field}>
-                        <label htmlFor="item_zone" className={styles.label}>โซนจัดเก็บ</label>
+                        <label htmlFor="item_zone" className={styles.label}>
+                            โซนจัดเก็บ
+                        </label>
                         <input
                             id="item_zone"
                             value={item_zone}
@@ -85,7 +105,9 @@ export default function BasicDetail({ form = {} }) {
                 <legend className={styles.legend}>จำนวนและหน่วย</legend>
                 <div className={styles.grid}>
                     <div className={styles.field}>
-                        <label htmlFor="item_unit" className={styles.label}>หน่วยนับ</label>
+                        <label htmlFor="item_unit" className={styles.label}>
+                            หน่วยนับ
+                        </label>
                         <input
                             id="item_unit"
                             value={item_unit}
@@ -95,7 +117,9 @@ export default function BasicDetail({ form = {} }) {
                         />
                     </div>
                     <div className={styles.field}>
-                        <label htmlFor="item_min" className={styles.label}>จำนวนขั้นต่ำ</label>
+                        <label htmlFor="item_min" className={styles.label}>
+                            จำนวนขั้นต่ำ
+                        </label>
                         <input
                             id="item_min"
                             value={item_min}
@@ -105,7 +129,9 @@ export default function BasicDetail({ form = {} }) {
                         />
                     </div>
                     <div className={styles.field}>
-                        <label htmlFor="item_max" className={styles.label}>จำนวนสูงสุด</label>
+                        <label htmlFor="item_max" className={styles.label}>
+                            จำนวนสูงสุด
+                        </label>
                         <input
                             id="item_max"
                             value={item_max}
@@ -115,7 +141,9 @@ export default function BasicDetail({ form = {} }) {
                         />
                     </div>
                     <div className={styles.field}>
-                        <label htmlFor="item_purchase_unit" className={styles.label}>หน่วยสั่งซื้อ</label>
+                        <label htmlFor="item_purchase_unit" className={styles.label}>
+                            หน่วยสั่งซื้อ
+                        </label>
                         <input
                             id="item_purchase_unit"
                             value={item_purchase_unit}
@@ -125,7 +153,9 @@ export default function BasicDetail({ form = {} }) {
                         />
                     </div>
                     <div className={styles.field}>
-                        <label htmlFor="item_conversion_rate" className={styles.label}>อัตราส่วนการแปลง</label>
+                        <label htmlFor="item_conversion_rate" className={styles.label}>
+                            อัตราส่วนการแปลง
+                        </label>
                         <input
                             id="item_conversion_rate"
                             value={item_conversion_rate}
@@ -135,7 +165,9 @@ export default function BasicDetail({ form = {} }) {
                         />
                     </div>
                     <div className={styles.field}>
-                        <label htmlFor="is_borrowable" className={styles.label}>สามารถยืมได้</label>
+                        <label htmlFor="is_borrowable" className={styles.label}>
+                            สามารถยืมได้
+                        </label>
                         <input
                             id="is_borrowable"
                             value={isBorrowableText}
@@ -150,16 +182,18 @@ export default function BasicDetail({ form = {} }) {
             <fieldset className={styles.section}>
                 <legend className={styles.legend}>รูปภาพพัสดุ</legend>
                 <div className={styles.imageField}>
-                    {item_img ? (
+                    {imgSrc ? (
                         <div className={styles.imagePreview}>
                             <img
-                                src={`http://localhost:5000/uploads/${item_img}`}
+                                src={imgSrc}
                                 alt="รูปภาพพัสดุ"
                                 className={styles.previewImage}
                             />
                         </div>
                     ) : (
-                        <div className={`${styles.imagePreview} ${styles.imagePreviewPlaceholder}`}>
+                        <div
+                            className={`${styles.imagePreview} ${styles.imagePreviewPlaceholder}`}
+                        >
                             <span>ไม่มีรูปภาพ</span>
                         </div>
                     )}

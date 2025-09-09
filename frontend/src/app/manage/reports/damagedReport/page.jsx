@@ -53,6 +53,8 @@ export default function DamagedReportPage() {
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentUser, setCurrentUser] = useState(null); // ✅ user จริง
+
   const startDateRef = useRef(null);
   const endDateRef = useRef(null);
 
@@ -63,6 +65,7 @@ export default function DamagedReportPage() {
     []
   );
 
+  /* ------------------- Options ------------------- */
   const categoryOptions = [
     { value: "all", label: "ทั้งหมด" },
     { value: "general", label: "ของใช้ทั่วไป" },
@@ -97,6 +100,7 @@ export default function DamagedReportPage() {
     { value: "custom", label: "กำหนดเอง" },
   ];
 
+  /* ------------------- Helpers ------------------- */
   const translateCategory = (cat) => {
     const map = {
       general: "ของใช้ทั่วไป",
@@ -142,34 +146,20 @@ export default function DamagedReportPage() {
 
   const toISODate = (date) => date.toISOString().split("T")[0];
 
-  const handleCustomStartChange = (e) => {
-    const startDate = e.target.value;
-    if (customEnd && startDate > customEnd) {
-      toast.error("วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุด");
-      return;
-    }
-    setCustomStart(startDate);
-  };
-
-  const handleCustomEndChange = (e) => {
-    const endDate = e.target.value;
-    if (customStart && endDate < customStart) {
-      toast.error("วันที่สิ้นสุดต้องไม่น้อยกว่าวันที่เริ่มต้น");
-      return;
-    }
-    setCustomEnd(endDate);
-  };
-
-  const openDatePicker = (ref) => {
-    if (ref.current) {
+  /* ------------------- Fetch Profile ------------------- */
+  useEffect(() => {
+    const fetchProfile = async () => {
       try {
-        ref.current.showPicker();
-      } catch {
-        ref.current.focus();
+        const res = await manageAxios.get("/profile");
+        setCurrentUser(res.data);
+      } catch (err) {
+        console.error("โหลดข้อมูลผู้ใช้ล้มเหลว:", err);
       }
-    }
-  };
+    };
+    fetchProfile();
+  }, []);
 
+  /* ------------------- Fetch Report ------------------- */
   const fetchReport = useCallback(async () => {
     try {
       setLoading(true);
@@ -230,7 +220,6 @@ export default function DamagedReportPage() {
     fetchReport();
 
     const socket = connectSocket();
-
     const handleReportUpdate = () => {
       if (isMounted) fetchReport();
     };
@@ -244,6 +233,7 @@ export default function DamagedReportPage() {
     };
   }, [fetchReport]);
 
+  /* ------------------- Pagination ------------------- */
   const filteredData = useMemo(() => {
     return data.sort((a, b) => {
       const dateA = new Date(a.damaged_date || 0);
@@ -298,6 +288,7 @@ export default function DamagedReportPage() {
   const startDisplay = filteredData.length ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0;
   const endDisplay = Math.min((currentPage - 1) * ITEMS_PER_PAGE + ITEMS_PER_PAGE, filteredData.length);
 
+  /* ------------------- Render ------------------- */
   return (
     <div className={styles.mainHome}>
       <div className={styles.infoContainer}>
@@ -323,9 +314,17 @@ export default function DamagedReportPage() {
                     start: customStart,
                     end: customEnd,
                   },
-                  user: { user_fname: "วัชรพล", user_lname: "อินทร์ทอง" },
+                  user: currentUser
+                    ? {
+                        user_fname: currentUser.user_fname,
+                        user_lname: currentUser.user_lname,
+                        role: currentUser.role,
+                        department: currentUser.department,
+                      }
+                    : { user_fname: "-", user_lname: "-", role: "-", department: "-" },
                 })
               }
+              disabled={!currentUser}
             >
               <FileDown size={16} style={{ marginRight: "6px" }} /> PDF
             </button>

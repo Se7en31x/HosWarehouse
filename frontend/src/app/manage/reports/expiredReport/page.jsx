@@ -17,6 +17,7 @@ import styles from "./page.module.css";
 
 const DynamicSelect = dynamic(() => import("react-select"), { ssr: false });
 
+/* ---------- react-select styles ---------- */
 const customSelectStyles = {
   control: (base, state) => ({
     ...base,
@@ -46,6 +47,7 @@ const customSelectStyles = {
 
 export default function ExpiredReportPage() {
   const [data, setData] = useState([]);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [category, setCategory] = useState(null);
   const [status, setStatus] = useState(null);
@@ -98,10 +100,10 @@ export default function ExpiredReportPage() {
   const formatDate = (iso) =>
     iso
       ? new Date(iso).toLocaleDateString("th-TH", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        })
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      })
       : "-";
 
   const translateCategory = (cat) => {
@@ -128,7 +130,17 @@ export default function ExpiredReportPage() {
     }
   };
 
-  /* ---- Fetch ---- */
+  /* ---- Fetch User ---- */
+  const fetchUserProfile = useCallback(async () => {
+    try {
+      const res = await manageAxios.get("/profile");
+      setUser(res.data);
+    } catch (err) {
+      console.error("โหลดข้อมูลผู้ใช้ล้มเหลว:", err);
+    }
+  }, []);
+
+  /* ---- Fetch Report ---- */
   const fetchReport = useCallback(async () => {
     try {
       setLoading(true);
@@ -175,8 +187,9 @@ export default function ExpiredReportPage() {
   }, [category, status, dateRange, customStart, customEnd]);
 
   useEffect(() => {
+    fetchUserProfile();
     fetchReport();
-  }, [fetchReport]);
+  }, [fetchReport, fetchUserProfile]);
 
   /* ---- Pagination ---- */
   const filteredData = useMemo(() => data, [data]);
@@ -212,11 +225,19 @@ export default function ExpiredReportPage() {
                     categoryLabel: category?.label,
                     statusLabel: status?.label,
                     dateLabel: dateRange?.label,
-                    dateValue: dateRange?.value, // ✅ ส่งไปใช้ mapDateRangeLabel
+                    dateValue: dateRange?.value,
                     start: customStart,
                     end: customEnd,
                   },
-                  user: { user_fname: "วัชรพล", user_lname: "อินทร์ทอง" },
+                  user: user
+                    ? {
+                      user_fname: user.user_fname,   // ✅ ตรงกับ template
+                      user_lname: user.user_lname,   // ✅ ตรงกับ template
+                      role: user.role,
+                      department: user.department,
+                    }
+                    : { user_fname: "-", user_lname: "-", role: "-", department: "-" },
+
                 })
               }
             >
@@ -478,9 +499,8 @@ export default function ExpiredReportPage() {
                 ) : (
                   <li key={`page-${p}`}>
                     <button
-                      className={`${styles.pageButton} ${
-                        p === currentPage ? styles.activePage : ""
-                      }`}
+                      className={`${styles.pageButton} ${p === currentPage ? styles.activePage : ""
+                        }`}
                       onClick={() => setCurrentPage(p)}
                     >
                       {p}

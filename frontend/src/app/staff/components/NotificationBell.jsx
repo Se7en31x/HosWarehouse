@@ -1,18 +1,17 @@
-// src/app/components/NotificationBell.jsx
 "use client";
 import { useState, useRef, useEffect } from "react";
-// ใช้ icon จาก lucide-react ทั้งหมด
-import { Bell, Check, X, Eye, Trash2 } from "lucide-react"; 
+import { Bell, Check, Eye, Trash2 } from "lucide-react"; 
 import { useNotifications } from "../../context/NotificationContextUser";
 import styles from "./NotificationBell.module.css";
 
 export default function NotificationBell() {
-  const { notifications, unreadCount, socket, setNotifications } = useNotifications();
+  const { notifications, unreadCount, socket, setNotifications, userId } = useNotifications(); 
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const toggleDropdown = () => setOpen(!open);
+  const toggleDropdown = () => setOpen((prev) => !prev);
 
+  // ✅ ปิด dropdown เมื่อกดนอก
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -37,17 +36,17 @@ export default function NotificationBell() {
 
   // ✅ อ่านทั้งหมด
   const handleMarkAllAsRead = () => {
-    if (socket) {
+    if (socket && userId) {
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-      socket.emit("markAllAsRead", 999);
+      socket.emit("markAllAsRead", userId);
     }
   };
 
   // ✅ ลบทั้งหมด
   const handleClearAll = () => {
-    if (socket) {
-      setNotifications([]); 
-      socket.emit("clearNotifications", 999);
+    if (socket && userId) {
+      setNotifications([]);
+      socket.emit("clearNotifications", userId);
     }
   };
 
@@ -87,9 +86,9 @@ export default function NotificationBell() {
               <div className={styles.empty}>ไม่มีการแจ้งเตือน</div>
             ) : (
               <ul className={styles.notiList}>
-                {notifications.map((n, idx) => (
+                {notifications.map((n) => (
                   <li
-                    key={idx}
+                    key={n.notification_id} // ✅ ใช้ id แทน idx
                     onClick={() => !n.is_read && handleMarkAsRead(n.notification_id)}
                     className={`${styles.notiItem} ${!n.is_read ? styles.unread : ""}`}
                   >
@@ -97,11 +96,13 @@ export default function NotificationBell() {
                       <strong>{n.title}</strong>
                       <p>{n.message}</p>
                       <small>
-                        {new Intl.DateTimeFormat("th-TH", {
-                          timeZone: "Asia/Bangkok",
-                          dateStyle: "short",
-                          timeStyle: "medium",
-                        }).format(new Date(n.created_at))}
+                        {n.created_at
+                          ? new Intl.DateTimeFormat("th-TH", {
+                              timeZone: "Asia/Bangkok",
+                              dateStyle: "short",
+                              timeStyle: "medium",
+                            }).format(new Date(n.created_at))
+                          : "ไม่ทราบเวลา"}
                       </small>
                     </div>
                   </li>

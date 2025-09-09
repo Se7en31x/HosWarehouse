@@ -1,75 +1,89 @@
 "use client";
 import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { connectSocket, disconnectSocket, joinUserRoom } from "../utils/socket";
+import { getUserIdFromToken } from "../utils/auth";
 
 const NotificationContext = createContext();
 
 export function NotificationProvider({ children }) {
-    const [notifications, setNotifications] = useState([]);
-    const socketRef = useRef(null);
-    const userId = 888; // ภายหลังดึงจาก session/login
+  const [notifications, setNotifications] = useState([]);
+  const [userId, setUserId] = useState(null);
+  const socketRef = useRef(null);
 
-    useEffect(() => {
-        if (socketRef.current) return; // ✅ กันสร้างซ้ำ
+  // ✅ ดึง user_id หลัง mount (กัน SSR error)
+  useEffect(() => {
+    const id = getUserIdFromToken("purchasing"); // 👈 ฝ่ายจัดซื้อ
+    if (id) {
+      console.log("🎯 Purchasing userId from token:", id);
+      setUserId(id);
+    }
+  }, []);
 
-        const handlers = {
-            onInitialNotifications: (data) => {
-                console.log("📥 Context got initial:", data);
-                setNotifications(data || []);
-            },
-            onNewNotification: (noti) => {
-                console.log("📩 Context got new:", noti); // 👀 Debug ตรงนี้
-                setNotifications((prev) => [noti, ...prev]);
-            },
-            onNotificationUpdated: (updated) => {
-                console.log("✏️ Context updated:", updated);
-                setNotifications((prev) =>
-                    prev.map((n) =>
-                        Number(n.notification_id) === Number(updated.notification_id)
-                            ? updated
-                            : n
-                    )
-                );
-            },
-            onAllNotificationsRead: () => {
-                console.log("👁 Context mark all read");
-                setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-            },
-            onNotificationDeleted: (deleted) => {
-                console.log("🗑 Context deleted:", deleted);
-                setNotifications((prev) =>
-                    prev.filter((n) => Number(n.notification_id) !== Number(deleted.notification_id))
-                );
-            },
-            onNotificationsCleared: () => {
-                console.log("🧹 Context cleared all");
-                setNotifications([]);
-            },
-        };
+  useEffect(() => {
+    if (!userId) return; // ❌ ถ้าไม่มี userId ยังไม่ join
 
-        const s = connectSocket(handlers);
-        socketRef.current = s;
+    if (socketRef.current) return; // ✅ กันสร้างซ้ำ
 
-        s.on("connect", () => {
-            console.log("🟢 Connected, joining user_" + userId);
-            joinUserRoom(userId); // ✅ แค่ joinRoom พอ
+    const handlers = {
+      onInitialNotifications: (data) => {
+        console.log("📥 Context got initial:", data);
+        setNotifications(data || []);
+      },
+      onNewNotification: (noti) => {
+        console.log("📩 Context got new:", noti);
+        setNotifications((prev) => {
+          // ✅ กัน duplicate
+          if (prev.some((n) => n.notification_id === noti.notification_id)) return prev;
+          return [noti, ...prev];
         });
+      },
+      onNotificationUpdated: (updated) => {
+        console.log("✏️ Context updated:", updated);
+        setNotifications((prev) =>
+          prev.map((n) =>
+            Number(n.notification_id) === Number(updated.notification_id) ? updated : n
+          )
+        );
+      },
+      onAllNotificationsRead: () => {
+        console.log("👁 Context mark all read");
+        setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      },
+      onNotificationDeleted: (deleted) => {
+        console.log("🗑 Context deleted:", deleted);
+        setNotifications((prev) =>
+          prev.filter((n) => Number(n.notification_id) !== Number(deleted.notification_id))
+        );
+      },
+      onNotificationsCleared: () => {
+        console.log("🧹 Context cleared all");
+        setNotifications([]);
+      },
+    };
 
-        return () => {
-            disconnectSocket();
-            socketRef.current = null;
-        };
-    }, [userId]);
+    const s = connectSocket(handlers);
+    socketRef.current = s;
 
-    const unreadCount = notifications.filter((n) => !n.is_read).length;
+    s.on("connect", () => {
+      console.log("🟢 Connected, joining user_" + userId);
+      joinUserRoom(userId);
+    });
 
-    return (
-        <NotificationContext.Provider
-            value={{ notifications, unreadCount, socket: socketRef.current, setNotifications }}
-        >
-            {children}
-        </NotificationContext.Provider>
-    );
+    return () => {
+      disconnectSocket();
+      socketRef.current = null;
+    };
+  }, [userId]);
+
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
+
+  return (
+    <NotificationContext.Provider
+      value={{ notifications, unreadCount, socket: socketRef.current, setNotifications, userId }}
+    >
+      {children}
+    </NotificationContext.Provider>
+  );
 }
 
 export const useNotifications = () => useContext(NotificationContext);
