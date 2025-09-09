@@ -233,7 +233,7 @@ exports.updateMedicine = async (item_id, data) => {
     toNullOrValue(data.med_replacement),
     Number(item_id),
   ];
-  console.log('✅ updateMedicine', values);
+
   await pool.query(query, values);
 };
 
@@ -258,7 +258,6 @@ exports.updateMedsup = async (item_id, data) => {
     toNullOrFloat(data.medsup_price),
     Number(item_id),
   ];
-  console.log('✅ updateMedsup', values);
   await pool.query(query, values);
 };
 
@@ -281,7 +280,7 @@ exports.updateEquipment = async (item_id, data) => {
     toNullOrValue(data.equip_note),
     Number(item_id),
   ];
-  console.log('✅ updateEquipment', values);
+
   await pool.query(query, values);
 };
 
@@ -310,7 +309,7 @@ exports.updateMedDevice = async (item_id, data) => {
     toNullOrValue(data.meddevice_note),
     Number(item_id),
   ];
-  console.log('✅ updateMedDevice', values);
+
   await pool.query(query, values);
 };
 
@@ -333,6 +332,6 @@ exports.updateGeneral = async (item_id, data) => {
     toNullOrFloat(data.gen_price),
     Number(item_id),
   ];
-  console.log('✅ updateGeneral', values);
+
   await pool.query(query, values);
 };

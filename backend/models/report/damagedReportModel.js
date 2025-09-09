@@ -72,10 +72,10 @@ exports.getDamagedReport = async (filters) => {
     ORDER BY di.damaged_date DESC;
   `;
 
-  if (process.env.NODE_ENV !== "production") {
-    console.log("Final Damaged Report Query:", query);
-    console.log("Query Parameters:", params);
-  }
+  // if (process.env.NODE_ENV !== "production") {
+  //   console.log("Final Damaged Report Query:", query);
+  //   console.log("Query Parameters:", params);
+  // }
 
   const { rows } = await pool.query(query, params);
   return rows;

@@ -6,21 +6,21 @@ const authMiddleware = require('../middleware/auth');
 // ✅ ดึงคำขอที่พร้อมหักสต็อก
 router.get(
   '/stockDeduction/ready',
-  authMiddleware(['manage', 'marehouse_manager']),
+  authMiddleware(['manage', 'warehouse_manager']),
   stockDeductionController.getRequestsReadyForDeduction
 );
 
 // ✅ ดึงรายละเอียดคำขอหักสต็อก
 router.get(
   '/stockDeduction/:requestId/details',
-  authMiddleware(['manage', 'marehouse_manager']),
+  authMiddleware(['manage', 'warehouse_manager']),
   stockDeductionController.getDeductionRequestDetails
 );
 
 // ✅ ดำเนินการหักสต็อก
 router.put(
   '/stockDeduction/:requestId/process',
-  authMiddleware(['manage', 'marehouse_manager']),
+  authMiddleware(['manage', 'warehouse_manager']),
   stockDeductionController.processStockDeduction
 );
 

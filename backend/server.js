@@ -1,60 +1,69 @@
-// server.js
-require('dotenv').config();
-const express = require('express');
+require("dotenv").config();
+const express = require("express");
 const app = express();
-const port = 5000;
-const morgan = require('morgan')
-const { readdirSync } = require('fs')
-const cors = require('cors')
-const { disconnect } = require('process');
-const { connectDB, disconnectDB } = require('./config/db');
-const bodyParser = require('body-parser');
-const socketIo = require('socket.io')
-const http = require('http');
-const helmet = require('helmet');
+const port = process.env.PORT || 5000;
+const morgan = require("morgan");
+const { readdirSync } = require("fs");
+const cors = require("cors");
+const { connectDB, disconnectDB } = require("./config/db");
+const http = require("http");
+const helmet = require("helmet");
+const path = require("path");
+const { initialize } = require("./initializer");
+require("./cronJobs");
+
 const server = http.createServer(app);
-const multer = require('multer');
-require('./cronJobs');
-const upload = multer({ dest: 'uploads/' });
-const { initialize } = require('./initializer');
 
-const path = require('path');
-
-app.use(express.json());
+// 🔹 Middleware
+app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-app.use(morgan('dev'));
-app.use(cors({
-  origin: ['http://localhost:3000'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  credentials: true,
-}));
+if (process.env.NODE_ENV !== "production") {
+  app.use(morgan("dev"));
+}
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(
+  cors({
+    origin: process.env.ALLOWED_ORIGINS?.split(",") || ["http://localhost:3000"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    credentials: true,
+  })
+);
 
-readdirSync('./Routes').map((r) => app.use('/api', require('./Routes/' + r)))
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ✅ แก้ไขส่วนนี้: เรียกใช้ initialize(server) เพียงครั้งเดียว
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
+
+// 🔹 Routes
+readdirSync("./Routes").map((r) =>
+  app.use("/api", require("./Routes/" + r))
+);
+
+// 🔹 Socket & DB
 initialize(server);
-
 connectDB();
 
-app.use('/uploads', express.static('uploads'));
-app.use(helmet({
-  crossOriginResourcePolicy: false,
-  crossOriginEmbedderPolicy: false,
-}));
+// 🔹 Error handler
 app.use((err, req, res, next) => {
-  console.error('Global Error:', err.stack);
-  res.status(500).json({ error: 'Internal Server Error' });
+  if (process.env.NODE_ENV !== "production") {
+    console.error("Global Error:", err.stack);
+  } else {
+    console.error("Global Error:", err.message);
+  }
+  res.status(500).json({ error: "Internal Server Error" });
 });
 
+// 🔹 Start Server
 server.listen(port, () => {
   console.log(`🚀 Server running at http://localhost:${port}`);
 });
 
-process.on('SIGINT', () => {
+// 🔹 Graceful shutdown
+process.on("SIGINT", () => {
   disconnectDB().then(() => process.exit());
 });

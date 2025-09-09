@@ -69,19 +69,46 @@ const getCategory = async () => {
 // ✅ Movements ล่าสุด (ทั้งนำเข้า-นำออก)
 const getMovements = async () => {
   const result = await pool.query(`
-    SELECT 
-      sm.move_id,
-      i.item_name,
-      sm.move_date,
-      sm.move_qty,
-      sm.move_type,
-      sm.move_status
-    FROM stock_movements sm
-    JOIN items i ON sm.item_id = i.item_id
-    ORDER BY sm.move_date DESC
+    (
+      -- รับเข้า
+      SELECT 
+        si.stockin_id AS move_id,
+        i.item_name,
+        il.lot_no,
+        sid.qty AS move_qty,
+        i.item_unit,
+        si.stockin_date AS move_date,
+        'stock_in' AS move_type,
+        si.stockin_status AS move_status
+      FROM stock_ins si
+      JOIN stock_in_details sid ON si.stockin_id = sid.stockin_id
+      JOIN items i ON sid.item_id = i.item_id
+      LEFT JOIN item_lots il ON sid.lot_id = il.lot_id
+      WHERE si.stockin_status IS NOT NULL
+    )
+    UNION ALL
+    (
+      -- จ่ายออก
+      SELECT 
+        so.stockout_id AS move_id,
+        i.item_name,
+        il.lot_no,
+        sod.qty AS move_qty,
+        i.item_unit,
+        so.stockout_date AS move_date,
+        'stock_out' AS move_type,
+        so.stockout_type::text AS move_status
+      FROM stock_outs so
+      JOIN stock_out_details sod ON so.stockout_id = sod.stockout_id
+      JOIN items i ON sod.item_id = i.item_id
+      LEFT JOIN item_lots il ON sod.lot_id = il.lot_id
+    )
+    ORDER BY move_date DESC
     LIMIT 10;
   `);
+
   return result.rows;
 };
+
 
 module.exports = { getSummary, getMonthly, getCategory, getMovements };

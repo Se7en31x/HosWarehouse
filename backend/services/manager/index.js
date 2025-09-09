@@ -2,9 +2,10 @@
 const { checkLowStock } = require("./lowStock");
 const { checkExpiredItems } = require("./expiredItems");
 const { checkDamagedItems } = require("./damagedItems");
-const { checkNewRequests } = require('./checkNewRequests');
-const { checkReturnRequests } = require('./checkReturnRequests');
-const { checkStockOutNotifications } = require('./checkStockOutNotifications'); // เพิ่มฟังก์ชันใหม่
+const { checkNewRequests } = require("./checkNewRequests");
+const { checkReturnRequests } = require("./checkReturnRequests");
+const { checkStockOutNotifications } = require("./checkStockOutNotifications");
+const { checkStockInNotifications } = require("./checkStockInNotifications"); // ✅ เพิ่ม import ใหม่
 
 async function runManagerRules() {
     try {
@@ -13,8 +14,8 @@ async function runManagerRules() {
         await checkDamagedItems();
         await checkNewRequests();
         await checkReturnRequests();
-        await checkStockOutNotifications(); // เพิ่มการตรวจสอบตัดสต็อก
-        console.log("✅ All manager rules executed successfully");
+        await checkStockOutNotifications();
+        await checkStockInNotifications(); // ✅ เรียกใช้ rule การนำเข้า
     } catch (err) {
         console.error("❌ Error running manager rules:", err.message);
     }

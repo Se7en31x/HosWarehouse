@@ -5,10 +5,6 @@ exports.getInventorySummary = async (filters) => {
   const { category, source } = filters;
   const start = filters.dateRange?.start;
   const end = filters.dateRange?.end;
-
-  console.log("-----------------------------------------");
-  console.log("Received filters:", filters);
-
   let params = [];
   let paramIndex = 1;
   let mainQueryConditions = [];
@@ -102,10 +98,6 @@ exports.getInventorySummary = async (filters) => {
       eq.equip_code
     ORDER BY i.item_name;
   `;
-
-  console.log("Final SQL Query:", query);
-  console.log("Query Parameters:", params);
-  console.log("-----------------------------------------");
 
   try {
     const { rows } = await pool.query(query, params);

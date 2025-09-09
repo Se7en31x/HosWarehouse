@@ -109,7 +109,6 @@ async function deleteSupplier(id) {
 }
 
 async function getSupplierReport({ startDate, endDate }) {
-  console.log("📥 getSupplierReport() startDate:", startDate, "endDate:", endDate);
 
   let whereClause = "";
   const params = [];
@@ -144,10 +143,8 @@ async function getSupplierReport({ startDate, endDate }) {
     ORDER BY total_spent DESC
   `;
 
-  console.log("📥 Executing SQL with params:", sql, params);
-
   const { rows } = await pool.query(sql, params);
-  console.log("📊 Supplier Report rows:", rows.length);
+
   return rows;
 }
 

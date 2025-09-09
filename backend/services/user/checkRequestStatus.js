@@ -1,46 +1,76 @@
-const {pool} = require("../../config/db");
-const NotificationModel = require("../../models/notificationModel");
+// backend/rules/checkRequestStatus.js
+const { pool } = require("../../config/db");
+const Notification = require("../../models/notificationModel");
+const { getIO } = require("../../socket");
 
 async function checkRequestStatus() {
+  const client = await pool.connect();
+  const io = getIO();
+
   try {
-    const { rows } = await pool.query(`
+    await client.query("BEGIN");
+    const RULE_REQUEST_STATUS = 8; // rule_id สำหรับสถานะคำขอ
+
+    // 🔍 หา requests ที่เปลี่ยนสถานะ
+    const { rows } = await client.query(`
       SELECT r.request_id, r.request_code, r.request_status, r.user_id
       FROM requests r
       WHERE r.request_status IN ('approved_all', 'rejected_all', 'approved_partial')
         AND NOT EXISTS (
-          SELECT 1 FROM notifications n
-          WHERE n.related_table = 'requests'
-            AND n.related_id = r.request_id
-            AND n.category = 'request_status'
+          SELECT 1 FROM notification_log nl
+          WHERE nl.rule_id = $1
+            AND nl.related_table = 'requests'
+            AND nl.related_id = r.request_id
         )
-    `);
+    `, [RULE_REQUEST_STATUS]);
 
     for (const row of rows) {
       let message = "";
+      let title = "อัปเดตคำขอ";
 
-      if (row.request_status === "approved_all") {
-        message = `คำขอ ${row.request_code} ได้รับการอนุมัติทั้งหมดแล้ว ✅`;
-      } else if (row.request_status === "rejected_all") {
-        message = `คำขอ ${row.request_code} ถูกปฏิเสธทั้งหมด ❌`;
-      } else if (row.request_status === "approved_partial") {
-        message = `คำขอ ${row.request_code} ได้รับการอนุมัติบางส่วน ℹ️`;
+      switch (row.request_status) {
+        case "approved_all":
+          message = `คำขอ ${row.request_code} ได้รับการอนุมัติทั้งหมดแล้ว ✅`;
+          break;
+        case "rejected_all":
+          message = `คำขอ ${row.request_code} ถูกปฏิเสธทั้งหมด ❌`;
+          break;
+        case "approved_partial":
+          message = `คำขอ ${row.request_code} ได้รับการอนุมัติบางส่วน ℹ️`;
+          break;
       }
 
-      if (message) {
-        await NotificationModel.create(
-          row.user_id,
-          "อัปเดตคำขอ",
-          message,
-          "request_status", // category
-          "requests",       // related_table
-          row.request_id    // related_id
-        );
+      if (!message) continue;
 
-        console.log(`ส่งแจ้งเตือนไปยัง user_${row.user_id}: ${message}`);
-      }
+      // ✅ สร้าง Notification
+      const noti = await Notification.create(
+        row.user_id,
+        title,
+        message,
+        "request_status",
+        "requests",
+        row.request_id,
+        client // ใช้ transaction
+      );
+
+      // ✅ ส่งให้ user ผ่าน socket
+      io.to(`user_${row.user_id}`).emit("newNotification", noti);
+
+      // ✅ log กันซ้ำ
+      await client.query(
+        `INSERT INTO notification_log (rule_id, related_table, related_id, sent_at)
+         VALUES ($1, 'requests', $2, NOW())`,
+        [RULE_REQUEST_STATUS, row.request_id]
+      );
+
     }
+
+    await client.query("COMMIT");
   } catch (err) {
-    console.error("Error checking request status notifications:", err);
+    await client.query("ROLLBACK");
+    console.error("❌ Error checking request status notifications:", err.message);
+  } finally {
+    client.release();
   }
 }
 

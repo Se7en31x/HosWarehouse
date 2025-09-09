@@ -84,9 +84,6 @@ exports.createPurchaseRequest = async (req, res) => {
 exports.getPRReport = async (req, res) => {
   try {
     const { monthRange, startDate, endDate } = req.query;
-
-    console.log("📥 PR Report params:", { monthRange, startDate, endDate });
-
     let start = startDate;
     let end = endDate;
 

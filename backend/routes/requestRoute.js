@@ -13,7 +13,7 @@ router.post(
 // ✅ manage: สำหรับดึงคำขอทั้งหมด
 router.get(
   "/requests",
-  authMiddleware(["manage", "marehouse_manager","warehouse_manager"]), 
+  authMiddleware(["manage", "warehouse_manager","warehouse_manager"]), 
   requestController.getRequests
 );
 

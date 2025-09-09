@@ -75,7 +75,7 @@ async function getAllItems() {
 
 // ===== Model Function: ค้นหาสินค้าด้วย Barcode =====
 async function findItemByBarcode(barcode) {
-    console.log("🔎 Barcode from scanner:", JSON.stringify(barcode));
+
     const cleanBarcode = (barcode || "").trim();
 
     const query = `

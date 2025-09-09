@@ -1,27 +1,24 @@
 const { pool } = require("../../config/db");
 
 exports.getReturnReport = async (filters) => {
-  console.log("Received filters:", filters);
+
 
   const { department, start, end, approvalStatus } = filters;
   const params = [];
   let whereClause = "WHERE r.request_type = 'borrow'";
 
-  console.log("Filtering by department:", department);
   if (department && department !== "all") {
     params.push(department);
     whereClause += ` AND r.department_id = $${params.length}`;
   }
 
   // ใช้ br.return_date แทน r.request_date
-  console.log("Filtering by return date range:", { start, end });
   if (start && end) {
     params.push(start, end);
     whereClause += ` AND br.return_date::date BETWEEN $${params.length - 1} AND $${params.length}`;
   }
 
   if (approvalStatus && approvalStatus !== "all") {
-    console.log("Filtering by approvalStatus:", approvalStatus);
     params.push(approvalStatus);
     whereClause += ` AND rd.approval_status = $${params.length}`;
   }

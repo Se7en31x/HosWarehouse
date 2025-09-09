@@ -10,7 +10,6 @@ class RequestStatusController {
             if (statusQuery) {
                 allowedStatuses = statusQuery.split(',');
             }
-            console.log(`Backend: Filtering requests by statuses: ${allowedStatuses.join(', ')}`);
             const requests = await RequestStatusModel.getRequestsByStatuses(allowedStatuses);
             res.status(200).json(requests);
         } catch (error) {

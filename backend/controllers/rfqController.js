@@ -13,7 +13,6 @@ exports.createRFQ = async (req, res) => {
       return res.status(401).json({ message: "ไม่พบข้อมูลผู้ใช้จาก token" });
     }
 
-    console.log("Creating RFQ for user_id:", userId); // เพิ่ม log เพื่อดีบัก
 
     const result = await rfqModel.createRFQ({ created_by: userId, items });
     res.status(201).json({ message: "สร้างใบขอราคาเรียบร้อย", ...result });

@@ -2,32 +2,25 @@
 const cron = require("node-cron");
 const { runManagerRules } = require("./services/manager");
 const { runUserNotifications } = require("./services/user");
+const { runPurchasingRules } = require("./services/purchasing"); // 👈 เพิ่ม
 
-// 🚀 เรียกตอน server start ทันที (ไม่ต้องรอ cron)
-// (async () => {
-//   console.log("⚡ Run Manager Rules on server start...");
-//   await runManagerRules();
-// })();
+// 🚀 รันทุก ๆ 10 วินาที (Dev/Test Mode)
+cron.schedule("*/10 * * * * *", async () => {
+  console.log("🚀 Running Manager Rules (every 10s)...");
+  await runManagerRules();
 
-// cron.schedule("*/10 * * * * *", async () => {
-//   console.log("🚀 Running Manager Rules (every 10s)...");
-//   await runManagerRules();
+  console.log("👤 Running User Notifications (every 10s)...");
+  await runUserNotifications();
 
-//   console.log("👤 Running User Notifications (every 10s)...");
-//   await runUserNotifications();
-// });
+  console.log("📦 Running Purchasing Rules (every 10s)...");
+  await runPurchasingRules();
+});
 
-
-// // 🟢 โหมด Production → ทุกวัน 00:05
+// // 🟢 Production Mode → ทุกวันเวลา 00:05
 // cron.schedule("5 0 * * *", async () => {
 //   console.log("🕛 Running Manager Rules (daily 00:05)...");
 //   await runManagerRules();
-// });
 
-// 🟡 โหมด Dev/Test → ทุก 10 วินาที (ปรับได้)
-// if (process.env.NODE_ENV !== "production") {
-//   setInterval(async () => {
-//     console.log("⚡ Dev Mode: Running Manager Rules (every 10s)...");
-//     await runManagerRules();
-//   }, 10000);
-// }
+//   console.log("🕛 Running Purchasing Rules (daily 00:05)...");
+//   await runPurchasingRules();
+// });

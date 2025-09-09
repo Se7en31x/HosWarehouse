@@ -8,13 +8,13 @@ const authMiddleware = require('../middleware/auth'); // ✅ import middleware
 // --------------------------------------------------------
 router.get(
   '/inventoryCheck/all',
-  authMiddleware(['marehouse_manager']), // 🔐 เฉพาะ manage
+  authMiddleware(['warehouse_manager']), // 🔐 เฉพาะ manage
   inventoryController.getAllItems
 );
 
 router.get(
   '/inventoryCheck/:id',
-  authMiddleware(['marehouse_manager']), // 🔐 เฉพาะ manage
+  authMiddleware(['warehouse_manager']), // 🔐 เฉพาะ manage
   inventoryController.getItemById
 );
 
@@ -31,14 +31,14 @@ router.get(
 // --------------------------------------------------------
 router.post(
   '/damaged',
-  authMiddleware(['marehouse_manager']), // 
+  authMiddleware(['warehouse_manager']), // 
   inventoryController.reportDamaged
 );
 
 
 router.post(
   '/inventory/adjust',
-  authMiddleware(['marehouse_manager']), 
+  authMiddleware(['warehouse_manager']), 
   inventoryController.adjustInventory
 );
 

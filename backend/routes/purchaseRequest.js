@@ -6,7 +6,7 @@ const authMiddleware = require("../middleware/auth");
 // ✅ ดึงสินค้า (สำหรับเลือกตอนสร้าง PR) → เฉพาะ warehouse_manager
 router.get(
   "/pr/items",
-  authMiddleware(["marehouse_manager"]),
+  authMiddleware(["warehouse_manager"]),
   purchaseRequestController.getItems
 );
 
@@ -41,7 +41,7 @@ router.get(
 // ✅ เพิ่มใหม่ (สร้าง PR) → เฉพาะ warehouse_manager
 router.post(
   "/pr",
-  authMiddleware(["marehouse_manager"]),
+  authMiddleware(["warehouse_manager"]),
   purchaseRequestController.createPurchaseRequest
 );
 

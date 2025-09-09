@@ -46,8 +46,6 @@ exports.getItemById = async (req, res) => {
 };
 
 exports.updateItem = async (req, res) => {
-  console.log('req.body:', req.body);
-  console.log('req.file:', req.file);
   const { id } = req.params;
   const category = req.body.item_category;
 

@@ -6,7 +6,7 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
   client_encoding: 'UTF8',
-  max: 5,                 // จำกัด connection pool (default 10)
+  max: 10,                 // จำกัด connection pool (default 10)
   idleTimeoutMillis: 30000, // ปิด connection ที่ idle เกิน 30s
   connectionTimeoutMillis: 2000,
 });

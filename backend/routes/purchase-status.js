@@ -4,7 +4,7 @@ const { pool } = require("../config/db");
 const authMiddleware = require("../middleware/auth");
 
 // ✅ API: ติดตามสถานะคำขอซื้อ (ฝ่ายคลัง)
-router.get("/purchase-status", authMiddleware(["manage", "marehouse_manager"]), async (req, res) => {
+router.get("/purchase-status", authMiddleware(["manage", "warehouse_manager"]), async (req, res) => {
   try {
     const sql = `
       SELECT 

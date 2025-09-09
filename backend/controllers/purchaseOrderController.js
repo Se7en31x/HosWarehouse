@@ -127,8 +127,6 @@ exports.uploadPOFiles = async (req, res) => {
       return res.status(400).json({ message: "กรุณาเลือกไฟล์อัปโหลด" });
     }
 
-    console.log("Full req.body:", req.body);
-
     const categories = req.body["categories[]"] || req.body.categories
       ? Array.isArray(req.body["categories[]"] || req.body.categories)
         ? (req.body["categories[]"] || req.body.categories).map((cat) => cat?.trim().toLowerCase())
@@ -140,15 +138,6 @@ exports.uploadPOFiles = async (req, res) => {
         ? (req.body["originalNames[]"] || req.body.originalNames)
         : [(req.body["originalNames[]"] || req.body.originalNames)]
       : new Array(req.files.length).fill(null);
-
-    console.log("Received files:", req.files.map((f) => f.originalname));
-    console.log("Received categories (raw):", req.body["categories[]"] || req.body.categories);
-    console.log("Received original names (raw):", req.body["originalNames[]"] || req.body.originalNames);
-    console.log("Processed categories:", categories);
-    console.log("Processed original names:", originalNames);
-    console.log("Number of files:", req.files.length);
-    console.log("Number of categories:", categories.length);
-    console.log("Number of original names:", originalNames.length);
 
     if (req.files.length !== categories.length || req.files.length !== originalNames.length) {
       console.error(`Mismatch: ${req.files.length} files, ${categories.length} categories, ${originalNames.length} original names`);
@@ -167,10 +156,6 @@ exports.uploadPOFiles = async (req, res) => {
         console.warn(`Invalid category for file ${safeFileName}: "${categories[i]}", defaulting to "other"`);
       }
 
-      console.log("Original filename:", originalFileName);
-      console.log("Cleaned filename:", safeFileName);
-      console.log("Generated filePath:", filePath);
-
       // อัปโหลดไฟล์โดยใช้ filePath ที่เข้ารหัสแล้ว
       const { data, error } = await supabase.storage
         .from("hospital-files")
@@ -180,8 +165,6 @@ exports.uploadPOFiles = async (req, res) => {
         console.error("Supabase upload error details:", error);
         throw new Error(`Failed to upload file ${safeFileName}: ${error.message}`);
       }
-
-      console.log("Supabase upload response:", data);
 
       const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/hospital-files/${filePath}`;
 
@@ -211,7 +194,6 @@ exports.updatePOAttachments = async (req, res) => {
     const userId = req.user?.id || null;
     const { existingAttachments } = req.body;
 
-    console.log("Full req.body:", req.body);
 
     const categories = req.body["categories[]"] || req.body.categories
       ? Array.isArray(req.body["categories[]"] || req.body.categories)
@@ -228,16 +210,6 @@ exports.updatePOAttachments = async (req, res) => {
       : req.files
       ? new Array(req.files.length).fill(null)
       : [];
-
-    console.log("Received files:", req.files?.map((f) => f.originalname) || "No files");
-    console.log("Received categories (raw):", req.body["categories[]"] || req.body.categories);
-    console.log("Received original names (raw):", req.body["originalNames[]"] || req.body.originalNames);
-    console.log("Processed categories:", categories);
-    console.log("Processed original names:", originalNames);
-    console.log("Number of files:", req.files?.length || 0);
-    console.log("Number of categories:", categories.length);
-    console.log("Number of original names:", originalNames.length);
-    console.log("Existing attachments:", existingAttachments);
 
     if (req.files && req.files.length !== categories.length) {
       console.error(`Mismatch: ${req.files.length} files, ${categories.length} categories`);
@@ -260,11 +232,6 @@ exports.updatePOAttachments = async (req, res) => {
         if (!validCategories.includes(categories[i])) {
           console.warn(`Invalid category for file ${safeFileName}: "${categories[i]}", defaulting to "other"`);
         }
-
-        console.log("Original filename:", originalFileName);
-        console.log("Cleaned filename:", safeFileName);
-        console.log("Generated filePath:", filePath);
-
         // อัปโหลดไฟล์โดยใช้ filePath ที่เข้ารหัสแล้ว
         const { data, error } = await supabase.storage
           .from("hospital-files")
@@ -275,7 +242,6 @@ exports.updatePOAttachments = async (req, res) => {
           throw new Error(`Failed to upload file ${safeFileName}: ${error.message}`);
         }
 
-        console.log("Supabase upload response:", data);
 
         const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/hospital-files/${filePath}`;
 
@@ -317,7 +283,6 @@ exports.getPOFiles = async (req, res) => {
 
     const filesWithUrls = files.map((file) => {
       const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/hospital-files/${file.file_path}`;
-      console.log("📂 Public URL for", file.original_file_name || file.file_name, ":", publicUrl);
       return { ...file, public_url: publicUrl };
     });
 
