@@ -25,11 +25,17 @@ router.get(
   rfqController.getPendingRFQs
 );
 
+router.get(
+  "/rfq/report",
+  authMiddleware(["purchasing_staff", "purchasing"]),
+  rfqController.getRFQReport
+);
 // ✅ ดึง RFQ รายการเดียวตาม ID → ฝ่ายจัดซื้อ
 router.get(
   "/rfq/:id",
   authMiddleware(["purchasing_staff", "purchasing"]),
   rfqController.getRFQById
 );
+
 
 module.exports = router;

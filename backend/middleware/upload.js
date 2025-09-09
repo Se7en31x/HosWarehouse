@@ -1,24 +1,21 @@
-// backend/middleware/upload.js
-const multer = require('multer');
-const path = require('path');
+const multer = require("multer");
 
-// ตั้งค่าที่เก็บไฟล์
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // โฟลเดอร์เก็บไฟล์
+const upload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: (req, file, cb) => {
+    // จำกัดประเภทไฟล์ให้เป็น PDF, JPEG, PNG เท่านั้น (สอดคล้องกับ frontend)
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png"];
+    if (!allowedTypes.includes(file.mimetype)) {
+      return cb(new Error("ไฟล์ต้องเป็น PDF, JPEG, หรือ PNG เท่านั้น"));
+    }
+    // แก้ไขการเข้ารหัสชื่อไฟล์ให้เป็น UTF-8
+    file.originalname = Buffer.from(file.originalname, "latin1").toString("utf8");
+    cb(null, true);
   },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname); // ดึงนามสกุลไฟล์
-    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`); // ชื่อไฟล์ใหม่
-  }
+  limits: {
+    fileSize: 10 * 1024 * 1024, // จำกัดขนาดไฟล์ที่ 10MB
+    files: 10, // จำกัดจำนวนไฟล์ต่อการอัปโหลด
+  },
 });
 
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png/;
-  const isValid = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  if (isValid) cb(null, true);
-  else cb(new Error('Only images are allowed'), false);
-};
-
-module.exports = multer({ storage, fileFilter });
+module.exports = upload;

@@ -1,13 +1,15 @@
-// models/rfqModel.js
 const { pool } = require("../config/db");
 const { generateDocNo } = require("../utils/docCounter");
 
+//
+// ✅ สร้าง RFQ
+//
 async function createRFQ({ created_by, items }) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
 
-    // ✅ ใช้ docCounter แทน Date.now()
+    // สร้างเลขที่ RFQ
     const rfqNo = await generateDocNo(client, "rfq");
 
     const { rows } = await client.query(
@@ -26,7 +28,7 @@ async function createRFQ({ created_by, items }) {
         [rfq_id, item.pr_id, item.pr_item_id, item.spec, item.qty, item.unit]
       );
 
-      // ✅ อัปเดตสถานะ PR ที่ถูกอ้างถึง
+      // อัปเดตสถานะ PR
       await client.query(
         `UPDATE purchase_requests 
          SET status = 'กำลังดำเนินการ', updated_at = NOW()
@@ -45,6 +47,9 @@ async function createRFQ({ created_by, items }) {
   }
 }
 
+//
+// ✅ ดึง RFQ ตาม ID
+//
 async function getRFQById(rfq_id) {
   const { rows: header } = await pool.query(
     `SELECT rfq.*, u.firstname, u.lastname
@@ -75,6 +80,9 @@ async function getRFQById(rfq_id) {
   return { header: header[0], items };
 }
 
+//
+// ✅ ดึง RFQ ทั้งหมด
+//
 async function getAllRFQs() {
   const { rows } = await pool.query(
     `SELECT 
@@ -105,6 +113,9 @@ async function getAllRFQs() {
   return rows;
 }
 
+//
+// ✅ ดึง RFQ ที่ Pending (ยังไม่ได้สร้าง PO)
+//
 async function getPendingRFQs() {
   try {
     const { rows } = await pool.query(`
@@ -129,9 +140,7 @@ async function getPendingRFQs() {
       LEFT JOIN rfq_items ri ON r.rfq_id = ri.rfq_id
       WHERE r.status = 'รอดำเนินการ'
         AND NOT EXISTS (
-          SELECT 1
-          FROM purchase_orders po
-          WHERE po.rfq_id = r.rfq_id
+          SELECT 1 FROM purchase_orders po WHERE po.rfq_id = r.rfq_id
         )
       GROUP BY r.rfq_id
       ORDER BY r.created_at DESC
@@ -143,5 +152,42 @@ async function getPendingRFQs() {
   }
 }
 
+//
+// ✅ Report RFQ
+//
+async function getRFQReport() {
+  try {
+    const { rows } = await pool.query(`
+      SELECT 
+        r.rfq_id,
+        r.rfq_no,
+        r.status,
+        r.created_at,
+        u.firstname,
+        u.lastname,
+        CAST(COUNT(ri.rfq_item_id) AS INT) AS item_count,
+        CAST(COALESCE(SUM(ri.qty), 0) AS INT) AS total_qty
+      FROM request_for_quotations r
+      LEFT JOIN rfq_items ri ON r.rfq_id = ri.rfq_id
+      LEFT JOIN "Admin".users u ON r.created_by = u.user_id   -- ✅ ใช้ schema Admin
+      GROUP BY r.rfq_id, r.rfq_no, r.status, r.created_at, u.firstname, u.lastname
+      ORDER BY r.created_at DESC
+    `);
+    return rows;
+  } catch (err) {
+    console.error("❌ getRFQReport SQL error:", err);
+    throw err;
+  }
+}
 
-module.exports = { createRFQ, getAllRFQs, getRFQById, getPendingRFQs };
+
+//
+// ✅ Export ฟังก์ชันทั้งหมด
+//
+module.exports = { 
+  createRFQ, 
+  getAllRFQs, 
+  getRFQById,
+  getPendingRFQs,
+  getRFQReport
+};

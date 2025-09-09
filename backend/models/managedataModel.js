@@ -131,131 +131,55 @@ exports.getItemById = async (id) => {
 };
 
 // ----------------------------------------------------------------------
-// อัปเดตข้อมูลในตารางหลัก
+// อัปเดตข้อมูลในตารางหลัก (รองรับ Supabase URL)
 // ----------------------------------------------------------------------
-exports.updateBaseItem = async (id, data, file) => {
+exports.updateBaseItem = async (id, data) => {
   try {
     const isBorrowable =
-      data.is_borrowable === true || data.is_borrowable === 'true' ? true : false;
+      data.is_borrowable === true || data.is_borrowable === 'true';
 
-    const updatedBy = data.updated_by || null; // ✅ มาจาก req.user.user_id ที่ controller ส่งมา
+    const updatedBy = data.updated_by || null;
 
-    let query;
-    let values;
+    const query = `
+      UPDATE items SET
+        item_category = $1,
+        item_name = $2,
+        item_sub_category = $3,
+        item_location = $4,
+        item_zone = $5,
+        item_unit = $6,
+        item_min = $7,
+        item_max = $8,
+        item_barcode = $9,
+        item_img = COALESCE($10, item_img),
+        original_name = COALESCE($11, original_name),
+        item_purchase_unit = $12,
+        item_conversion_rate = $13,
+        is_borrowable = $14,
+        updated_at = CURRENT_TIMESTAMP,
+        updated_by = $15
+      WHERE item_id = $16
+      RETURNING *;
+    `;
 
-    if (file) {
-      query = `
-        UPDATE items SET
-          item_category = $1,
-          item_name = $2,
-          item_sub_category = $3,
-          item_location = $4,
-          item_zone = $5,
-          item_unit = $6,
-          item_min = $7,
-          item_max = $8,
-          item_barcode = $9,
-          item_img = $10,
-          item_purchase_unit = $11,
-          item_conversion_rate = $12,
-          is_borrowable = $13,
-          updated_at = CURRENT_TIMESTAMP,
-          updated_by = $14
-        WHERE item_id = $15
-        RETURNING *;
-      `;
-      values = [
-        toNullOrValue(data.item_category),
-        toNullOrValue(data.item_name),
-        toNullOrValue(data.item_sub_category),
-        toNullOrValue(data.item_location),
-        toNullOrValue(data.item_zone),
-        toNullOrValue(data.item_unit),
-        toNullOrInt(data.item_min),
-        toNullOrInt(data.item_max),
-        toNullOrValue(data.item_barcode),
-        file.filename,
-        toNullOrValue(data.item_purchase_unit),
-        toNullOrFloat(data.item_conversion_rate),
-        isBorrowable,
-        updatedBy,
-        Number(id),
-      ];
-    } else if (data.item_img) {
-      query = `
-        UPDATE items SET
-          item_category = $1,
-          item_name = $2,
-          item_sub_category = $3,
-          item_location = $4,
-          item_zone = $5,
-          item_unit = $6,
-          item_min = $7,
-          item_max = $8,
-          item_barcode = $9,
-          item_img = $10,
-          item_purchase_unit = $11,
-          item_conversion_rate = $12,
-          is_borrowable = $13,
-          updated_at = CURRENT_TIMESTAMP,
-          updated_by = $14
-        WHERE item_id = $15
-        RETURNING *;
-      `;
-      values = [
-        toNullOrValue(data.item_category),
-        toNullOrValue(data.item_name),
-        toNullOrValue(data.item_sub_category),
-        toNullOrValue(data.item_location),
-        toNullOrValue(data.item_zone),
-        toNullOrValue(data.item_unit),
-        toNullOrInt(data.item_min),
-        toNullOrInt(data.item_max),
-        toNullOrValue(data.item_barcode),
-        toNullOrValue(data.item_img),
-        toNullOrValue(data.item_purchase_unit),
-        toNullOrFloat(data.item_conversion_rate),
-        isBorrowable,
-        updatedBy,
-        Number(id),
-      ];
-    } else {
-      query = `
-        UPDATE items SET
-          item_category = $1,
-          item_name = $2,
-          item_sub_category = $3,
-          item_location = $4,
-          item_zone = $5,
-          item_unit = $6,
-          item_min = $7,
-          item_max = $8,
-          item_barcode = $9,
-          item_purchase_unit = $10,
-          item_conversion_rate = $11,
-          is_borrowable = $12,
-          updated_at = CURRENT_TIMESTAMP,
-          updated_by = $13
-        WHERE item_id = $14
-        RETURNING *;
-      `;
-      values = [
-        toNullOrValue(data.item_category),
-        toNullOrValue(data.item_name),
-        toNullOrValue(data.item_sub_category),
-        toNullOrValue(data.item_location),
-        toNullOrValue(data.item_zone),
-        toNullOrValue(data.item_unit),
-        toNullOrInt(data.item_min),
-        toNullOrInt(data.item_max),
-        toNullOrValue(data.item_barcode),
-        toNullOrValue(data.item_purchase_unit),
-        toNullOrFloat(data.item_conversion_rate),
-        isBorrowable,
-        updatedBy,
-        Number(id),
-      ];
-    }
+    const values = [
+      toNullOrValue(data.item_category),
+      toNullOrValue(data.item_name),
+      toNullOrValue(data.item_sub_category),
+      toNullOrValue(data.item_location),
+      toNullOrValue(data.item_zone),
+      toNullOrValue(data.item_unit),
+      toNullOrInt(data.item_min),
+      toNullOrInt(data.item_max),
+      toNullOrValue(data.item_barcode),
+      toNullOrValue(data.item_img),        // ✅ URL จาก Supabase
+      toNullOrValue(data.original_name),   // ✅ เก็บชื่อไฟล์จริง
+      toNullOrValue(data.item_purchase_unit),
+      toNullOrFloat(data.item_conversion_rate),
+      isBorrowable,
+      updatedBy,
+      Number(id),
+    ];
 
     const result = await pool.query(query, values);
     return result.rows[0];
@@ -264,6 +188,7 @@ exports.updateBaseItem = async (id, data, file) => {
     throw error;
   }
 };
+
 
 // ----------------------------------------------------------------------
 // อัปเดต Medicine

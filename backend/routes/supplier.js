@@ -2,6 +2,12 @@ const express = require("express");
 const router = express.Router();
 const supplierController = require("../controllers/supplierController");
 const authMiddleware = require("../middleware/auth");
+// ✅ รายงาน Supplier → ฝ่ายจัดซื้อ
+router.get(
+  "/suppliers/report",
+  authMiddleware(["purchasing_staff", "purchasing"]),
+  supplierController.getSupplierReport   // ← ต้องมีใน controller
+);
 
 // ✅ ดึง supplier ทั้งหมด → ฝ่ายจัดซื้อ
 router.get(
@@ -44,5 +50,6 @@ router.delete(
   authMiddleware(["purchasing_staff", "purchasing"]),
   supplierController.deleteSupplier
 );
+
 
 module.exports = router;

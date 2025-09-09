@@ -371,8 +371,41 @@ async function receiveMoreGoods(client, grId, items, userId = 1) {
     throw err;
   }
 }
+async function getGRReport({ startDate, endDate }) {
+  let query = `
+    SELECT 
+      gr.gr_id,
+      gr.gr_no,
+      gr.gr_date,
+      gr.status,
+      po.po_no,
+      s.supplier_name,
+      i.item_name,
+      gri.qty_ordered,
+      gri.qty_received,
+      i.item_unit
+    FROM goods_receipts gr
+    LEFT JOIN purchase_orders po ON gr.po_id = po.po_id
+    LEFT JOIN suppliers s ON po.supplier_id = s.supplier_id
+    LEFT JOIN goods_receipt_items gri ON gr.gr_id = gri.gr_id
+    LEFT JOIN items i ON gri.item_id = i.item_id
+  `;
 
+  const params = [];
+  if (startDate && endDate) {
+    query += ` WHERE gr.gr_date BETWEEN $1 AND $2 `;
+    params.push(startDate, endDate);
+  }
+
+  query += `
+    ORDER BY gr.gr_date DESC, gr.gr_no
+  `;
+
+  const { rows } = await pool.query(query, params);
+  return rows;
+}
 module.exports = {
+  getGRReport,
   getAllGoodsReceipts,
   getGoodsReceiptById,
   createGoodsReceipt,

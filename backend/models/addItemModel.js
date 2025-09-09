@@ -18,11 +18,11 @@ async function addBaseItem(client, data) {
     INSERT INTO items (
       item_name, item_category, item_unit,
       item_location, item_min, item_max,
-      item_img, item_zone, item_barcode, item_sub_category,
+      item_img, original_name, item_zone, item_barcode, item_sub_category,
       item_status, is_deleted,
       item_purchase_unit, item_conversion_rate,
       is_borrowable, created_by
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
     RETURNING item_id;
   `;
   const vals = [
@@ -32,7 +32,8 @@ async function addBaseItem(client, data) {
     toNullOrValue(data.item_location),
     toNullOrInt(data.item_min),
     toNullOrInt(data.item_max),
-    toNullOrValue(data.item_img),
+    toNullOrValue(data.item_img),        // ✅ เก็บ URL
+    toNullOrValue(data.original_name),  // ✅ เก็บชื่อไฟล์จริง
     toNullOrValue(data.item_zone),
     toNullOrValue(data.item_barcode),
     toNullOrValue(data.item_sub_category),
@@ -40,8 +41,8 @@ async function addBaseItem(client, data) {
     false,
     toNullOrValue(data.item_purchase_unit),
     toNullOrFloat(data.item_conversion_rate),
-    data.is_borrowable === true || data.is_borrowable === "true", // ✅ แปลงเป็น boolean
-    data.created_by || null, // ✅ จาก token
+    data.is_borrowable === true || data.is_borrowable === "true",
+    data.created_by || null,
   ];
   const { rows } = await client.query(sql, vals);
   return rows[0].item_id;

@@ -108,6 +108,52 @@ async function deleteSupplier(id) {
   return { message: "Supplier deleted" };
 }
 
+async function getSupplierReport({ startDate, endDate }) {
+  console.log("📥 getSupplierReport() startDate:", startDate, "endDate:", endDate);
+
+  let whereClause = "";
+  const params = [];
+
+  if (startDate && endDate) {
+    params.push(startDate, endDate);
+    whereClause = `WHERE po.po_date BETWEEN $${params.length - 1} AND $${params.length}`;
+  } else if (startDate) {
+    params.push(startDate);
+    whereClause = `WHERE po.po_date >= $${params.length}`;
+  } else if (endDate) {
+    params.push(endDate);
+    whereClause = `WHERE po.po_date <= $${params.length}`;
+  }
+
+  const sql = `
+    SELECT
+      s.supplier_id,
+      s.supplier_name,
+      s.supplier_contact_name,
+      s.supplier_phone,
+      s.supplier_email,
+      s.is_active,
+      COUNT(po.po_id) AS total_po,
+      COALESCE(SUM(po.grand_total), 0) AS total_spent
+    FROM suppliers s
+    LEFT JOIN purchase_orders po
+      ON s.supplier_id = po.supplier_id
+      ${whereClause}
+    GROUP BY s.supplier_id, s.supplier_name, s.supplier_contact_name,
+             s.supplier_phone, s.supplier_email, s.is_active
+    ORDER BY total_spent DESC
+  `;
+
+  console.log("📥 Executing SQL with params:", sql, params);
+
+  const { rows } = await pool.query(sql, params);
+  console.log("📊 Supplier Report rows:", rows.length);
+  return rows;
+}
+
+
+
+
 module.exports = {
   getAllSuppliers,
   getSupplierById,
@@ -115,4 +161,5 @@ module.exports = {
   updateSupplier,
   deleteSupplier,
   toggleSupplierStatus,
+  getSupplierReport, // ✅ เพิ่มตรงนี้
 };

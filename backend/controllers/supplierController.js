@@ -76,3 +76,15 @@ exports.deleteSupplier = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+// ✅ REPORT
+exports.getSupplierReport = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query; // client ส่ง query param
+    const report = await supplierModel.getSupplierReport({ startDate, endDate });
+    res.json(report);
+  } catch (err) {
+    console.error("❌ Controller getSupplierReport error:", err);
+    res.status(500).json({ message: "โหลดรายงานซัพพลายเออร์ไม่สำเร็จ", error: err.message });
+  }
+};

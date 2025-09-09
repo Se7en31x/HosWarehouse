@@ -82,9 +82,34 @@ async function receiveMore(req, res) {
   }
 }
 
+// ===== GET: GR Report =====
+async function getGRReport(req, res) {
+  try {
+    const { monthRange, startDate, endDate } = req.query;
+
+    let start = startDate;
+    let end = endDate;
+
+    if (monthRange && monthRange !== "all" && monthRange !== "custom") {
+      const now = new Date();
+      end = now.toISOString().split("T")[0];
+      const past = new Date();
+      past.setMonth(past.getMonth() - parseInt(monthRange));
+      start = past.toISOString().split("T")[0];
+    }
+
+    const result = await grModel.getGRReport({ startDate: start, endDate: end });
+    res.json(result);
+  } catch (err) {
+    console.error("❌ getGRReport error:", err);
+    res.status(500).json({ message: "เกิดข้อผิดพลาด", error: err.message });
+  }
+}
+
 module.exports = {
   receiveMore,
   getAllGoodsReceipts,
   getGoodsReceiptById,
   createGoodsReceipt,
+  getGRReport, // ✅ export ออกมาด้วย
 };

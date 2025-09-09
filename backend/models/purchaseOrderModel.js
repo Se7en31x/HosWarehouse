@@ -1,6 +1,14 @@
 const { pool } = require("../config/db");
 const { generateDocNo } = require("../utils/docCounter");
 
+// โหลด environment variables
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const BUCKET = 'hospital-files'; // กำหนด bucket name
+
+if (!SUPABASE_URL) {
+  throw new Error('SUPABASE_URL is not defined in environment variables');
+}
+
 // ✅ ดึง PO ทั้งหมด (รวม items + files)
 async function getAllPOs(status) {
   try {
@@ -44,10 +52,12 @@ async function getAllPOs(status) {
             DISTINCT jsonb_build_object(
               'file_id', pf.file_id,
               'file_name', pf.file_name,
+              'original_file_name', pf.original_file_name,
               'file_type', pf.file_type,
-              'file_category', pf.file_category, -- ✅ เพิ่มตรงนี้
+              'file_category', pf.file_category,
               'file_path', pf.file_path,
               'file_url', pf.file_url,
+              'public_url', pf.public_url,
               'uploaded_at', pf.uploaded_at
             )
           ) FILTER (WHERE pf.file_id IS NOT NULL), '[]'
@@ -119,10 +129,12 @@ async function getPOById(id) {
             DISTINCT jsonb_build_object(
               'file_id', pf.file_id,
               'file_name', pf.file_name,
+              'original_file_name', pf.original_file_name,
               'file_type', pf.file_type,
-              'file_category', pf.file_category, -- ✅ เพิ่มตรงนี้
+              'file_category', pf.file_category,
               'file_path', pf.file_path,
               'file_url', pf.file_url,
+              'public_url', pf.public_url,
               'uploaded_at', pf.uploaded_at
             )
           ) FILTER (WHERE pf.file_id IS NOT NULL), '[]'
@@ -160,7 +172,7 @@ async function createPO({ supplier_id, items, notes, created_by }) {
     const { rows } = await client.query(
       `INSERT INTO purchase_orders 
         (po_no, po_date, supplier_id, status, notes, subtotal, vat_amount, grand_total, is_vat_included, created_by, created_at)
-        VALUES ($1, NOW(), $2,'รอดำเนินการ',$3,$4,$5,$6,false,$7,NOW())
+        VALUES ($1, NOW(), $2, 'รอดำเนินการ', $3, $4, $5, $6, false, $7, NOW())
         RETURNING po_id`,
       [po_no, supplier_id, notes, subtotal, vat_amount, grand_total, created_by]
     );
@@ -170,7 +182,7 @@ async function createPO({ supplier_id, items, notes, created_by }) {
     for (const item of items || []) {
       await client.query(
         `INSERT INTO purchase_order_items (po_id, item_id, quantity, unit, price, note)
-          VALUES ($1,$2,$3,$4,$5,$6)`,
+          VALUES ($1, $2, $3, $4, $5, $6)`,
         [po_id, item.item_id, item.quantity, item.unit, item.price, item.note || ""]
       );
     }
@@ -179,6 +191,7 @@ async function createPO({ supplier_id, items, notes, created_by }) {
     return await getPOById(po_id);
   } catch (err) {
     await client.query("ROLLBACK");
+    console.error("Error in createPO:", err);
     throw new Error(`Failed to create PO: ${err.message}`);
   } finally {
     client.release();
@@ -215,7 +228,7 @@ async function updatePO(id, { items, notes, status }) {
     for (const item of items || []) {
       await client.query(
         `INSERT INTO purchase_order_items (po_id, item_id, quantity, unit, price, note)
-          VALUES ($1,$2,$3,$4,$5,$6)`,
+          VALUES ($1, $2, $3, $4, $5, $6)`,
         [id, item.item_id, item.quantity, item.unit, item.price, item.note || ""]
       );
     }
@@ -224,6 +237,7 @@ async function updatePO(id, { items, notes, status }) {
     return await getPOById(id);
   } catch (err) {
     await client.query("ROLLBACK");
+    console.error("Error in updatePO:", err);
     throw new Error(`Failed to update PO ${id}: ${err.message}`);
   } finally {
     client.release();
@@ -302,17 +316,30 @@ async function addPOFiles(po_id, files, uploaded_by = 1) {
   try {
     await client.query("BEGIN");
 
-    const insertPromises = files.map((f) => {
+    const insertPromises = files.map(async (f) => {
       const normalizedPath = f.file_path.replace(/\\/g, "/");
+      const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${normalizedPath}`;
+
       return client.query(
         `INSERT INTO po_files 
-         (po_id, file_name, file_type, file_category, file_path, file_url, uploaded_by, uploaded_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())`,
-        [po_id, f.file_name, f.file_type, f.file_category, normalizedPath, f.file_url.replace(/\\/g, "/"), uploaded_by]
+         (po_id, file_name, original_file_name, file_type, file_category, file_path, file_url, public_url, uploaded_by, uploaded_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+         RETURNING file_id`,
+        [
+          po_id,
+          f.file_name,
+          f.original_file_name || f.file_name, // ใช้ original_file_name ถ้ามี
+          f.file_type,
+          f.file_category,
+          normalizedPath,
+          f.file_url.replace(/\\/g, "/"),
+          publicUrl,
+          uploaded_by,
+        ]
       );
     });
-    await Promise.all(insertPromises);
 
+    await Promise.all(insertPromises);
     await client.query("COMMIT");
     return await getPOById(po_id);
   } catch (err) {
@@ -324,13 +351,13 @@ async function addPOFiles(po_id, files, uploaded_by = 1) {
   }
 }
 
-
 // ✅ อัปเดตไฟล์แนบของ PO
 async function updatePOFiles(po_id, newFiles, existingFileIdsToKeep = [], uploaded_by = 1) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
 
+    // ลบไฟล์ที่ไม่ได้อยู่ใน existingFileIdsToKeep
     if (existingFileIdsToKeep.length > 0) {
       const placeholders = existingFileIdsToKeep.map((_, i) => `$${i + 2}`).join(",");
       await client.query(
@@ -341,16 +368,31 @@ async function updatePOFiles(po_id, newFiles, existingFileIdsToKeep = [], upload
       await client.query(`DELETE FROM po_files WHERE po_id = $1`, [po_id]);
     }
 
-    for (const f of newFiles) {
+    // เพิ่มไฟล์ใหม่ลงในฐานข้อมูล
+    const insertPromises = newFiles.map(async (f) => {
       const normalizedPath = f.file_path.replace(/\\/g, "/");
-      await client.query(
-        `INSERT INTO po_files 
-         (po_id, file_name, file_type, file_category, file_path, file_url, uploaded_by, uploaded_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())`,
-        [po_id, f.file_name, f.file_type, f.file_category, normalizedPath, f.file_url.replace(/\\/g, "/"), uploaded_by]
-      );
-    }
+      const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${normalizedPath}`;
 
+      return client.query(
+        `INSERT INTO po_files 
+         (po_id, file_name, original_file_name, file_type, file_category, file_path, file_url, public_url, uploaded_by, uploaded_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+         RETURNING file_id`,
+        [
+          po_id,
+          f.file_name,
+          f.original_file_name || f.file_name, // ใช้ original_file_name ถ้ามี
+          f.file_type,
+          f.file_category,
+          normalizedPath,
+          f.file_url.replace(/\\/g, "/"),
+          publicUrl,
+          uploaded_by,
+        ]
+      );
+    });
+
+    await Promise.all(insertPromises);
     await client.query("COMMIT");
     return await getPOById(po_id);
   } catch (err) {
@@ -378,13 +420,42 @@ async function markPOAsUsed(po_id) {
   }
 }
 
-  module.exports = {
-    getAllPOs,
-    getPOById,
-    createPO,
-    updatePO,
-    createPOFromRFQ,
-    addPOFiles,
-    updatePOFiles,
-    markPOAsUsed,
-  };
+// ✅ ดึงไฟล์ของ PO ตาม id
+async function getPOFiles(po_id) {
+  try {
+    const { rows } = await pool.query(
+      `SELECT 
+         file_id,
+         po_id,
+         file_name,
+         original_file_name,
+         file_type,
+         file_category,
+         file_path,
+         file_url,
+         public_url,
+         uploaded_by,
+         uploaded_at
+       FROM po_files
+       WHERE po_id = $1
+       ORDER BY uploaded_at DESC`,
+      [po_id]
+    );
+    return rows;
+  } catch (err) {
+    console.error("Error in getPOFiles:", err);
+    throw new Error(`Failed to fetch files for PO ${po_id}: ${err.message}`);
+  }
+}
+
+module.exports = {
+  getAllPOs,
+  getPOById,
+  createPO,
+  updatePO,
+  createPOFromRFQ,
+  addPOFiles,
+  updatePOFiles,
+  markPOAsUsed,
+  getPOFiles,
+};

@@ -10,10 +10,17 @@ router.get(
   purchaseRequestController.getItems
 );
 
+// ✅ รายงาน PR (ต้องวางก่อน /pr/:id เพื่อไม่ชน)
+router.get(
+  "/pr/report",
+  authMiddleware(["purchasing_staff", "purchasing"]),
+  purchaseRequestController.getPRReport
+);
+
 // ✅ ดึง PR Header ทั้งหมด → ฝ่ายจัดซื้อ
 router.get(
   "/pr",
-  authMiddleware(["purchasing_staff", "purchasing"]), // ✅ อนุญาตทั้ง staff และ manager
+  authMiddleware(["purchasing_staff", "purchasing"]),
   purchaseRequestController.getAllPurchaseRequests
 );
 

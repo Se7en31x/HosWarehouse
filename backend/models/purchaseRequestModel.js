@@ -111,10 +111,46 @@ async function createPurchaseRequest({ requester_id, item_id, qty_requested, uni
   }
 }
 
+async function getPRReport({ startDate, endDate }) {
+  let query = `
+    SELECT 
+      pr.pr_id,
+      pr.pr_no,
+      pr.created_at,
+      pr.status,
+      u.firstname,
+      u.lastname,
+      pri.pr_item_id,
+      pri.qty_requested,
+      pri.unit,
+      i.item_name,
+      i.item_category
+    FROM purchase_requests pr
+    JOIN purchase_request_items pri ON pr.pr_id = pri.pr_id
+    JOIN items i ON pri.item_id = i.item_id
+    LEFT JOIN "Admin".users u ON pr.requester_id = u.user_id
+  `;
+
+  const params = [];
+  if (startDate && endDate) {
+    query += ` WHERE pr.created_at::date BETWEEN $1 AND $2 `;
+    params.push(startDate, endDate);
+  }
+
+  query += `
+    ORDER BY pr.created_at DESC
+  `;
+
+  const { rows } = await pool.query(query, params);
+  return rows;
+}
+
+
 module.exports = {
   getItems,
   getAllPurchaseRequests,
   getAllPurchaseRequestItems,
   getPurchaseRequestById,
   createPurchaseRequest,
+  getPRReport
 };

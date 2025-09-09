@@ -3,6 +3,13 @@ const router = express.Router();
 const grController = require("../controllers/goodsReceiptController");
 const authMiddleware = require("../middleware/auth");
 
+// ✅ GR Report → ต้องอยู่บนสุด (กันชนกับ /gr/:id)
+router.get(
+  "/gr/report",
+  authMiddleware(["purchasing_staff", "purchasing"]),
+  grController.getGRReport
+);
+
 // ✅ GR List → ฝ่ายจัดซื้อ
 router.get(
   "/gr",

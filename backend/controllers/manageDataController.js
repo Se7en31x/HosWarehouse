@@ -1,7 +1,7 @@
 const manageDataModel = require('../models/managedataModel');
 const { getIO } = require('../socket');
 const inventoryModel = require('../models/inventoryModel');
-const { pool } = require('../config/db');
+const supabase = require('../supabase');
 
 exports.getManageData = async (req, res) => {
   try {
@@ -21,7 +21,6 @@ exports.deleteItem = async (req, res) => {
 
     const io = getIO();
     const updatedItems = await inventoryModel.getAllItemsDetailed();
-    // ✅ เปลี่ยนชื่อ Event จาก 'itemsData' เป็น 'itemsUpdated' ให้ตรงกับ Front-end
     io.emit('itemsUpdated', updatedItems);
 
     res.status(200).json({ success: true, message: 'ลบข้อมูลเรียบร้อย (soft delete)' });
@@ -39,7 +38,6 @@ exports.getItemById = async (req, res) => {
     if (!item) {
       return res.status(404).json({ error: 'ไม่พบรายการนี้' });
     }
-    console.log('ข้อมูลที่ดึงมาได้:', item);
     res.status(200).json(item);
   } catch (error) {
     console.error('❌ getItemById error:', error);
@@ -54,7 +52,30 @@ exports.updateItem = async (req, res) => {
   const category = req.body.item_category;
 
   try {
-    await manageDataModel.updateBaseItem(id, req.body, req.file);
+    // ✅ handle image upload
+    if (req.file) {
+      const originalName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
+      const ext = req.file.originalname.split('.').pop();
+      const safeName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${ext}`;
+      const filePath = `items/${safeName}`;
+
+      // upload to supabase
+      const { error: uploadError } = await supabase.storage
+        .from('hospital-files')
+        .upload(filePath, req.file.buffer, { contentType: req.file.mimetype });
+
+      if (uploadError) throw uploadError;
+
+      const imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/hospital-files/${filePath}`;
+
+      req.body.item_img = imageUrl;
+      req.body.original_name = originalName;
+    }
+
+    // ✅ update base item
+    await manageDataModel.updateBaseItem(id, req.body);
+
+    // ✅ update detail by category
     switch (category) {
       case 'medicine':
         await manageDataModel.updateMedicine(id, req.body);
@@ -77,12 +98,11 @@ exports.updateItem = async (req, res) => {
 
     const io = getIO();
     const updatedItems = await inventoryModel.getAllItemsDetailed();
-    // ✅ เปลี่ยนชื่อ Event จาก 'itemsData' เป็น 'itemsUpdated' ให้ตรงกับ Front-end
     io.emit('itemsUpdated', updatedItems);
 
     res.status(200).json({ message: 'อัปเดตข้อมูลสำเร็จ' });
   } catch (err) {
     console.error('Update error:', err);
-    res.status(500).json({ error: 'เกิดข้อผิดพลาดขณะอัปเดตข้อมูล' });
+    res.status(500).json({ error: 'เกิดข้อผิดพลาดขณะอัปเดตข้อมูล', details: err.message });
   }
 };
