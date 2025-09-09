@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import styles from "./page.module.css";
 import { purchasingAxios } from "@/app/utils/axiosInstance";
 import { FaSearch, FaPlusCircle, FaTimes, FaEye } from "react-icons/fa";
@@ -27,8 +27,6 @@ const StatusBadge = ({ poStatus }) => {
 const PoAndRfqPage = () => {
   const [rfqs, setRfqs] = useState([]);
   const [selectedRFQ, setSelectedRFQ] = useState(null);
-
-  // ✅ Suppliers
   const [suppliers, setSuppliers] = useState([]);
   const [selectedSupplierId, setSelectedSupplierId] = useState("");
   const [supplier, setSupplier] = useState({
@@ -38,8 +36,6 @@ const PoAndRfqPage = () => {
     email: "",
     taxId: "",
   });
-
-  // ✅ Pricing & PO
   const [prices, setPrices] = useState({});
   const [discounts, setDiscounts] = useState({});
   const [attachments, setAttachments] = useState({});
@@ -52,11 +48,20 @@ const PoAndRfqPage = () => {
   const [filterStatus, setFilterStatus] = useState("ทั้งหมด");
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // ✅ เพิ่ม state สำหรับประเภทการคิดภาษี
   const [isVatInclusive, setIsVatInclusive] = useState(false);
+  const fileInputRefs = useRef({});
 
-  // ✅ โหลด RFQ + PO + Suppliers
+  const validCategories = [
+    "quotation",
+    "delivery_note",
+    "tax_invoice",
+    "invoice",
+    "payment_proof",
+    "receipt",
+    "contract",
+    "other",
+  ];
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -94,7 +99,12 @@ const PoAndRfqPage = () => {
       setSupplier({ name: "", address: "", phone: "", email: "", taxId: "" });
       setSelectedSupplierId("");
       setNotes("");
-      setIsVatInclusive(false); // ✅ Reset isVatInclusive เมื่อเปลี่ยน RFQ
+      setIsVatInclusive(false);
+      Object.keys(fileInputRefs.current).forEach((type) => {
+        if (fileInputRefs.current[type]) {
+          fileInputRefs.current[type].value = "";
+        }
+      });
       return;
     }
     try {
@@ -106,7 +116,12 @@ const PoAndRfqPage = () => {
       setVat(0);
       setGrandTotal(0);
       setAttachments({});
-      setIsVatInclusive(false); // ✅ Reset isVatInclusive เมื่อเปลี่ยน RFQ
+      setIsVatInclusive(false);
+      Object.keys(fileInputRefs.current).forEach((type) => {
+        if (fileInputRefs.current[type]) {
+          fileInputRefs.current[type].value = "";
+        }
+      });
     } catch (err) {
       Swal.fire({
         title: "ผิดพลาด",
@@ -126,7 +141,6 @@ const PoAndRfqPage = () => {
     setDiscounts({ ...discounts, [itemId]: parseFloat(value) || 0 });
   };
 
-  // ✅ แก้ไขการคำนวณเพื่อให้รองรับการรวมภาษีแล้ว
   useEffect(() => {
     if (!selectedRFQ) return;
     let totalItemsPrice = selectedRFQ.items.reduce((sum, item) => {
@@ -155,18 +169,61 @@ const PoAndRfqPage = () => {
   }, [selectedRFQ, prices, discounts, isVatInclusive]);
 
   const handleAttachmentChange = (e, type) => {
+    if (!validCategories.includes(type)) {
+      Swal.fire({
+        title: "ผิดพลาด",
+        text: `หมวดหมู่ไม่ถูกต้อง: ${type}`,
+        icon: "error",
+        confirmButtonText: "ตกลง",
+        customClass: { confirmButton: styles.swalButton },
+      });
+      return;
+    }
+
     const files = Array.from(e.target.files);
-    setAttachments({
-      ...attachments,
-      [type]: [...(attachments[type] || []), ...files],
-    });
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png"];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+
+    for (const file of files) {
+      if (!allowedTypes.includes(file.type)) {
+        Swal.fire({
+          title: "ผิดพลาด",
+          text: `ไฟล์ ${file.name} ไม่ใช่ประเภทที่อนุญาต (PDF, JPEG, PNG เท่านั้น)`,
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          customClass: { confirmButton: styles.swalButton },
+        });
+        return;
+      }
+      if (file.size > maxSize) {
+        Swal.fire({
+          title: "ผิดพลาด",
+          text: `ไฟล์ ${file.name} มีขนาดเกิน 10MB`,
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          customClass: { confirmButton: styles.swalButton },
+        });
+        return;
+      }
+    }
+
+    console.log(`Selected files for ${type}:`, files.map((f) => f.name));
+
+    setAttachments((prev) => ({
+      ...prev,
+      [type]: [...(prev[type] || []), ...files],
+    }));
+
+    if (fileInputRefs.current[type]) {
+      fileInputRefs.current[type].value = "";
+    }
   };
 
   const handleRemoveAttachment = (type, idx) => {
-    setAttachments({
-      ...attachments,
-      [type]: attachments[type].filter((_, i) => i !== idx),
-    });
+    setAttachments((prev) => ({
+      ...prev,
+      [type]: prev[type].filter((_, i) => i !== idx),
+    }));
   };
 
   const handleCreatePO = async () => {
@@ -235,14 +292,48 @@ const PoAndRfqPage = () => {
 
       if (Object.keys(attachments).some((type) => attachments[type]?.length > 0)) {
         const formData = new FormData();
+        const files = [];
+        const categories = [];
+        const originalNames = [];
+
         Object.entries(attachments).forEach(([type, filesArray]) => {
-          filesArray.forEach((file) => {
-            formData.append("files", file);
-            formData.append("categories", type);
-          });
+          if (!validCategories.includes(type)) {
+            throw new Error(`หมวดหมู่ไม่ถูกต้อง: ${type}`);
+          }
+          if (filesArray?.length > 0) {
+            filesArray.forEach((file) => {
+              files.push(file);
+              categories.push(type);
+              originalNames.push(file.name); // ใช้ file.name เพื่อให้ได้ชื่อไฟล์ดั้งเดิม
+            });
+          }
         });
-        await purchasingAxios.post(`/po/${newPo.po_id}/upload`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
+
+        console.log("Files to send:", files.map((f) => f.name));
+        console.log("Original names:", originalNames);
+        console.log("Categories to send:", categories);
+        console.log("Number of files:", files.length);
+        console.log("Number of categories:", categories.length);
+        console.log("Number of original names:", originalNames.length);
+
+        if (files.length !== categories.length || files.length !== originalNames.length) {
+          throw new Error("จำนวนไฟล์, หมวดหมู่, หรือชื่อไฟล์ไม่ตรงกันใน frontend");
+        }
+
+        files.forEach((file, index) => {
+          formData.append("files", file);
+          formData.append("categories[]", categories[index]);
+          formData.append("originalNames[]", originalNames[index]);
+        });
+        formData.append("existingAttachments", JSON.stringify([]));
+
+        console.log("FormData contents:");
+        for (let pair of formData.entries()) {
+          console.log(`${pair[0]}:`, pair[1]);
+        }
+
+        await purchasingAxios.put(`/po/${newPo.po_id}/attachments`, formData, {
+          headers: { "Content-Type": "multipart/form-data; charset=utf-8" },
         });
       }
 
@@ -254,26 +345,29 @@ const PoAndRfqPage = () => {
         customClass: { confirmButton: styles.swalButton },
       });
 
-      setPoList((prev) => [
-        { ...newPo, attachments: newPo.attachments || [] },
-        ...prev,
-      ]);
+      const resPo = await purchasingAxios.get("/po");
+      setPoList(resPo.data);
 
-      // ✅ รีโหลด RFQ pending ใหม่
       const resRfq = await purchasingAxios.get("/rfq/pending");
       setRfqs(resRfq.data);
 
-      handleSelectRFQ(""); // ปิดฟอร์ม
+      handleSelectRFQ("");
     } catch (err) {
+      console.error("Frontend error:", err);
       Swal.fire({
         title: "ผิดพลาด",
-        text: err.response?.data?.message || err.message,
+        text: err.response?.data?.message || "เกิดข้อผิดพลาดในการสร้าง PO หรืออัปโหลดไฟล์",
         icon: "error",
         confirmButtonText: "ตกลง",
         customClass: { confirmButton: styles.swalButton },
       });
     } finally {
       setIsSubmitting(false);
+      Object.keys(fileInputRefs.current).forEach((type) => {
+        if (fileInputRefs.current[type]) {
+          fileInputRefs.current[type].value = "";
+        }
+      });
     }
   };
 
@@ -306,7 +400,6 @@ const PoAndRfqPage = () => {
           </div>
         </div>
 
-        {/* ฟอร์มสร้าง PO */}
         <section className={styles.formSection}>
           <div className={styles.selector}>
             <div className={styles.filterGroup}>
@@ -315,6 +408,7 @@ const PoAndRfqPage = () => {
                 value={selectedRFQ?.rfq_id || ""}
                 onChange={(e) => handleSelectRFQ(e.target.value)}
                 className={styles.input}
+                disabled={isSubmitting}
               >
                 <option value="">-- กรุณาเลือก --</option>
                 {rfqs.map((r) => (
@@ -337,12 +431,10 @@ const PoAndRfqPage = () => {
 
           {selectedRFQ && (
             <div className={styles.detail}>
-              {/* รายละเอียด RFQ */}
               <h2 className={styles.sectionTitle}>
                 รายละเอียด RFQ: {selectedRFQ?.header?.rfq_no || selectedRFQ?.rfq_no || "-"}
               </h2>
 
-              {/* ตารางสินค้า */}
               <div className={styles.tableSection}>
                 <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
                   <div className={styles.headerItem}>ชื่อสินค้า</div>
@@ -375,6 +467,7 @@ const PoAndRfqPage = () => {
                             value={unitPrice}
                             onChange={(e) => handlePriceChange(item.rfq_item_id, e.target.value)}
                             placeholder="0.00"
+                            disabled={isSubmitting}
                           />
                         </div>
                         <div className={styles.tableCell}>
@@ -384,6 +477,7 @@ const PoAndRfqPage = () => {
                             value={discount}
                             onChange={(e) => handleDiscountChange(item.rfq_item_id, e.target.value)}
                             placeholder="0.00"
+                            disabled={isSubmitting}
                           />
                         </div>
                         <div className={`${styles.tableCell} ${styles.centerCell}`}>
@@ -395,15 +489,14 @@ const PoAndRfqPage = () => {
                 </div>
               </div>
 
-              {/* สรุปยอด */}
               <div className={styles.summaryContainer}>
-                {/* ✅ เพิ่ม Checkbox สำหรับประเภทการคำนวณภาษี */}
                 <div className={styles.summaryRow}>
                   <label className={styles.checkboxLabel}>
                     <input
                       type="checkbox"
                       checked={isVatInclusive}
                       onChange={(e) => setIsVatInclusive(e.target.checked)}
+                      disabled={isSubmitting}
                     />
                     ราคาที่กรอกรวมภาษีแล้ว
                   </label>
@@ -422,7 +515,6 @@ const PoAndRfqPage = () => {
                 </div>
               </div>
 
-              {/* Supplier */}
               <div className={styles.section}>
                 <h3 className={styles.sectionTitle}>ข้อมูลบริษัท/ซัพพลายเออร์</h3>
                 <div className={styles.formGrid}>
@@ -443,18 +535,17 @@ const PoAndRfqPage = () => {
                         });
                       }
                     }}
+                    disabled={isSubmitting}
                   >
                     <option value="">-- เลือกซัพพลายเออร์ --</option>
-                    {/* ✅ แก้ไขการแสดงผลโดยการกรองเฉพาะผู้ขายที่ใช้งานอยู่ */}
                     {suppliers
-                      .filter(s => s.is_active)
+                      .filter((s) => s.is_active)
                       .map((s) => (
                         <option key={s.supplier_id} value={s.supplier_id}>
                           {s.supplier_name}
                         </option>
                       ))}
                   </select>
-
                   <input type="text" placeholder="ที่อยู่" value={supplier.address} className={styles.input} disabled />
                   <input type="text" placeholder="เบอร์โทร" value={supplier.phone} className={styles.input} disabled />
                   <input type="email" placeholder="อีเมล" value={supplier.email} className={styles.input} disabled />
@@ -462,7 +553,6 @@ const PoAndRfqPage = () => {
                 </div>
               </div>
 
-              {/* Attachments */}
               <div className={styles.section}>
                 <h3 className={styles.sectionTitle}>แนบไฟล์ประกอบ</h3>
                 <div className={styles.fileGrid}>
@@ -475,18 +565,24 @@ const PoAndRfqPage = () => {
                             type="file"
                             multiple
                             className={styles.fileInput}
+                            accept="application/pdf,image/jpeg,image/png"
                             onChange={(e) => handleAttachmentChange(e, f.type)}
+                            ref={(el) => (fileInputRefs.current[f.type] = el)}
+                            disabled={isSubmitting}
                           />
                         </div>
                       </label>
                       <div className={styles.fileList}>
                         {(attachments[f.type] || []).map((file, i) => (
-                          <div key={i} className={styles.fileItem}>
-                            <span className={styles.textWrap}>{file.name}</span>
+                          <div key={`${f.type}-${i}`} className={styles.fileItem}>
+                            <span className={styles.textWrap} title={file.name}>
+                              {file.name}
+                            </span>
                             <button
                               type="button"
                               className={`${styles.ghostBtn} ${styles.actionButton}`}
                               onClick={() => handleRemoveAttachment(f.type, i)}
+                              disabled={isSubmitting}
                             >
                               <FaTimes size={18} /> ลบ
                             </button>
@@ -498,7 +594,6 @@ const PoAndRfqPage = () => {
                 </div>
               </div>
 
-              {/* Notes */}
               <div className={styles.section}>
                 <h3 className={styles.sectionTitle}>หมายเหตุ</h3>
                 <textarea
@@ -506,10 +601,10 @@ const PoAndRfqPage = () => {
                   placeholder="ระบุหมายเหตุเพิ่มเติม..."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
+                  disabled={isSubmitting}
                 />
               </div>
 
-              {/* Buttons */}
               <div className={styles.footer}>
                 <button
                   className={`${styles.primaryButton} ${styles.actionButton}`}
@@ -530,7 +625,6 @@ const PoAndRfqPage = () => {
           )}
         </section>
 
-        {/* รายการ PO */}
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>รายการใบสั่งซื้อ</h2>
           <div className={styles.toolbar}>

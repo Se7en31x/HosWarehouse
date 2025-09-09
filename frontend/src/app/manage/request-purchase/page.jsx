@@ -8,22 +8,16 @@ import { connectSocket, disconnectSocket } from "@/app/utils/socket";
 import Swal from "sweetalert2"; // เพิ่มการนำเข้า SweetAlert2
 
 const ImageWithFallback = ({ item }) => {
-  const initialUrl = item.item_img
-    ? String(item.item_img).startsWith("http")
-      ? item.item_img
-      : `http://localhost:5000/uploads/${item.item_img}`
-    : "http://localhost:5000/public/defaults/landscape.png";
   const fallbackUrl = "http://localhost:5000/public/defaults/landscape.png";
+
+  const initialUrl = item.item_img
+    ? item.item_img // ถ้าเป็น Supabase URL หรือ external URL ใช้ได้เลย
+    : fallbackUrl;
+
   const [imgSrc, setImgSrc] = useState(initialUrl);
 
   useEffect(() => {
-    setImgSrc(
-      item.item_img
-        ? String(item.item_img).startsWith("http")
-          ? item.item_img
-          : `http://localhost:5000/uploads/${item.item_img}`
-        : "http://localhost:5000/public/defaults/landscape.png"
-    );
+    setImgSrc(item.item_img ? item.item_img : fallbackUrl);
   }, [item.item_img]);
 
   return (
@@ -35,6 +29,7 @@ const ImageWithFallback = ({ item }) => {
     />
   );
 };
+
 
 const mapCategoryToThai = (category) => {
   switch ((category || "").toLowerCase()) {

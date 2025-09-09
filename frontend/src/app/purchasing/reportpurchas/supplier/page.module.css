@@ -1,0 +1,223 @@
+/* page.module.css */
+.mainHome {
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  background: #f1f5f9;
+
+}
+
+.container {
+  width: 100%;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ===== Header ===== */
+.pageTitle {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ===== Filters ===== */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+
+.searchContainer,
+.dateFilter {
+  display: flex;
+  align-items: center;
+  background: #f9fafb;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 8px 14px;
+  transition: all 0.2s ease;
+}
+
+.searchContainer:hover,
+.dateFilter:hover {
+  border-color: #60a5fa;
+  background: #f0f9ff;
+}
+
+.searchIcon,
+.filterIcon {
+  color: #64748b;
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+
+.input,
+.dateInput,
+.selectBox {
+  border: none;
+  outline: none;
+  font-size: 15px;
+  background: transparent;
+  width: 100%;
+}
+
+
+.dateSeparator {
+  color: #64748b;
+  font-size: 14px;
+  margin: 0 8px;
+}
+
+/* ===== Buttons ===== */
+.exportButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.exportBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.exportBtn.pdf {
+  background: linear-gradient(90deg, #dc2626, #f87171);
+  color: #fff;
+}
+.exportBtn.pdf:hover {
+  background: linear-gradient(90deg, #b91c1c, #dc2626);
+  transform: translateY(-2px);
+}
+
+.exportBtn.excel {
+  background: linear-gradient(90deg, #16a34a, #4ade80);
+  color: #fff;
+}
+.exportBtn.excel:hover {
+  background: linear-gradient(90deg, #15803d, #22c55e);
+  transform: translateY(-2px);
+}
+
+.exportBtn.reset {
+  background: linear-gradient(90deg, #6b7280, #9ca3af);
+  color: #fff;
+}
+.exportBtn.reset:hover {
+  background: linear-gradient(90deg, #4b5563, #6b7280);
+  transform: translateY(-2px);
+}
+
+/* ===== Table ===== */
+.tableSection {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.tableGrid {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1.2fr 2fr 1fr 1fr;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 14px;
+}
+
+.tableHeader {
+  background: #f1f5f9;
+  font-weight: 600;
+  color: #1e293b;
+  border-radius: 10px 10px 0 0;
+}
+
+.tableRow {
+  background: #fff;
+  transition: background 0.2s ease;
+}
+.tableRow:hover {
+  background: #f0f9ff;
+}
+
+.centerCell {
+  text-align: center;
+}
+
+.textWrap {
+  word-break: break-word;
+}
+
+/* ===== Messages ===== */
+.loadingContainer,
+.noDataMessage {
+  text-align: center;
+  padding: 32px;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+.loadingContainer {
+  background: #f9fafb;
+  color: #64748b;
+}
+
+.noDataMessage {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1024px) {
+  .tableGrid {
+    grid-template-columns: repeat(6, minmax(120px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 20px;
+  }
+
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .exportButtons {
+    justify-content: center;
+  }
+
+  .exportBtn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .tableGrid {
+    grid-template-columns: repeat(3, 1fr);
+    font-size: 13px;
+  }
+
+  .tableHeader {
+    font-size: 13px;
+  }
+}

@@ -405,7 +405,13 @@ const PurchaseRequestPage = () => {
                       </div>
                       <div className={`${styles.tableCell} ${styles.centerCell}`}>
                         {item.created_at
-                          ? new Date(item.created_at).toLocaleDateString("th-TH")
+                          ? new Date(item.created_at).toLocaleString("th-TH", {
+                            year: "numeric",
+                            month: "numeric",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
                           : "-"}
                       </div>
                     </div>

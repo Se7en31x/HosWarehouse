@@ -1,157 +1,36 @@
-/* page.module.css */
 .mainHome {
   display: flex;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #e2e8f0 0%, #f1f5f9 100%);
-  padding: 32px;
+  background-color: #f1f5f9;
 }
 
 .container {
   width: 100%;
   background-color: #fff;
-  border-radius: 20px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 32px;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 24px;
 }
 
 .header {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  border-bottom: 2px solid #3b82f6;
-  padding-bottom: 20px;
-  text-align: center;
+  gap: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 16px;
 }
 
 .pageTitle {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
-  font-size: 28px;
+  gap: 12px;
+  font-size: 26px;
   font-weight: 700;
   color: #1e293b;
-}
-
-.subtitle {
-  font-size: 18px;
-  color: #475569;
-  font-weight: 400;
-}
-
-.cardGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 32px;
-  padding: 32px 0;
-}
-
-.card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  padding: 32px;
-  background: linear-gradient(135deg, #f9fafb 0%, #e0f2fe 100%);
-  border: 2px solid #93c5fd;
-  border-radius: 16px;
-  text-decoration: none;
-  color: #1e293b;
-  font-size: 18px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.card:hover {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  border-color: #2563eb;
-  transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-}
-
-.card svg {
-  color: #2563eb;
-  font-size: 40px;
-  transition: transform 0.3s ease;
-}
-
-.card:hover svg {
-  transform: scale(1.1);
-}
-
-.textWrap {
-  word-break: break-word;
-  text-align: center;
-}
-
-/* Reused styles from HistoryDetailPage and RFQReport for consistency */
-.infoContainer {
-  width: 100%;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 24px;
-}
-
-.tableSection {
-  overflow-x: auto;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.tableGrid {
-  display: grid;
-  grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr;
-  gap: 20px;
-  padding: 16px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.tableHeader {
-  background: #f1f5f9;
-  font-weight: 600;
-  color: #1e293b;
-  padding: 16px;
-  border-radius: 10px 10px 0 0;
-}
-
-.tableRow {
-  background-color: #fff;
-  transition: background-color 0.2s ease;
-}
-
-.tableRow:hover {
-  background-color: #f0f9ff;
-}
-
-.centerCell {
-  text-align: center;
-}
-
-.loadingContainer {
-  text-align: center;
-  font-size: 16px;
-  color: #64748b;
-  padding: 32px;
-  background: #f9fafb;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.noDataMessage {
-  text-align: center;
-  font-size: 16px;
-  color: #dc2626;
-  padding: 32px;
-  background: #fef2f2;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .filters {
@@ -270,32 +149,75 @@
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-  .cardGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.tableSection {
+  overflow-x: auto;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
+.tableGrid {
+  display: grid;
+  /* ✅ ปรับเป็น 6 คอลัมน์ */
+  grid-template-columns: 2fr 1.2fr 1.5fr 1fr 1fr 1fr;
+  gap: 20px;
+  padding: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tableHeader {
+  background: #f1f5f9;
+  font-weight: 600;
+  color: #1e293b;
+  padding: 16px;
+  border-radius: 10px 10px 0 0;
+}
+
+.tableRow {
+  background-color: #fff;
+  transition: background-color 0.2s ease;
+}
+
+.tableRow:hover {
+  background-color: #f0f9ff;
+}
+
+.centerCell {
+  text-align: center;
+}
+
+.loadingContainer {
+  text-align: center;
+  font-size: 16px;
+  color: #64748b;
+  padding: 32px;
+  background: #f9fafb;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.noDataMessage {
+  text-align: center;
+  font-size: 16px;
+  color: #dc2626;
+  padding: 32px;
+  background: #fef2f2;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.textWrap {
+  word-break: break-word;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .container {
     padding: 16px;
   }
 
-  .infoContainer {
-    padding: 16px;
-  }
-
   .pageTitle {
-    font-size: 24px;
-  }
-
-  .subtitle {
-    font-size: 16px;
-  }
-
-  .cardGrid {
-    grid-template-columns: 1fr;
+    font-size: 22px;
   }
 
   .filters {
@@ -316,8 +238,9 @@
     width: 100%;
   }
 
+  /* ✅ ปรับให้เป็น 6 คอลัมน์เล็กๆ ตอนจอเล็ก */
   .tableGrid {
-    grid-template-columns: repeat(5, minmax(100px, 1fr));
+    grid-template-columns: repeat(6, minmax(100px, 1fr));
   }
 }
 

@@ -48,7 +48,6 @@
 
 .infoContainer {
   width: 100%;
-  max-width: 1280px;
   min-height: 100vh;
   background: var(--panel);
   color: var(--text);

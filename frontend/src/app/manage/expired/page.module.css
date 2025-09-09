@@ -202,7 +202,7 @@
 .tableGrid {
   display: grid;
   grid-template-columns:
-    minmax(100px, 1fr)
+    minmax(100px, 1.5fr)
     minmax(180px, 2fr)
     minmax(90px, 0.8fr)
     minmax(90px, 0.8fr)

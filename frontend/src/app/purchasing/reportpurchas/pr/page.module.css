@@ -1,0 +1,257 @@
+.mainHome {
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #f1f5f9;
+}
+
+.container {
+  width: 100%;
+  background-color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.pageTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 26px;
+  font-weight: 700;
+  color: #1e293b;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 16px;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  align-items: center;
+  padding: 16px 0;
+}
+
+.searchContainer {
+  display: flex;
+  align-items: center;
+  background: #f9fafb;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 10px 14px;
+  transition: all 0.2s ease;
+}
+
+.searchContainer:hover {
+  border-color: #60a5fa;
+  background: #f0f9ff;
+}
+
+.searchIcon {
+  color: #64748b;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.input {
+  border: none;
+  outline: none;
+  font-size: 15px;
+  padding: 8px;
+  background: transparent;
+  width: 100%;
+}
+
+.dateFilter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f9fafb;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 10px 14px;
+  transition: all 0.2s ease;
+}
+
+.dateFilter:hover {
+  border-color: #60a5fa;
+  background: #f0f9ff;
+}
+
+.filterIcon {
+  color: #64748b;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.dateSeparator {
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.dateInput {
+  border: none;
+  outline: none;
+  font-size: 15px;
+  background: transparent;
+  width: 130px;
+}
+
+.exportButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.exportBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #fff;
+  text-decoration: none;
+  border: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.exportBtn.pdf {
+  background: linear-gradient(90deg, #dc2626, #f87171);
+}
+
+.exportBtn.pdf:hover {
+  background: linear-gradient(90deg, #b91c1c, #dc2626);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.exportBtn.excel {
+  background: linear-gradient(90deg, #16a34a, #4ade80);
+}
+
+.exportBtn.excel:hover {
+  background: linear-gradient(90deg, #15803d, #22c55e);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.tableSection {
+  overflow-x: auto;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.tableGrid {
+  display: grid;
+  grid-template-columns: 1fr 0.6fr 1.2fr 1.8fr 1fr 1fr 1fr;
+  gap: 20px;
+  padding: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tableHeader {
+  background: #f1f5f9;
+  font-weight: 600;
+  color: #1e293b;
+  padding: 16px;
+  border-radius: 10px 10px 0 0;
+}
+
+.tableRow {
+  background-color: #fff;
+  transition: background-color 0.2s ease;
+}
+
+.tableRow:hover {
+  background-color: #f0f9ff;
+}
+
+.centerCell {
+  text-align: center;
+}
+
+.textWrap {
+  word-break: break-word;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;   /* ✅ ยืดความสูงขั้นต่ำให้กินจอ */
+  font-size: 18px;
+  color: #64748b;
+  background: #f9fafb;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.noDataMessage {
+  text-align: center;
+  font-size: 16px;
+  color: #dc2626;
+  padding: 32px;
+  background: #fef2f2;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .tableGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .tableHeader,
+  .tableRow {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .pageTitle {
+    font-size: 22px;
+  }
+
+  .filters {
+    grid-template-columns: 1fr;
+  }
+
+  .exportButtons {
+    justify-content: center;
+  }
+
+  .tableGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .dateFilter {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .dateInput {
+    width: 100%;
+  }
+
+  .exportBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}

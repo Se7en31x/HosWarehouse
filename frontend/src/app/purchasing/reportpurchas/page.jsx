@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import styles from "./page.module.css";
-import { FaFileAlt, FaFileInvoice, FaFileSignature, FaUsers } from "react-icons/fa";
+import { FaFileAlt, FaFileInvoice, FaFileSignature, FaUsers, FaTruck } from "react-icons/fa";
 
 export default function ReportMainPage() {
   return (
@@ -30,6 +30,12 @@ export default function ReportMainPage() {
           <Link href="/purchasing/reportpurchas/supplier" className={styles.card}>
             <FaUsers size={28} />
             <span>รายงานซัพพลายเออร์</span>
+          </Link>
+
+          {/* ✅ รายงานใหม่ GR Report */}
+          <Link href="/purchasing/reportpurchas/grReport" className={styles.card}>
+            <FaTruck size={28} />
+            <span>รายงานการรับสินค้า (GR)</span>
           </Link>
         </div>
       </div>

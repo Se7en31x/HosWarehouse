@@ -85,7 +85,7 @@ export default function Sidebar() {
                     <li className={`${styles.sidebarItem} ${isActive("/purchasing/reportpurchas") ? styles.active : ""}`}>
                         <Link href="/purchasing/reportpurchas" className={styles.noStyleLink}>
                             <BarChart2 className={styles.sidebarIcon} />
-                            <span className={styles.sidebarText}>ออกรายการ</span>
+                            <span className={styles.sidebarText}>ออกรายงาน</span>
                         </Link>
                     </li>
 

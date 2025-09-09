@@ -12,7 +12,7 @@ import dynamic from 'next/dynamic';
 
 const Select = dynamic(() => import('react-select'), { ssr: false });
 
-import { manageAxios } from '../../utils/axiosInstance';
+import { staffAxios } from '../../utils/axiosInstance';
 import { connectSocket, disconnectSocket } from '../../utils/socket';
 
 // Options
@@ -79,18 +79,25 @@ const getStockStatus = (item) => {
 
 // Item Image Component
 function ItemImage({ item_img, alt }) {
-  const defaultImg = 'http://localhost:5000/public/defaults/landscape.png';
-  const [imgSrc, setImgSrc] = useState(
-    item_img ? `http://localhost:5000/uploads/${item_img}` : defaultImg
-  );
+  const defaultImg = "http://localhost:5000/public/defaults/landscape.png";
+
+  // ✅ ตรวจว่าเป็น URL เต็ม (http/https) หรือแค่ชื่อไฟล์
+  const initialSrc = item_img
+    ? (item_img.startsWith("http") 
+        ? item_img 
+        : `http://localhost:5000/uploads/${item_img}`)
+    : defaultImg;
+
+  const [imgSrc, setImgSrc] = useState(initialSrc);
+
   return (
     <Image
       src={imgSrc}
-      alt={alt || 'ไม่มีชื่อ'}
+      alt={alt || "ไม่มีชื่อ"}
       width={50}
       height={50}
-      style={{ objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }}
-      onError={() => setImgSrc(defaultImg)}
+      style={{ objectFit: "cover", borderRadius: 8, border: "1px solid #e5e7eb" }}
+      onError={() => setImgSrc(defaultImg)} // ถ้ารูปแตก ใช้ default
       loading="lazy"
       unoptimized
     />
@@ -179,19 +186,21 @@ export default function InventoryCheckWithWithdraw() {
   // Fetch Data and Subscribe to WebSocket
   useEffect(() => {
     let isMounted = true;
-
     const fetchInitialData = async () => {
       try {
-        const res = await manageAxios.get('/inventoryCheck/all');
+        const res = await staffAxios.get('/for-withdrawal');
+        console.log("📥 API Response (for-withdrawal):", res.data); // ✅ debug data ที่ได้
         if (isMounted) {
           setAllItems(Array.isArray(res.data) ? res.data.filter(item => item && item.item_id) : []);
+          setIsLoading(false); // ✅ อย่าลืม set loading false
         }
       } catch (err) {
-        console.error('❌ โหลดข้อมูลเริ่มต้นไม่สำเร็จ:', err);
+        console.error('❌ โหลดข้อมูลเริ่มต้นไม่สำเร็จ:', err.response?.data || err.message);
         toast.error('ไม่สามารถโหลดข้อมูลจากเซิร์ฟเวอร์ได้');
         if (isMounted) setIsLoading(false);
       }
     };
+
 
     fetchInitialData();
 
@@ -339,7 +348,7 @@ export default function InventoryCheckWithWithdraw() {
 
   const handleBorrow = async (item) => {
     try {
-      const response = await manageAxios.get(`/check-pending-borrow/${item.item_id}`);
+      const response = await staffAxios.get(`/check-pending-borrow/${item.item_id}`);
       if (response.data.pending) {
         Swal.fire({
           title: 'ไม่สามารถยืมได้',
