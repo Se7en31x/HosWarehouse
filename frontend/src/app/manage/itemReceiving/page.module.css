@@ -1,41 +1,4 @@
-/* =============================
-   ItemReceivingPage — page.module.css
-   New Palette: fixed HEX
-   ============================= */
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-/* ---- Variables ---- */
-:root {
-  --bg: #F9FAFB;
-  --panel: #FFFFFF;
-  --muted: #6B7280;
-  --text: #1F2A44;
-  --border: #D1D5DB;
-  --success: #10B981;
-  --warning: #F59E0B;
-  --danger: #EF4444;
-  --tint-50: #FAFAFA;
-  --tint-100: #F3F4F6;
-  --tint-200: #E5E7EB;
-  --radius: 5px;
-  --row-h: 60px;
-  --rows-per-page: 12; /* ⬅️ ล็อค 12 แถว (จะถูก override ด้วย inline เช่นกัน) */
-  --table-gap: 12px;
-  --th-font: 1.05rem;
-  --th-min-h: 60px;
-  --th-pad-y: 14px;
-  --th-pad-x: 12px;
-  --th-letter: 0.01em;
-  --th-line: 1.25;
-  --z-header: 10;
-  --z-toolbar: 100;
-  --z-select: 9000;
-  --z-swal: 10000;
-  --z-modal-overlay: 12000;
-  --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.15);
-}
 
 /* ---- Layout ---- */
 .mainHome {
@@ -44,23 +7,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
+  background: #F9FAFB;
 }
 
 .infoContainer {
   width: 100%;
   max-width: none;
   min-height: 100vh;
-  background: var(--panel);
-  color: var(--text);
-  border-radius: var(--radius);
+  background: #FFFFFF;
+  color: #1F2A44;
+  border-radius: 5px;
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
   flex: 1 1 auto;
   align-self: stretch;
-  box-shadow: var(--shadow);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* ---- Header ---- */
@@ -69,7 +32,7 @@
   justify-content: space-between;
   align-items: center;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #D1D5DB;
 }
 
 .pageTitle {
@@ -79,7 +42,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  color: var(--text);
+  color: #1F2A44;
 }
 
 .titleGroup {
@@ -91,18 +54,18 @@
 
 /* ---- Toolbar ---- */
 .toolbar {
-  z-index: var(--z-toolbar);
+  z-index: 100;
   display: flex;
   gap: 12px;
   align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
   padding: 16px;
-  border-radius: var(--radius);
+  border-radius: 5px;
 }
 
 .filterGrid {
-  z-index: var(--z-toolbar);
+  z-index: 100;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
@@ -110,7 +73,7 @@
 }
 
 .filterGroup {
-  z-index: var(--z-toolbar);
+  z-index: 100;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -118,7 +81,7 @@
 
 .label {
   font-size: 0.9rem;
-  color: var(--text);
+  color: #1F2A44;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -133,8 +96,8 @@
 
 .searchBox input {
   height: 42px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 1px solid #D1D5DB;
+  border-radius: 5px;
   padding: 0 12px 0 36px;
   font-size: 0.95rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
@@ -151,7 +114,7 @@
 .searchBox svg {
   position: absolute;
   left: 10px;
-  color: var(--muted);
+  color: #6B7280;
 }
 
 .searchCluster {
@@ -162,10 +125,10 @@
 }
 
 .ghostBtn {
-  background: var(--panel);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: #FFFFFF;
+  color: #1F2A44;
+  border: 1px solid #D1D5DB;
+  border-radius: 5px;
   height: 42px;
   padding: 0 14px;
   cursor: pointer;
@@ -176,14 +139,14 @@
 }
 
 .ghostBtn:hover {
-  background: var(--tint-100);
+  background: #F3F4F6;
   transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
 .ghostBtn:active {
   transform: translateY(0);
-  box-shadow: var(--shadow);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .clearButton {
@@ -193,40 +156,33 @@
 
 /* ---- Table ---- */
 .tableSection {
-  border-radius: var(--radius);
-  background: var(--panel);
+  border-radius: 5px;
+  background: #FFFFFF;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-/* ✅ คอลัมน์คงที่ 7 คอลัมน์ (ตรงกับ PAGE_CONFIG.columns) */
 .tableGridItems {
   display: grid;
   grid-template-columns:
-    minmax(220px, 2fr)  /* รายการ */
-    minmax(140px, 1.2fr)/* ประเภท */
-    minmax(90px, .8fr)  /* หน่วย */
-    minmax(90px, .8fr)  /* ขั้นต่ำ */
-    minmax(90px, .8fr)  /* สูงสุด */
-    minmax(110px, .9fr) /* คงเหลือ */
-    minmax(140px, 1fr); /* การดำเนินการ */
+    minmax(220px, 2fr) minmax(140px, 1.2fr) minmax(90px, .8fr) minmax(90px, .8fr) minmax(90px, .8fr) minmax(110px, .9fr) minmax(140px, 1fr);
   align-items: center;
 }
 
 .tableHeader {
   position: sticky;
   top: 0;
-  z-index: var(--z-header);
+  z-index: 10;
   background: #f1f5f9;
-  padding-block: var(--th-pad-y);
-  padding-inline: var(--th-pad-x);
+  padding-block: 14px;
+  padding-inline: 12px;
   font-weight: 700;
   color: #000000;
-  font-size: var(--th-font);
-  line-height: var(--th-line);
-  min-height: var(--th-min-h);
+  font-size: 1.05rem;
+  line-height: 1.25;
+  min-height: 60px;
 }
 
 .headerItem {
@@ -244,29 +200,29 @@
 .inventory {
   border: 0;
   border-radius: 0;
-  background: var(--panel);
-  height: calc(var(--row-h) * var(--rows-per-page));
+  background: #FFFFFF;
+  height: calc(60px * 12);
   overflow: hidden;
 }
 
 .tableRow:nth-child(odd) {
-  background: var(--panel);
+  background: #FFFFFF;
 }
 
 .tableRow:nth-child(even) {
-  background: var(--tint-50);
+  background: #FAFAFA;
 }
 
 .tableRow:hover {
-  background: var(--tint-200);
+  background: #E5E7EB;
   transform: translateY(-1px);
 }
 
 .tableRow {
   box-sizing: border-box;
-  height: var(--row-h);
-  padding: 0 var(--th-pad-x);
-  border-top: 1px solid var(--tint-200);
+  height: 60px;
+  padding: 0 12px;
+  border-top: 1px solid #E5E7EB;
   transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
@@ -284,31 +240,35 @@
 }
 
 .lowStock {
-  color: var(--danger);
+  color: #EF4444;
   font-weight: 600;
 }
 
 .noDataMessage,
 .errorContainer,
 .loadingContainer {
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(60px * 12);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  color: var(--muted);
+  color: #6B7280;
   font-size: 1rem;
 }
 
-/* ⬇️ แถวว่างเติมท้าย (ไม่รับ hover/คลิก และคงลายแถว) */
-.fillerRow { pointer-events: none; }
-.fillerRow:hover { background: inherit !important; }
+.fillerRow {
+  pointer-events: none;
+}
+
+.fillerRow:hover {
+  background: inherit !important;
+}
 
 .retryButton {
   background: #3B82F6;
   color: #FFFFFF;
   border: none;
-  border-radius: var(--radius);
+  border-radius: 5px;
   padding: 8px 16px;
   cursor: pointer;
   transition: background-color 0.2s ease, transform 0.15s ease;
@@ -330,7 +290,7 @@
   justify-content: center;
   background: #3B82F6;
   color: #FFFFFF;
-  border-radius: var(--radius);
+  border-radius: 5px;
   padding: 8px 16px;
   transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
 }
@@ -338,29 +298,28 @@
 .actionButton:hover {
   background: #2563EB;
   transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
 .actionButton:active {
   transform: translateY(0);
-  box-shadow: var(--shadow);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* ---- Pagination ---- */
-/* ⭐ เพิ่ม info bar + ใช้ UL เดิมแสดงปุ่ม */
 .paginationBar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
   padding: 12px 0;
-  border-top: 1px solid var(--border);
-  background: var(--panel);
+  border-top: 1px solid #D1D5DB;
+  background: #FFFFFF;
 }
 
 .paginationInfo {
   font-size: 0.9rem;
-  color: var(--muted);
+  color: #6B7280;
 }
 
 .paginationControls {
@@ -378,21 +337,21 @@
 .pageButton {
   min-width: 34px;
   height: 42px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--panel);
+  border: 1px solid #D1D5DB;
+  border-radius: 5px;
+  background: #FFFFFF;
   cursor: pointer;
   font-size: 0.95rem;
   font-weight: 500;
-  color: var(--text);
+  color: #1F2A44;
   transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
   padding: 6px 10px;
 }
 
 .pageButton:hover:not(:disabled) {
-  background: var(--tint-100);
+  background: #F3F4F6;
   transform: translateY(-1px);
-  box-shadow: var(--shadow);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .pageButton:disabled {
@@ -408,21 +367,21 @@
 
 .ellipsis {
   padding: 0 8px;
-  color: var(--muted);
+  color: #6B7280;
   font-size: 1rem;
 }
 
 /* ---- Form Section ---- */
 .tableSection.formActive {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .subTitle {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--text);
+  color: #1F2A44;
   margin: 16px 0 12px;
   display: flex;
   align-items: center;
@@ -432,9 +391,9 @@
 
 .formContainer {
   padding: 20px;
-  border-radius: var(--radius);
-  background: linear-gradient(145deg, var(--tint-50), #F7FAFC);
-  box-shadow: var(--shadow);
+  border-radius: 5px;
+  background: linear-gradient(145deg, #FAFAFA, #F7FAFC);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
 }
 
@@ -457,7 +416,7 @@
 
 .fieldError .formInput,
 .fieldError .notesField {
-  border-color: var(--danger);
+  border-color: #EF4444;
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
@@ -472,18 +431,18 @@
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--muted);
+  color: #6B7280;
   z-index: 1;
 }
 
 .formInput,
 .notesField {
   height: 44px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 1px solid #D1D5DB;
+  border-radius: 5px;
   padding: 0 12px 0 36px;
   font-size: 0.95rem;
-  background: var(--panel);
+  background: #FFFFFF;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
@@ -509,7 +468,7 @@
 }
 
 .errorText {
-  color: var(--danger);
+  color: #EF4444;
   font-size: 0.85rem;
   margin-top: 4px;
   display: flex;
@@ -519,20 +478,20 @@
 }
 
 .helperText {
-  color: var(--muted);
+  color: #6B7280;
   font-size: 0.85rem;
   margin-top: 4px;
 }
 
 .helperIcon {
-  color: var(--muted);
+  color: #6B7280;
   cursor: help;
   margin-left: 6px;
 }
 
 .charCount {
   font-size: 0.8rem;
-  color: var(--muted);
+  color: #6B7280;
   margin-left: 8px;
 }
 
@@ -544,10 +503,10 @@
 }
 
 .addItemButton {
-  background: var(--success);
+  background: #10B981;
   color: #FFFFFF;
   border: none;
-  border-radius: var(--radius);
+  border-radius: 5px;
   padding: 10px 20px;
   cursor: pointer;
   display: inline-flex;
@@ -560,12 +519,12 @@
 .addItemButton:hover:not(:disabled) {
   background: #059669;
   transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
 .addItemButton:active {
   transform: translateY(0);
-  box-shadow: var(--shadow);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .addItemButton:disabled {
@@ -575,13 +534,22 @@
 
 /* ---- Animations ---- */
 @keyframes slideIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ---- Responsive ---- */
 @media (max-width: 1024px) {
-  .formGrid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .formGrid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
 }
 
 @media (max-width: 768px) {
@@ -592,30 +560,27 @@
     flex-wrap: wrap;
     row-gap: 6px;
   }
-  .filterGrid { grid-template-columns: 1fr; }
-  .formGrid   { grid-template-columns: 1fr; }
+
+  .filterGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
-  :root {
-    --th-font: 1rem;
-    --th-min-h: 54px;
-    --th-pad-y: 10px;
-    --table-gap: 10px;
+  .mainHome {
+    padding: 12px;
   }
-  .mainHome { padding: 12px; }
 
-  /* ✅ mobile: คง 7 คอลัมน์ให้สอดคล้องกับ header/body */
   .tableGridItems {
     grid-template-columns:
-      minmax(140px, 2fr) /* รายการ */
-      minmax(100px, 1.2fr) /* ประเภท */
-      80px  /* หน่วย */
-      80px  /* ขั้นต่ำ */
-      80px  /* สูงสุด */
-      100px /* คงเหลือ */
-      110px /* การดำเนินการ */;
+      minmax(140px, 2fr) minmax(100px, 1.2fr) 80px 80px 80px 100px 110px;
   }
 
-  .formContainer  { padding: 16px; }
+  .formContainer {
+    padding: 16px;
+  }
 }

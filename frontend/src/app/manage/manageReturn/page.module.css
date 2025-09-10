@@ -1,38 +1,10 @@
 /* =============================
-   ManageReturnPage — page.module.css
-   Based on StockDeductionPage, ManageReturnDetailPage, and DamagedItemsPage
-   Locked at 12 rows per page
-   ============================= */
+   ManageReturnPage — page.module.css
+   Based on StockDeductionPage, ManageReturnDetailPage, and DamagedItemsPage
+   Locked at 12 rows per page
+   ============================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-/* ---- Variables ---- */
-:root {
-  --bg: #F9FAFB;
-  --panel: #FFFFFF;
-  --muted: #6B7280;
-  --text: #1F2A44;
-  --border: #D1D5DB;
-  --success: #10B981;
-  --warning: #F59E0B;
-  --danger: #EF4444;
-  --tint-50: #FAFAFA;
-  --tint-100: #F3F4F6;
-  --tint-200: #E5E7EB;
-  --radius: 5px;
-  --row-h: 60px;
-  --rows-per-page: 12;
-  --table-gap: 12px;
-  --th-font: 1.05rem;
-  --th-min-h: 60px;
-  --th-pad-y: 14px;
-  --th-pad-x: 12px;
-  --th-letter: 0.01em;
-  --th-line: 1.25;
-  --z-header: 10;
-  --z-toolbar: 100;
-  --z-modal: 1000;
-}
 
 /* ---- Layout ---- */
 .mainHome {
@@ -41,16 +13,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
+  background: #F9FAFB;
 }
 
 .infoContainer {
   width: 100%;
   max-width: none;
   min-height: 100vh;
-  background: var(--panel);
-  color: var(--text);
-  border-radius: var(--radius);
+  background: #FFFFFF;
+  color: #1F2A44;
+  border-radius: 5px;
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -76,7 +48,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  color: var(--text);
+  color: #1F2A44;
 }
 
 .titleGroup {
@@ -89,19 +61,19 @@
 /* ---- Toolbar ---- */
 .toolbar {
   position: relative;
-  z-index: var(--z-toolbar);
+  z-index: 100;
   display: flex;
   gap: 12px;
   align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
   padding: 16px;
-  border-radius: var(--radius);
+  border-radius: 5px;
 }
 
 .filterGrid {
   position: relative;
-  z-index: var(--z-toolbar);
+  z-index: 100;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 250px));
   gap: 12px;
@@ -120,7 +92,7 @@
 
 .label {
   font-size: 0.85rem;
-  color: var(--text);
+  color: #1F2A44;
   font-weight: 600;
 }
 
@@ -157,12 +129,12 @@
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--muted);
+  color: #6B7280;
 }
 
 .ghostBtn {
-  background: var(--panel);
-  color: var(--text);
+  background: #FFFFFF;
+  color: #1F2A44;
   border: 1px solid #D1D5DB;
   border-radius: 8px;
   height: 40px;
@@ -192,39 +164,39 @@
 
 /* ---- Table ---- */
 .tableFrame {
-  border-radius: var(--radius);
+  border-radius: 5px;
   background: #FFFFFF;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 0;
-  min-height: calc(var(--row-h) * var(--rows-per-page) + var(--th-min-h));
+  min-height: calc(60px * 12 + 60px);
 }
 
 .tableGrid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
-  gap: var(--table-gap);
+  gap: 12px;
   width: 100%;
 }
 
 .tableHeader {
   background: #f1f5f9;
   font-weight: 700;
-  font-size: var(--th-font);
+  font-size: 1.05rem;
   color: #000000;
   position: sticky;
   top: 0;
-  z-index: var(--z-header);
-  padding: var(--th-pad-y) var(--th-pad-x);
-  line-height: var(--th-line);
-  letter-spacing: var(--th-letter);
+  z-index: 10;
+  padding: 14px 12px;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
 }
 
 .headerItem {
   display: flex;
   align-items: center;
-  padding: var(--th-pad-y) var(--th-pad-x);
+  padding: 14px 12px;
   white-space: nowrap;
 }
 
@@ -234,7 +206,7 @@
 
 .inventory {
   overflow-y: auto;
-  max-height: calc(var(--row-h) * var(--rows-per-page));
+  max-height: calc(60px * 12);
 }
 
 .tableRow {
@@ -258,7 +230,7 @@
   align-items: center;
   padding: 12px;
   font-size: 0.95rem;
-  color: var(--text);
+  color: #1F2A44;
 }
 
 .centerCell {
@@ -365,7 +337,7 @@
 
 .paginationInfo {
   font-size: 0.9rem;
-  color: var(--muted);
+  color: #6B7280;
 }
 
 .paginationControls {
@@ -412,7 +384,7 @@
 
 .ellipsis {
   padding: 0 8px;
-  color: var(--muted);
+  color: #6B7280;
   font-size: 1rem;
 }
 
@@ -420,21 +392,21 @@
 .infoMessage,
 .noDataMessage {
   text-align: center;
-  color: var(--muted);
+  color: #6B7280;
   font-size: 1rem;
-  padding: calc(var(--row-h) * 2);
+  padding: calc(60px * 2);
 }
 
 .noDataMessage {
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(60px * 12);
 }
 
 .loadingContainer {
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(60px * 12);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
+  color: #6B7280;
   font-size: 1rem;
   background: url('/loading-spinner.gif') no-repeat center;
 }
@@ -488,13 +460,6 @@
 }
 
 @media (max-width: 640px) {
-  :root {
-    --th-font: 1rem;
-    --th-min-h: 54px;
-    --th-pad-y: 10px;
-    --table-gap: 10px;
-  }
-
   .mainHome {
     padding: 12px;
   }

@@ -1,39 +1,21 @@
 /* ===== Base & Layout ===== */
-:root {
-  /* palette ให้ตรงกับหน้าก่อน ๆ */
-  --bg: #F9FAFB;
-  --panel: #FFFFFF;
-  --text: #1F2A44;
-  --muted: #6B7280;
-  --border: #E5E7EB;
-  --primary: #3B82F6;
-  --primary-600: #2563EB;
-  --tint-100: #F3F4F6;
-  --tint-200: #E5E7EB;
-
-  --radius: 12px;
-  --row-h: 56px;
-  --head-bg: #F1F5F9;
-  --head-fg: #1F2A44;
-  --hover: #F8FAFC;
-}
 
 .pageBackground {
   height: 100vh;
-  background: var(--bg);
+  background: #F9FAFB;
   display: flex;
   align-items: flex-start;
   justify-content: center;
   font-family: 'Kanit', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  color: var(--text);
+  color: #1F2A44;
   overflow: hidden;
 }
 
 .container {
-  background: var(--panel);
+  background: #FFFFFF;
   width: 100%;
   max-width: 1600px;
-  border-radius: var(--radius);
+  border-radius: 12px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, .06);
   padding: 20px;
   display: flex;
@@ -48,61 +30,118 @@
   font-weight: 700;
   margin: 0 0 14px 0;
   text-align: center;
-  color: var(--text);
+  color: #1F2A44;
   position: relative;
   padding-bottom: 10px;
 }
+
 .title::after {
   content: '';
-  position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
-  width: 64px; height: 3px; background: var(--primary); border-radius: 2px;
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 64px;
+  height: 3px;
+  background: #3B82F6;
+  border-radius: 2px;
 }
 
 .infoGrid {
-  display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px;
-  background: var(--panel); padding: 16px; border-radius: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+  background: #FFFFFF;
+  padding: 16px;
+  border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, .04);
 }
+
 .infoLeft {
-  flex: 2; display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  padding-right: 12px; border-right: 1px solid var(--tint-200);
+  flex: 2;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  padding-right: 12px;
+  border-right: 1px solid #E5E7EB;
 }
-.infoLeft div { font-size: 1rem; color: var(--text); line-height: 1.4; }
-.status { font-weight: 700; color: var(--primary); }
+
+.infoLeft div {
+  font-size: 1rem;
+  color: #1F2A44;
+  line-height: 1.4;
+}
+
+.status {
+  font-weight: 700;
+  color: #3B82F6;
+}
+
 .summary {
-  grid-column: 1 / -1; font-weight: 600; color: var(--primary);
-  border-top: 1px dashed var(--tint-200); padding-top: 10px; margin-top: 8px;
+  grid-column: 1 / -1;
+  font-weight: 600;
+  color: #3B82F6;
+  border-top: 1px dashed #E5E7EB;
+  padding-top: 10px;
+  margin-top: 8px;
 }
+
 .noteBox {
-  flex: 1; background: var(--tint-100); border: 1px solid var(--tint-200);
-  border-radius: 8px; padding: 14px; color: var(--muted);
+  flex: 1;
+  background: #F3F4F6;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 14px;
+  color: #6B7280;
 }
 
 /* ===== Table ===== */
-.subtitle { font-size: 1.25rem; font-weight: 700; color: var(--text); margin: 10px 0; }
+.subtitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1F2A44;
+  margin: 10px 0;
+}
 
 .tableContainer {
-  flex: 1; border: 1px solid var(--tint-200); border-radius: 10px;
+  flex: 1;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
   box-shadow: 0 3px 12px rgba(0, 0, 0, .05);
-  overflow-y: auto; overflow-x: hidden; scrollbar-width: none; -ms-overflow-style: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   max-height: 600px;
 }
-.tableContainer::-webkit-scrollbar { display: none; }
+
+.tableContainer::-webkit-scrollbar {
+  display: none;
+}
 
 .table {
-  width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed;
-  font-size: .95rem; color: var(--text);
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  font-size: .95rem;
+  color: #1F2A44;
 }
 
-/* ✅ ใช้ thead มาตรฐาน (ไม่ต้องพึ่ง class .tableHead) */
 .table thead th {
-  position: sticky; top: 0; z-index: 2;
-  background: var(--head-bg); color: var(--head-fg);
-  font-weight: 700; padding: 12px; border-bottom: 1px solid var(--tint-200);
-  white-space: nowrap; text-align: left;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #F1F5F9;
+  color: #1F2A44;
+  font-weight: 700;
+  padding: 12px;
+  border-bottom: 1px solid #E5E7EB;
+  white-space: nowrap;
+  text-align: left;
 }
 
-/* จัดแนวตัวเลข/วันที่ให้อยู่กึ่งกลาง */
 .table thead th:nth-child(4),
 .table thead th:nth-child(5),
 .table thead th:nth-child(6),
@@ -112,101 +151,323 @@
 .table tbody td:nth-child(5),
 .table tbody td:nth-child(6),
 .table tbody td:nth-child(8),
-.table tbody td:nth-child(9) { text-align: center; }
+.table tbody td:nth-child(9) {
+  text-align: center;
+}
 
-/* คุมความกว้างคอลัมน์สำคัญ */
-.table tbody td:first-child { width: 64px; }
-.table thead th:first-child { width: 64px; }
-.table thead th:nth-child(2) { width: 26%; }
-.table thead th:nth-child(3) { width: 10%; }
-.table thead th:nth-child(4) { width: 8%; }
-.table thead th:nth-child(5) { width: 8%; }
-.table thead th:nth-child(6) { width: 11%; }
-.table thead th:nth-child(7) { width: 11%; }
-.table thead th:nth-child(8) { width: 10%; }
-.table thead th:nth-child(9) { width: 12%; }
+.table tbody td:first-child {
+  width: 64px;
+}
+
+.table thead th:first-child {
+  width: 64px;
+}
+
+.table thead th:nth-child(2) {
+  width: 26%;
+}
+
+.table thead th:nth-child(3) {
+  width: 10%;
+}
+
+.table thead th:nth-child(4) {
+  width: 8%;
+}
+
+.table thead th:nth-child(5) {
+  width: 8%;
+}
+
+.table thead th:nth-child(6) {
+  width: 11%;
+}
+
+.table thead th:nth-child(7) {
+  width: 11%;
+}
+
+.table thead th:nth-child(8) {
+  width: 10%;
+}
+
+.table thead th:nth-child(9) {
+  width: 12%;
+}
 
 .table tbody td {
-  padding: 12px 14px; border-top: 1px solid var(--tint-200);
-  vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  height: var(--row-h);
+  padding: 12px 14px;
+  border-top: 1px solid #E5E7EB;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: 56px;
 }
-/* zebra */
-.table tbody tr:nth-child(even) { background: #FBFBFD; }
-.table tbody tr:hover { background: var(--hover); }
+
+.table tbody tr:nth-child(even) {
+  background: #FBFBFD;
+}
+
+.table tbody tr:hover {
+  background: #F8FAFC;
+}
 
 /* ===== Approved Qty input + tooltip (แมพกับ JSX ปัจจุบัน) ===== */
-.inputContainer { position: relative; display: inline-flex; align-items: center; justify-content: center; }
-.input {
-  width: 96px; height: 38px; padding: 8px 10px; text-align: center;
-  border: 1px solid var(--tint-200); border-radius: 8px; background: #fff;
-  font-size: .95rem; transition: border-color .15s, box-shadow .15s;
-}
-.input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(59,130,246,.2); }
-.inputError { border-color: #EF4444 !important; box-shadow: 0 0 0 2px rgba(239,68,68,.18) !important; }
-.tooltip {
-  position: absolute; top: -28px; right: 0; transform: translateY(-2px);
-  background: #111827; color: #fff; padding: 4px 8px; border-radius: 6px; font-size: .75rem; white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+.inputContainer {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* ยังคงรองรับชื่อเดิมที่เคยใช้ไว้ */
-.approvedQtyInput { width: 90px; padding: 8px; border: 1px solid var(--tint-200); border-radius: 8px; text-align: center; font-size: .95rem; transition: border-color .15s, box-shadow .15s; background: #fff; }
-.approvedQtyInput:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(59,130,246,.25); outline: none; }
-.inputErrorBorder { border-color: #e74c3c !important; box-shadow: 0 0 0 2px rgba(231,76,60,.25) !important; }
+.input {
+  width: 96px;
+  height: 38px;
+  padding: 8px 10px;
+  text-align: center;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  background: #fff;
+  font-size: .95rem;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, .2);
+}
+
+.inputError {
+  border-color: #EF4444 !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, .18) !important;
+}
+
+.tooltip {
+  position: absolute;
+  top: -28px;
+  right: 0;
+  transform: translateY(-2px);
+  background: #111827;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: .75rem;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
+}
+
+.approvedQtyInput {
+  width: 90px;
+  padding: 8px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  text-align: center;
+  font-size: .95rem;
+  transition: border-color .15s, box-shadow .15s;
+  background: #fff;
+}
+
+.approvedQtyInput:focus {
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, .25);
+  outline: none;
+}
+
+.inputErrorBorder {
+  border-color: #e74c3c !important;
+  box-shadow: 0 0 0 2px rgba(231, 76, 60, .25) !important;
+}
 
 /* ===== Badges ===== */
-.badge { display: inline-flex; align-items: center; justify-content: center; padding: .28rem .6rem; border-radius: 999px; font-weight: 700; font-size: .8rem; color: #fff; min-width: 90px; }
-.badgeGreen { background: #16a34a; }
-.badgeYellow { background: #f59e0b; }
-.badgeRed { background: #ef4444; }
-.badgeGray { background: #6b7280; }
-
-/* ===== ปุ่มในคอลัมน์ "การดำเนินการ" (แมพกับ JSX: actionButtons/approveButton/rejectButton) ===== */
-.actionButtons { display: inline-flex; gap: 8px; align-items: center; justify-content: center; }
-.actionButton {
-  padding: 8px 14px; border-radius: 8px; font-size: .85rem; font-weight: 700;
-  border: 1px solid transparent; color: #fff; cursor: pointer;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, .08); transition: transform .1s, background .15s, border-color .15s;
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .28rem .6rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .8rem;
+  color: #fff;
+  min-width: 90px;
 }
-.approveButton { background: #16a34a; }
-.approveButton:hover { background: #15803d; transform: translateY(-1px); }
-.rejectButton { background: #ef4444; }
-.rejectButton:hover { background: #dc2626; transform: translateY(-1px); }
-.disabledAction { color: var(--muted); }
 
-/* (คงสไตล์เดิมที่อาจใช้อยู่ในส่วนอื่น) */
-.actionButton.approve { background: #2ecc71; }
-.actionButton.approve:hover { background: #27ae60; }
-.actionButton.reject { background: #e74c3c; }
-.actionButton.reject:hover { background: #c0392b; }
-.actionButton.disabled { background: #bdc3c7; cursor: not-allowed; box-shadow: none; }
+.badgeGreen {
+  background: #16a34a;
+}
+
+.badgeYellow {
+  background: #f59e0b;
+}
+
+.badgeRed {
+  background: #ef4444;
+}
+
+.badgeGray {
+  background: #6b7280;
+}
+
+/* ===== ปุ่มในคอลัมน์ "การดำเนินการ" (แมพกับ JSX ปัจจุบัน) ===== */
+.actionButtons {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.actionButton {
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: .85rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .08);
+  transition: transform .1s, background .15s, border-color .15s;
+}
+
+.approveButton {
+  background: #16a34a;
+}
+
+.approveButton:hover {
+  background: #15803d;
+  transform: translateY(-1px);
+}
+
+.rejectButton {
+  background: #ef4444;
+}
+
+.rejectButton:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.disabledAction {
+  color: #6B7280;
+}
+
+.actionButton.approve {
+  background: #2ecc71;
+}
+
+.actionButton.approve:hover {
+  background: #27ae60;
+}
+
+.actionButton.reject {
+  background: #e74c3c;
+}
+
+.actionButton.reject:hover {
+  background: #c0392b;
+}
+
+.actionButton.disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  box-shadow: none;
+}
 
 /* ===== ปุ่มด้านล่างหน้า ===== */
-.actions { display: flex; justify-content: flex-end; align-items: center; gap: 16px; margin-top: 16px; }
-.actionsCell { white-space: normal; overflow: visible; }
-.actionBtnGroup { display: flex; flex-wrap: wrap; gap: 6px; }
-
-.saveButton, .cancelButton {
-  padding: 12px 28px; border: none; border-radius: 10px; font-weight: 700; font-size: 1rem;
-  cursor: pointer; transition: transform .1s, box-shadow .1s, background .15s;
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
 }
-.btnIcon { margin-right: 8px; font-size: 1rem; vertical-align: middle; }
 
-.saveButton { background: var(--primary); color: #fff; box-shadow: 0 3px 10px rgba(59,130,246,.25); }
-.saveButton:hover:not(:disabled) { background: var(--primary-600); transform: translateY(-1px); }
-.saveButton:disabled { background: #d1d5db; cursor: not-allowed; box-shadow: none; }
+.actionsCell {
+  white-space: normal;
+  overflow: visible;
+}
 
-.cancelButton { background: #fff; color: #374151; border: 1px solid var(--tint-200); box-shadow: none; }
-.cancelButton:hover { background: var(--tint-100); transform: translateY(-1px); }
+.actionBtnGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.saveButton,
+.cancelButton {
+  padding: 12px 28px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform .1s, box-shadow .1s, background .15s;
+}
+
+.btnIcon {
+  margin-right: 8px;
+  font-size: 1rem;
+  vertical-align: middle;
+}
+
+.saveButton {
+  background: #3B82F6;
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(59, 130, 246, .25);
+}
+
+.saveButton:hover:not(:disabled) {
+  background: #2563EB;
+  transform: translateY(-1px);
+}
+
+.saveButton:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.cancelButton {
+  background: #fff;
+  color: #374151;
+  border: 1px solid #E5E7EB;
+  box-shadow: none;
+}
+
+.cancelButton:hover {
+  background: #F3F4F6;
+  transform: translateY(-1px);
+}
 
 /* ===== Responsive ===== */
-@media (max-width: 1024px) { .container { max-width: 100%; } }
-@media (max-width: 768px) {
-  .infoLeft { grid-template-columns: 1fr; border-right: none; padding-right: 0; border-bottom: 1px dashed var(--tint-200); padding-bottom: 12px; }
-  .table { font-size: .9rem; }
+@media (max-width: 1024px) {
+  .container {
+    max-width: 100%;
+  }
 }
+
+@media (max-width: 768px) {
+  .infoLeft {
+    grid-template-columns: 1fr;
+    border-right: none;
+    padding-right: 0;
+    border-bottom: 1px dashed #E5E7EB;
+    padding-bottom: 12px;
+  }
+
+  .table {
+    font-size: .9rem;
+  }
+}
+
 @media (max-width: 640px) {
-  .actions { flex-direction: column; align-items: stretch; }
-  .saveButton, .cancelButton { width: 100%; }
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .saveButton,
+  .cancelButton {
+    width: 100%;
+  }
 }

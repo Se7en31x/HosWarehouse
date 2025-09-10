@@ -1,39 +1,22 @@
+/* MyRequests — page.module.css */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-/* ---- Variables ---- */
+/* SweetAlert */
+:global(.swal2-container),
+:global(.swal-topmost) {
+  z-index: 10000 !important;
+  position: fixed !important;
+  inset: 0 !important;
+}
+
+/* ---- Layout ---- */
 .mainHome {
-  --bg: #f3f4f6;
-  --panel: #ffffff;
-  --text: #111827;
-  --muted: #6b7280;
-  --border: #e5e7eb;
-
-  --primary: #2563eb;
-  --primary-dark: #1e40af;
-  --success: #16a34a;
-  --success-dark: #15803d;
-  --danger: #dc2626;
-  --danger-dark: #b91c1c;
-
-  --radius: 8px;
-
-  --row-h: 60px;
-  --rows-per-page: 10;
-  --th-font: 1.05rem;
-  --th-min-h: 60px;
-  --th-pad-y: 14px;
-  --th-pad-x: 12px;
-  --th-letter: 0.01em;
-  --th-line: 1.25;
-
-  --z-header: 10;
-
   min-height: 100vh;
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
+  background: #f3f4f6;
 }
 
 /* ---- Container ---- */
@@ -41,8 +24,8 @@
   width: 100%;
   max-width: none;
   min-height: 100vh;
-  background: var(--panel);
-  color: var(--text);
+  background: #ffffff;
+  color: #111827;
   border-radius: 0;
   padding: 24px;
   display: flex;
@@ -58,14 +41,14 @@
   font-weight: 700;
   font-size: clamp(1.4rem, 2.2vw, 2rem);
   margin: 0;
-  color: var(--text);
+  color: #111827;
 }
 
 /* ---- Summary Card ---- */
 .summaryCard {
   background: #f9fafb;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -80,13 +63,13 @@
 }
 
 .summaryNote {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid #e5e7eb;
   padding-top: 12px;
 }
 
 /* ---- Table ---- */
 .tableFrame {
-  border-radius: var(--radius);
+  border-radius: 8px;
   background: #ffffff;
   overflow: hidden;
   display: flex;
@@ -98,37 +81,31 @@
 .tableGrid {
   display: grid;
   grid-template-columns:
-    minmax(60px, 0.8fr)
-    minmax(200px, 2fr)
-    minmax(120px, 1fr)
-    minmax(120px, 1fr)
-    minmax(80px, 0.8fr)
-    minmax(100px, 1fr)
-    minmax(100px, 1fr)
-    minmax(100px, 1fr);
+    minmax(60px, 0.8fr) minmax(200px, 2fr) minmax(120px, 1fr) minmax(120px, 1fr) minmax(80px, 0.8fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr);
   align-items: center;
 }
 
 .tableHeader {
   position: sticky;
   top: 0;
-  z-index: var(--z-header);
+  z-index: 10;
   background: #f9fafb;
-  padding-block: var(--th-pad-y);
-  padding-inline: var(--th-pad-x);
+  padding-block: 14px;
+  padding-inline: 12px;
   font-weight: 700;
   color: #374151;
-  font-size: var(--th-font);
-  line-height: var(--th-line);
-  min-height: var(--th-min-h);
-  border-bottom: 1px solid var(--border);
+  font-size: 1.05rem;
+  line-height: 1.25;
+  min-height: 60px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .headerItem {
   font-weight: 700;
   display: flex;
   align-items: center;
-  justify-content: center; /* จัดกึ่งกลางทั้งแนวตั้งและแนวนอน */
+  justify-content: center;
+  /* จัดกึ่งกลางทั้งแนวตั้งและแนวนอน */
   height: 100%;
   padding: 4px 6px;
   white-space: nowrap;
@@ -136,14 +113,14 @@
 }
 
 .tableBody {
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(60px * 10);
   overflow: hidden;
 }
 
 .tableRow {
-  height: var(--row-h);
-  padding: 0 var(--th-pad-x);
-  border-top: 1px solid var(--border);
+  height: 60px;
+  padding: 0 12px;
+  border-top: 1px solid #e5e7eb;
   transition: background-color 0.2s ease;
 }
 
@@ -183,8 +160,10 @@
 }
 
 .imageCell {
-  width: 60px; /* ล็อคความกว้างของเซลล์รูปภาพ */
-  height: var(--row-h); /* ใช้ความสูงเดียวกับแถว */
+  width: 60px;
+  /* ล็อคความกว้างของเซลล์รูปภาพ */
+  height: 60px;
+  /* ใช้ความสูงเดียวกับแถว */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -197,8 +176,10 @@
   border-radius: 4px;
   object-fit: cover;
   object-position: center;
-  flex-shrink: 0; /* ป้องกันการหด */
-  flex-grow: 0; /* ป้องกันการขยาย */
+  flex-shrink: 0;
+  /* ป้องกันการหด */
+  flex-grow: 0;
+  /* ป้องกันการขยาย */
 }
 
 .fillerRow {
@@ -211,22 +192,22 @@
 
 /* ---- Loading ---- */
 .loadingContainer {
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(60px * 10);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
+  color: #6b7280;
   font-size: 1rem;
   background: url('/loading-spinner.gif') no-repeat center;
 }
 
 /* ---- No Data ---- */
 .noDataCell {
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(60px * 10);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
+  color: #6b7280;
   font-size: 1rem;
 }
 
@@ -305,6 +286,7 @@
 
 /* ---- Responsive ---- */
 @media (max-width: 1024px) {
+
   .summaryRowTop,
   .summaryRowBottom {
     grid-template-columns: repeat(2, minmax(180px, 1fr));
@@ -312,6 +294,7 @@
 }
 
 @media (max-width: 720px) {
+
   .summaryRowTop,
   .summaryRowBottom {
     grid-template-columns: 1fr;
@@ -319,11 +302,7 @@
 
   .tableGrid {
     grid-template-columns:
-      minmax(60px, 0.8fr)
-      minmax(200px, 2fr)
-      minmax(120px, 1fr)
-      minmax(100px, 1fr)
-      minmax(100px, 1fr);
+      minmax(60px, 0.8fr) minmax(200px, 2fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr);
     grid-auto-rows: auto;
     row-gap: 6px;
   }
@@ -334,19 +313,20 @@
 
   .tableRow {
     grid-template-columns:
-      minmax(60px, 0.8fr)
-      minmax(200px, 2fr)
-      minmax(120px, 1fr)
-      minmax(100px, 1fr)
-      minmax(100px, 1fr);
-    border-top: 1px solid var(--border);
+      minmax(60px, 0.8fr) minmax(200px, 2fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr);
+    border-top: 1px solid #e5e7eb;
     padding: 12px;
     height: auto;
   }
 
-  .tableCell:nth-child(4), /* จำนวนที่ขอ/อนุมัติ */
-  .tableCell:nth-child(6), /* สถานะการอนุมัติ */
-  .tableCell:nth-child(7)  /* สถานะการดำเนินการ */ {
+  .tableCell:nth-child(4),
+  /* จำนวนที่ขอ/อนุมัติ */
+  .tableCell:nth-child(6),
+  /* สถานะการอนุมัติ */
+  .tableCell:nth-child(7)
+
+  /* สถานะการดำเนินการ */
+    {
     display: none;
   }
 

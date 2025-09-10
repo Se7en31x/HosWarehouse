@@ -1,34 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* ---- Variables (aligned with StockOutHistoryPage, DamagedHistoryPage, RequestPurchasePage) ---- */
-:root {
-  --bg: #F9FAFB;
-  --panel: #FFFFFF;
-  --muted: #6B7280;
-  --text: #1F2A44;
-  --border: #D1D5DB;
-  --primary: #3B82F6;
-  --primary-500: #3B82F6;
-  --primary-600: #2563EB;
-  --tint-50: #FAFAFA;
-  --tint-100: #F3F4F6;
-  --tint-200: #E5E7EB;
-  --success: #16a34a;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --radius: 10px;
-  --row-h: 60px;
-  --table-gap: 12px;
-  --th-font: 1.05rem;
-  --th-min-h: 60px;
-  --th-pad-y: 14px;
-  --th-pad-x: 12px;
-  --th-letter: 0.01em;
-  --th-line: 1.25;
-  --z-header: 10;
-  --z-swal: 10000;
-}
-
 /* ---- Layout ---- */
 .mainHome {
   min-height: 100vh;
@@ -36,15 +7,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
+  background: #F9FAFB;
 }
 
 .infoContainer {
   width: 100%;
   max-width: none;
   min-height: 100vh;
-  background: var(--panel);
-  color: var(--text);
+  background: #FFFFFF;
+  color: #1F2A44;
   border-radius: 0;
   padding: 24px;
   display: flex;
@@ -80,8 +51,8 @@
 /* ---- Panels ---- */
 .leftPanel,
 .rightPanel {
-  border: 1px solid var(--tint-200);
-  border-radius: var(--radius);
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
   background: #fff;
   padding: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -90,8 +61,8 @@
 /* ---- Cards ---- */
 .card {
   background: #fff;
-  border: 1px solid var(--tint-200);
-  border-radius: var(--radius);
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
   padding: 16px;
   margin-bottom: 16px;
 }
@@ -124,7 +95,7 @@
 }
 
 .infoIcon {
-  color: var(--muted);
+  color: #6B7280;
 }
 
 .infoRow p {
@@ -175,20 +146,23 @@
 
 /* ---- Table (colors adjusted) ---- */
 .tableContainer {
-  max-height: calc(var(--row-h) * 8);
+  max-height: calc(60px * 8);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  border: 1px solid #E7EEF6;       /* soft outer border */
+  border: 1px solid #E7EEF6;
   border-radius: 10px;
   background: #FFFFFF;
 }
-.tableContainer::-webkit-scrollbar { display: none; }
+
+.tableContainer::-webkit-scrollbar {
+  display: none;
+}
 
 .table {
   width: 100%;
   background: #FFFFFF;
-  border: 1px solid #E7EEF6;       /* outer border of table */
+  border: 1px solid #E7EEF6;
   border-radius: 10px;
   border-collapse: separate;
   border-spacing: 0;
@@ -200,20 +174,24 @@
   padding: 12px;
   text-align: left;
   font-size: 0.95rem;
-  border-bottom: 1px solid #E7EEF6; /* row separators */
+  border-bottom: 1px solid #E7EEF6;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .table th {
-  background: #EAF6FB;             /* header blue tint */
+  background: #EAF6FB;
   color: #1F2A44;
   font-weight: 600;
   position: sticky;
   top: 0;
-  z-index: var(--z-header);
+  z-index: 10;
 }
 
 .table tr:hover {
-  background: #F3F8FE;             /* lighter blue on hover */
+  background: #F3F8FE;
 }
 
 .pendingChangeRow {
@@ -285,7 +263,7 @@
 /* ---- Dropdown ---- */
 .statusDropdown {
   padding: 6px 10px;
-  border: 1px solid var(--tint-200);
+  border: 1px solid #E5E7EB;
   border-radius: 8px;
   font-size: 0.9rem;
   background: #fff;
@@ -293,7 +271,7 @@
 }
 
 .statusDropdown:focus {
-  outline: 2px solid var(--primary-500);
+  outline: 2px solid #3B82F6;
   outline-offset: 1px;
 }
 
@@ -323,11 +301,11 @@
 .backButton {
   background: #fff;
   color: #374151;
-  border: 1px solid var(--tint-200);
+  border: 1px solid #E5E7EB;
 }
 
 .backButton:hover {
-  background: var(--tint-100);
+  background: #F3F4F6;
   transform: translateY(-1px);
 }
 
@@ -336,13 +314,13 @@
 }
 
 .saveAllButton {
-  background: var(--primary);
+  background: #3B82F6;
   color: #fff;
   border: none;
 }
 
 .saveAllButton:hover:not(:disabled) {
-  background: var(--primary-600);
+  background: #2563EB;
   transform: translateY(-1px);
 }
 
@@ -366,7 +344,7 @@
 
 .spinner {
   border: 4px solid #f3f3f3;
-  border-top: 4px solid var(--primary);
+  border-top: 4px solid #3B82F6;
   border-radius: 50%;
   width: 36px;
   height: 36px;
@@ -374,25 +352,30 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loadingText,
 .noDataMessage {
   font-size: 1.25rem;
-  color: var(--muted);
+  color: #6B7280;
   margin-top: 12px;
 }
 
 /* ---- SweetAlert2 Custom Styles ---- */
 .swalPopup {
-  border-radius: var(--radius);
+  border-radius: 10px;
   font-family: 'Inter', sans-serif;
 }
 
 .swalButton {
-  background: var(--primary);
+  background: #3B82F6;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -402,13 +385,13 @@
 }
 
 .swalButton:hover {
-  background: var(--primary-600);
+  background: #2563EB;
 }
 
 .swalCancelButton {
   background: #fff;
   color: #374151;
-  border: 1px solid var(--tint-200);
+  border: 1px solid #E5E7EB;
   border-radius: 8px;
   padding: 10px 16px;
   font-size: 0.95rem;
@@ -416,38 +399,51 @@
 }
 
 .swalCancelButton:hover {
-  background: var(--tint-100);
+  background: #F3F4F6;
 }
 
 /* ---- Responsive ---- */
 @media (max-width: 1024px) {
-  .contentGrid { grid-template-columns: 1fr; }
-  .rightPanel { margin-top: 24px; }
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .rightPanel {
+    margin-top: 24px;
+  }
 }
 
 @media (max-width: 768px) {
-  .infoContainer { padding: 16px; }
-  .table th, .table td { padding: 8px; font-size: 0.9rem; }
+  .infoContainer {
+    padding: 16px;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px;
+    font-size: 0.9rem;
+  }
 }
 
 @media (max-width: 640px) {
-  :root {
-    --th-font: 1rem;
-    --th-min-h: 54px;
-    --th-pad-y: 10px;
-    --table-gap: 10px;
+  .mainHome {
+    padding: 12px;
   }
 
-  .mainHome { padding: 12px; }
-
   .tableContainer {
-    border: 2px solid #E7EEF6; /* keep soft frame on small screens */
-    border-radius: var(--radius);
+    border: 2px solid #E7EEF6;
+    border-radius: 10px;
     padding: 8px;
   }
 
-  .table { display: block; border: none; }
-  .table thead { display: none; }
+  .table {
+    display: block;
+    border: none;
+  }
+
+  .table thead {
+    display: none;
+  }
 
   .table tbody tr {
     display: block;
@@ -472,8 +468,16 @@
     flex: 1;
   }
 
-  .table td:not(:last-child) { border-bottom: 1px solid #E7EEF6; }
+  .table td:not(:last-child) {
+    border-bottom: 1px solid #E7EEF6;
+  }
 
-  .actionButtonContainer { flex-direction: column; }
-  .backButton, .saveAllButton { width: 100%; }
+  .actionButtonContainer {
+    flex-direction: column;
+  }
+
+  .backButton,
+  .saveAllButton {
+    width: 100%;
+  }
 }

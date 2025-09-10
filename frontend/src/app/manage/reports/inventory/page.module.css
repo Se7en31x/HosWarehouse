@@ -1,56 +1,9 @@
 /* =============================
-   InventoryReport — page.module.css
-   Based on DamagedReportPage + InventoryCheck (baseline)
-   ============================= */
+   InventoryReport — page.module.css
+   Based on DamagedReportPage + InventoryCheck (baseline)
+   ============================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-/* ---- Variables ---- */
-:root {
-  --bg: #F9FAFB;
-  --panel: #FFFFFF;
-  --muted: #6B7280;
-  --text: #1F2A44;
-  --border: #D1D5DB;
-  --accent: #2563EB;
-  --accent-hover: #1D4ED8;
-
-  --success: #10B981;
-  --warning: #F59E0B;
-  --danger: #EF4444;
-
-  --tint-50: #FAFAFA;
-  --tint-100: #F3F4F6;
-  --tint-200: #E5E7EB;
-
-  --radius: 6px;
-  --radius-sm: 4px;
-
-  --row-h: 48px;
-  --rows-per-page: 12;
-
-  --th-font: 0.9rem;
-  --th-min-h: 48px;
-  --th-pad-y: 8px;
-  --th-pad-x: 8px;
-  --th-line: 1.2;
-
-  --z-header: 10;
-  --z-toolbar: 100;
-  --z-select: 9000;
-  --z-swal: 10000;
-
-  --table-columns-inventory:
-    minmax(36px, 0.5fr)
-    minmax(100px, 1fr)
-    minmax(140px, 2fr)
-    minmax(120px, 1.2fr)
-    minmax(80px, 1fr)
-    minmax(80px, 1fr)
-    minmax(80px, 1fr)
-    minmax(80px, 1fr)
-    minmax(120px, 1.5fr);
-}
 
 /* ---- Layout ---- */
 .mainHome {
@@ -59,21 +12,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
+  background: #F9FAFB;
 }
 
 .infoContainer {
   width: 100%;
   min-height: 100vh;
-  background: var(--panel);
-  color: var(--text);
-  border-radius: var(--radius);
+  background: #FFFFFF;
+  color: #1F2A44;
+  border-radius: 6px;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   flex: 1 1 auto;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 /* ---- Header ---- */
@@ -82,7 +35,7 @@
   justify-content: space-between;
   align-items: center;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #D1D5DB;
 }
 
 .pageTitle {
@@ -92,7 +45,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--text);
+  color: #1F2A44;
 }
 
 .titleGroup {
@@ -103,16 +56,16 @@
 
 /* ---- Toolbar ---- */
 .toolbar {
-  z-index: var(--z-toolbar);
+  z-index: 100;
   display: flex;
   gap: 12px;
   align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
   padding: 12px;
-  border-radius: var(--radius);
-  background: var(--tint-50);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border-radius: 6px;
+  background: #FAFAFA;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .filterGrid {
@@ -135,7 +88,7 @@
 .label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--text);
+  color: #1F2A44;
 }
 
 /* ---- Date Picker ---- */
@@ -149,9 +102,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  background: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  border-radius: 4px;
   padding: 4px 8px;
 }
 
@@ -159,7 +112,7 @@
   border: none;
   background: transparent;
   font-size: 0.85rem;
-  color: var(--text);
+  color: #1F2A44;
 }
 
 .dateInput:focus {
@@ -170,19 +123,19 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  color: var(--accent);
+  color: #2563EB;
   display: flex;
   align-items: center;
   padding: 2px;
 }
 
 .calendarButton:hover {
-  color: var(--accent-hover);
+  color: #1D4ED8;
 }
 
 .toLabel {
   font-size: 0.85rem;
-  color: var(--muted);
+  color: #6B7280;
   font-weight: 600;
 }
 
@@ -195,10 +148,10 @@
 }
 
 .btnPrimary {
-  background: var(--accent);
+  background: #2563EB;
   color: #fff;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 4px;
   height: 40px;
   padding: 0 16px;
   display: inline-flex;
@@ -210,14 +163,14 @@
 }
 
 .btnPrimary:hover {
-  background: var(--accent-hover);
+  background: #1D4ED8;
 }
 
 .btnSecondary {
   background: #6B7280;
   color: #fff;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 4px;
   height: 40px;
   padding: 0 16px;
   display: inline-flex;
@@ -233,10 +186,10 @@
 }
 
 .ghostBtn {
-  background: var(--panel);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  background: #FFFFFF;
+  color: #1F2A44;
+  border: 1px solid #D1D5DB;
+  border-radius: 4px;
   height: 40px;
   padding: 0 16px;
   display: inline-flex;
@@ -247,18 +200,18 @@
 }
 
 .ghostBtn:hover {
-  background: var(--tint-100);
+  background: #F3F4F6;
 }
 
 .clearButton {
-  color: var(--accent);
+  color: #2563EB;
   font-weight: 600;
 }
 
 /* ---- Table ---- */
 .tableSection {
-  border-radius: var(--radius);
-  background: var(--panel);
+  border-radius: 6px;
+  background: #FFFFFF;
   overflow-x: auto;
   display: flex;
   flex-direction: column;
@@ -266,7 +219,8 @@
 
 .tableGridInventory {
   display: grid;
-  grid-template-columns: var(--table-columns-inventory);
+  grid-template-columns:
+    minmax(36px, 0.5fr) minmax(100px, 1fr) minmax(140px, 2fr) minmax(120px, 1.2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(120px, 1.5fr);
   align-items: center;
   min-width: 750px;
 }
@@ -274,12 +228,12 @@
 .tableHeader {
   position: sticky;
   top: 0;
-  z-index: var(--z-header);
-  background: var(--tint-100);
+  z-index: 10;
+  background: #F3F4F6;
   font-weight: 700;
-  font-size: var(--th-font);
-  line-height: var(--th-line);
-  min-height: var(--th-min-h);
+  font-size: 0.9rem;
+  line-height: 1.2;
+  min-height: 48px;
 }
 
 .headerItem {
@@ -288,22 +242,22 @@
 }
 
 .inventory {
-  background: var(--panel);
-  height: calc(var(--row-h) * var(--rows-per-page));
+  background: #FFFFFF;
+  height: calc(48px * 12);
   overflow: hidden;
 }
 
 .tableRow {
-  height: var(--row-h);
-  border-top: 1px solid var(--tint-200);
+  height: 48px;
+  border-top: 1px solid #E5E7EB;
 }
 
 .tableRow:nth-child(even) {
-  background: var(--tint-50);
+  background: #FAFAFA;
 }
 
 .tableRow:hover {
-  background: var(--tint-200);
+  background: #E5E7EB;
 }
 
 .tableCell {
@@ -322,11 +276,11 @@
 
 /* ---- No Data ---- */
 .noDataMessage {
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(48px * 12);
   display: flex;
   justify-content: center;
   align-items: center;
-  color: var(--muted);
+  color: #6B7280;
   font-size: 0.9rem;
 }
 
@@ -341,11 +295,11 @@
 
 /* ---- Loading ---- */
 .loadingContainer {
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(48px * 12);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
+  color: #6B7280;
   font-size: 0.9rem;
 }
 
@@ -355,13 +309,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-top: 1px solid var(--border);
-  background: var(--panel);
+  border-top: 1px solid #D1D5DB;
+  background: #FFFFFF;
 }
 
 .paginationInfo {
   font-size: 0.85rem;
-  color: var(--muted);
+  color: #6B7280;
 }
 
 .paginationControls {
@@ -375,17 +329,17 @@
 .pageButton {
   min-width: 30px;
   height: 36px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--panel);
+  border: 1px solid #D1D5DB;
+  border-radius: 4px;
+  background: #FFFFFF;
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 500;
-  color: var(--text);
+  color: #1F2A44;
 }
 
 .pageButton:hover:not(:disabled) {
-  background: var(--tint-100);
+  background: #F3F4F6;
 }
 
 .pageButton:disabled {
@@ -394,14 +348,15 @@
 }
 
 .activePage {
-  background: var(--accent);
+  background: #2563EB;
   color: #fff;
-  border-color: var(--accent);
+  border-color: #2563EB;
 }
 
 .ellipsis {
   padding: 0 6px;
-  color: var(--muted);
+  color: #6B7280;
+  font-size: 1rem;
 }
 
 /* ---- Stock Status ---- */

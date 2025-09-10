@@ -1,42 +1,22 @@
+/* MyRequests — page.module.css */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-/* ---- Variables ---- */
+/* SweetAlert */
+:global(.swal2-container),
+:global(.swal-topmost) {
+  z-index: 10000 !important;
+  position: fixed !important;
+  inset: 0 !important;
+}
+
+/* ---- Layout ---- */
 .mainHome {
-  --bg: #f3f4f6;
-  --panel: #ffffff;
-  --text: #111827;
-  --muted: #6b7280;
-  --border: #e5e7eb;
-
-  --primary: #2563eb;
-  --primary-dark: #1e40af;
-  --success: #16a34a;
-  --success-dark: #15803d;
-  --danger: #dc2626;
-  --danger-dark: #b91c1c;
-
-  --radius: 8px;
-
-  --row-h: 60px;
-  --rows-per-page: 10;
-  --th-font: 1.05rem;
-  --th-min-h: 60px;
-  --th-pad-y: 14px;
-  --th-pad-x: 12px;
-  --th-letter: 0.01em;
-  --th-line: 1.25;
-
-  --z-toolbar: 100;
-  --z-header: 10;
-  --z-select: 9000;
-  --z-modal-overlay: 12000;
-
   min-height: 100vh;
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
+  background: #f3f4f6;
 }
 
 /* ---- Container ---- */
@@ -44,8 +24,8 @@
   width: 100%;
   max-width: none;
   min-height: 100vh;
-  background: var(--panel);
-  color: var(--text);
+  background: #ffffff;
+  color: #111827;
   border-radius: 0;
   padding: 24px;
   display: flex;
@@ -62,7 +42,7 @@
   justify-content: space-between;
   align-items: center;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .titleGroup {
@@ -79,26 +59,26 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  color: var(--text);
+  color: #111827;
 }
 
 /* ---- Controls ---- */
 .controls {
   position: relative;
-  z-index: var(--z-toolbar);
+  z-index: 100;
   display: flex;
   gap: 12px;
   align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
   padding: 16px;
-  border-radius: var(--radius);
-  
+  border-radius: 8px;
+
 }
 
 .filterGrid {
   position: relative;
-  z-index: var(--z-toolbar);
+  z-index: 100;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
@@ -107,7 +87,7 @@
 
 .filterGroup {
   position: relative;
-  z-index: var(--z-toolbar);
+  z-index: 100;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -121,7 +101,7 @@
 
 .filterInput {
   height: 40px;
-  border: 1px solid var(--border);
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 0 12px;
   font-size: 0.95rem;
@@ -130,7 +110,7 @@
 
 .filterInput:focus {
   outline: none;
-  border-color: var(--primary);
+  border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
@@ -145,7 +125,7 @@
 .ghostBtn {
   background: #fff;
   color: #374151;
-  border: 1px solid var(--border);
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   height: 40px;
   padding: 0 12px;
@@ -163,24 +143,24 @@
 
 .pdfBtn {
   color: #fff;
-  background: var(--danger);
-  border-color: var(--danger);
+  background: #dc2626;
+  border-color: #dc2626;
 }
 
 .pdfBtn:hover {
-  background: var(--danger-dark);
-  border-color: var(--danger-dark);
+  background: #b91c1c;
+  border-color: #b91c1c;
 }
 
 .csvBtn {
   color: #fff;
-  background: var(--success);
-  border-color: var(--success);
+  background: #16a34a;
+  border-color: #16a34a;
 }
 
 .csvBtn:hover {
-  background: var(--success-dark);
-  border-color: var(--success-dark);
+  background: #15803d;
+  border-color: #15803d;
 }
 
 .ghostBtn:disabled {
@@ -214,19 +194,19 @@
 }
 
 .viewButton {
-  background: var(--primary);
-  border-color: var(--primary);
+  background: #2563eb;
+  border-color: #2563eb;
   color: #fff;
 }
 
 .viewButton:hover {
-  background: var(--primary-dark);
-  border-color: var(--primary-dark);
+  background: #1e40af;
+  border-color: #1e40af;
 }
 
 /* ---- Table ---- */
 .tableFrame {
-  border-radius: var(--radius);
+  border-radius: 8px;
   background: #ffffff;
   overflow: hidden;
   display: flex;
@@ -238,14 +218,22 @@
 .tableGrid {
   display: grid;
   grid-template-columns:
-    minmax(100px, 1.2fr)     /* เลขคำขอ */
-    minmax(160px, 1.6fr)   /* ชื่อผู้ขอ */
-    minmax(180px, 1.8fr)   /* แผนก */
-    minmax(160px, 1.5fr)   /* วันที่ */
-    minmax(150px, 1.4fr)   /* ประเภท */
-    minmax(120px, 1fr)     /* ความเร่งด่วน */
-    minmax(140px, 1.2fr)   /* สถานะ */
-    minmax(100px, 1fr);    /* การดำเนินการ */
+    minmax(100px, 1.2fr)
+    /* เลขคำขอ */
+    minmax(160px, 1.6fr)
+    /* ชื่อผู้ขอ */
+    minmax(180px, 1.8fr)
+    /* แผนก */
+    minmax(160px, 1.5fr)
+    /* วันที่ */
+    minmax(150px, 1.4fr)
+    /* ประเภท */
+    minmax(120px, 1fr)
+    /* ความเร่งด่วน */
+    minmax(140px, 1.2fr)
+    /* สถานะ */
+    minmax(100px, 1fr);
+  /* การดำเนินการ */
   align-items: center;
 }
 
@@ -253,20 +241,20 @@
 .tableHeader {
   position: sticky;
   top: 0;
-  z-index: var(--z-header);
+  z-index: 10;
   background: #f9fafb;
-  padding-block: var(--th-pad-y);
-  padding-inline: var(--th-pad-x);
+  padding-block: 14px;
+  padding-inline: 12px;
   font-weight: 700;
   color: #374151;
-  font-size: var(--th-font);
-  line-height: var(--th-line);
-  min-height: var(--th-min-h);
-  border-bottom: 1px solid var(--border);
+  font-size: 1.05rem;
+  line-height: 1.25;
+  min-height: 60px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .tableHeader .headerItem,
-.tableHeader > div {
+.tableHeader>div {
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -294,14 +282,14 @@
 }
 
 .tableBody {
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(60px * 10);
   overflow: hidden;
 }
 
 .tableRow {
-  height: var(--row-h);
-  padding: 0 var(--th-pad-x);
-  border-top: 1px solid var(--border);
+  height: 60px;
+  padding: 0 12px;
+  border-top: 1px solid #e5e7eb;
   transition: background-color 0.2s ease;
 }
 
@@ -336,7 +324,7 @@
 }
 
 .muted {
-  color: var(--muted);
+  color: #6b7280;
 }
 
 .codeCell {
@@ -345,7 +333,7 @@
 }
 
 .typeCell {
-  color: var(--primary);
+  color: #2563eb;
 }
 
 .fillerRow {
@@ -358,22 +346,22 @@
 
 /* ---- Loading ---- */
 .loadingContainer {
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(60px * 10);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
+  color: #6b7280;
   font-size: 1rem;
   background: url('/loading-spinner.gif') no-repeat center;
 }
 
 /* ---- No Data ---- */
 .noDataCell {
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(60px * 10);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
+  color: #6b7280;
   font-size: 1rem;
 }
 
@@ -384,13 +372,13 @@
   align-items: center;
   gap: 12px;
   padding: 12px 0;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid #e5e7eb;
   background: #ffffff;
 }
 
 .paginationInfo {
   font-size: 0.9rem;
-  color: var(--muted);
+  color: #6b7280;
 }
 
 .paginationControls {
@@ -406,7 +394,7 @@
 .pageButton {
   min-width: 34px;
   height: 40px;
-  border: 1px solid var(--border);
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   background: #ffffff;
   cursor: pointer;
@@ -428,14 +416,14 @@
 }
 
 .activePage {
-  background: var(--primary);
+  background: #2563eb;
   color: #ffffff;
-  border-color: var(--primary);
+  border-color: #2563eb;
 }
 
 .ellipsis {
   padding: 0 8px;
-  color: var(--muted);
+  color: #6b7280;
   font-size: 1rem;
 }
 
@@ -528,21 +516,21 @@
 }
 
 .typeWithdraw {
-  color: var(--primary);
+  color: #2563eb;
   background: #eff6ff;
-  border: 1px solid  var(--primary);
+  border: 1px solid #2563eb;
 }
 
 .typeBorrow {
-  color: var(--danger);
+  color: #dc2626;
   background: #fef2f2;
-  border: 1px solid  var(--danger);
+  border: 1px solid #dc2626;
 }
 
 .typeReturn {
-  color: var(--success);
+  color: #16a34a;
   background: #ecfdf5;
-  border: 1px solid  var(--success);
+  border: 1px solid #16a34a;
 }
 
 /* ---- Modal (สำหรับหน้า /staff/requestHistory/:id) ---- */
@@ -552,16 +540,17 @@
   background: rgba(0, 0, 0, 0.5);
   display: grid;
   place-items: center;
-  z-index: var(--z-modal-overlay);
+  z-index: 12000;
 }
 
 .modal {
   position: relative;
   z-index: 1;
   width: 94%;
-  max-width: 960px; /* ขนาด modal ใหญ่ขึ้น */
+  max-width: 960px;
+  /* ขนาด modal ใหญ่ขึ้น */
   background: #fff;
-  border: 1px solid var(--border);
+  border: 1px solid #e5e7eb;
   border-radius: 14px;
   padding: 18px;
   display: flex;
@@ -580,7 +569,7 @@
   font-size: 1.25rem;
   font-weight: 800;
   margin: 0 0 2px;
-  color: var(--text);
+  color: #111827;
 }
 
 .modalBody {
@@ -590,7 +579,7 @@
 }
 
 .modalTableWrapper {
-  border: 1px solid var(--border);
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
   overflow: hidden;
 }
@@ -598,19 +587,19 @@
 .modalTable {
   width: 100%;
   border-collapse: collapse;
-  background: var(--panel);
+  background: #ffffff;
 }
 
 .modalTable thead th {
   text-align: left;
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
+  background: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
   padding: 10px 12px;
   font-size: 12px;
 }
 
 .modalTable tbody td {
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #e5e7eb;
   padding: 10px 12px;
   vertical-align: middle;
 }
@@ -620,16 +609,17 @@
 .modalEmpty {
   padding: 16px;
   text-align: center;
-  color: var(--muted);
+  color: #6b7280;
 }
 
 .modalError {
-  color: var(--danger);
+  color: #dc2626;
 }
 
 /* ---- Responsive ---- */
 @media (max-width: 1024px) {
-  .filterGrid {
+  .summaryRowTop,
+  .summaryRowBottom {
     grid-template-columns: repeat(2, minmax(180px, 1fr));
   }
 }
@@ -642,6 +632,7 @@
     flex-wrap: wrap;
     row-gap: 6px;
   }
+
   .filterGrid {
     grid-template-columns: 1fr;
   }
@@ -658,9 +649,11 @@
     grid-auto-rows: auto;
     row-gap: 6px;
   }
+
   .tableHeader {
     display: none;
   }
+
   .tableRow {
     grid-template-columns:
       minmax(100px, 1fr)
@@ -668,14 +661,18 @@
       minmax(150px, 1.4fr)
       minmax(120px, 1fr)
       minmax(140px, 1fr);
-    border-top: 1px solid var(--border);
+    border-top: 1px solid #e5e7eb;
     padding: 12px;
     height: auto;
   }
+
   .tableCell:nth-child(5) {
-    display: none; /* ซ่อนสถานะการอนุมัติในหน้าจอเล็ก */
+    display: none;
+    /* ซ่อนสถานะการอนุมัติในหน้าจอเล็ก */
   }
+
   .fillerRow {
-    display: none; /* ซ่อน filler rows ในหน้าจอเล็ก */
+    display: none;
+    /* ซ่อน filler rows ในหน้าจอเล็ก */
   }
 }

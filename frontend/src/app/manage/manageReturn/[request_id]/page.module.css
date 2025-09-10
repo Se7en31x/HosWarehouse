@@ -1,71 +1,9 @@
 /* ============================= 
-   Manage Return Detail — page.module.css
-   Match style with ApprovalRequest and ManageReturnPage, separate tables with fixed height (3 rows for pending, 5 rows for history) with scroll
-   ============================= */
+   Manage Return Detail — page.module.css
+   Match style with ApprovalRequest and ManageReturnPage, separate tables with fixed height (3 rows for pending, 5 rows for history) with scroll
+   ============================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-:root {
-  /* Colors */
-  --bg: #f0fbfe;
-  --panel: #ffffff;
-  --muted: #6b7280;
-  --text: #111827;
-  --border: #e5e7eb;
-
-  --primary: #008dda;
-  --primary-500: #41c9e2;
-  --primary-600: #1685bb;
-
-  --success: #16a34a;
-  --warning: #d97706;
-  --danger: #dc2626;
-
-  --tint-50: #f0fbfe;
-  --tint-100: #e9f6fb;
-  --tint-200: #ace2e1;
-
-  --radius: 10px;
-
-  /* Table */
-  --row-h: 60px;
-  --rows-per-page-pending: 3;
-  --rows-per-page-history: 5;
-
-  /* Header sizing */
-  --th-font: 1.05rem;
-  --th-min-h: 60px;
-  --th-pad-y: 14px;
-  --th-pad-x: 12px;
-  --th-letter: 0.01em;
-  --th-line: 1.25;
-
-  /* Z */
-  --z-header: 10;
-  --z-overlay: 2000;
-  --z-swal: 10000;
-
-  /* Status badge colors */
-  --st-normal-fg: #065f46;
-  --st-normal-bg: #d9fbe5;
-  --st-normal-br: #86efac;
-
-  --st-expired-fg: #d97706;
-  --st-expired-bg: #fff7ed;
-  --st-expired-br: #fdba74;
-
-  --st-damaged-fg: #dc2626;
-  --st-damaged-bg: #fef2f2;
-  --st-damaged-br: #fecaca;
-
-  --st-lost-fg: #374151;
-  --st-lost-bg: #f3f4f6;
-  --st-lost-br: #e5e7eb;
-
-  --st-default-fg: #374151;
-  --st-default-bg: #f3f4f6;
-  --st-default-br: #e5e7eb;
-}
 
 /* Layout */
 .mainHome {
@@ -74,14 +12,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
+  background: #f0fbfe;
 }
 
 .infoContainer {
   width: 100%;
   min-height: 100vh;
-  background: var(--panel);
-  color: var(--text);
+  background: #ffffff;
+  color: #111827;
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -113,7 +51,7 @@
   margin: 18px 0 8px;
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--primary-600);
+  color: #1685bb;
 }
 
 /* Buttons */
@@ -125,7 +63,7 @@
   font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
-  background: var(--primary); /* #008dda */
+  background: #008dda;
   color: #fff;
   display: inline-flex;
   align-items: center;
@@ -133,7 +71,7 @@
 }
 
 .actionButton:hover {
-  background: var(--primary-600); /* #1685bb */
+  background: #1685bb;
 }
 
 .actionButton:disabled {
@@ -144,7 +82,7 @@
 .ghostBtn {
   background: #fff;
   color: #374151;
-  border: 1px solid var(--tint-200);
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   height: 40px;
   padding: 0 12px;
@@ -158,8 +96,8 @@
 
 /* Table */
 .tableFrame {
-  border: 1px solid var(--tint-200);
-  border-radius: var(--radius);
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
   background: #fff;
   overflow: hidden;
 }
@@ -167,51 +105,68 @@
 .tableGrid.pending {
   display: grid;
   grid-template-columns:
-    minmax(180px, 1.4fr) /* พัสดุ */
-    minmax(80px, 0.6fr) /* หน่วย */
-    minmax(80px, 0.6fr) /* อนุมัติ */
-    minmax(80px, 0.6fr) /* คืนสะสม */
-    minmax(80px, 0.6fr) /* คงเหลือ */
-    minmax(140px, 1fr) /* กำหนดคืน */
-    minmax(120px, 0.9fr); /* จัดการ */
+    minmax(180px, 1.4fr)
+    /* พัสดุ */
+    minmax(80px, 0.6fr)
+    /* หน่วย */
+    minmax(80px, 0.6fr)
+    /* อนุมัติ */
+    minmax(80px, 0.6fr)
+    /* คืนสะสม */
+    minmax(80px, 0.6fr)
+    /* คงเหลือ */
+    minmax(140px, 1fr)
+    /* กำหนดคืน */
+    minmax(120px, 0.9fr);
+  /* จัดการ */
   align-items: center;
 }
 
 .tableGrid.history {
   display: grid;
   grid-template-columns:
-    minmax(120px, 0.9fr) /* รหัสคืน */
-    minmax(140px, 1fr) /* วันเวลา */
-    minmax(140px, 1fr) /* ผู้ตรวจรับ */
-    minmax(180px, 1.4fr) /* พัสดุ */
-    minmax(80px, 0.6fr) /* อนุมัติ */
-    minmax(80px, 0.6fr) /* คืนครั้งนี้ */
-    minmax(80px, 0.6fr) /* คืนสะสม */
-    minmax(80px, 0.6fr) /* คงเหลือ */
-    minmax(120px, 0.9fr) /* สถานะ */
-    minmax(140px, 1fr); /* ผลการจัดการ */
+    minmax(120px, 0.9fr)
+    /* รหัสคืน */
+    minmax(140px, 1fr)
+    /* วันเวลา */
+    minmax(140px, 1fr)
+    /* ผู้ตรวจรับ */
+    minmax(180px, 1.4fr)
+    /* พัสดุ */
+    minmax(80px, 0.6fr)
+    /* อนุมัติ */
+    minmax(80px, 0.6fr)
+    /* คืนครั้งนี้ */
+    minmax(80px, 0.6fr)
+    /* คืนสะสม */
+    minmax(80px, 0.6fr)
+    /* คงเหลือ */
+    minmax(120px, 0.9fr)
+    /* สถานะ */
+    minmax(140px, 1fr);
+  /* ผลการจัดการ */
   align-items: center;
 }
 
 .tableHeader {
   position: sticky;
   top: 0;
-  z-index: var(--z-header);
+  z-index: 10;
   background: #eef9fc;
-  border-bottom: 1px solid var(--tint-200);
-  padding-block: var(--th-pad-y);
-  padding-inline: var(--th-pad-x);
+  border-bottom: 1px solid #e5e7eb;
+  padding-block: 14px;
+  padding-inline: 12px;
   font-weight: 700;
   color: #374151;
-  font-size: var(--th-font);
-  line-height: var(--th-line);
-  min-height: var(--th-min-h);
+  font-size: 1.05rem;
+  line-height: 1.25;
+  min-height: 60px;
 }
 
-.tableHeader.tableGrid > div,
+.tableHeader.tableGrid>div,
 .tableHeader .headerItem {
   font-weight: 700;
-  letter-spacing: var(--th-letter);
+  letter-spacing: 0.01em;
   display: flex;
   align-items: center;
   white-space: nowrap;
@@ -224,25 +179,24 @@
 
 .inventory.pending {
   background: #fff;
-  height: calc(var(--row-h) * var(--rows-per-page-pending));
+  height: calc(60px * 3);
   overflow-y: auto;
 }
 
 .inventory.history {
   background: #fff;
-  height: calc(var(--row-h) * var(--rows-per-page-history));
+  height: calc(60px * 5);
   overflow-y: auto;
 }
 
 .tableRow {
-  height: var(--row-h);
-  padding: 0 var(--th-pad-x);
-  /* border-top: 1px solid #deedf1; */
+  height: 60px;
+  padding: 0 12px;
   border-bottom: 1px solid #deedf1;
 }
 
 .tableRow:hover {
-  background: var(--tint-100);
+  background: #e9f6fb;
 }
 
 .tableRow:first-child {
@@ -265,15 +219,15 @@
 /* States */
 .noDataMessage,
 .loadingContainer {
-  height: calc(var(--row-h) * var(--rows-per-page-pending));
+  height: calc(60px * 3);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
+  color: #6b7280;
 }
 
 .inventory.history .noDataMessage {
-  height: calc(var(--row-h) * var(--rows-per-page-history));
+  height: calc(60px * 5);
 }
 
 /* Modal */
@@ -284,12 +238,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: var(--z-overlay);
+  z-index: 2000;
 }
 
 .modalCard {
   background: #fff;
-  border-radius: var(--radius);
+  border-radius: 10px;
   padding: 24px;
   max-width: 500px;
   width: 100%;
@@ -300,14 +254,14 @@
 }
 
 .swal2-container {
-  z-index: var(--z-swal) !important;
+  z-index: 10000 !important;
 }
 
 .modalTitle {
   font-size: 1.2rem;
   font-weight: 700;
   margin-bottom: 6px;
-  color: var(--text);
+  color: #111827;
 }
 
 .modalActions {
@@ -333,7 +287,7 @@
 .select,
 .textarea {
   width: 100%;
-  border: 1px solid var(--tint-200);
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 8px 12px;
   font-size: 0.95rem;
@@ -342,7 +296,7 @@
 .input:focus,
 .select:focus,
 .textarea:focus {
-  outline: 2px solid var(--primary-500);
+  outline: 2px solid #41c9e2;
   outline-offset: 1px;
 }
 
@@ -353,15 +307,15 @@
 
 .helpText {
   font-size: 0.8rem;
-  color: var(--muted);
+  color: #6b7280;
 }
 
 .submitStatus {
-  background: var(--tint-100);
+  background: #e9f6fb;
   padding: 8px 12px;
   border-radius: 8px;
   font-size: 0.9rem;
-  color: var(--text);
+  color: #111827;
 }
 
 /* Status badge */
@@ -377,70 +331,81 @@
 }
 
 .stNormal {
-  color: var(--st-normal-fg);
-  background: var(--st-normal-bg);
-  border-color: var(--st-normal-br);
+  color: #065f46;
+  background: #d9fbe5;
+  border-color: #86efac;
 }
 
 .stExpired {
-  color: var(--st-expired-fg);
-  background: var(--st-expired-bg);
-  border-color: var(--st-expired-br);
+  color: #d97706;
+  background: #fff7ed;
+  border-color: #fdba74;
 }
 
 .stDamaged {
-  color: var(--st-damaged-fg);
-  background: var(--st-damaged-bg);
-  border-color: var(--st-damaged-br);
+  color: #dc2626;
+  background: #fef2f2;
+  border-color: #fecaca;
 }
 
 .stLost {
-  color: var(--st-lost-fg);
-  background: var(--st-lost-bg);
-  border-color: var(--st-lost-br);
+  color: #374151;
+  background: #f3f4f6;
+  border-color: #e5e7eb;
 }
 
 .stDefault {
-  color: var(--st-default-fg);
-  background: var(--st-default-bg);
-  border-color: var(--st-default-br);
+  color: #374151;
+  background: #f3f4f6;
+  border-color: #e5e7eb;
 }
 
 /* Responsive */
 @media (max-width: 640px) {
   .tableGrid.pending {
     grid-template-columns:
-      140px /* พัสดุ */
-      60px /* หน่วย */
-      60px /* อนุมัติ */
-      60px /* คืนสะสม */
-      60px /* คงเหลือ */
-      100px /* กำหนดคืน */
-      100px; /* จัดการ */
+      140px
+      /* พัสดุ */
+      60px
+      /* หน่วย */
+      60px
+      /* อนุมัติ */
+      60px
+      /* คืนสะสม */
+      60px
+      /* คงเหลือ */
+      100px
+      /* กำหนดคืน */
+      100px;
+    /* จัดการ */
   }
 
   .tableGrid.history {
     grid-template-columns:
-      100px /* รหัสคืน */
-      120px /* วันเวลา */
-      120px /* ผู้ตรวจรับ */
-      140px /* พัสดุ */
-      60px /* อนุมัติ */
-      60px /* คืนครั้งนี้ */
-      60px /* คืนสะสม */
-      60px /* คงเหลือ */
-      100px /* สถานะ */
-      120px; /* ผลการจัดการ */
+      100px
+      /* รหัสคืน */
+      120px
+      /* วันเวลา */
+      120px
+      /* ผู้ตรวจรับ */
+      140px
+      /* พัสดุ */
+      60px
+      /* อนุมัติ */
+      60px
+      /* คืนครั้งนี้ */
+      60px
+      /* คืนสะสม */
+      60px
+      /* คงเหลือ */
+      100px
+      /* สถานะ */
+      120px;
+    /* ผลการจัดการ */
   }
 
   .stBadge {
     padding: 4px 8px;
     font-size: 0.85rem;
-  }
-
-  :root {
-    --th-font: 1rem;
-    --th-min-h: 54px;
-    --th-pad-y: 10px;
   }
 }

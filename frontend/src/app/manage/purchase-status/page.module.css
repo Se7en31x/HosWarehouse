@@ -1,49 +1,9 @@
 /* =============================
-   WarehousePurchaseStatus — page.module.css
-   Same as InventoryCheck with added status badges
-   ============================= */
+   WarehousePurchaseStatus — page.module.css
+   Same as InventoryCheck with added status badges
+   ============================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-/* ---- Variables ---- */
-:root {
-  /* Colors */
-  --bg: #F9FAFB;
-  --panel: #FFFFFF;
-  --muted: #6B7280;
-  --text: #1F2A44;
-  --border: #D1D5DB;
-
-  --success: #10B981;
-  --warning: #F59E0B;
-  --danger: #EF4444;
-
-  --tint-50: #FAFAFA;
-  --tint-100: #F3F4F6;
-  --tint-200: #E5E7EB;
-
-  --radius: 5px;
-
-  /* Table sizing */
-  --row-h: 60px;
-  --rows-per-page: 12; /* ✅ Locked at 12 rows */
-  --table-gap: 12px;
-
-  /* Header sizing */
-  --th-font: 1.05rem;
-  --th-min-h: 60px;
-  --th-pad-y: 14px;
-  --th-pad-x: 12px;
-  --th-letter: 0.01em;
-  --th-line: 1.25;
-
-  /* Z-Index */
-  --z-header: 10;
-  --z-toolbar: 100;
-  --z-select: 9000;
-  --z-swal: 10000;
-  --z-modal-overlay: 12000;
-}
 
 /* ---- Layout ---- */
 .mainHome {
@@ -52,16 +12,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
+  background: #F9FAFB;
 }
 
 .infoContainer {
   width: 100%;
   max-width: none;
   min-height: 100vh;
-  background: var(--panel);
-  color: var(--text);
-  border-radius: var(--radius);
+  background: #FFFFFF;
+  color: #1F2A44;
+  border-radius: 5px;
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -87,7 +47,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  color: var(--text);
+  color: #1F2A44;
 }
 
 .titleGroup {
@@ -100,19 +60,19 @@
 /* ---- Toolbar ---- */
 .toolbar {
   position: relative;
-  z-index: var(--z-toolbar);
+  z-index: 100;
   display: flex;
   gap: 12px;
   align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
   padding: 16px;
-  border-radius: var(--radius);
+  border-radius: 5px;
 }
 
 .filterGrid {
   position: relative;
-  z-index: var(--z-toolbar);
+  z-index: 100;
   display: grid;
   grid-template-columns: auto auto 1fr;
   gap: 12px;
@@ -121,7 +81,7 @@
 
 .filterGroup {
   position: relative;
-  z-index: var(--z-toolbar);
+  z-index: 100;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -129,7 +89,7 @@
 
 .label {
   font-size: 0.85rem;
-  color: var(--text);
+  color: #1F2A44;
   font-weight: 600;
 }
 
@@ -148,7 +108,7 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.filterGrid > .filterGroup:last-child {
+.filterGrid>.filterGroup:last-child {
   justify-self: end;
   width: 100%;
   max-width: 360px;
@@ -162,8 +122,8 @@
 }
 
 .ghostBtn {
-  background: var(--panel);
-  color: var(--text);
+  background: #FFFFFF;
+  color: #1F2A44;
   border: 1px solid #D1D5DB;
   border-radius: 8px;
   height: 40px;
@@ -198,7 +158,7 @@
 
 /* ---- Table ---- */
 .tableSection {
-  border-radius: var(--radius);
+  border-radius: 5px;
   background: #FFFFFF;
   overflow: hidden;
   display: flex;
@@ -209,34 +169,43 @@
 .tableGrid {
   display: grid;
   grid-template-columns:
-    minmax(120px, 1.2fr) /* วันที่ขอ */
-    minmax(100px, 1fr)   /* PR No */
-    minmax(180px, 2fr)   /* สินค้า */
-    minmax(120px, 1.2fr) /* หมวดหมู่ */
-    minmax(90px, 0.8fr)  /* จำนวน */
-    minmax(90px, 0.8fr)  /* หน่วย */
-    minmax(90px, 0.8fr)  /* รับแล้ว */
-    minmax(90px, 0.8fr)  /* คงเหลือ */
-    minmax(100px, 1.5fr); /* สถานะ */
+    minmax(120px, 1.2fr)
+    /* วันที่ขอ */
+    minmax(100px, 1fr)
+    /* PR No */
+    minmax(180px, 2fr)
+    /* สินค้า */
+    minmax(120px, 1.2fr)
+    /* หมวดหมู่ */
+    minmax(90px, 0.8fr)
+    /* จำนวน */
+    minmax(90px, 0.8fr)
+    /* หน่วย */
+    minmax(90px, 0.8fr)
+    /* รับแล้ว */
+    minmax(90px, 0.8fr)
+    /* คงเหลือ */
+    minmax(100px, 1.5fr);
+  /* สถานะ */
   align-items: center;
 }
 
 .tableHeader {
   position: sticky;
   top: 0;
-  z-index: var(--z-header);
+  z-index: 10;
   background: #f1f5f9;
-  padding-block: var(--th-pad-y);
-  padding-inline: var(--th-pad-x);
+  padding-block: 14px;
+  padding-inline: 12px;
   font-weight: 700;
   color: #000000;
-  font-size: var(--th-font);
-  line-height: var(--th-line);
-  min-height: var(--th-min-h);
+  font-size: 1.05rem;
+  line-height: 1.25;
+  min-height: 60px;
 }
 
 .tableHeader .headerItem,
-.tableHeader > div {
+.tableHeader>div {
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -257,7 +226,7 @@
   border: 0;
   border-radius: 0;
   background: #FFFFFF;
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(60px * 12);
   overflow: hidden;
 }
 
@@ -273,11 +242,11 @@
   background: #E5E7EB;
 }
 
-.inventory .tableRow > .tableCell:nth-child(5),
-.inventory .tableRow > .tableCell:nth-child(6),
-.inventory .tableRow > .tableCell:nth-child(7),
-.inventory .tableRow > .tableCell:nth-child(8),
-.inventory .tableRow > .tableCell:nth-child(9) {
+.inventory .tableRow>.tableCell:nth-child(5),
+.inventory .tableRow>.tableCell:nth-child(6),
+.inventory .tableRow>.tableCell:nth-child(7),
+.inventory .tableRow>.tableCell:nth-child(8),
+.inventory .tableRow>.tableCell:nth-child(9) {
   display: flex;
   justify-content: center;
   text-align: center;
@@ -285,8 +254,8 @@
 
 .tableRow {
   box-sizing: border-box;
-  height: var(--row-h);
-  padding: 0 var(--th-pad-x);
+  height: 60px;
+  padding: 0 12px;
   border-top: 1px solid #e5e7eb;
   transition: background-color 0.2s ease;
 }
@@ -312,11 +281,11 @@
 
 .noDataMessage,
 .noData {
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(60px * 12);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
+  color: #6B7280;
   font-size: 1rem;
 }
 
@@ -324,29 +293,30 @@
 .fillerRow {
   pointer-events: none;
 }
+
 .fillerRow:hover {
   background: inherit !important;
 }
 
 /* ---- Loading ---- */
 .loadingContainer {
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(60px * 12);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
+  color: #6B7280;
   font-size: 1rem;
   background: url('/loading-spinner.gif') no-repeat center;
 }
 
 /* ---- Error ---- */
 .errorContainer {
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(60px * 12);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  color: var(--danger);
+  color: #EF4444;
   font-size: 1rem;
 }
 
@@ -363,7 +333,7 @@
 
 .paginationInfo {
   font-size: 0.9rem;
-  color: var(--muted);
+  color: #6B7280;
 }
 
 .paginationControls {
@@ -410,7 +380,7 @@
 
 .ellipsis {
   padding: 0 8px;
-  color: var(--muted);
+  color: #6B7280;
   font-size: 1rem;
 }
 
@@ -462,7 +432,8 @@
   .filterGrid {
     grid-template-columns: repeat(2, minmax(180px, 1fr));
   }
-  .filterGrid > .filterGroup:last-child {
+
+  .filterGrid>.filterGroup:last-child {
     justify-self: stretch;
     max-width: none;
   }
@@ -476,34 +447,40 @@
     flex-wrap: wrap;
     row-gap: 6px;
   }
+
   .filterGrid {
     grid-template-columns: 1fr;
   }
-  .filterGrid > .filterGroup:last-child {
+
+  .filterGrid>.filterGroup:last-child {
     justify-self: stretch;
   }
 }
 
 @media (max-width: 640px) {
-  :root {
-    --th-font: 1rem;
-    --th-min-h: 54px;
-    --th-pad-y: 10px;
-    --table-gap: 10px;
-  }
   .mainHome {
     padding: 12px;
   }
+
   .tableGrid {
     grid-template-columns:
-      100px /* วันที่ขอ */
-      80px  /* PR No */
-      160px /* สินค้า */
-      100px /* หมวดหมู่ */
-      80px  /* จำนวน */
-      80px  /* หน่วย */
-      80px  /* รับแล้ว */
-      80px  /* คงเหลือ */
-      100px; /* สถานะ */
+      100px
+      /* วันที่ขอ */
+      80px
+      /* PR No */
+      160px
+      /* สินค้า */
+      100px
+      /* หมวดหมู่ */
+      80px
+      /* จำนวน */
+      80px
+      /* หน่วย */
+      80px
+      /* รับแล้ว */
+      80px
+      /* คงเหลือ */
+      100px;
+    /* สถานะ */
   }
 }

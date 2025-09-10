@@ -1,61 +1,17 @@
-:root {
-  --bg: #F9FAFB;
-  --panel: #FFFFFF;
-  --muted: #6B7280;
-  --text: #1F2A44;
-  --border: #D1D5DB;
-  --accent: #2563EB;
-  --accent-hover: #1D4ED8;
-
-  --success: #10B981;
-  --warning: #F59E0B;
-  --danger: #EF4444;
-
-  --tint-50: #FAFAFA;
-  --tint-100: #F3F4F6;
-  --tint-200: #E5E7EB;
-
-  --radius: 6px;
-  --radius-sm: 4px;
-
-  --row-h: 48px;
-  --rows-per-page: 12;
-
-  --table-columns-expired:
-    minmax(50px, 0.4fr)
-    /* ลำดับ */
-    minmax(120px, 1.5fr)
-    /* ชื่อพัสดุ */
-    minmax(100px, 1fr)
-    /* ประเภท */
-    minmax(90px, 0.8fr)
-    /* Lot No */
-    minmax(90px, 0.8fr)
-    /* จำนวนที่นำเข้า */
-    minmax(100px, 1fr)
-    /* วันหมดอายุ */
-    minmax(90px, 0.8fr)
-    /* จำนวนหมดอายุ */
-    minmax(90px, 0.8fr)
-    /* จัดการแล้ว */
-    minmax(90px, 0.8fr)
-    /* คงเหลือ */
-    minmax(100px, 1fr);
-  /* สถานะ */
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /* ---- Layout ---- */
 .mainHome {
   min-height: 100vh;
   display: flex;
   justify-content: center;
-  background: var(--bg);
+  background: #F9FAFB;
 }
 
 .infoContainer {
   width: 100%;
   min-height: 100vh;
-  background: var(--panel);
+  background: #FFFFFF;
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -67,7 +23,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #D1D5DB;
   padding-bottom: 8px;
 }
 
@@ -85,8 +41,8 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  background: var(--tint-50);
-  border-radius: var(--radius);
+  background: #FAFAFA;
+  border-radius: 6px;
   padding: 12px;
 }
 
@@ -120,8 +76,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border: 1px solid #D1D5DB;
+  border-radius: 4px;
   padding: 4px 8px;
 }
 
@@ -132,14 +88,14 @@
 
 .toLabel {
   font-size: 0.85rem;
-  color: var(--muted);
+  color: #6B7280;
 }
 
 .calendarButton {
   border: none;
   background: transparent;
   cursor: pointer;
-  color: var(--accent);
+  color: #2563EB;
 }
 
 /* ---- Buttons ---- */
@@ -150,10 +106,10 @@
 }
 
 .btnPrimary {
-  background: var(--accent);
+  background: #2563EB;
   color: #fff;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 4px;
   padding: 0 16px;
   height: 40px;
   display: inline-flex;
@@ -162,14 +118,14 @@
 }
 
 .btnPrimary:hover {
-  background: var(--accent-hover);
+  background: #1D4ED8;
 }
 
 .btnSecondary {
   background: #6B7280;
   color: #fff;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 4px;
   padding: 0 16px;
   height: 40px;
   display: inline-flex;
@@ -178,9 +134,9 @@
 }
 
 .ghostBtn {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  background: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  border-radius: 4px;
   padding: 0 16px;
   height: 40px;
   display: inline-flex;
@@ -189,62 +145,59 @@
 }
 
 .ghostBtn:hover {
-  background: var(--tint-100);
+  background: #F3F4F6;
 }
 
 .clearButton {
-  color: var(--accent);
+  color: #2563EB;
   font-weight: 600;
 }
 
 /* ---- Table ---- */
 .tableSection {
-  border-radius: var(--radius);
+  border-radius: 6px;
   overflow-x: auto;
 }
 
 .tableGridExpired {
   display: grid;
-  grid-template-columns: var(--table-columns-expired);
+  grid-template-columns:
+    minmax(50px, 0.4fr) minmax(120px, 1.5fr) minmax(100px, 1fr) minmax(90px, 0.8fr) minmax(90px, 0.8fr) minmax(100px, 1fr) minmax(90px, 0.8fr) minmax(90px, 0.8fr) minmax(90px, 0.8fr) minmax(100px, 1fr);
   align-items: center;
   min-width: 900px;
 }
 
 .tableHeader {
   font-weight: 700;
-  background: var(--tint-100);
+  background: #F3F4F6;
   position: sticky;
   top: 0;
   z-index: 5;
-  border-bottom: 1px solid var(--border);
-  min-height: calc(var(--row-h) + 8px);
-  /* สูงกว่า row ปกติ */
+  border-bottom: 1px solid #D1D5DB;
+  min-height: calc(48px + 8px);
   display: grid;
-  /* ✅ ใช้ grid แทน flex */
-  grid-template-columns: var(--table-columns-expired);
-  /* ✅ ให้ตรงกับตาราง */
+  grid-template-columns:
+    minmax(50px, 0.4fr) minmax(120px, 1.5fr) minmax(100px, 1fr) minmax(90px, 0.8fr) minmax(90px, 0.8fr) minmax(100px, 1fr) minmax(90px, 0.8fr) minmax(90px, 0.8fr) minmax(90px, 0.8fr) minmax(100px, 1fr);
   align-items: center;
 }
 
 .tableHeader .tableCell {
   padding: 8px 6px;
-  /* padding มากขึ้น */
   font-size: 0.9rem;
-  /* ขยายตัวอักษรเล็กน้อย */
 }
 
 .tableRow {
-  height: var(--row-h);
-  border-top: 1px solid var(--tint-200);
+  height: 48px;
+  border-top: 1px solid #E5E7EB;
   transition: background 0.2s;
 }
 
 .tableRow:nth-child(even) {
-  background: var(--tint-50);
+  background: #FAFAFA;
 }
 
 .tableRow:hover {
-  background: var(--tint-200);
+  background: #E5E7EB;
 }
 
 .tableCell {
@@ -264,11 +217,11 @@
 
 /* ---- States ---- */
 .noDataMessage {
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(48px * 12);
   display: flex;
   justify-content: center;
   align-items: center;
-  color: var(--muted);
+  color: #6B7280;
 }
 
 .fillerRow {
@@ -276,11 +229,11 @@
 }
 
 .loadingContainer {
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(48px * 12);
   display: flex;
   justify-content: center;
   align-items: center;
-  color: var(--muted);
+  color: #6B7280;
 }
 
 /* ---- Pagination ---- */
@@ -289,13 +242,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-top: 1px solid var(--border);
-  background: var(--panel);
+  border-top: 1px solid #D1D5DB;
+  background: #FFFFFF;
 }
 
 .paginationInfo {
   font-size: 0.85rem;
-  color: var(--muted);
+  color: #6B7280;
 }
 
 .paginationControls {
@@ -309,17 +262,17 @@
 .pageButton {
   min-width: 30px;
   height: 36px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--panel);
+  border: 1px solid #D1D5DB;
+  border-radius: 4px;
+  background: #FFFFFF;
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 500;
-  color: var(--text);
+  color: #1F2A44;
 }
 
 .pageButton:hover:not(:disabled) {
-  background: var(--tint-100);
+  background: #F3F4F6;
 }
 
 .pageButton:disabled {
@@ -328,14 +281,14 @@
 }
 
 .activePage {
-  background: var(--accent);
+  background: #2563EB;
   color: #fff;
-  border-color: var(--accent);
+  border-color: #2563EB;
 }
 
 .ellipsis {
   padding: 0 6px;
-  color: var(--muted);
+  color: #6B7280;
 }
 
 /* ---- Badge ---- */
@@ -351,20 +304,20 @@
 
 .stAvailable {
   background: #ecfdf5;
-  color: var(--success);
+  color: #10B981;
 }
 
 .stLow {
   background: #fffbeb;
-  color: var(--warning);
+  color: #F59E0B;
 }
 
 .stOut {
   background: #fef2f2;
-  color: var(--danger);
+  color: #EF4444;
 }
 
 .stHold {
   background: #f3f4f6;
-  color: var(--muted);
+  color: #6B7280;
 }
