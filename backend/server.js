@@ -1,6 +1,4 @@
-require("dotenv").config({
-  path: `.env.${process.env.NODE_ENV || "development"}`
-});
+require("dotenv").config(); 
 const express = require("express");
 const app = express();
 const port = process.env.PORT || 5000;
@@ -12,7 +10,6 @@ const http = require("http");
 const helmet = require("helmet");
 const path = require("path");
 const { initialize } = require("./initializer");
-require("./cronJobs");
 
 const server = http.createServer(app);
 
@@ -41,8 +38,6 @@ app.use(
   })
 );
 
-
-
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use(
@@ -58,8 +53,11 @@ readdirSync("./routes").map((r) =>
 );
 
 // 🔹 Socket & DB
-initialize(server);
-connectDB();
+initialize(server);   // ✅ setup socket.io
+connectDB();          // ✅ connect DB ก่อน
+
+// ✅ CronJobs ต้องมา หลังจาก socket.io และ DB พร้อมแล้ว
+require("./cronJobs");
 
 // 🔹 Error handler
 app.use((err, req, res, next) => {
@@ -75,7 +73,6 @@ app.use((err, req, res, next) => {
 server.listen(port, () => {
   console.log(`🚀 Server running at http://localhost:${port} in ${process.env.NODE_ENV} mode`);
 });
-
 
 // 🔹 Graceful shutdown
 process.on("SIGINT", () => {
