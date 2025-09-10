@@ -1,56 +1,61 @@
 /* =============================
-    PoAndRfqPage — page.module.css
-    Palette: #008dda, #41c9e2, #ace2e1, #1685bb
-    ============================= */
+   PO from RFQ — page.module.css
+   Sticky headers, 12 rows locked, BR rounded, 4-col file grid
+   ============================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* ---- Variables ---- */
 :root {
-  --bg: #f0fbfe;
-  --panel: #ffffff;
-  --muted: #6b7280;
-  --text: #111827;
-  --border: #e5e7eb;
-  --primary: #008dda;
-  --primary-500: #41c9e2;
-  --primary-600: #1685bb;
-  --tint-50: #f0fbfe;
-  --tint-100: #e9f6fb;
-  --tint-200: #ace2e1;
-  --success: #16a34a;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --radius: 10px;
-  --row-h: 64px;
-  --rows-per-page: 10;
-  --th-font: 1.15rem;
-  --body-font: 1rem;
-  --th-min-h: 64px;
-  --th-pad-y: 16px;
+  --bg: #F9FAFB;
+  --panel: #FFFFFF;
+  --text: #1F2A44;
+  --muted: #6B7280;
+  --border: #D1D5DB;
+
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --info: #3B82F6;
+
+  --tint-50: #FAFAFA;
+  --tint-100: #F3F4F6;
+  --tint-200: #E5E7EB;
+
+  --radius: 8px;
+
+  --row-h: 60px;
+  --rows-per-page: 12;
+
+  --th-font: 1.05rem;
+  --th-min-h: 60px;
+  --th-pad-y: 14px;
   --th-pad-x: 12px;
-  --th-letter: 0.01em;
   --th-line: 1.25;
+
   --z-header: 10;
   --z-toolbar: 100;
-  --z-modal: 12000;
+  --z-modal: 11000;
+
+  /* ── Zebra & Hover ── */
+  --row-stripe-odd: #FFFFFF;
+  --row-stripe-even: #F8FAFC;
+  /* slate-50-ish */
+  --row-hover: #EEF2FF;
+  /* indigo-50-ish */
 }
 
-/* ---- Layout ---- */
+/* ---------- Layout ---------- */
 .mainHome {
-  /* min-height: 100vh; */
+  min-height: 100vh;
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans';
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--bg);
-  /* padding: 20px; */
-  /* เพิ่ม padding เพื่อไม่ให้เนื้อหาชิดขอบจอเกินไป */
 }
 
 .infoContainer {
   width: 100%;
-  /* จำกัดความกว้างสูงสุดของเนื้อหา */
   min-height: 100vh;
   background: var(--panel);
   color: var(--text);
@@ -58,55 +63,88 @@
   padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
 }
 
-/* ---- Header ---- */
+/* ---------- Header ---------- */
 .pageBar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
 }
 
 .pageTitle {
-  font-weight: 700;
-  font-size: clamp(1.4rem, 2.2vw, 2rem);
   margin: 0;
   display: flex;
   align-items: center;
   gap: 12px;
+  font-weight: 700;
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
   color: var(--text);
-}
-
-.subtitle {
-  font-size: 0.95rem;
-  color: var(--muted);
-  margin: 4px 0 0 0;
 }
 
 .titleGroup {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-/* ---- Toolbar ---- */
+.subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: .95rem;
+}
+
+/* ---------- Form section ---------- */
+.formSection {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.selector {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.section {
+  margin-top: 14px;
+}
+
+.sectionTitle {
+  margin: 0 0 8px 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ---------- Toolbar ---------- */
 .toolbar {
+  position: relative;
   z-index: var(--z-toolbar);
   display: flex;
   gap: 12px;
   align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
-  border: 1px solid var(--tint-200);
-  border-radius: 12px;
-  padding: 12px;
-  background: var(--tint-50);
+  padding: 12px 0;
+  border-radius: var(--radius);
 }
 
 .filterGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: auto 1fr;
   gap: 12px;
   flex: 1;
 }
@@ -118,26 +156,44 @@
 }
 
 .label {
-  font-size: 0.85rem;
+  font-size: .85rem;
   color: var(--text);
   font-weight: 600;
 }
 
 .input {
   height: 40px;
-  border: 1px solid var(--tint-200);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 0 12px;
-  font-size: 0.95rem;
+  font-size: .95rem;
+  transition: border-color .2s ease, box-shadow .2s ease;
   background: #fff;
-  width: 100%;
 }
 
 .input:focus {
-  outline: 2px solid var(--primary-500);
-  outline-offset: 1px;
+  outline: none;
+  border-color: var(--info);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, .1);
 }
 
+.inputInline {
+  height: 36px;
+  padding: 0 10px;
+  width: 140px;
+}
+
+.numberInput {
+  -moz-appearance: textfield;
+}
+
+.numberInput::-webkit-outer-spin-button,
+.numberInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* ---------- Search ---------- */
 .searchBar {
   position: relative;
   display: flex;
@@ -146,253 +202,71 @@
 
 .searchIcon {
   position: absolute;
-  left: 12px;
-  color: var(--muted);
+  left: 10px;
+  color: #9ca3af;
 }
 
 .searchBar .input {
-  padding-left: 36px;
+  padding-left: 34px;
 }
 
-/* ---- Buttons ---- */
-.ghostBtn {
-  background: #fff;
-  color: var(--text);
-  border: 1px solid var(--tint-200);
-  border-radius: 8px;
-  height: 40px;
-  padding: 0 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-}
-
-.ghostBtn:hover:not(:disabled) {
-  background: var(--tint-100);
-}
-
-.primaryButton {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  height: 40px;
-  padding: 0 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-}
-
-.primaryButton:hover:not(:disabled) {
-  background: var(--primary-600);
-}
-
-.actionButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* ---- Form Section ---- */
-.formSection {
-  border: 1px solid var(--tint-200);
-  border-radius: var(--radius);
-  background: var(--tint-50);
-  padding: 16px;
-}
-
-.selector {
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.detail {
-  margin-top: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.sectionTitle {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0;
-}
-
-.formGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-}
-
-.textarea {
-  min-height: 100px;
-  border: 1px solid var(--tint-200);
-  border-radius: 8px;
-  padding: 12px;
-  font-size: 0.95rem;
-  background: #fff;
-  resize: vertical;
-}
-
-.textarea:focus {
-  outline: 2px solid var(--primary-500);
-  outline-offset: 1px;
-}
-
-/* ---- File Upload ---- */
-.fileGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-}
-
-.fileGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.fileLabel {
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.uploadBox {
-  border: 2px dashed var(--tint-200);
-  border-radius: 8px;
-  padding: 12px;
-  text-align: center;
-  cursor: pointer;
-  background: #fff;
-}
-
-.uploadBox:hover {
-  background: var(--tint-100);
-}
-
-.fileInput {
-  display: none;
-}
-
-.fileList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.fileItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px;
-  border: 1px solid var(--tint-200);
-  border-radius: 8px;
-  background: var(--tint-50);
-}
-
-/* ---- Table ---- */
+/* ---------- Table: base ---------- */
 .tableSection {
-  border: 1px solid var(--tint-200);
-  border-radius: var(--radius);
   background: #fff;
-  overflow-x: auto;
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+ 
 }
 
 .tableGrid {
   display: grid;
-  grid-template-columns:
-    minmax(150px, 2fr)
-    /* ชื่อสินค้า */
-    minmax(80px, 0.8fr)
-    /* จำนวน */
-    minmax(80px, 0.8fr)
-    /* หน่วย */
-    minmax(120px, 1fr)
-    /* ราคา/หน่วย */
-    minmax(120px, 1fr)
-    /* ส่วนลด */
-    minmax(120px, 1fr);
-  /* จำนวนเงิน */
   align-items: center;
-}
-
-.tableGrid.poList {
-  grid-template-columns:
-    minmax(120px, 1fr)
-    /* เลขที่ PO */
-    minmax(150px, 1.5fr)
-    /* ซัพพลายเออร์ */
-    minmax(120px, 1fr)
-    /* วันที่สร้าง */
-    minmax(120px, 1fr)
-    /* ยอดรวม (ก่อน VAT) */
-    minmax(100px, 0.8fr)
-    /* VAT */
-    minmax(120px, 1fr)
-    /* ยอดสุทธิ */
-    minmax(100px, 1fr)
-    /* สถานะ */
-    minmax(150px, 1.2fr);
-  /* การจัดการ */
 }
 
 .tableHeader {
   position: sticky;
   top: 0;
   z-index: var(--z-header);
-  background: var(--tint-50);
-  border-bottom: 1px solid var(--tint-200);
-  padding: var(--th-pad-y) var(--th-pad-x);
+  background: #f1f5f9;
+  padding-block: var(--th-pad-y);
+  padding-inline: var(--th-pad-x);
   font-weight: 700;
-  color: var(--text);
+  color: #000;
   font-size: var(--th-font);
   line-height: var(--th-line);
   min-height: var(--th-min-h);
+  border-bottom: 1px solid #e5e7eb;
 }
 
-.headerItem {
+.tableHeader .headerItem,
+.tableHeader>div {
+  font-weight: 700;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  white-space: nowrap;
   padding: 0;
 }
 
-/* แก้ไข: จัดหัวข้อในตารางรายการ PO ให้ชิดซ้าย */
-.tableGrid.poList .tableHeader .headerItem {
-  justify-content: flex-start;
-}
-
-.tableGrid.poList .tableHeader .headerItem:last-child,
-.tableGrid.poList .tableHeader .headerItem:nth-last-child(2) {
-  justify-content: center;
-}
-
+/* คอนเทนเนอร์ตาราง (ล็อค 12 แถว) */
 .inventory {
-  height: auto;
-  min-height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(var(--row-h) * var(--rows-per-page));
+  overflow: hidden;
   background: #fff;
 }
 
-.tableRow {
-  height: var(--row-h);
-  padding: 0 var(--th-pad-x);
-  border-top: 1px solid var(--tint-200);
+.inventoryAuto {
+  background: #fff;
 }
 
-.tableRow:hover {
-  background: var(--tint-100);
+/* แถว/เซลล์ */
+.tableRow {
+  box-sizing: border-box;
+  min-height: var(--row-h);
+  padding: 8px var(--th-pad-x);
+  border-top: 1px solid #e5e7eb;
+  transition: background-color .2s ease;
 }
 
 .tableRow:first-child {
@@ -403,30 +277,331 @@
   display: flex;
   align-items: center;
   padding: 4px 6px;
-  font-size: var(--body-font);
-  justify-content: flex-start;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.tableCell.centerCell {
+.centerCell {
+  display: flex;
   justify-content: center;
 }
 
-.tableCell.textWrap {
-  white-space: normal;
-}
-
-.tableCell a {
-  text-decoration: none;
+.moneyCell {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .mono {
-  font-family: 'Courier New', Courier, monospace;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
-/* ---- Status Badge ---- */
+.textEllipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* เติมแถวว่างให้ครบ */
+.fillerRow {
+  pointer-events: none;
+}
+
+.fillerRow:hover {
+  background: inherit !important;
+}
+
+/* ---------- RFQ items grid (6 คอลัมน์) ---------- */
+.rfqGrid {
+  grid-template-columns:
+    minmax(240px, 2fr) minmax(100px, .9fr) minmax(100px, .9fr) minmax(160px, 1.2fr) minmax(140px, 1.1fr) minmax(160px, 1.2fr);
+}
+
+.tableHeader.rfqGrid .headerItem:nth-child(2),
+.tableHeader.rfqGrid .headerItem:nth-child(3) {
+  justify-content: center;
+  text-align: center;
+}
+
+.tableHeader.rfqGrid .headerItem:nth-child(6) {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+/* ---------- PO list grid (8 คอลัมน์) ---------- */
+.poList {
+  grid-template-columns:
+    minmax(140px, 1.1fr) minmax(220px, 1.6fr) minmax(120px, 1fr) minmax(160px, 1.2fr) minmax(120px, 1fr) minmax(160px, 1.2fr) minmax(120px, 1fr) minmax(180px, 1.2fr);
+}
+
+.tableHeader.poList .headerItem:nth-child(3),
+.tableHeader.poList .headerItem:nth-child(7),
+.tableHeader.poList .headerItem:nth-child(8) {
+  justify-content: center;
+  text-align: center;
+}
+
+.tableHeader.poList .headerItem:nth-child(4),
+.tableHeader.poList .headerItem:nth-child(5),
+.tableHeader.poList .headerItem:nth-child(6) {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+/* ✅ บังคับ alignment ของ "ทุกแถวข้อมูล" ให้ตรงกับหัวตาราง (กันพลาด) */
+.tableRow.poList>.tableCell:nth-child(3),
+.tableRow.poList>.tableCell:nth-child(7),
+.tableRow.poList>.tableCell:nth-child(8) {
+  justify-content: center;
+  text-align: center;
+}
+
+.tableRow.poList>.tableCell:nth-child(4),
+.tableRow.poList>.tableCell:nth-child(5),
+.tableRow.poList>.tableCell:nth-child(6) {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+/* ✅ บังคับ alignment ให้ rfqGrid ตรงกับหัวตาราง */
+.tableRow.rfqGrid>.tableCell:nth-child(2),
+.tableRow.rfqGrid>.tableCell:nth-child(3) {
+  justify-content: center;
+  text-align: center;
+}
+
+.tableRow.rfqGrid>.tableCell:nth-child(6) {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+/* ---------- Zebra striping ---------- */
+/* สลับสีเฉพาะแถวข้อมูล ไม่รวม fillerRow */
+.inventory>.tableRow.poList:not(.fillerRow):nth-child(odd) {
+  background: var(--row-stripe-odd);
+}
+
+.inventory>.tableRow.poList:not(.fillerRow):nth-child(even) {
+  background: var(--row-stripe-even);
+}
+
+.inventoryAuto>.tableRow.rfqGrid:not(.fillerRow):nth-child(odd) {
+  background: var(--row-stripe-odd);
+}
+
+.inventoryAuto>.tableRow.rfqGrid:not(.fillerRow):nth-child(even) {
+  background: var(--row-stripe-even);
+}
+
+/* Hover ให้อยู่เหนือ zebra เสมอ */
+.inventory>.tableRow:hover,
+.inventoryAuto>.tableRow:hover {
+  background: var(--row-hover);
+}
+
+/* ---------- RFQ layout: table + summary ---------- */
+.rfqLayout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 16px;
+  align-items: start;
+}
+
+.summaryContainer {
+  margin-top: 0;
+  width: 360px;
+  max-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  background: #fff;
+  display: grid;
+  gap: 8px;
+}
+
+.summarySticky {
+  position: sticky;
+  top: 8px;
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.grandTotalRow {
+  font-weight: 700;
+}
+
+.checkboxLabel {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ---------- Buttons ---------- */
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: background-color .2s ease, transform .15s ease, border-color .2s ease;
+}
+
+.primaryButton {
+  background: #3B82F6;
+  color: #fff;
+  border-color: #3B82F6;
+}
+
+.primaryButton:hover {
+  background: #2563EB;
+  transform: translateY(-1px);
+}
+
+.ghostBtn {
+  background: #fff;
+  color: #1F2A44;
+  border: 1px solid var(--border);
+}
+
+.ghostBtn:hover {
+  background: #F3F4F6;
+  transform: translateY(-1px);
+}
+
+.btnGroup {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ---------- Supplier form ---------- */
+.formGrid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+}
+
+@media (max-width: 680px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Files (4 บน / 4 ล่าง) ---------- */
+.fileGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  align-items: stretch;
+}
+
+@media (max-width: 1280px) {
+  .fileGrid {
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 960px) {
+  .fileGrid {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .fileGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fileGroup {}
+
+.fileLabel {
+  width: 100%;
+}
+
+.uploadBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  background: #fafafa;
+  min-height: 48px;
+}
+
+.fileInput {
+  display: none;
+}
+
+.fileList {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fileItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff;
+}
+
+/* ---------- Textarea ---------- */
+.textarea {
+  width: 100%;
+  min-height: 100px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: .95rem;
+}
+
+/* ---------- Footer buttons row ---------- */
+.footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 10px;
+}
+
+/* ---------- Loading / empty ---------- */
+.loadingContainer {
+  min-height: calc(var(--row-h) * 6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  color: var(--muted);
+}
+
+.noDataMessage {
+  min-height: calc(var(--row-h) * 4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+/* ---------- Status badges ---------- */
 .stBadge {
   display: inline-flex;
   align-items: center;
@@ -434,64 +609,147 @@
   padding: 6px 10px;
   border-radius: 999px;
   font-weight: 700;
-  font-size: 0.9rem;
-  border: 1px solid transparent;
+  font-size: .85rem;
   min-width: 92px;
-  line-height: 1;
+  border: 1px solid transparent;
 }
 
 .pending {
-  color: #92400e;
-  background: #fef3c7;
-  border-color: #fde68a;
+  color: #92400E;
+  background: #FEF3C7;
+  border-color: #FCD34D;
 }
 
 .approved {
-  color: #166534;
-  background: #dcfce7;
-  border-color: #86efac;
+  color: #065F46;
+  background: #D1FAE5;
+  border-color: #6EE7B7;
 }
 
 .completed {
-  color: #1e40af;
-  background: #dbeafe;
-  border-color: #93c5fd;
+  color: #1f2937;
+  background: #E5E7EB;
+  border-color: #D1D5DB;
 }
 
 .canceled {
-  color: #9f1239;
-  background: #ffe4e6;
-  border-color: #fecdd3;
+  color: #991B1B;
+  background: #FEE2E2;
+  border-color: #FECACA;
 }
 
-/* ---- Summary ---- */
-.summaryContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 16px;
-  padding: 12px;
-  border: 1px solid var(--tint-200);
-  border-radius: 8px;
-  background: var(--tint-50);
+/* ---------- SweetAlert ---------- */
+.swalButton {
+  font-weight: 700;
 }
 
-.summaryRow {
+/* ---------- Pagination ---------- */
+.paginationBar {
   display: flex;
   justify-content: space-between;
-  font-size: var(--body-font);
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+  background: #fff;
 }
 
-.grandTotalRow {
-  font-weight: 600;
-  border-top: 1px solid var(--tint-200);
-  padding-top: 8px;
+.paginationInfo {
+  font-size: .9rem;
+  color: var(--muted);
 }
 
-/* ---- Footer ---- */
-.footer {
+.paginationControls {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 16px 0;
+  list-style: none;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+
+.pageButton {
+  min-width: 34px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  font-size: .95rem;
+  font-weight: 500;
+  color: #1F2A44;
+  padding: 6px 10px;
+  transition: background-color .2s ease, transform .1s ease;
+}
+
+.pageButton:hover:not(:disabled) {
+  background: #F3F4F6;
+  transform: translateY(-1px);
+}
+
+.pageButton:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.activePage {
+  background: #3B82F6;
+  color: #fff;
+  border-color: #3B82F6;
+}
+
+.ellipsis {
+  padding: 0 8px;
+  color: #6B7280;
+  font-size: 1rem;
+}
+
+/* ---------- มุมล่างขวาตาราง PO ---------- */
+.roundBR {
+  position: relative;
+  border-bottom-right-radius: 14px;
+  overflow: hidden;
+}
+
+.roundBR .inventory,
+.roundBR .paginationBar {
+  border-bottom-right-radius: 14px;
+  background-clip: padding-box;
+}
+
+/* ---------- Responsive tweaks ---------- */
+@media (max-width: 980px) {
+  .rfqLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .summaryContainer {
+    width: 100%;
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .filterGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .poList {
+    grid-template-columns:
+      1.1fr
+      /* PO */
+      1.5fr
+      /* Supplier */
+      .9fr
+      /* Date */
+      1.1fr
+      /* Sub */
+      .9fr
+      /* VAT */
+      1.1fr
+      /* Grand */
+      .9fr
+      /* Status */
+      1.2fr;
+    /* Actions */
+  }
 }

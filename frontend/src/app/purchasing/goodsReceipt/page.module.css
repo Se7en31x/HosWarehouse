@@ -1,645 +1,271 @@
 /* =============================
-   GoodsReceiptListPage — page.module.css
-   Palette: #008dda, #41c9e2, #ace2e1, #1685bb (Originals)
-   Adjusted for full-screen and enhanced visuals.
-   ============================= */
+   GoodsReceiptList — page.module.css
+   Baseline เดียวกับ Inventory: header sticky, 12 แถวคงที่
+   ============================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /* ---- Variables ---- */
-:root {
-  --bg: #eef7fa;
-  /* Lighter, more subtle background */
-  --panel: #ffffff;
-  --muted: #6b7280;
-  --text: #111827;
-  --border: #e0e7eb;
-  /* Slightly softer border */
+:root{
+  --bg:#F9FAFB;
+  --panel:#FFFFFF;
+  --text:#1F2A44;
+  --muted:#6B7280;
+  --border:#D1D5DB;
 
-  /* Original-inspired primary colors */
-  --primary: #008dda;
-  /* Main blue */
-  --primary-hover: #007bbd;
-  /* Darker blue for hover */
-  --primary-active: #006aa0;
-  /* Even darker for active */
-  --secondary-btn-bg: #e1f5fe;
-  /* Light blue for secondary button background */
-  --secondary-btn-hover-text: #0056b3;
-  /* Darker text on hover */
+  --success:#10B981;
+  --warning:#F59E0B;
+  --danger:#EF4444;
 
-  --tint-50: #f6faff;
-  /* Lightest tint for backgrounds */
-  --tint-100: #e9f6fb;
-  /* Slightly darker tint */
+  --tint-50:#FAFAFA;
+  --tint-100:#F3F4F6;
+  --tint-200:#E5E7EB;
 
-  --success: #28a745;
-  --danger: #dc3545;
-  --warning: #ffc107;
-  --radius: 12px;
-  --row-h: 68px;
-  --rows-per-page: 10;
-  --th-font: 1.05rem;
-  --body-font: 0.95rem;
-  --th-min-h: 60px;
-  --th-pad-y: 12px;
-  --th-pad-x: 20px;
-  --z-header: 10;
-  --z-toolbar: 100;
-  --z-modal: 12000;
+  --radius:5px;
+
+  /* Table sizing */
+  --row-h:60px;
+  --rows-per-page:10; /* override ด้วย inline = 12 */
+  --th-font:1.05rem;
+  --th-min-h:60px;
+  --th-pad-y:14px;
+  --th-pad-x:12px;
+
+  /* Z */
+  --z-header:10;
+  --z-toolbar:100;
 }
 
-/* ---- Layout ---- */
-.mainHome {
-  /* Full viewport width */
-  font-family: 'Sarabun', 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans';
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  background: var(--bg);
-  /* Consistent padding around the main container */
-  box-sizing: border-box;
-  /* Include padding in width calculation */
+/* ---- Base ---- */
+.mainHome{
+  min-height:100vh;
+  background:var(--bg);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial;
 }
 
-.infoContainer {
-  width: 100%;
-  /* Take full width of its parent (mainHome padding) */
-  /* max-width: 1600px; */
-  /* Max width to prevent it from being too stretched on very wide screens */
-  background: var(--panel);
-  color: var(--text);
-  border-radius: var(--radius);
-  padding: 32px;
-  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.08);
-  /* More pronounced shadow */
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-  /* Slightly increased gap for better spacing */
+.infoContainer{
+  width:100%;
+  min-height:100vh;
+  background:var(--panel);
+  color:var(--text);
+  border-radius:var(--radius);
+  padding:24px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,.05);
 }
 
 /* ---- Header ---- */
-.pageBar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 20px;
-  /* Increased gap */
+.pageBar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding-bottom:12px;
+  border-bottom:1px solid var(--border);
 }
 
-.pageTitle {
-  font-weight: 700;
-  font-size: 2.2rem;
-  /* Slightly larger title */
-  margin: 0;
-  color: var(--text);
-}
+.titleGroup{ display:flex; flex-direction:column; gap:6px; }
+.pageTitle{ margin:0; font-size:clamp(1.4rem,2.2vw,2rem); font-weight:700; }
+.subtitle{ margin:0; color:var(--muted); }
 
-.subtitle {
-  font-size: 1rem;
-  color: var(--muted);
-  margin: 6px 0 0 0;
+.primaryButton{
+  display:inline-flex; align-items:center; gap:8px;
+  background:#3B82F6; color:#fff; border:none; border-radius:8px;
+  padding:10px 14px; cursor:pointer;
+  transition:background .2s ease, transform .1s ease;
 }
-
-.titleGroup {
-  display: flex;
-  flex-direction: column;
-}
+.primaryButton:hover{ background:#2563EB; transform:translateY(-1px); }
+.primaryButton:active{ transform:translateY(0); }
 
 /* ---- Toolbar ---- */
-.toolbar {
-  z-index: var(--z-toolbar);
-  display: flex;
-  gap: 20px;
-  /* Increased gap */
-  align-items: flex-end;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-  /* Increased padding */
-  background: var(--tint-50);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-  /* Subtle inner shadow */
+.toolbar{
+  position:relative; z-index:var(--z-toolbar);
+  display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap;
+  padding:16px; border-radius:var(--radius);
 }
 
-.filterGrid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  /* Increased gap */
-  flex: 1;
+.filterGrid{
+  display:grid; grid-template-columns:auto 1fr; gap:12px; flex:1;
 }
 
-.filterGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 180px;
-  /* Ensure filter groups have a minimum width */
-  flex-grow: 1;
-}
+.filterGroup{ display:flex; flex-direction:column; gap:6px; }
+.label{ font-size:.9rem; font-weight:600; color:var(--text); }
 
-.label {
-  font-size: 0.9rem;
-  color: var(--text);
-  font-weight: 600;
+.input{
+  height:40px; border:1px solid var(--border); border-radius:8px;
+  padding:0 12px; font-size:.95rem; transition:border-color .2s, box-shadow .2s;
 }
+.input:focus{ outline:none; border-color:#3B82F6; box-shadow:0 0 0 3px rgba(59,130,246,.1); }
 
-.input {
-  height: 48px;
-  /* Taller input fields */
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0 16px;
-  font-size: 1rem;
-  background: #fff;
-  width: 100%;
-  box-sizing: border-box;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+.searchBar{ position:relative; }
+.searchIcon{
+  position:absolute; left:10px; top:50%; transform:translateY(-50%);
+  color:#9CA3AF; pointer-events:none;
 }
+.inputWithIcon{ padding-left:34px; }
 
-.input:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(0, 141, 218, 0.2);
-  /* Primary color shadow */
-}
-
-.searchBar {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.searchIcon {
-  position: absolute;
-  left: 16px;
-  /* Adjusted icon position */
-  color: var(--muted);
-}
-
-.searchBar .input {
-  padding-left: 48px;
-  /* Adjusted padding for icon */
-}
-
-/* ---- Buttons ---- */
-.primaryButton {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  height: 48px;
-  /* Taller button */
-  padding: 0 24px;
-  /* More horizontal padding */
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  /* Increased gap */
-  font-size: 1rem;
-  /* Slightly larger font */
-  font-weight: 600;
-  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 4px 10px rgba(0, 141, 218, 0.2);
-  /* Subtle shadow for primary button */
-}
-
-.primaryButton:hover:not(:disabled) {
-  background: var(--primary-hover);
-  transform: translateY(-3px);
-  /* More pronounced lift */
-  box-shadow: 0 6px 15px rgba(0, 141, 218, 0.3);
-}
-
-.primaryButton:active {
-  background: var(--primary-active);
-  transform: translateY(0);
-  box-shadow: 0 2px 5px rgba(0, 141, 218, 0.2);
-}
-
-.secondaryButton {
-  background: var(--secondary-btn-bg);
-  /* Light blue background */
-  color: var(--primary);
-  /* Primary color text */
-  border: 1px solid var(--primary);
-  /* Primary color border */
-  border-radius: 8px;
-  height: 44px;
-  /* Taller button */
-  width: 44px;
-  /* Square button */
-  padding: 0;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-  /* Subtle shadow */
-}
-
-.secondaryButton:hover {
-  background: var(--primary);
-  /* Solid primary on hover */
-  color: #fff;
-  /* White text on hover */
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 141, 218, 0.25);
-}
-
-.secondaryButton:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.actionButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* CSS for removing underline from a link */
-.noUnderline {
-  text-decoration: none;
-}
-
+.noUnderline{ text-decoration:none; }
 
 /* ---- Table ---- */
-.tableSection {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: #fff;
-  overflow-x: auto;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  /* Soft table shadow */
+.tableSection{
+  border-radius:var(--radius);
+  background:#fff; overflow:hidden; display:flex; flex-direction:column;
 }
 
-.tableGrid {
-  display: grid;
+.tableGrid{
+  display:grid;
   grid-template-columns:
-    minmax(140px, 1.2fr)
-    /* เลขที่ GR */
-    minmax(140px, 1.2fr)
-    /* เลขที่ PO */
-    minmax(120px, 1fr)
-    /* วันที่รับ */
-    minmax(200px, 2.5fr)
-    /* ซัพพลายเออร์ */
-    minmax(120px, 1.2fr)
-    /* สถานะ */
-    minmax(100px, 1fr);
-  /* การจัดการ */
-  align-items: stretch;
-  /* Stretch items to fill cell height */
-  width: fit-content;
-  min-width: 100%;
+    minmax(140px,1.2fr) /* GR */
+    minmax(140px,1.2fr) /* PO */
+    minmax(120px,.9fr)  /* Date */
+    minmax(200px,2fr)   /* Supplier */
+    minmax(120px,1fr)   /* Status */
+    minmax(120px,1fr);  /* Actions */
+  align-items:center;
+}
+.tableGrid > *{ min-width:0; }
+
+.tableHeader{
+  position:sticky; top:0; z-index:var(--z-header);
+  background:#f1f5f9;
+  padding-block:var(--th-pad-y); padding-inline:var(--th-pad-x);
+  font-weight:700; font-size:var(--th-font); min-height:var(--th-min-h);
+  border-bottom:1px solid #e5e7eb; /* เส้นหัวเท่ากับเส้นแถว */
 }
 
-.tableHeader {
-  position: sticky;
-  top: 0;
-  z-index: var(--z-header);
-  background: var(--tint-100);
-  border-bottom: 1px solid var(--border);
-  padding: var(--th-pad-y) var(--th-pad-x);
-  font-weight: 700;
-  color: var(--text);
-  font-size: var(--th-font);
-  min-height: var(--th-min-h);
+.headerItem{ display:flex; align-items:center; white-space:nowrap; }
+.centerCell{ display:flex; justify-content:center; }
+
+.inventory{
+  background:#fff;
+  height:calc(var(--row-h) * var(--rows-per-page));
+  overflow:hidden; /* fixed-height body */
 }
 
-.headerItem {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  /* Default left align */
-  padding: 0 10px;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
+.tableRow{
+  height:var(--row-h);
+  padding:0 var(--th-pad-x);
+  border-top:1px solid #e5e7eb;
+  transition:background-color .2s ease;
+}
+.tableRow:first-child{ border-top:0; }
+.tableRow:nth-child(odd){ background:#fff; }
+.tableRow:nth-child(even){ background:#f9fafb; }
+.tableRow:hover{ background:#E5E7EB; }
+
+.tableCell{
+  display:flex; align-items:center;
+  padding:4px 6px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 
-.headerItemRight {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  /* Right align for actions */
-  padding: 0 10px;
+.textTruncate{
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 
-.headerItem:first-child {
-  padding-left: 20px;
+.mono{ font-variant-numeric:tabular-nums; letter-spacing:.02em; }
+
+.actionsCell{ display:flex; gap:8px; justify-content:center; }
+
+.noDataMessage{
+  height:calc(var(--row-h) * var(--rows-per-page));
+  display:flex; align-items:center; justify-content:center;
+  color:var(--muted);
 }
 
-.headerItem:last-child {
-  padding-right: 20px;
+/* เติมแถวว่าง */
+.fillerRow{ pointer-events:none; }
+.fillerRow:hover{ background:inherit !important; }
+
+/* ---- Buttons ---- */
+.secondaryButton{
+  display:inline-flex; align-items:center; justify-content:center;
+  height:36px; min-width:36px;
+  padding:6px 10px;
+  border:1px solid var(--border); background:#fff; color:var(--text);
+  border-radius:8px; cursor:pointer;
+  transition:background .2s ease, transform .1s ease, box-shadow .15s ease;
+}
+.secondaryButton:hover{ background:#F3F4F6; transform:translateY(-1px); }
+.secondaryButton:active{ transform:translateY(0); }
+.secondaryButton:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(59,130,246,.25); }
+
+.swalButton{
+  background:#3B82F6 !important; color:#fff !important; border-radius:8px !important;
+  padding:10px 14px !important;
 }
 
-.inventory {
-  background: #fff;
+/* ---- Loading ---- */
+.loadingContainer{
+  height:calc(var(--row-h) * var(--rows-per-page));
+  display:flex; gap:10px; align-items:center; justify-content:center;
+  color:var(--muted);
 }
-
-.tableRow {
-  min-height: var(--row-h);
-  border-top: 1px solid var(--border);
+.spinner{
+  width:18px; height:18px; border:3px solid #e5e7eb; border-top-color:#3B82F6;
+  border-radius:50%; animation:spin 1s linear infinite;
 }
+@keyframes spin{ to{ transform:rotate(360deg); } }
 
-.tableRow:hover {
-  background: var(--tint-50);
+/* ---- Pagination ---- */
+.paginationBar{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:12px 0; border-top:1px solid var(--border); background:#fff;
 }
-
-.tableRow:first-child {
-  border-top: 0;
+.paginationInfo{ font-size:.9rem; color:var(--muted); }
+.paginationControls{
+  display:flex; list-style:none; gap:6px; padding:0; margin:0; align-items:center;
 }
-
-.tableCell {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  /* Default left align */
-  padding: 8px 10px;
-  font-size: var(--body-font);
-  min-height: var(--row-h);
-  box-sizing: border-box;
+.pageButton{
+  min-width:34px; height:40px;
+  border:1px solid var(--border); border-radius:8px; background:#fff; color:var(--text);
+  cursor:pointer; font-size:.95rem; font-weight:500;
+  transition:background .2s ease, color .2s ease, transform .1s ease, box-shadow .15s ease;
+  padding:6px 10px;
 }
+.pageButton:hover:not(:disabled){ background:#F3F4F6; transform:translateY(-1px); }
+.pageButton:disabled{ opacity:.5; cursor:not-allowed; }
+.pageButton:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(59,130,246,.25); }
+.activePage{ background:#3B82F6; color:#fff; border-color:#3B82F6; }
+.ellipsis{ padding:0 8px; color:var(--muted); }
 
-.tableCell:first-child {
-  padding-left: 20px;
+/* ---- Status Badges ---- */
+.stBadge{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:6px 10px; border-radius:999px; font-weight:700; font-size:.85rem;
+  border:1px solid transparent; min-width:92px; line-height:1;
+  transition:transform .2s ease;
 }
+.stBadge:hover{ transform:translateY(-1px); }
 
-.tableCell:last-child {
-  padding-right: 20px;
-}
-
-
-/* Specific alignment classes */
-.tableCellCenter {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 10px;
-  font-size: var(--body-font);
-  min-height: var(--row-h);
-  box-sizing: border-box;
-}
-
-.tableCellRight {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 8px 10px;
-  font-size: var(--body-font);
-  min-height: var(--row-h);
-  box-sizing: border-box;
-}
-
-
-.tableCell.textWrap {
-  white-space: normal;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  max-height: var(--row-h);
-  /* Constrain height to row height */
-  overflow-y: auto;
-  /* Allow scrolling if content exceeds height */
-}
-
-.mono {
-  font-family: 'Courier New', Courier, monospace;
-  letter-spacing: 0.02em;
-  /* Slightly more spaced for mono fonts */
-}
-
-/* ---- Status Badge ---- */
-.stBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  border: 1px solid transparent;
-  min-width: 110px;
-  /* Slightly wider badge */
-  line-height: 1;
-  text-align: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  /* Subtle badge shadow */
-}
-
-/* Adjusted badge colors to complement new primary/background */
-.pending {
-  color: #a16207;
-  background: #fffbeb;
-  border-color: #fcd34d;
-}
-
-/* Amber */
-.partial {
-  color: #075985;
-  background: #e0f7fa;
-  border-color: #88dceb;
-}
-
-/* Cyan/Blue-Green */
-.completed {
-  color: #15803d;
-  background: #f0fdf4;
-  border-color: #86efac;
-}
-
-/* Green */
-.canceled {
-  color: #9f1239;
-  background: #fef2f2;
-  border-color: #fca5a5;
-}
-
-/* Red */
-
-/* ---- Loading and Empty States ---- */
-.loadingContainer {
-  display: flex;
-  flex-direction: column;
-  /* Stack spinner and text */
-  justify-content: center;
-  align-items: center;
-  min-height: 350px;
-  /* Taller loading area */
-  gap: 12px;
-  font-size: 1.1rem;
-  color: var(--muted);
-}
-
-
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.noDataMessage {
-  min-height: 350px;
-  /* Taller empty state area */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--muted);
-  font-size: 1.1rem;
-  font-weight: 500;
-}
-
-/* ---- Swal Button ---- */
-.swalButton {
-  background: var(--primary) !important;
-  border-radius: 8px !important;
-  padding: 12px 24px !important;
-  /* Larger padding */
-  font-size: 1rem !important;
-  font-weight: 600 !important;
-}
-
-.swalButton:hover {
-  background: var(--primary-hover) !important;
-}
+.pending  { color:#6B4F00; background:#FFF7DB; border-color:#F8E39A; } /* รอดำเนินการ */
+.partial  { color:#92400E; background:#FEF3C7; border-color:#FCD34D; } /* รอรับเพิ่ม */
+.completed{ color:#065F46; background:#D1FAE5; border-color:#6EE7B7; } /* เสร็จสิ้น */
+.canceled { color:#991B1B; background:#FEE2E2; border-color:#FECACA; } /* ยกเลิก */
 
 /* ---- Responsive ---- */
-@media (max-width: 1200px) {
-  .filterGrid {
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 16px;
-  }
-
-  .infoContainer {
-    padding: 28px;
-  }
-
-  .toolbar {
-    padding: 18px;
-  }
+@media (max-width: 960px){
+  .filterGrid{ grid-template-columns:1fr; }
 }
 
-@media (max-width: 992px) {
-  .mainHome {
-    padding: 24px;
+@media (max-width: 640px){
+  :root{
+    --th-font:1rem;
+    --th-min-h:54px;
+    --th-pad-y:10px;
   }
-
-  .pageTitle {
-    font-size: 1.8rem;
-  }
-
-  .primaryButton {
-    height: 44px;
-    padding: 0 20px;
-  }
-
-  .tableGrid {
+  .mainHome{ padding:12px; }
+  .tableGrid{
     grid-template-columns:
-      minmax(120px, 1.2fr) minmax(120px, 1.2fr) minmax(100px, 1fr) minmax(180px, 2.5fr) minmax(100px, 1.2fr) minmax(90px, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .mainHome {
-    padding: 16px;
-  }
-
-  .infoContainer {
-    padding: 20px 16px;
-    gap: 20px;
-  }
-
-  .pageBar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .pageTitle {
-    font-size: 1.6rem;
-  }
-
-  .subtitle {
-    font-size: 0.9rem;
-  }
-
-  .toolbar {
-    padding: 16px;
-    gap: 12px;
-    align-items: flex-start;
-  }
-
-  .filterGrid {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .filterGroup {
-    min-width: unset;
-    width: 100%;
-  }
-
-  .input {
-    height: 44px;
-    font-size: 0.9rem;
-  }
-
-  .primaryButton {
-    width: 100%;
-    justify-content: center;
-    height: 44px;
-    font-size: 0.95rem;
-  }
-}
-
-@media (max-width: 600px) {
-  :root {
-    --th-font: 0.95rem;
-    --body-font: 0.85rem;
-    --th-min-h: 55px;
-    --th-pad-y: 10px;
-    --th-pad-x: 15px;
-    --row-h: 60px;
-  }
-
-  .tableGrid {
-    grid-template-columns:
-      minmax(100px, 1.2fr) minmax(100px, 1.2fr) minmax(90px, 1fr) minmax(150px, 2.5fr) minmax(90px, 1.2fr) minmax(80px, 1fr);
-  }
-
-  .tableCell,
-  .headerItem {
-    padding: 8px;
-  }
-
-  .tableCell:first-child,
-  .headerItem:first-child {
-    padding-left: 15px;
-  }
-
-  .tableCell:last-child,
-  .headerItem:last-child {
-    padding-right: 15px;
-  }
-
-  .stBadge {
-    min-width: 90px;
-    padding: 4px 10px;
-    font-size: 0.8rem;
-  }
-
-  .secondaryButton {
-    height: 38px;
-    width: 38px;
+      120px /* GR */
+      120px /* PO */
+      100px /* Date */
+      1fr   /* Supplier */
+      100px /* Status */
+      100px /* Actions */;
   }
 }

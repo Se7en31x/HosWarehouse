@@ -8,7 +8,32 @@ import { PackageCheck } from "lucide-react";
 import Swal from "sweetalert2";
 import styles from "./page.module.css";
 
-const GoodsReceiptCreatePage = () => {
+/* ───────── Utils ───────── */
+const thaiDate = (d) => {
+  try {
+    return d
+      ? new Date(d).toLocaleDateString("th-TH", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        })
+      : "-";
+  } catch {
+    return "-";
+  }
+};
+
+const isPharma = (cat) => {
+  const t = String(cat || "").toLowerCase();
+  return (
+    t === "medicine" ||
+    t === "medsup" ||
+    t.includes("ยา") ||
+    t.includes("เวชภัณฑ์")
+  );
+};
+
+export default function GoodsReceiptCreatePage() {
   const router = useRouter();
   const [poList, setPoList] = useState([]);
   const [selectedPO, setSelectedPO] = useState(null);
@@ -22,12 +47,13 @@ const GoodsReceiptCreatePage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  /* -------- โหลด PO ที่รอดำเนินการ -------- */
   useEffect(() => {
     const fetchPOs = async () => {
       try {
         setLoading(true);
         const res = await purchasingAxios.get("/po?status=รอดำเนินการ");
-        setPoList(res.data);
+        setPoList(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         Swal.fire({
           title: "ผิดพลาด",
@@ -43,6 +69,7 @@ const GoodsReceiptCreatePage = () => {
     fetchPOs();
   }, []);
 
+  /* -------- เลือก PO -------- */
   const handleSelectPO = async (id) => {
     if (!id) {
       setSelectedPO(null);
@@ -57,9 +84,11 @@ const GoodsReceiptCreatePage = () => {
     }
     try {
       const res = await purchasingAxios.get(`/po/${id}`);
-      setSelectedPO(res.data);
+      const data = res.data;
+      setSelectedPO(data);
+
       const init = {};
-      res.data.items.forEach((item) => {
+      (data?.items || []).forEach((item) => {
         init[item.po_item_id] = { qty_received: 0, lot: "", mfg: "", expiry: "" };
       });
       setReceivedItems(init);
@@ -74,17 +103,20 @@ const GoodsReceiptCreatePage = () => {
     }
   };
 
+  /* -------- ฟอร์ม: อัปเดตรายการ -------- */
   const handleItemChange = (id, field, value) => {
-    setReceivedItems({
-      ...receivedItems,
-      [id]: { ...receivedItems[id], [field]: value },
-    });
+    setReceivedItems((prev) => ({
+      ...prev,
+      [id]: { ...prev[id], [field]: value },
+    }));
   };
 
+  /* -------- ฟอร์ม: อัปเดตหัว GR -------- */
   const handleReceiptChange = (field, value) => {
-    setReceiptData({ ...receiptData, [field]: value });
+    setReceiptData((prev) => ({ ...prev, [field]: value }));
   };
 
+  /* -------- ตรวจสอบก่อนบันทึก -------- */
   const validateBeforeSave = async () => {
     if (!selectedPO) {
       await Swal.fire({
@@ -99,14 +131,14 @@ const GoodsReceiptCreatePage = () => {
 
     let hasQty = false;
 
-    for (const item of selectedPO.items) {
+    for (const item of selectedPO.items || []) {
       const val = receivedItems[item.po_item_id];
       const qty = parseInt(val?.qty_received) || 0;
 
       if (qty > 0) {
         hasQty = true;
 
-        if (qty > item.quantity) {
+        if (qty > Number(item.quantity || 0)) {
           await Swal.fire({
             title: "แจ้งเตือน",
             text: `ห้ามรับเกินจำนวนสั่งซื้อ (${item.quantity} ${item.unit}) สำหรับ ${item.item_name}`,
@@ -117,7 +149,8 @@ const GoodsReceiptCreatePage = () => {
           return false;
         }
 
-        if (["medicine", "medsup"].includes(item.item_category)) {
+        // เฉพาะยา/เวชภัณฑ์ ต้องมีวันผลิตและวันหมดอายุ
+        if (isPharma(item.item_category)) {
           if (!val.mfg) {
             await Swal.fire({
               title: "ข้อมูลไม่ครบถ้วน",
@@ -132,6 +165,17 @@ const GoodsReceiptCreatePage = () => {
             await Swal.fire({
               title: "ข้อมูลไม่ครบถ้วน",
               text: `กรุณากรอกวันหมดอายุของ ${item.item_name}`,
+              icon: "warning",
+              confirmButtonText: "ตกลง",
+              customClass: { confirmButton: styles.swalButton },
+            });
+            return false;
+          }
+          // วันผลิตต้องไม่เกินวันหมดอายุ
+          if (new Date(val.mfg) > new Date(val.expiry)) {
+            await Swal.fire({
+              title: "ข้อมูลไม่ถูกต้อง",
+              text: `วันผลิตต้องไม่มากกว่าวันหมดอายุ (${item.item_name})`,
               icon: "warning",
               confirmButtonText: "ตกลง",
               customClass: { confirmButton: styles.swalButton },
@@ -156,20 +200,15 @@ const GoodsReceiptCreatePage = () => {
     return true;
   };
 
+  /* -------- บันทึก -------- */
   const handleSaveReceipt = async () => {
     if (saving) return;
     if (!(await validateBeforeSave())) return;
 
     setSaving(true);
-
     try {
-      const payload = {
-        po_id: selectedPO.po_id,
-        delivery_no: receiptData.delivery_no,
-        invoice_no: receiptData.invoice_no,
-        receipt_date: receiptData.receipt_date,
-        note: receiptData.note,
-        items: selectedPO.items
+      const itemsPayload =
+        (selectedPO?.items || [])
           .filter((item) => (parseInt(receivedItems[item.po_item_id]?.qty_received) || 0) > 0)
           .map((item) => ({
             po_item_id: item.po_item_id,
@@ -179,7 +218,15 @@ const GoodsReceiptCreatePage = () => {
             mfg_date: receivedItems[item.po_item_id]?.mfg || null,
             expiry_date: receivedItems[item.po_item_id]?.expiry || null,
             unit: item.unit || null,
-          })),
+          }));
+
+      const payload = {
+        po_id: selectedPO.po_id,
+        delivery_no: receiptData.delivery_no,
+        invoice_no: receiptData.invoice_no,
+        receipt_date: receiptData.receipt_date,
+        note: receiptData.note,
+        items: itemsPayload,
       };
 
       const res = await purchasingAxios.post("/gr", payload);
@@ -189,9 +236,7 @@ const GoodsReceiptCreatePage = () => {
         icon: "success",
         confirmButtonText: "ตกลง",
         customClass: { confirmButton: styles.swalButton },
-      }).then(() => {
-        router.push("/purchasing/goodsReceipt");
-      });
+      }).then(() => router.push("/purchasing/goodsReceipt"));
     } catch (err) {
       Swal.fire({
         title: "ผิดพลาด",
@@ -205,13 +250,14 @@ const GoodsReceiptCreatePage = () => {
     }
   };
 
-  const handleCancel = () => {
-    router.push("/purchasing/goodsReceipt");
-  };
+  const handleCancel = () => router.push("/purchasing/goodsReceipt");
 
   const sortedItems = useMemo(() => {
     if (!selectedPO?.items) return [];
-    return [...selectedPO.items].sort((a, b) => a.item_name.localeCompare(b.item_name));
+    const collator = new Intl.Collator("th-TH");
+    return [...selectedPO.items].sort((a, b) =>
+      collator.compare(a?.item_name || "", b?.item_name || "")
+    );
   }, [selectedPO]);
 
   if (loading) {
@@ -219,7 +265,7 @@ const GoodsReceiptCreatePage = () => {
       <div className={styles.mainHome}>
         <div className={styles.infoContainer}>
           <div className={styles.loadingContainer}>
-            <div className={styles.spinner}>กำลังโหลด...</div>
+            <div className={styles.spinner} role="status" aria-live="polite" aria-label="กำลังโหลด" />
           </div>
         </div>
       </div>
@@ -229,13 +275,15 @@ const GoodsReceiptCreatePage = () => {
   return (
     <div className={styles.mainHome}>
       <div className={styles.infoContainer}>
+        {/* Header */}
         <div className={styles.pageBar}>
           <div className={styles.titleGroup}>
             <h1 className={styles.pageTitle}>
-              <PackageCheck size={28} /> บันทึกรับสินค้าใหม่
+              บันทึกรับสินค้าใหม่
             </h1>
-            <p className={styles.subtitle}>สร้างรายการรับสินค้าจากใบสั่งซื้อ (PO)</p>
+            {/* <p className={styles.subtitle}>สร้างรายการรับสินค้าจากใบสั่งซื้อ (PO)</p> */}
           </div>
+
           <button
             className={`${styles.ghostBtn} ${styles.actionButton}`}
             onClick={handleCancel}
@@ -245,6 +293,7 @@ const GoodsReceiptCreatePage = () => {
           </button>
         </div>
 
+        {/* เลือก PO */}
         <section className={styles.formSection}>
           <div className={styles.selector}>
             <div className={styles.formGroup}>
@@ -264,6 +313,7 @@ const GoodsReceiptCreatePage = () => {
                 ))}
               </select>
             </div>
+
             {selectedPO && (
               <button
                 className={`${styles.dangerButton} ${styles.actionButton}`}
@@ -275,7 +325,8 @@ const GoodsReceiptCreatePage = () => {
             )}
           </div>
 
-          {selectedPO && (
+          {/* รายละเอียด + ฟอร์ม */}
+          {selectedPO ? (
             <div className={styles.detail}>
               <h2 className={styles.sectionTitle}>
                 รายละเอียด PO: <span className={styles.mono}>{selectedPO.po_no}</span>
@@ -293,6 +344,7 @@ const GoodsReceiptCreatePage = () => {
                     aria-describedby="delivery-no-label"
                   />
                 </div>
+
                 <div className={styles.formGroup}>
                   <label className={styles.label} id="invoice-no-label">เลขที่ใบกำกับภาษี</label>
                   <input
@@ -304,6 +356,7 @@ const GoodsReceiptCreatePage = () => {
                     aria-describedby="invoice-no-label"
                   />
                 </div>
+
                 <div className={styles.formGroup}>
                   <label className={styles.label} id="receipt-date-label">วันที่รับ</label>
                   <input
@@ -314,7 +367,8 @@ const GoodsReceiptCreatePage = () => {
                     aria-describedby="receipt-date-label"
                   />
                 </div>
-                <div className={styles.formGroup}>
+
+                <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
                   <label className={styles.label} id="note-label">หมายเหตุ</label>
                   <textarea
                     placeholder="ระบุหมายเหตุเพิ่มเติม..."
@@ -326,12 +380,15 @@ const GoodsReceiptCreatePage = () => {
                 </div>
               </div>
 
+              {/* ตารางรายการ */}
               <div className={styles.tableSection}>
                 <h3 className={styles.sectionTitle}>📦 รายการสินค้า</h3>
+
+                {/* Header */}
                 <div
                   className={`${styles.tableGrid} ${styles.tableHeader}`}
-                  role="region"
-                  aria-label="ตารางรายการสินค้า"
+                  role="row"
+                  aria-label="ส่วนหัวตารางรายการสินค้า"
                 >
                   <div className={styles.headerItem}>สินค้า</div>
                   <div className={styles.headerItem}>จำนวนสั่งซื้อ</div>
@@ -340,71 +397,94 @@ const GoodsReceiptCreatePage = () => {
                   <div className={styles.headerItem}>วันผลิต</div>
                   <div className={styles.headerItem}>วันหมดอายุ</div>
                 </div>
-                <div className={styles.inventory}>
+
+                {/* Body */}
+                <div className={styles.inventory} role="rowgroup" aria-label="ตารางรายการสินค้า">
                   {sortedItems.length > 0 ? (
-                    sortedItems.map((item) => (
-                      <div
-                        key={item.po_item_id}
-                        className={`${styles.tableGrid} ${styles.tableRow}`}
-                      >
-                        <div className={`${styles.tableCell} ${styles.textWrap}`} title={item.item_name || "-"}>
-                          {item.item_name || "-"}
+                    sortedItems.map((item) => {
+                      const maxQty = Number(item.quantity || 0);
+                      return (
+                        <div
+                          key={item.po_item_id}
+                          className={`${styles.tableGrid} ${styles.tableRow}`}
+                          role="row"
+                        >
+                          <div
+                            className={`${styles.tableCell} ${styles.textWrap}`}
+                            title={item.item_name || "-"}
+                          >
+                            {item.item_name || "-"}
+                          </div>
+
+                          <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                            {maxQty} {item.unit || "-"}
+                          </div>
+
+                          <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                            <input
+                              type="number"
+                              min="0"
+                              max={maxQty}
+                              value={receivedItems[item.po_item_id]?.qty_received ?? ""}
+                              onChange={(e) =>
+                                handleItemChange(item.po_item_id, "qty_received", e.target.value)
+                              }
+                              className={styles.inputItem}
+                              placeholder="0"
+                              aria-label={`จำนวนที่รับจริงสำหรับ ${item.item_name}`}
+                            />
+                          </div>
+
+                          <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                            <input
+                              type="text"
+                              placeholder="Lot No."
+                              value={receivedItems[item.po_item_id]?.lot || ""}
+                              onChange={(e) =>
+                                handleItemChange(item.po_item_id, "lot", e.target.value)
+                              }
+                              className={styles.input}
+                              aria-label={`Lot No. สำหรับ ${item.item_name}`}
+                            />
+                          </div>
+
+                          <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                            <input
+                              type="date"
+                              value={receivedItems[item.po_item_id]?.mfg || ""}
+                              onChange={(e) =>
+                                handleItemChange(item.po_item_id, "mfg", e.target.value)
+                              }
+                              className={styles.input}
+                              aria-label={`วันผลิตสำหรับ ${item.item_name}`}
+                            />
+                          </div>
+
+                          <div className={`${styles.tableCell} ${styles.centerCell}`}>
+                            <input
+                              type="date"
+                              value={receivedItems[item.po_item_id]?.expiry || ""}
+                              onChange={(e) =>
+                                handleItemChange(item.po_item_id, "expiry", e.target.value)
+                              }
+                              className={styles.input}
+                              aria-label={`วันหมดอายุสำหรับ ${item.item_name}`}
+                            />
+                          </div>
                         </div>
-                        <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                          {item.quantity} {item.unit || "-"}
-                        </div>
-                        <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                          <input
-                            type="number"
-                            min="0"
-                            max={item.quantity}
-                            value={receivedItems[item.po_item_id]?.qty_received || ""}
-                            onChange={(e) =>
-                              handleItemChange(item.po_item_id, "qty_received", e.target.value)
-                            }
-                            className={styles.inputItem}
-                            placeholder="0"
-                            aria-label={`จำนวนที่รับจริงสำหรับ ${item.item_name}`}
-                          />
-                        </div>
-                        <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                          <input
-                            type="text"
-                            placeholder="Lot No."
-                            value={receivedItems[item.po_item_id]?.lot || ""}
-                            onChange={(e) => handleItemChange(item.po_item_id, "lot", e.target.value)}
-                            className={styles.input}
-                            aria-label={`Lot No. สำหรับ ${item.item_name}`}
-                          />
-                        </div>
-                        <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                          <input
-                            type="date"
-                            value={receivedItems[item.po_item_id]?.mfg || ""}
-                            onChange={(e) => handleItemChange(item.po_item_id, "mfg", e.target.value)}
-                            className={styles.input}
-                            aria-label={`วันผลิตสำหรับ ${item.item_name}`}
-                          />
-                        </div>
-                        <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                          <input
-                            type="date"
-                            value={receivedItems[item.po_item_id]?.expiry || ""}
-                            onChange={(e) =>
-                              handleItemChange(item.po_item_id, "expiry", e.target.value)
-                            }
-                            className={styles.input}
-                            aria-label={`วันหมดอายุสำหรับ ${item.item_name}`}
-                          />
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   ) : (
-                    <div className={styles.noDataMessage}>ไม่มีรายการสินค้า</div>
+                    <div className={styles.noDataMessage}>
+                      {poList.length === 0
+                        ? "ไม่มี PO รอดำเนินการ"
+                        : "ไม่มีรายการสินค้า"}
+                    </div>
                   )}
                 </div>
               </div>
 
+              {/* ปุ่มบันทึก */}
               <div className={styles.footer}>
                 <button
                   className={`${styles.primaryButton} ${styles.actionButton}`}
@@ -423,11 +503,13 @@ const GoodsReceiptCreatePage = () => {
                 </button>
               </div>
             </div>
+          ) : (
+            <div className={styles.hintBox}>
+              กรุณาเลือก PO เพื่อเริ่มบันทึกรับสินค้า
+            </div>
           )}
         </section>
       </div>
     </div>
   );
-};
-
-export default GoodsReceiptCreatePage;
+}

@@ -2,8 +2,8 @@
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { drawMetaBlock } from "./metaBlock";
-import { drawBrandHeader } from "./brandHeader";
+import { drawMetaBlock } from "./blocks/metaBlock";
+import { drawBrandHeader } from "./blocks/brandHeader";
 
 /* ======================
    Helper: Buffer → Base64

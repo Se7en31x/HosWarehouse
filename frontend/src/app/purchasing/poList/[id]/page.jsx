@@ -2,31 +2,37 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { purchasingAxios } from "@/app/utils/axiosInstance";
 import Swal from "sweetalert2";
-import styles from "./page.module.css";
 import { PackageCheck } from "lucide-react";
 import { FaTimes, FaFilePdf, FaFileImage, FaFile } from "react-icons/fa";
-import Link from "next/link";
+import styles from "./page.module.css";
 
+/* ───────── Badge ───────── */
 const StatusBadge = ({ status }) => {
-  let badgeStyle = styles.pending;
-  if (status?.toLowerCase() === "approved") badgeStyle = styles.approved;
-  else if (status?.toLowerCase() === "completed") badgeStyle = styles.completed;
-  else if (status?.toLowerCase() === "canceled") badgeStyle = styles.canceled;
-  return (
-    <span className={`${styles.stBadge} ${badgeStyle}`}>
-      {status ? status.charAt(0).toUpperCase() + status.slice(1) : "รอดำเนินการ"}
-    </span>
-  );
+  const t = String(status || "pending").toLowerCase();
+  const map = {
+    approved: { cls: styles.approved, label: "อนุมัติ" },
+    completed: { cls: styles.completed, label: "เสร็จสิ้น" },
+    canceled: { cls: styles.canceled, label: "ยกเลิก" },
+    cancelled: { cls: styles.canceled, label: "ยกเลิก" },
+    pending: { cls: styles.pending, label: "รอดำเนินการ" },
+  };
+  const m = map[t] || map.pending;
+  return <span className={`${styles.stBadge} ${m.cls}`}>{m.label}</span>;
 };
 
+/* ───────── Utils ───────── */
+const nf0 = new Intl.NumberFormat("th-TH");
+const nf2 = new Intl.NumberFormat("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 const PoDetailsPage = () => {
-  const params = useParams();
-  const id = params?.id;
+  const { id } = useParams();
 
   const [poData, setPoData] = useState(null);
   const [loading, setLoading] = useState(true);
+
   const [newAttachments, setNewAttachments] = useState({});
   const [deletedFileIds, setDeletedFileIds] = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -63,6 +69,7 @@ const PoDetailsPage = () => {
 
   useEffect(() => {
     fetchPoDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const handleNewAttachmentChange = (e, type) => {
@@ -76,8 +83,7 @@ const PoDetailsPage = () => {
       });
       return;
     }
-
-    const files = Array.from(e.target.files);
+    const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
     const allowedTypes = ["application/pdf", "image/jpeg", "image/png"];
@@ -86,9 +92,9 @@ const PoDetailsPage = () => {
     for (const file of files) {
       if (!allowedTypes.includes(file.type)) {
         Swal.fire({
-          title: "ผิดพลาด",
-          text: `ไฟล์ ${file.name} ไม่ใช่ประเภทที่อนุญาต (PDF, JPEG, PNG เท่านั้น)`,
-          icon: "error",
+          title: "ไฟล์ไม่ถูกต้อง",
+          text: `ไฟล์ ${file.name} ต้องเป็น PDF, JPEG หรือ PNG`,
+          icon: "warning",
           confirmButtonText: "ตกลง",
           customClass: { confirmButton: styles.swalButton },
         });
@@ -96,9 +102,9 @@ const PoDetailsPage = () => {
       }
       if (file.size > maxSize) {
         Swal.fire({
-          title: "ผิดพลาด",
+          title: "ไฟล์ใหญ่เกินไป",
           text: `ไฟล์ ${file.name} มีขนาดเกิน 10MB`,
-          icon: "error",
+          icon: "warning",
           confirmButtonText: "ตกลง",
           customClass: { confirmButton: styles.swalButton },
         });
@@ -115,75 +121,55 @@ const PoDetailsPage = () => {
   const handleRemoveNewAttachment = (type, idx) => {
     setNewAttachments((prev) => ({
       ...prev,
-      [type]: prev[type].filter((_, i) => i !== idx),
+      [type]: (prev[type] || []).filter((_, i) => i !== idx),
     }));
   };
 
   const handleRemoveExistingAttachment = (fileId) => {
-    setDeletedFileIds((prev) => [...prev, fileId]);
+    setDeletedFileIds((prev) => (prev.includes(fileId) ? prev : [...prev, fileId]));
   };
 
   const handleUpdateAttachments = async () => {
     setUploading(true);
     try {
-      const formData = new FormData();
       const files = [];
       const categories = [];
       const originalNames = [];
 
       Object.entries(newAttachments).forEach(([type, filesArray]) => {
-        if (!validCategories.includes(type)) {
-          throw new Error(`หมวดหมู่ไม่ถูกต้อง: ${type}`);
-        }
-        if (filesArray?.length > 0) {
-          filesArray.forEach((file) => {
-            files.push(file);
-            categories.push(type);
-            originalNames.push(file.name);
-          });
-        }
+        if (!validCategories.includes(type)) throw new Error(`หมวดหมู่ไม่ถูกต้อง: ${type}`);
+        (filesArray || []).forEach((file) => {
+          files.push(file);
+          categories.push(type);
+          originalNames.push(file.name);
+        });
       });
 
-      console.log("Files to send:", files.map((f) => f.name));
-      console.log("Categories to send:", categories);
-      console.log("Original names to send:", originalNames);
-      console.log("Number of files:", files.length);
-      console.log("Number of categories:", categories.length);
-      console.log("Number of original names:", originalNames.length);
+      const existingFileIdsToKeep =
+        poData?.attachments
+          ?.filter((file) => !deletedFileIds.includes(file.file_id))
+          ?.map((file) => file.file_id) || [];
 
-      if (files.length !== categories.length || files.length !== originalNames.length) {
-        throw new Error("จำนวนไฟล์, หมวดหมู่, หรือชื่อไฟล์ไม่ตรงกันใน frontend");
-      }
-
-      files.forEach((file, index) => {
-        formData.append("files", file);
-        formData.append("categories[]", categories[index]);
-        formData.append("originalNames[]", originalNames[index]);
-      });
-
-      const existingFileIdsToKeep = poData?.attachments
-        ?.filter((file) => !deletedFileIds.includes(file.file_id))
-        ?.map((file) => file.file_id) || [];
-
-      formData.append("existingAttachments", JSON.stringify(existingFileIdsToKeep));
-
-      console.log("FormData contents:");
-      for (let pair of formData.entries()) {
-        console.log(`${pair[0]}:`, pair[1]);
-      }
-
-      if (files.length === 0 && existingFileIdsToKeep.length === poData?.attachments?.length) {
+      if (files.length === 0 && existingFileIdsToKeep.length === (poData?.attachments?.length || 0)) {
         Swal.fire({
-          title: "ไม่มีข้อมูลเปลี่ยนแปลง",
+          title: "ไม่มีการเปลี่ยนแปลง",
           text: "กรุณาเพิ่มหรือลบไฟล์ก่อนบันทึก",
-          icon: "warning",
+          icon: "info",
           confirmButtonText: "ตกลง",
           customClass: { confirmButton: styles.swalButton },
         });
         return;
       }
 
-      const res = await purchasingAxios.put(`/po/${poData.po_id}/attachments`, formData, {
+      const formData = new FormData();
+      files.forEach((file, idx) => {
+        formData.append("files", file);
+        formData.append("categories[]", categories[idx]);
+        formData.append("originalNames[]", originalNames[idx]);
+      });
+      formData.append("existingAttachments", JSON.stringify(existingFileIdsToKeep));
+
+      await purchasingAxios.put(`/po/${poData.po_id}/attachments`, formData, {
         headers: { "Content-Type": "multipart/form-data; charset=utf-8" },
       });
 
@@ -199,7 +185,6 @@ const PoDetailsPage = () => {
       setDeletedFileIds([]);
       fetchPoDetails();
     } catch (err) {
-      console.error("Frontend error:", err);
       Swal.fire({
         title: "ผิดพลาด",
         text: err.response?.data?.message || "ไม่สามารถอัปโหลดไฟล์ได้ กรุณาตรวจสอบไฟล์และหมวดหมู่",
@@ -214,7 +199,7 @@ const PoDetailsPage = () => {
 
   const getFileIcon = (fileType) => {
     if (fileType === "application/pdf") return <FaFilePdf size={18} className={styles.fileIcon} />;
-    if (fileType.startsWith("image/")) return <FaFileImage size={18} className={styles.fileIcon} />;
+    if (String(fileType).startsWith("image/")) return <FaFileImage size={18} className={styles.fileIcon} />;
     return <FaFile size={18} className={styles.fileIcon} />;
   };
 
@@ -232,7 +217,7 @@ const PoDetailsPage = () => {
   const groupedExistingFiles = useMemo(() => {
     return (
       poData?.attachments
-        ?.filter((file) => !deletedFileIds.includes(file.file_id))
+        ?.filter((f) => !deletedFileIds.includes(f.file_id))
         ?.reduce((acc, file) => {
           const category = file.file_category || "other";
           acc[category] = [...(acc[category] || []), file];
@@ -246,7 +231,7 @@ const PoDetailsPage = () => {
       <div className={styles.mainHome}>
         <div className={styles.infoContainer}>
           <div className={styles.loadingContainer}>
-            <div className={styles.spinner}>กำลังโหลด...</div>
+            <div className={styles.spinner} role="status" aria-live="polite" aria-label="กำลังโหลด" />
           </div>
         </div>
       </div>
@@ -258,6 +243,11 @@ const PoDetailsPage = () => {
       <div className={styles.mainHome}>
         <div className={styles.infoContainer}>
           <div className={styles.noDataMessage}>ไม่พบข้อมูลใบสั่งซื้อ</div>
+          <div className={styles.footer}>
+            <Link href="/purchasing/poList" className={`${styles.ghostBtn} ${styles.actionButton}`}>
+              <FaTimes size={18} /> กลับไปยังรายการ
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -266,22 +256,23 @@ const PoDetailsPage = () => {
   return (
     <div className={styles.mainHome}>
       <div className={styles.infoContainer}>
+        {/* Header */}
         <div className={styles.pageBar}>
           <div className={styles.titleGroup}>
             <h1 className={styles.pageTitle}>
-              <PackageCheck size={28} /> รายละเอียดการสั่งซื้อ
+             รายละเอียดการสั่งซื้อ
             </h1>
-            <p className={styles.subtitle}>
-              ดูและจัดการข้อมูลใบสั่งซื้อเลขที่ {poData.po_no}
-            </p>
+            {/* <p className={styles.subtitle}>
+              ดูและจัดการข้อมูลใบสั่งซื้อเลขที่ <span className={styles.mono}>{poData.po_no}</span>
+            </p> */}
           </div>
-          <Link href="/purchasing/poList">
-            <button className={`${styles.ghostBtn} ${styles.actionButton}`}>
-              <FaTimes size={18} /> กลับไปยังรายการ
-            </button>
+
+          <Link href="/purchasing/poList" className={`${styles.ghostBtn} ${styles.actionButton}`}>
+            <FaTimes size={18} /> กลับไปยังรายการ
           </Link>
         </div>
 
+        {/* Meta */}
         <div className={styles.detail}>
           <h2 className={styles.sectionTitle}>รายละเอียด PO: {poData.po_no}</h2>
 
@@ -304,10 +295,13 @@ const PoDetailsPage = () => {
             </div>
           </div>
 
+          {/* Table */}
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>📦 รายการสินค้า</h3>
+
             <div className={styles.tableSection}>
-              <div className={`${styles.tableGrid} ${styles.tableHeader}`}>
+              {/* Header */}
+              <div className={`${styles.tableGrid} ${styles.tableHeader}`} role="row" aria-label="หัวตารางรายการสินค้า">
                 <div className={styles.headerItem}>ชื่อสินค้า</div>
                 <div className={styles.headerItem}>จำนวน</div>
                 <div className={styles.headerItem}>หน่วย</div>
@@ -315,83 +309,75 @@ const PoDetailsPage = () => {
                 <div className={styles.headerItem}>ส่วนลด</div>
                 <div className={styles.headerItem}>จำนวนเงิน</div>
               </div>
-              <div className={styles.inventory}>
-                {poData.items.map((item) => {
-                  const total = item.quantity * item.price - (item.discount || 0);
+
+              {/* Body */}
+              <div className={styles.inventory} role="rowgroup" aria-label="ตารางรายการสินค้า">
+                {(poData.items || []).map((item) => {
+                  const qty = Number(item.quantity || 0);
+                  const price = Number(item.price || 0);
+                  const discount = Number(item.discount || 0);
+                  const total = qty * price - discount;
+
                   return (
-                    <div key={item.po_item_id} className={`${styles.tableGrid} ${styles.tableRow}`}>
-                      <div className={`${styles.tableCell} ${styles.textWrap}`}>
-                        {item.item_name || "-"}
-                      </div>
-                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                        {item.quantity || 0}
-                      </div>
-                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                        {item.unit || "-"}
-                      </div>
-                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                        {Number(item.price).toLocaleString("th-TH", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} บาท
-                      </div>
-                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                        {Number(item.discount || 0).toLocaleString("th-TH", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} บาท
-                      </div>
-                      <div className={`${styles.tableCell} ${styles.centerCell}`}>
-                        {Number(total).toLocaleString("th-TH", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} บาท
-                      </div>
+                    <div key={item.po_item_id} className={`${styles.tableGrid} ${styles.tableRow}`} role="row">
+                      <div className={`${styles.tableCell} ${styles.textWrap}`}>{item.item_name || "-"}</div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>{nf0.format(qty)}</div>
+                      <div className={`${styles.tableCell} ${styles.centerCell}`}>{item.unit || "-"}</div>
+                      <div className={`${styles.tableCell} ${styles.rightCell}`}>{nf2.format(price)} บาท</div>
+                      <div className={`${styles.tableCell} ${styles.rightCell}`}>{nf2.format(discount)} บาท</div>
+                      <div className={`${styles.tableCell} ${styles.rightCell}`}>{nf2.format(total)} บาท</div>
                     </div>
                   );
                 })}
               </div>
             </div>
 
+            {/* Summary */}
             <div className={styles.summaryContainer}>
               <div className={styles.summaryRow}>
                 <span>รวม (ก่อนภาษี):</span>
-                <span>{Number(poData.subtotal).toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท</span>
+                <span>{nf2.format(Number(poData.subtotal || 0))} บาท</span>
               </div>
               <div className={styles.summaryRow}>
                 <span>ภาษีมูลค่าเพิ่ม (7%):</span>
-                <span>{Number(poData.vat_amount).toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท</span>
+                <span>{nf2.format(Number(poData.vat_amount || 0))} บาท</span>
               </div>
               <div className={`${styles.summaryRow} ${styles.grandTotalRow}`}>
                 <span>ยอดสุทธิ:</span>
-                <span>{Number(poData.grand_total).toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท</span>
+                <span>{nf2.format(Number(poData.grand_total || 0))} บาท</span>
               </div>
             </div>
           </div>
 
+          {/* Attachments */}
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>📎 เอกสารแนบ</h3>
+
             <div className={styles.fileGrid}>
-              {attachmentTypes.map((fileType) => (
-                <div key={fileType.type} className={styles.fileGroup}>
+              {attachmentTypes.map(({ label, type }) => (
+                <div key={type} className={styles.fileGroup}>
                   <label className={styles.fileLabel}>
                     <div className={styles.uploadBox}>
-                      <span>{fileType.label}</span>
+                      <span>{label}</span>
                       <input
                         type="file"
                         multiple
                         className={styles.fileInput}
                         accept="application/pdf,image/jpeg,image/png"
-                        onChange={(e) => handleNewAttachmentChange(e, fileType.type)}
+                        onChange={(e) => handleNewAttachmentChange(e, type)}
                         disabled={uploading}
                       />
                     </div>
                   </label>
+
                   <div className={styles.fileList}>
-                    {(groupedExistingFiles[fileType.type] || []).map((file) => {
+                    {(groupedExistingFiles[type] || []).map((file) => {
                       const supabaseBase =
                         "https://ijvzxcyfkvahhlveukow.supabase.co/storage/v1/object/public/hospital-files/";
-                      const fileLink = file.signed_url || file.public_url || (file.file_path ? `${supabaseBase}${file.file_path}` : "#");
+                      const fileLink =
+                        file.signed_url ||
+                        file.public_url ||
+                        (file.file_path ? `${supabaseBase}${file.file_path}` : "#");
                       const displayName = file.original_file_name || file.file_name;
 
                       return (
@@ -419,8 +405,9 @@ const PoDetailsPage = () => {
                         </div>
                       );
                     })}
-                    {(newAttachments[fileType.type] || []).map((file, idx) => (
-                      <div key={`${fileType.type}-${idx}`} className={styles.fileItem}>
+
+                    {(newAttachments[type] || []).map((file, idx) => (
+                      <div key={`${type}-${idx}`} className={styles.fileItem}>
                         <div className={styles.fileItemContent}>
                           {getFileIcon(file.type)}
                           <span className={styles.textWrap} title={file.name}>
@@ -429,7 +416,7 @@ const PoDetailsPage = () => {
                         </div>
                         <button
                           className={`${styles.ghostBtn} ${styles.actionButton}`}
-                          onClick={() => handleRemoveNewAttachment(fileType.type, idx)}
+                          onClick={() => handleRemoveNewAttachment(type, idx)}
                           aria-label={`ลบไฟล์ ${file.name}`}
                           disabled={uploading}
                         >
@@ -441,11 +428,13 @@ const PoDetailsPage = () => {
                 </div>
               ))}
             </div>
+
             <div className={styles.footer}>
               <button
                 className={`${styles.primaryButton} ${styles.actionButton}`}
                 onClick={handleUpdateAttachments}
                 disabled={uploading}
+                aria-label="บันทึกรายการไฟล์แนบ"
               >
                 {uploading ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
               </button>
