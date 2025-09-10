@@ -1,39 +1,9 @@
 /* =============================
-   PurchaseRequest — page.module.css
-   Baseline Layout (เหมือน InventoryCheck + Modal Table)
-   ============================= */
+   PurchaseRequest — page.module.css
+   Baseline Layout (เหมือน InventoryCheck + Modal Table)
+   ============================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-/* ---- Variables ---- */
-:root {
-  --bg: #F9FAFB;
-  --panel: #FFFFFF;
-  --text: #1F2A44;
-  --muted: #6B7280;
-  --border: #D1D5DB;
-
-  --success: #10B981;
-  --warning: #F59E0B;
-  --danger: #EF4444;
-
-  --tint-50: #FAFAFA;
-  --tint-100: #F3F4F6;
-  --tint-200: #E5E7EB;
-
-  --radius: 5px;
-  --row-h: 60px;
-  --rows-per-page: 12;
-
-  --th-font: 1.05rem;
-  --th-min-h: 60px;
-  --th-pad-y: 14px;
-  --th-pad-x: 12px;
-
-  --z-header: 10;
-  --z-toolbar: 100;
-  --z-modal-overlay: 12000;
-}
 
 /* ---- Layout ---- */
 .mainHome {
@@ -42,16 +12,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
+  background: #F9FAFB;
 }
 
 .infoContainer {
   width: 100%;
   max-width: none;
   min-height: 100vh;
-  background: var(--panel);
-  color: var(--text);
-  border-radius: var(--radius);
+  background: #FFFFFF;
+  color: #1F2A44;
+  border-radius: 5px;
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -66,7 +36,7 @@
   justify-content: space-between;
   align-items: center;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #D1D5DB;
 }
 
 .pageTitle {
@@ -80,7 +50,7 @@
 
 .subtitle {
   font-size: 1rem;
-  color: var(--muted);
+  color: #6B7280;
   margin: 0;
 }
 
@@ -92,14 +62,14 @@
 
 /* ---- Toolbar ---- */
 .toolbar {
-  z-index: var(--z-toolbar);
+  z-index: 100;
   display: flex;
   gap: 12px;
   align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
   padding: 16px;
-  border-radius: var(--radius);
+  border-radius: 5px;
 }
 
 .filterGrid {
@@ -118,12 +88,12 @@
 .label {
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text);
+  color: #1F2A44;
 }
 
 .input {
   height: 40px;
-  border: 1px solid var(--border);
+  border: 1px solid #D1D5DB;
   border-radius: 8px;
   padding: 0 12px;
   font-size: 0.95rem;
@@ -145,7 +115,7 @@
 .searchIcon {
   position: absolute;
   left: 12px;
-  color: var(--muted);
+  color: #6B7280;
 }
 
 .searchBar .input {
@@ -172,13 +142,13 @@
 }
 
 .ghostBtn {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  color: var(--text);
+  background: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  color: #1F2A44;
 }
 
 .ghostBtn:hover {
-  background: var(--tint-100);
+  background: #F3F4F6;
   transform: translateY(-2px);
 }
 
@@ -194,14 +164,14 @@
 }
 
 .primaryButton:disabled {
-  background: var(--tint-200);
+  background: #E5E7EB;
   cursor: not-allowed;
 }
 
 /* ---- Table ---- */
 .tableSection {
-  border-radius: var(--radius);
-  background: var(--panel);
+  border-radius: 5px;
+  background: #FFFFFF;
   display: flex;
   flex-direction: column;
 }
@@ -209,28 +179,20 @@
 .tableGrid {
   display: grid;
   grid-template-columns:
-    60px   /* เลือก */
-    140px  /* PR NO */
-    minmax(280px, 3fr) /* ✅ ชื่อสินค้า กว้างขึ้น */
-    100px  /* จำนวน */
-    100px  /* หน่วย */
-    140px  /* ประเภท */
-    180px  /* ✅ ผู้ขอ กว้างขึ้น */
-    140px  /* สถานะ */
-    180px; /* ✅ วันที่ กว้างขึ้น */
+    60px 140px minmax(280px, 3fr) 100px 100px 140px 180px 140px 180px;
   align-items: center;
 }
 
 .tableHeader {
   position: sticky;
   top: 0;
-  z-index: var(--z-header);
-  background: var(--tint-50);
-  padding-block: var(--th-pad-y);
-  padding-inline: var(--th-pad-x);
+  z-index: 10;
+  background: #FAFAFA;
+  padding-block: 14px;
+  padding-inline: 12px;
   font-weight: 700;
-  font-size: var(--th-font);
-  min-height: var(--th-min-h);
+  font-size: 1.05rem;
+  min-height: 60px;
 }
 
 .headerItem {
@@ -249,23 +211,33 @@
 }
 
 .inventory {
-  background: var(--panel);
-  height: calc(var(--row-h) * var(--rows-per-page));
+  background: #FFFFFF;
+  height: calc(60px * 12);
   overflow: hidden;
 }
 
 .tableRow {
-  height: var(--row-h);
-  padding: 0 var(--th-pad-x);
-  border-top: 1px solid var(--tint-200);
+  height: 60px;
+  padding: 0 12px;
+  border-top: 1px solid #E5E7EB;
   transition: background-color 0.2s ease;
 }
 
-.tableRow:nth-child(odd) { background: var(--panel); }
-.tableRow:nth-child(even) { background: var(--tint-50); }
-.tableRow:hover { background: var(--tint-100); }
+.tableRow:nth-child(odd) {
+  background: #FFFFFF;
+}
 
-.rowSelected { background: rgba(59, 130, 246, 0.1); }
+.tableRow:nth-child(even) {
+  background: #FAFAFA;
+}
+
+.tableRow:hover {
+  background: #F3F4F6;
+}
+
+.rowSelected {
+  background: rgba(59, 130, 246, 0.1);
+}
 
 .tableCell {
   display: flex;
@@ -276,13 +248,21 @@
   text-overflow: ellipsis;
 }
 
-.centerCell { justify-content: center; }
+.centerCell {
+  justify-content: center;
+}
 
-.mono { font-family: 'Courier New', monospace; }
+.mono {
+  font-family: 'Courier New', monospace;
+}
 
-/* ⬇️ แถว filler */
-.fillerRow { pointer-events: none; }
-.fillerRow:hover { background: inherit !important; }
+.fillerRow {
+  pointer-events: none;
+}
+
+.fillerRow:hover {
+  background: inherit !important;
+}
 
 /* ---- Status Badges ---- */
 .stBadge {
@@ -297,10 +277,29 @@
   line-height: 1;
 }
 
-.stAvailable { color: #065F46; background: #D1FAE5; border: 1px solid #6EE7B7; }
-.stLow       { color: #92400E; background: #FEF3C7; border: 1px solid #FCD34D; }
-.stOut       { color: #991B1B; background: #FEE2E2; border: 1px solid #FECACA; }
-.stHold      { color: #374151; background: #E5E7EB; border: 1px solid #D1D5DB; }
+.stAvailable {
+  color: #065F46;
+  background: #D1FAE5;
+  border: 1px solid #6EE7B7;
+}
+
+.stLow {
+  color: #92400E;
+  background: #FEF3C7;
+  border: 1px solid #FCD34D;
+}
+
+.stOut {
+  color: #991B1B;
+  background: #FEE2E2;
+  border: 1px solid #FECACA;
+}
+
+.stHold {
+  color: #374151;
+  background: #E5E7EB;
+  border: 1px solid #D1D5DB;
+}
 
 /* ---- Pagination ---- */
 .paginationBar {
@@ -309,12 +308,12 @@
   align-items: center;
   gap: 12px;
   padding: 12px 0;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid #D1D5DB;
 }
 
 .paginationInfo {
   font-size: 0.9rem;
-  color: var(--muted);
+  color: #6B7280;
 }
 
 .paginationControls {
@@ -328,16 +327,16 @@
 .pageButton {
   min-width: 34px;
   height: 40px;
-  border: 1px solid var(--border);
+  border: 1px solid #D1D5DB;
   border-radius: 8px;
-  background: var(--panel);
+  background: #FFFFFF;
   cursor: pointer;
   font-size: 0.95rem;
   font-weight: 500;
 }
 
 .pageButton:hover:not(:disabled) {
-  background: var(--tint-100);
+  background: #F3F4F6;
 }
 
 .pageButton:disabled {
@@ -353,15 +352,18 @@
 
 .ellipsis {
   padding: 0 8px;
-  color: var(--muted);
+  color: #6B7280;
 }
 
 /* ---- Modal ---- */
 .modalOverlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: var(--z-modal-overlay);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 12000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -369,11 +371,11 @@
 }
 
 .modalContent {
-  background: var(--panel);
-  border-radius: var(--radius);
+  background: #FFFFFF;
+  border-radius: 5px;
   width: 100%;
-  max-width: 1000px;   /* ✅ กว้างขึ้น (เดิม 800px) */
-  min-width: 720px;    /* ✅ กันเล็กเกินไป */
+  max-width: 1000px;
+  min-width: 720px;
   max-height: 90vh;
   overflow-y: auto;
   display: flex;
@@ -386,7 +388,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #D1D5DB;
 }
 
 .modalBody {
@@ -401,29 +403,31 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 24px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid #D1D5DB;
 }
 
 .closeButton {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--muted);
+  color: #6B7280;
 }
 
-.closeButton:hover { color: var(--danger); }
+.closeButton:hover {
+  color: #EF4444;
+}
 
 
 @media (max-width: 1024px) {
   .modalContent {
-    max-width: 90vw;   /* ✅ Tablet: กว้าง 90% */
+    max-width: 90vw;
     min-width: auto;
   }
 }
 
 @media (max-width: 640px) {
   .modalContent {
-    max-width: 95vw;   /* ✅ Mobile: เกือบเต็มจอ */
+    max-width: 95vw;
     min-width: auto;
     border-radius: 0.5rem;
   }
@@ -432,57 +436,45 @@
 /* ---- Modal Table ---- */
 .modalBody .tableGrid {
   grid-template-columns:
-    120px  /* PR NO */
-    minmax(200px, 2fr) /* ชื่อสินค้า */
-    100px  /* จำนวน */
-    100px  /* หน่วย */
-    1fr;   /* คุณลักษณะ */
+    120px minmax(200px, 2fr) 100px 100px 1fr;
 }
 
 .modalBody .tableHeader {
-  background: var(--tint-50);
+  background: #FAFAFA;
   font-weight: 700;
 }
 
 .modalBody .tableCell input {
   width: 100%;
   height: 36px;
-  border: 1px solid var(--border);
+  border: 1px solid #D1D5DB;
   border-radius: 6px;
   padding: 0 10px;
   font-size: 0.9rem;
 }
+
 .modalBody .tableCell input:focus {
   outline: none;
   border-color: #3B82F6;
-  box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
 }
+
 
 /* ---- Responsive ---- */
 @media (max-width: 1024px) {
-  .filterGrid { grid-template-columns: 1fr; }
+  .filterGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
   .tableGrid {
     grid-template-columns:
-      50px   /* เลือก */
-      100px   /* PR NO */
-      minmax(200px, 2fr) /* ✅ ชื่อสินค้า กว้างขึ้น */
-      70px   /* จำนวน */
-      70px   /* หน่วย */
-      110px  /* ประเภท */
-      140px  /* ✅ ผู้ขอ กว้างขึ้น */
-      100px  /* สถานะ */
-      140px; /* ✅ วันที่ กว้างขึ้น */
+      50px 100px minmax(200px, 2fr) 70px 70px 110px 140px 100px 140px;
   }
 
   .modalBody .tableGrid {
     grid-template-columns:
-      100px  /* PR NO */
-      150px  /* ชื่อสินค้า */
-      80px   /* จำนวน */
-      80px   /* หน่วย */
-      1fr;   /* คุณลักษณะ */
+      100px 150px 80px 80px 1fr;
   }
 }
