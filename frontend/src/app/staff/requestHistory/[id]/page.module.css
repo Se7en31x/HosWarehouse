@@ -1,14 +1,6 @@
 /* MyRequests — page.module.css */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-/* SweetAlert */
-:global(.swal2-container),
-:global(.swal-topmost) {
-  z-index: 10000 !important;
-  position: fixed !important;
-  inset: 0 !important;
-}
-
 /* ---- Layout ---- */
 .mainHome {
   min-height: 100vh;

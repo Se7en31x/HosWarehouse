@@ -1,14 +1,6 @@
 /* MyRequests — page.module.css */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* SweetAlert */
-:global(.swal2-container),
-:global(.swal-topmost) {
-  z-index: 10000 !important;
-  position: fixed !important;
-  inset: 0 !important;
-}
-
 /* ---- Layout ---- */
 .mainHome {
   min-height: 100vh;
@@ -17,7 +9,6 @@
   align-items: center;
   justify-content: center;
   background: #f3f4f6;
-  /* #f3f4f6 */
 }
 
 /* ---- Container ---- */
@@ -35,7 +26,6 @@
   flex: 1 1 auto;
   align-self: stretch;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  /* From InventoryCheck */
 }
 
 /* ---- Header ---- */
@@ -45,7 +35,6 @@
   align-items: center;
   padding-bottom: 12px;
   border-bottom: 1px solid #e5e7eb;
-  /* #e5e7eb */
 }
 
 .pageTitle {
@@ -97,12 +86,10 @@
 
 .statWithdraw {
   color: #2563eb;
-  /* #2563eb */
 }
 
 .statBorrow {
   color: #dc2626;
-  /* #16a34a */
 }
 
 /* ---- Toolbar (Filters) ---- */
@@ -152,7 +139,6 @@
 .input {
   height: 40px;
   border: 1px solid #e5e7eb;
-  /* #e5e7eb */
   border-radius: 8px;
   padding: 0 12px;
   font-size: 0.95rem;
@@ -162,7 +148,6 @@
 .input:focus {
   outline: none;
   border-color: #2563eb;
-  /* #2563eb */
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
@@ -170,7 +155,6 @@
   background: #fff;
   color: #374151;
   border: 1px solid #e5e7eb;
-  /* #e5e7eb */
   border-radius: 8px;
   height: 40px;
   padding: 0 12px;
@@ -183,7 +167,6 @@
 
 .ghostBtn:hover {
   background: #f3f4f6;
-  /* #f3f4f6 */
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
@@ -195,7 +178,6 @@
 
 .clearButton {
   color: #2563eb;
-  /* #2563eb */
   font-weight: 600;
 }
 
@@ -217,26 +199,22 @@
 
 .successBtn {
   background: #16a34a;
-  /* #16a34a */
   color: #fff;
   border-color: #16a34a;
 }
 
 .successBtn:hover {
   background: #15803d;
-  /* #15803d */
 }
 
 .dangerBtnOutline {
   background: #dc2626;
-  /* #dc2626 */
   border-color: #dc2626;
   color: #fff;
 }
 
 .dangerBtnOutline:hover {
   background: #b91c1c;
-  /* #b91c1c */
   border-color: #b91c1c;
 }
 
@@ -528,7 +506,6 @@
   z-index: 1;
   width: 94%;
   max-width: 960px;
-  /* เพิ่มขนาดจาก 560px เป็น 960px */
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 14px;
