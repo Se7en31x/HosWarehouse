@@ -6,13 +6,20 @@ const rolePermissions = require('../config/rolePermissions'); // 👈 import per
 
 // GET /inventory/all - สำหรับผู้ดูแลคลัง (ใช้สำหรับหน้า Overview)
 exports.getAllItems = async (req, res) => {
-    try {
-        const items = await inventoryModel.getAllItemsDetailed();
-        res.status(200).json(items);
-    } catch (error) {
-        console.error('❌ Error getAllItems:', error);
-        res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
-    }
+  try {
+    console.log("📦 [API] /api/inventoryCheck/all called");
+
+    const items = await inventoryModel.getAllItemsDetailed();
+    console.log("✅ getAllItems success:", items?.length || 0, "records");
+
+    res.status(200).json(items);
+  } catch (error) {
+    console.error("❌ Error getAllItems:", error.message);
+    res.status(500).json({
+      message: "เกิดข้อผิดพลาดในการดึงข้อมูล",
+      error: error.message, // 👉 ส่งรายละเอียดออกมาเพื่อ debug ชั่วคราว
+    });
+  }
 };
 
 // GET /inventory/for-withdrawal - สำหรับพนักงานทั่วไป
