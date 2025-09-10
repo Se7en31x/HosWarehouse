@@ -24,11 +24,15 @@ if (process.env.NODE_ENV !== "production") {
 
 app.use(
   cors({
-    origin: process.env.ALLOWED_ORIGINS?.split(",") || ["http://localhost:3000"],
+    origin: process.env.ALLOWED_ORIGINS?.split(",") || [
+      "http://localhost:3000",
+      "https://hoswarehouse-production.up.railway.app"
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   })
 );
+
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
@@ -40,8 +44,8 @@ app.use(
 );
 
 // 🔹 Routes
-readdirSync("./Routes").map((r) =>
-  app.use("/api", require("./Routes/" + r))
+readdirSync("./routes").map((r) =>
+  app.use("/api", require("./routes/" + r))
 );
 
 // 🔹 Socket & DB
@@ -60,8 +64,9 @@ app.use((err, req, res, next) => {
 
 // 🔹 Start Server
 server.listen(port, () => {
-  console.log(`🚀 Server running at http://localhost:${port}`);
+  console.log(`🚀 Server running at http://localhost:${port} in ${process.env.NODE_ENV} mode`);
 });
+
 
 // 🔹 Graceful shutdown
 process.on("SIGINT", () => {
