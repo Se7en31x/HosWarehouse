@@ -1,9 +1,10 @@
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 
+// ⚡ baseConfig: ใช้ env ถ้ามี, ถ้าไม่มีใช้ localhost
 const baseConfig = {
-  baseURL: "http://localhost:5000/api", // 👉 เปลี่ยนตามจริงถ้า deploy
-  withCredentials: false,
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api",
+  withCredentials: false, // ถ้าใช้ cookie → เปลี่ยนเป็น true
 };
 
 // 🔎 ฟังก์ชันดึง token + ใส่ลง header

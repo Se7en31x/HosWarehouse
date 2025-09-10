@@ -1,39 +1,9 @@
 /* =============================
-   ExpiredItemsPage — page.module.css
-   Based on InventoryCheck with styles for modals and specific buttons
-   ============================= */
+   ExpiredItemsPage — page.module.css
+   Based on InventoryCheck with styles for modals and specific buttons
+   ============================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-/* ---- Variables ---- */
-:root {
-  --bg: #F9FAFB;
-  --panel: #FFFFFF;
-  --muted: #6B7280;
-  --text: #1F2A44;
-  --border: #D1D5DB;
-  --success: #10B981;
-  --warning: #F59E0B;
-  --danger: #EF4444;
-  --tint-50: #FAFAFA;
-  --tint-100: #F3F4F6;
-  --tint-200: #E5E7EB;
-  --radius: 5px;
-  --row-h: 60px;
-  --rows-per-page: 12; /* ⬅️ ล็อค 12 แถว */
-  --table-gap: 12px;
-  --th-font: 1.05rem;
-  --th-min-h: 60px;
-  --th-pad-y: 14px;
-  --th-pad-x: 12px;
-  --th-letter: 0.01em;
-  --th-line: 1.25;
-  --z-header: 10;
-  --z-toolbar: 100;
-  --z-select: 9000;
-  --z-modal: 10000;
-  --z-modal-overlay: 12000;
-}
 
 /* ---- Layout ---- */
 .mainHome {
@@ -42,16 +12,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
+  background: #F9FAFB;
 }
 
 .infoContainer {
   width: 100%;
   max-width: none;
   min-height: 100vh;
-  background: var(--panel);
-  color: var(--text);
-  border-radius: var(--radius);
+  background: #FFFFFF;
+  color: #1F2A44;
+  border-radius: 5px;
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -77,7 +47,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  color: var(--text);
+  color: #1F2A44;
 }
 
 .titleGroup {
@@ -90,19 +60,19 @@
 /* ---- Toolbar ---- */
 .toolbar {
   position: relative;
-  z-index: var(--z-toolbar);
+  z-index: 100;
   display: flex;
   gap: 12px;
   align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
   padding: 16px;
-  border-radius: var(--radius);
+  border-radius: 5px;
 }
 
 .filterGrid {
   position: relative;
-  z-index: var(--z-toolbar);
+  z-index: 100;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 250px));
   gap: 12px;
@@ -111,7 +81,7 @@
 
 .filterGroup {
   position: relative;
-  z-index: var(--z-toolbar);
+  z-index: 100;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -119,7 +89,7 @@
 
 .label {
   font-size: 0.85rem;
-  color: var(--text);
+  color: #1F2A44;
   font-weight: 600;
 }
 
@@ -156,12 +126,12 @@
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--muted);
+  color: #6B7280;
 }
 
 .ghostBtn {
-  background: var(--panel);
-  color: var(--text);
+  background: #FFFFFF;
+  color: #1F2A44;
   border: 1px solid #D1D5DB;
   border-radius: 8px;
   height: 40px;
@@ -191,7 +161,7 @@
 
 /* ---- Table ---- */
 .tableSection {
-  border-radius: var(--radius);
+  border-radius: 5px;
   background: #FFFFFF;
   overflow: hidden;
   display: flex;
@@ -199,37 +169,48 @@
   gap: 0;
 }
 
-.tableGrid {
+.tableGridExpired {
   display: grid;
   grid-template-columns:
-    minmax(100px, 1.5fr)
-    minmax(180px, 2fr)
-    minmax(90px, 0.8fr)
-    minmax(90px, 0.8fr)
-    minmax(90px, 0.8fr)
-    minmax(90px, 0.8fr)
+    minmax(50px, 0.5fr)
+    /* ลำดับ */
+    minmax(200px, 2fr)
+    /* ชื่อพัสดุ */
     minmax(100px, 1fr)
+    /* ประเภท */
     minmax(100px, 1fr)
-    minmax(140px, 1.2fr);
+    /* Lot No. */
+    minmax(100px, 1fr)
+    /* จำนวนที่นำเข้า */
+    minmax(100px, 1fr)
+    /* วันหมดอายุ */
+    minmax(100px, 1fr)
+    /* จำนวนหมดอายุ */
+    minmax(100px, 1fr)
+    /* จัดการแล้ว */
+    minmax(100px, 1fr)
+    /* คงเหลือ */
+    minmax(120px, 1fr);
+  /* สถานะ */
   align-items: center;
 }
 
 .tableHeader {
   position: sticky;
   top: 0;
-  z-index: var(--z-header);
+  z-index: 10;
   background: #f1f5f9;
-  padding-block: var(--th-pad-y);
-  padding-inline: var(--th-pad-x);
+  padding-block: 14px;
+  padding-inline: 12px;
   font-weight: 700;
   color: #000000;
-  font-size: var(--th-font);
-  line-height: var(--th-line);
-  min-height: var(--th-min-h);
+  font-size: 1.05rem;
+  line-height: 1.25;
+  min-height: 60px;
 }
 
 .tableHeader .headerItem,
-.tableHeader > div {
+.tableHeader>div {
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -237,12 +218,16 @@
   padding: 0;
 }
 
-.tableHeader .headerItem:nth-child(3),
-.tableHeader .headerItem:nth-child(4),
-.tableHeader .headerItem:nth-child(5),
-.tableHeader .headerItem:nth-child(6),
-.tableHeader .headerItem:nth-child(8),
-.tableHeader .headerItem:nth-child(9) {
+/* ตั้งให้คอลัมน์ที่ 1, 3, 4, 5, 6, 7, 8, 9, 10 อยู่ตรงกลาง */
+.tableGridExpired>.tableCell:nth-child(1),
+.tableGridExpired>.tableCell:nth-child(3),
+.tableGridExpired>.tableCell:nth-child(4),
+.tableGridExpired>.tableCell:nth-child(5),
+.tableGridExpired>.tableCell:nth-child(6),
+.tableGridExpired>.tableCell:nth-child(7),
+.tableGridExpired>.tableCell:nth-child(8),
+.tableGridExpired>.tableCell:nth-child(9),
+.tableGridExpired>.tableCell:nth-child(10) {
   justify-content: center;
   text-align: center;
 }
@@ -251,7 +236,7 @@
   border: 0;
   border-radius: 0;
   background: #FFFFFF;
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(60px * 12);
   overflow: hidden;
 }
 
@@ -267,12 +252,12 @@
   background: #E5E7EB;
 }
 
-.inventory .tableRow > .tableCell:nth-child(3),
-.inventory .tableRow > .tableCell:nth-child(4),
-.inventory .tableRow > .tableCell:nth-child(5),
-.inventory .tableRow > .tableCell:nth-child(6),
-.inventory .tableRow > .tableCell:nth-child(8),
-.inventory .tableRow > .tableCell:nth-child(9) {
+.inventory .tableRow>.tableCell:nth-child(3),
+.inventory .tableRow>.tableCell:nth-child(4),
+.inventory .tableRow>.tableCell:nth-child(5),
+.inventory .tableRow>.tableCell:nth-child(6),
+.inventory .tableRow>.tableCell:nth-child(8),
+.inventory .tableRow>.tableCell:nth-child(9) {
   display: flex;
   justify-content: center;
   text-align: center;
@@ -280,8 +265,8 @@
 
 .tableRow {
   box-sizing: border-box;
-  height: var(--row-h);
-  padding: 0 var(--th-pad-x);
+  height: 60px;
+  padding: 0 12px;
   border-top: 1px solid #e5e7eb;
   transition: background-color 0.2s ease;
 }
@@ -305,27 +290,32 @@
 }
 
 .noDataMessage {
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(60px * 12);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
+  color: #6B7280;
   font-size: 1rem;
 }
 
 .loadingContainer {
-  height: calc(var(--row-h) * var(--rows-per-page));
+  height: calc(60px * 12);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
+  color: #6B7280;
   font-size: 1rem;
   background: url('/loading-spinner.gif') no-repeat center;
 }
 
 /* เติมแถวว่าง */
-.fillerRow { pointer-events: none; }
-.fillerRow:hover { background: inherit !important; }
+.fillerRow {
+  pointer-events: none;
+}
+
+.fillerRow:hover {
+  background: inherit !important;
+}
 
 /* ---- Action Buttons ---- */
 .actions {
@@ -406,22 +396,28 @@
   transform: translateY(-1px);
 }
 
-.statusPending {
+.stAvailable {
+  color: #065F46;
+  background: #D1FAE5;
+  border-color: #6EE7B7;
+}
+
+.stOut {
   color: #92400E;
   background: #FEF3C7;
   border-color: #FCD34D;
 }
 
-.statusPartial {
+.stLow {
   color: #1F2A44;
   background: #E5E7EB;
   border-color: #D1D5DB;
 }
 
-.statusComplete {
-  color: #065F46;
-  background: #D1FAE5;
-  border-color: #6EE7B7;
+.stHold {
+  color: #6B7280;
+  background: #E5E7EB;
+  border-color: #D1D5DB;
 }
 
 /* ---- Pagination ---- */
@@ -439,7 +435,7 @@
 
 .paginationInfo {
   font-size: 0.9rem;
-  color: var(--muted);
+  color: #6B7280;
 }
 
 .paginationButtons {
@@ -482,7 +478,7 @@
 
 .ellipsis {
   padding: 0 8px;
-  color: var(--muted);
+  color: #6B7280;
   font-size: 1rem;
 }
 
@@ -497,12 +493,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: var(--z-modal-overlay);
+  z-index: 12000;
 }
 
 .modal {
-  background: var(--panel);
-  border-radius: var(--radius);
+  background: #FFFFFF;
+  border-radius: 5px;
   padding: 24px;
   max-width: 500px;
   width: 90%;
@@ -524,7 +520,7 @@
 .modalHeader h2 {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--text);
+  color: #1F2A44;
   margin: 0;
 }
 
@@ -532,12 +528,12 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--muted);
+  color: #6B7280;
   padding: 4px;
 }
 
 .modalClose:hover {
-  color: var(--text);
+  color: #1F2A44;
 }
 
 .alertIcon {
@@ -545,23 +541,23 @@
 }
 
 .alertIconSuccess {
-  color: var(--success);
+  color: #10B981;
 }
 
 .alertIconError {
-  color: var(--danger);
+  color: #EF4444;
 }
 
 .alertTitle {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--text);
+  color: #1F2A44;
   margin: 0 0 8px;
 }
 
 .alertMessage {
   font-size: 1rem;
-  color: var(--muted);
+  color: #6B7280;
   margin: 0 0 16px;
 }
 
@@ -586,12 +582,12 @@
 
 .disposeLabel {
   font-weight: 600;
-  color: var(--text);
+  color: #1F2A44;
   font-size: 0.9rem;
 }
 
 .disposeValue {
-  color: var(--text);
+  color: #1F2A44;
   font-size: 0.9rem;
 }
 
@@ -643,8 +639,8 @@
 }
 
 .btnSecondary {
-  background: var(--tint-100);
-  color: var(--text);
+  background: #F3F4F6;
+  color: #1F2A44;
   border: 1px solid #D1D5DB;
   border-radius: 8px;
   padding: 8px 16px;
@@ -694,7 +690,7 @@
 
 .noHistoryMessage {
   text-align: center;
-  color: var(--muted);
+  color: #6B7280;
   font-size: 1rem;
   margin: 16px 0;
 }
@@ -704,6 +700,7 @@
   .filterGrid {
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
+
   .searchCluster {
     flex: 1;
     justify-content: flex-end;
@@ -718,29 +715,27 @@
     flex-wrap: wrap;
     gap: 6px;
   }
+
   .searchBox {
     flex: 1;
     min-width: 200px;
   }
+
   .clearButton {
     flex: 0 0 auto;
   }
 }
 
 @media (max-width: 640px) {
-  :root {
-    --th-font: 1rem;
-    --th-min-h: 54px;
-    --th-pad-y: 10px;
-    --table-gap: 10px;
-  }
   .mainHome {
     padding: 12px;
   }
+
   .searchBox {
     width: 100%;
   }
-  .tableGrid {
+
+  .tableGridExpired {
     grid-template-columns:
       100px 180px 80px 80px 80px 80px 100px 100px 120px;
   }
@@ -748,5 +743,12 @@
 
 /* แถวว่างให้ดูเป็นบาร์เปล่าแบบในภาพ */
 .placeholderRow .tableCell {
-  visibility: hidden;   /* ซ่อนคอนเทนต์ แต่ยังคงความสูง/พื้นหลังของแถว */
+  visibility: hidden;
+}
+
+.tableHeader {
+  font-size: 1rem;
+  min-height: 54px;
+  padding-block: 10px;
+  gap: 10px;
 }

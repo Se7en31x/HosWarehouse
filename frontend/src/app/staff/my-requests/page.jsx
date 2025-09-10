@@ -86,11 +86,17 @@ const translateStatus = (status) => {
 // กันรูปเสีย
 function ItemImage({ item_img, alt }) {
   const defaultImg = 'http://localhost:5000/public/defaults/landscape.png';
-  const [imgSrc, setImgSrc] = useState(
-    item_img && typeof item_img === 'string' && item_img.trim() !== ''
-      ? `http://localhost:5000/uploads/${item_img}`
-      : defaultImg
-  );
+
+  const getImgUrl = (img) => {
+    if (!img || typeof img !== "string" || img.trim() === "") return defaultImg;
+    if (img.startsWith("http")) {
+      return img;  // ✅ ถ้าเป็น URL เต็ม (เช่น Supabase)
+    }
+    return `http://localhost:5000/uploads/${img}`; // ✅ ถ้าเป็นไฟล์ local
+  };
+
+  const [imgSrc, setImgSrc] = useState(getImgUrl(item_img));
+
   return (
     <img
       src={imgSrc}
@@ -102,6 +108,7 @@ function ItemImage({ item_img, alt }) {
     />
   );
 }
+
 
 // ─────────────────────────────────────────────────────────────
 // เนื้อหารายละเอียดคำขอ (โหมด "รายละเอียด")

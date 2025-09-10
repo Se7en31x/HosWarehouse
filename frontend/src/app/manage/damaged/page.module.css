@@ -5,36 +5,6 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* ---- Variables ---- */
-:root {
-  --bg: #F9FAFB;
-  --panel: #FFFFFF;
-  --muted: #6B7280;
-  --text: #1F2A44;
-  --border: #D1D5DB;
-  --success: #10B981;
-  --warning: #F59E0B;
-  --danger: #EF4444;
-  --tint-50: #FAFAFA;
-  --tint-100: #F3F4F6;
-  --tint-200: #E5E7EB;
-  --radius: 5px;
-  --row-h: 60px;
-  /* ⬅️ ความสูงแถวคงที่ */
-  --rows-per-page: 12;
-  /* ⬅️ ล็อค 12 แถว/หน้า */
-  --table-gap: 12px;
-  --th-font: 1.05rem;
-  --th-min-h: 60px;
-  --th-pad-y: 14px;
-  --th-pad-x: 12px;
-  --th-letter: 0.01em;
-  --th-line: 1.25;
-  --z-header: 10;
-  --z-toolbar: 100;
-  --z-modal: 1000;
-}
-
 /* ---- Layout ---- */
 .pageBackground {
   min-height: 100vh;
@@ -42,16 +12,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
+  background: #F9FAFB;
 }
 
 .container {
   width: 100%;
   max-width: none;
   min-height: 100vh;
-  background: var(--panel);
-  color: var(--text);
-  border-radius: var(--radius);
+  background: #FFFFFF;
+  color: #1F2A44;
+  border-radius: 5px;
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -77,7 +47,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  color: var(--text);
+  color: #1F2A44;
 }
 
 .titleGroup {
@@ -90,19 +60,19 @@
 /* ---- Toolbar ---- */
 .toolbar {
   position: relative;
-  z-index: var(--z-toolbar);
+  z-index: 100;
   display: flex;
   gap: 12px;
   align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
   padding: 16px;
-  border-radius: var(--radius);
+  border-radius: 5px;
 }
 
 .filterGrid {
   position: relative;
-  z-index: var(--z-toolbar);
+  z-index: 100;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 250px));
   gap: 12px;
@@ -115,7 +85,7 @@
 
 .filterGroup {
   position: relative;
-  z-index: var(--z-toolbar);
+  z-index: 100;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -123,7 +93,7 @@
 
 .label {
   font-size: 0.85rem;
-  color: var(--text);
+  color: #1F2A44;
   font-weight: 600;
 }
 
@@ -160,12 +130,12 @@
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--muted);
+  color: #6B7280;
 }
 
 .ghostBtn {
-  background: var(--panel);
-  color: var(--text);
+  background: #FFFFFF;
+  color: #1F2A44;
   border: 1px solid #D1D5DB;
   border-radius: 8px;
   height: 40px;
@@ -195,41 +165,39 @@
 
 /* ---- Table ---- */
 .tableFrame {
-  border-radius: var(--radius);
+  border-radius: 5px;
   background: #FFFFFF;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 0;
-  min-height: calc(var(--row-h) * var(--rows-per-page) + var(--th-min-h));
-  /* 12 แถว + หัวตาราง */
+  min-height: calc(60px * 12 + 60px);
 }
 
 .tableGrid {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
-  /* 8 คอลัมน์ */
-  gap: var(--table-gap);
+  gap: 12px;
   width: 100%;
 }
 
 .tableHeader {
   background: #f1f5f9;
   font-weight: 700;
-  font-size: var(--th-font);
+  font-size: 1.05rem;
   color: #000000;
   position: sticky;
   top: 0;
-  z-index: var(--z-header);
-  padding: var(--th-pad-y) var(--th-pad-x);
-  line-height: var(--th-line);
-  letter-spacing: var(--th-letter);
+  z-index: 10;
+  padding: 14px 12px;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
 }
 
 .headerItem {
   display: flex;
   align-items: center;
-  padding: var(--th-pad-y) var(--th-pad-x);
+  padding: 14px 12px;
   white-space: nowrap;
 }
 
@@ -237,21 +205,17 @@
   justify-content: center;
 }
 
-/* ✅ สูงคงที่ 12 แถว & แถวเท่ากันทุกแถว */
 .inventory {
   overflow-y: auto;
-  height: calc(var(--row-h) * var(--rows-per-page));
-  /* ความสูงตายตัวสำหรับ 12 แถว */
+  height: calc(60px * 12);
 }
 
 .tableRow {
   border-bottom: 1px solid #E5E7EB;
-  height: var(--row-h);
-  /* ⬅️ กำหนดความสูงแถวคงที่ */
+  height: 60px;
   box-sizing: border-box;
 }
 
-/* สีสลับแถว */
 .tableRow:nth-child(odd) {
   background: #FFFFFF;
 }
@@ -264,21 +228,17 @@
   background: #E5E7EB;
 }
 
-/* แต่ละเซลล์ไม่ตัดบรรทัด & มี ellipsis เพื่อไม่ให้แถวสูงขึ้น */
 .tableCell {
   display: flex;
   align-items: center;
   padding: 12px;
   font-size: 0.95rem;
-  color: var(--text);
+  color: #1F2A44;
   white-space: nowrap;
-  /* ⬅️ ไม่ขึ้นบรรทัดใหม่ */
   overflow: hidden;
   text-overflow: ellipsis;
-  /* ⬅️ ตัดด้วย … */
 }
 
-/* เติมแถวว่าง */
 .fillerRow {
   pointer-events: none;
 }
@@ -427,7 +387,7 @@
 
 .paginationInfo {
   font-size: 0.9rem;
-  color: var(--muted);
+  color: #6B7280;
 }
 
 .paginationControls {
@@ -472,7 +432,7 @@
 
 .ellipsis {
   padding: 0 8px;
-  color: var(--muted);
+  color: #6B7280;
   font-size: 1rem;
 }
 
@@ -484,41 +444,32 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: var(--z-modal);
-  /* Added Animation */
+  z-index: 1000;
   animation: fadeIn 0.3s ease-out;
 }
 
 .modal {
   background: #FFFFFF;
   border-radius: 12px;
-  /* Increased radius for a softer look */
   padding: 32px;
-  /* Increased padding */
   max-width: 500px;
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 24px;
-  /* Increased gap */
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-  /* Deeper shadow */
   position: relative;
-  /* Added Animation */
   animation: slideIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .modalTitle {
   font-size: 1.5rem;
-  /* Larger font size for the title */
   font-weight: 700;
-  color: var(--text);
+  color: #1F2A44;
   margin: 0;
   padding-right: 32px;
-  /* To prevent title from overlapping close button */
 }
 
-/* Close button - now with animation */
 .modal .closeBtn {
   position: absolute;
   top: 12px;
@@ -526,26 +477,21 @@
   padding: 8px;
   background: none;
   border: none;
-  color: var(--muted);
+  color: #6B7280;
   cursor: pointer;
   transition: color 0.2s ease, transform 0.3s ease;
-  /* Adjusted transition */
 }
 
 .modal .closeBtn:hover {
-  color: var(--text);
+  color: #1F2A44;
   transform: rotate(90deg);
-  /* Added a subtle rotate effect */
 }
 
-/* Content and input fields */
 .modalContent {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  /* Adjusted gap */
   padding: 0;
-  /* Removed padding */
 }
 
 .modalInputGroup {
@@ -556,24 +502,19 @@
 
 .modalLabel {
   font-size: 0.95rem;
-  /* Slightly larger label font */
   font-weight: 600;
-  color: var(--text);
-  /* Changed color for better contrast */
+  color: #1F2A44;
 }
 
 .modalInput,
 .modalTextarea {
   width: 100%;
   padding: 12px;
-  /* Increased padding */
-  border: 1px solid var(--border);
+  border: 1px solid #D1D5DB;
   border-radius: 8px;
-  /* Slightly larger border radius */
   font-size: 1rem;
-  color: var(--text);
-  background-color: var(--tint-50);
-  /* Added subtle background */
+  color: #1F2A44;
+  background-color: #FAFAFA;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
@@ -582,28 +523,23 @@
   outline: none;
   border-color: #3B82F6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-  /* Slightly darker shadow */
-  background-color: var(--panel);
+  background-color: #FFFFFF;
 }
 
 .modalTextarea {
   min-height: 100px;
-  /* Increased min-height */
   resize: vertical;
 }
 
-/* Modal Buttons */
 .modalActions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   padding-top: 8px;
-  /* Space between inputs and buttons */
 }
 
 .btn {
   padding: 12px 24px;
-  /* Larger buttons */
   border: none;
   border-radius: 8px;
   font-size: 1rem;
@@ -622,13 +558,12 @@
 }
 
 .btnSecondary {
-  background: var(--tint-200);
-  /* Lighter gray for secondary */
-  color: var(--text);
+  background: #E5E7EB;
+  color: #1F2A44;
 }
 
 .btnSecondary:hover {
-  background: var(--tint-100);
+  background: #F3F4F6;
 }
 
 .btn:disabled {
@@ -638,7 +573,6 @@
   box-shadow: none;
 }
 
-/* Animations - Adjusted timings */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -652,7 +586,6 @@
 @keyframes slideIn {
   from {
     transform: translateY(-30px) scale(0.9);
-    /* More dramatic entry */
     opacity: 0;
   }
 
@@ -660,12 +593,4 @@
     transform: translateY(0) scale(1);
     opacity: 1;
   }
-}
-
-.modalOverlay {
-  animation: fadeIn 0.4s ease-out;
-}
-
-.modal {
-  animation: slideIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
