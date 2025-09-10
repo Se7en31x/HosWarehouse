@@ -43,8 +43,8 @@ exports.getRequestDetailByUser = async (requestId, userId) => {
       r.request_status,
       r.request_note,
       r.is_urgent,
-      u.username,
-      u.firstname || ' ' || u.lastname AS full_name,
+      u.firstname || ' ' || u.lastname AS user_name,  -- ✅ ใช้ชื่อจริง + นามสกุล
+      d.department_name_th AS department,             -- ✅ แผนกจาก Admin.departments
       json_agg(
         json_build_object(
           'request_detail_id', rd.request_detail_id,
@@ -76,15 +76,17 @@ exports.getRequestDetailByUser = async (requestId, userId) => {
         )
       ) AS items
     FROM requests r
-    JOIN "Admin".users u ON r.user_id = u.user_id   -- ✅ ใช้ "Admin" (case-sensitive)
+    JOIN "Admin".users u ON r.user_id = u.user_id
+    LEFT JOIN "Admin".departments d ON r.department_id = d.department_id
     LEFT JOIN request_details rd ON r.request_id = rd.request_id
     LEFT JOIN items i ON rd.item_id = i.item_id
     WHERE r.request_id = $1 AND r.user_id = $2
-    GROUP BY r.request_id, u.username, u.firstname, u.lastname;
+    GROUP BY r.request_id, u.firstname, u.lastname, d.department_name_th;
   `;
   const { rows } = await pool.query(query, [requestId, userId]);
   return rows[0];
 };
+
 
 // ─────────────────────────────────────────────
 // 3. ยกเลิกคำขอ

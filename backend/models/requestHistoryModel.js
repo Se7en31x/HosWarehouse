@@ -12,12 +12,14 @@ exports.getAllRequests = async (userId = null, role = "user") => {
       r.is_urgent,             
       r.request_note,
       r.updated_at,
-      u.firstname || ' ' || u.lastname AS user_name,   -- ✅ firstname, lastname
+      u.firstname || ' ' || u.lastname AS requester_name,   -- ✅ fullname
+      d.department_name_th AS department_name,              -- ✅ department
       COUNT(rd.request_detail_id) AS total_items,
       COALESCE(SUM(rd.requested_qty),0) AS total_requested,
       COALESCE(SUM(rd.approved_qty),0) AS total_approved
     FROM requests r
-    JOIN "Admin".users u ON r.user_id = u.user_id   -- ✅ ใช้ "Admin"
+    JOIN "Admin".users u ON r.user_id = u.user_id
+    LEFT JOIN "Admin".departments d ON r.department_id = d.department_id   -- ✅ join แผนก
     LEFT JOIN request_details rd ON r.request_id = rd.request_id
     WHERE r.is_deleted = false
   `;
@@ -29,7 +31,7 @@ exports.getAllRequests = async (userId = null, role = "user") => {
   }
 
   query += `
-    GROUP BY r.request_id, u.firstname, u.lastname
+    GROUP BY r.request_id, u.firstname, u.lastname, d.department_name_th
     ORDER BY r.request_date DESC
   `;
 
@@ -49,12 +51,14 @@ exports.getRequestById = async (requestId, userId = null, role = "user") => {
       r.is_urgent,
       r.request_note,
       r.user_id,
-      u.firstname || ' ' || u.lastname AS user_name,
+      u.firstname || ' ' || u.lastname AS requester_name,   -- ✅ fullname
+      d.department_name_th AS department_name,              -- ✅ department
       COUNT(rd.request_detail_id) AS total_items,
       COALESCE(SUM(rd.requested_qty),0) AS total_requested,
       COALESCE(SUM(rd.approved_qty),0) AS total_approved
     FROM requests r
-    JOIN "Admin".users u ON r.user_id = u.user_id   -- ✅ ใช้ "Admin"
+    JOIN "Admin".users u ON r.user_id = u.user_id
+    LEFT JOIN "Admin".departments d ON r.department_id = d.department_id   -- ✅ join แผนก
     LEFT JOIN request_details rd ON r.request_id = rd.request_id
     WHERE r.request_id = $1
       AND r.is_deleted = false
@@ -66,7 +70,7 @@ exports.getRequestById = async (requestId, userId = null, role = "user") => {
     params.push(userId);
   }
 
-  headerQuery += ` GROUP BY r.request_id, u.firstname, u.lastname`;
+  headerQuery += ` GROUP BY r.request_id, u.firstname, u.lastname, d.department_name_th`;
 
   const headerRes = await pool.query(headerQuery, params);
   const header = headerRes.rows[0];

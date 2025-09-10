@@ -2,7 +2,7 @@
 const cron = require("node-cron");
 const { runManagerRules } = require("./services/manager");
 const { runUserNotifications } = require("./services/user");
-const { runPurchasingRules } = require("./services/purchasing"); // 👈 เพิ่ม
+const { runPurchasingRules } = require("./services/purchasing"); 
 
 // 🚀 รันทุก ๆ 10 วินาที (Dev/Test Mode)
 cron.schedule("*/10 * * * * *", async () => {
