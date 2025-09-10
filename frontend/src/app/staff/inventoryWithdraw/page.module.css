@@ -1,239 +1,666 @@
-/* src/app/components/Header.module.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* Header */
-.header {
-  height: 90px;
-  /* กำหนดให้เท่ากันทุกฝั่ง */
-  min-height: 90px;
-  max-height: 90px;
-  margin: 0;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  width: 100%;
-  background: linear-gradient(to right, #008dda, #41c9e2);
-  transition: background 0.25s ease-in-out;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  height: 105px;
-  padding: 0 30px;
-  border-bottom: 1px solid #e0e0e0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border-radius: 0 0 2px 2px;
-}
-
-/* ✅ กรอบโลโก้ */
-.logoWrapper {
-  width: 65px;
-  height: 65px;
-  margin-right: 20px;
+/* ---- Layout ---- */
+.pageBackground {
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  /* เอาพื้นหลังออก */
+  background: #f3f4f6;
 }
 
-/* โลโก้ */
-.logo {
-  width: 66px;
-  height: 66px;
-  object-fit: cover;
-  border: 0px solid #ebebeb;
-  /* ✅ กรอบสีฟ้า */
-  border-radius: 12px;
-  /* มุมโค้งมน */
-  background-color: #ffffff;
-}
-
-/* ชื่อระบบ */
-.headerTitle {
-  font-size: 24px;
-  font-weight: 500;
-  color: #ffffff;
-  margin: 0;
-  padding: 0;
-  line-height: 1;
-}
-
-/* กลุ่มไอคอนขวาสุด */
-.iconGroup {
-  margin-left: auto;
+/* ---- Container ---- */
+.infoContainer {
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  background: #ffffff;
+  color: #111827;
+  border-radius: 0;
+  padding: 24px;
   display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1 1 auto;
+  align-self: stretch;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* ---- Header ---- */
+.pageBar {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-/* ไอคอน (lucide-react) */
-.icon {
-  color: #ffffff;
-  cursor: pointer;
-  transition: color 0.2s ease-in-out, transform 0.08s ease;
-  background: transparent !important;
-}
-
-.icon:hover {
-  color: #e6f4ff;
-}
-
-.icon:active {
-  transform: scale(0.97);
-}
-
-/* ปุ่ม reset style */
-/* ไม่จำเป็นต้องแก้ไขส่วนนี้มากนัก เพราะใช้ button สำหรับไอคอน Bell และใช้ div สำหรับ Profile */
-
-/* Badge Notification */
-/* ส่วนนี้ใช้ CSS จากไฟล์ NotificationBell.module.css */
-
-/* Profile Section */
-.profileWrapper {
-  width: 200px;
+.pageTitle {
+  font-weight: 700;
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 12px;
-  /* เพิ่มระยะห่างระหว่างข้อความและไอคอน */
-  padding: 8px 16px;
-  /* เพิ่ม padding ให้ดูมีพื้นที่มากขึ้น */
-  border-radius: 9999px;
-  /* ทำให้ขอบมนเต็มที่ */
-  background: #33a0db98;
-  cursor: pointer;
-  /* เพิ่ม cursor: pointer เพื่อบ่งบอกว่าสามารถคลิกได้ */
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  /* เพิ่มเงาเล็กน้อย */
+  color: #111827;
 }
 
-.profileWrapper:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
-  /* ยกขึ้นเล็กน้อยเมื่อ hover */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  /* ทำให้เงาเข้มขึ้นเมื่อ hover */
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.profileWrapper:active {
-  transform: translateY(0);
-  /* กลับสู่ตำแหน่งเดิมเมื่อคลิก */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+/* ---- Toolbar (Filters) ---- */
+.toolbar {
+  position: relative;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  background: transparent;
 }
 
-.profileText {
+/* ซ้าย = หมวดหมู่ + หน่วย */
+.filterGrid {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+  justify-content: flex-start;
+}
+
+/* ขวา = ค้นหา + ปุ่มล้าง */
+.searchCluster {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.filterGroup {
+  position: relative;
+  z-index: 100;
   display: flex;
   flex-direction: column;
-  text-align: right;
-  line-height: 1.2;
-  flex: 1 1 auto;
-  /* ✅ ให้ยืด-หดได้ */
-  min-width: 0;
-  /* ✅ สำคัญมากเพื่อให้ ellipsis ทำงาน */
-  max-width: 160px;
-  /* จำกัดความกว้างสูงสุด */
-  overflow: hidden;
-  /* ตัดส่วนเกิน */
+  gap: 6px;
 }
 
-.profileName,
-.profileRole {
-  white-space: nowrap;
-  /* ไม่ให้ขึ้นบรรทัดใหม่ */
-  overflow: hidden;
-  /* ซ่อนข้อความเกิน */
-  text-overflow: ellipsis;
-  /* ใส่ … */
-}
-
-.profileName {
-  font-size: 1rem;
-  /* 16px */
+.label {
+  font-size: 0.85rem;
+  color: #374151;
   font-weight: 600;
-  /* เพิ่มความหนาของตัวอักษร */
-  color: #ffffff;
-  white-space: nowrap;
-  /* ป้องกันการขึ้นบรรทัดใหม่ */
 }
 
-.profileRole {
-  font-size: 0.8rem;
-  /* ลดขนาดตัวอักษรเล็กน้อย */
-  color: #e6f3ff;
-  /* สีที่สว่างขึ้นเล็กน้อย */
-  font-weight: 400;
-  white-space: nowrap;
+.input {
+  height: 40px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.profileIcon {
-  color: #ffffff;
-  width: 36px;
+.input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.filterGrid>.filterGroup:last-child {
+  justify-self: end;
+  width: 100%;
+  max-width: 360px;
+}
+
+.searchCluster {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.ghostBtn {
+  background: #fff;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  height: 40px;
+  padding: 0 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ghostBtn:hover {
+  background: #f3f4f6;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.ghostBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.clearButton {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+/* ---- Buttons ---- */
+.actionButton {
+  border: 1px solid transparent;
+  border-radius: 8px;
   height: 36px;
-  transition: transform 0.2s ease-in-out;
+  padding: 0 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
-.profileImage {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  /* วงกลม */
+.actionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.withdrawButton {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.withdrawButton:hover {
+  background: #1e40af;
+  border-color: #1e40af;
+}
+
+.borrowButton {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #fff;
+}
+
+.borrowButton:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.successBtn {
+  background: #16a34a;
+  color: #fff;
+  border-color: #16a34a;
+}
+
+.successBtn:hover {
+  background: #15803d;
+}
+
+.dangerBtnOutline {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #fff;
+}
+
+.dangerBtnOutline:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+/* ---- Table ---- */
+.tableSection {
+  border-radius: 8px;
+  background: #ffffff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.tableGrid {
+  display: grid;
+  grid-template-columns: minmax(44px, 0.5fr) minmax(100px, 1fr) minmax(70px, 0.8fr) minmax(180px, 2fr) minmax(120px, 1.2fr) minmax(90px, 0.8fr) minmax(90px, 0.8fr) minmax(100px, 1.5fr) minmax(110px, 1fr);
+  align-items: center;
+}
+
+.tableHeader {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #f9fafb;
+  padding-block: 14px;
+  padding-inline: 12px;
+  font-weight: 700;
+  color: #374151;
+  font-size: 1.05rem;
+  line-height: 1.25;
+  min-height: 60px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tableHeader .headerItem,
+.tableHeader>div {
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 0;
+}
+
+.tableHeader .headerItem:nth-child(1),
+.tableHeader .headerItem:nth-child(3),
+.tableHeader .headerItem:nth-child(6),
+.tableHeader .headerItem:nth-child(7),
+.tableHeader .headerItem:nth-child(8),
+.tableHeader .headerItem:nth-child(9) {
+  justify-content: center;
+  text-align: center;
+}
+
+.inventory {
+  border: 0;
+  border-radius: 0;
+  background: #ffffff;
+  height: calc(60px * 12);
+  overflow: hidden;
+}
+
+.inventory .tableRow:nth-child(odd) {
+  background: #ffffff;
+}
+
+.inventory .tableRow:nth-child(even) {
+  background: #f9fafb;
+}
+
+.tableRow:hover {
+  background: #f3f4f6;
+}
+
+.tableRow {
+  box-sizing: border-box;
+  height: 60px;
+  padding: 0 12px;
+  border-top: 1px solid #e5e7eb;
+  transition: background-color 0.2s ease;
+}
+
+.tableRow:first-child {
+  border-top: 0;
+}
+
+.tableCell,
+.cell {
+  display: flex;
+  align-items: center;
+  padding: 4px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.95rem;
+}
+
+.cellName {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.centerCell {
+  display: flex;
+  justify-content: center;
+}
+
+.imageCell img {
+  width: 50px;
+  height: 50px;
   object-fit: cover;
-  /* รูปเต็มกรอบ */
-  border: 2px solid #fff;
-  /* กรอบสีขาว */
-  flex-shrink: 0;
-  /* ✅ กันไม่ให้ถูกบีบ */
-  flex-grow: 0;
-  /* ✅ กันไม่ให้ขยาย */
-  flex-basis: 36px;
-  /* ✅ ล็อคความกว้าง/สูงใน flex */
-  transition: transform 0.2s ease-in-out;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  display: block;
+  margin: 0 auto;
+  transition: transform 0.2s ease;
 }
 
-.profileWrapper:hover .profileIcon {
+.imageCell img:hover {
   transform: scale(1.1);
-  /* ทำให้ไอคอนขยายเล็กน้อยเมื่อ hover */
 }
 
-/* responsive */
+.noDataMessage,
+.noData {
+  height: calc(60px * 12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.fillerRow {
+  pointer-events: none;
+}
+
+.fillerRow:hover {
+  background: inherit !important;
+}
+
+/* ---- Loading ---- */
+.loadingContainer {
+  height: calc(60px * 12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 1rem;
+  background: url('/loading-spinner.gif') no-repeat center;
+}
+
+/* ---- Pagination ---- */
+.paginationBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+.paginationInfo {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.paginationControls {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 6px;
+  justify-content: flex-end;
+  align-items: center;
+  background: transparent;
+  border-top: 0;
+}
+
+.pageButton {
+  min-width: 34px;
+  height: 40px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1f2a44;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+  padding: 6px 10px;
+}
+
+.pageButton:hover:not(:disabled) {
+  background: #f3f4f6;
+  transform: translateY(-1px);
+}
+
+.pageButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.activePage {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.ellipsis {
+  padding: 0 8px;
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+/* ---- Row actions ---- */
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ---- Stock Status Badges ---- */
+.stBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 1px solid transparent;
+  min-width: 92px;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.stBadge:hover {
+  transform: translateY(-1px);
+}
+
+.stAvailable {
+  color: #166534;
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
+.stOut {
+  color: #9f1239;
+  background: #ffe4e6;
+  border-color: #fecdd3;
+}
+
+.stHold {
+  color: #334155;
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+/* ---- Type Chips ---- */
+.typePills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.typePill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.typeWithdraw {
+  background: #e0f2fe;
+  border: 1px solid #93c5fd;
+  color: #1d4ed8;
+}
+
+.typeBorrow {
+  background: #ffe4e6;
+  border: 1px solid #fecdd3;
+  color: #9f1239;
+}
+
+.typeReturn {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #374151;
+}
+
+/* ---- Modal ---- */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: grid;
+  place-items: center;
+  z-index: 12000;
+}
+
+.modal {
+  position: relative;
+  z-index: 1;
+  width: 94%;
+  max-width: 960px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.modalTitle {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin: 0 0 2px;
+  color: #111827;
+}
+
+/* ---- Info grid ---- */
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.infoCard {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.infoCardFull {
+  grid-column: 1 / -1;
+}
+
+.infoLabel {
+  font-size: 11px;
+  color: #6b7280;
+  letter-spacing: .02em;
+  margin-bottom: 4px;
+}
+
+.infoValue {
+  font-weight: 700;
+  color: #111827;
+}
+
+/* ---- ตารางในรายละเอียด ---- */
+.modalTableWrapper {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.modalTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+.modalTable thead th {
+  text-align: left;
+  background: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+
+.modalTable tbody td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 10px 12px;
+  vertical-align: middle;
+}
+
+.cellName {
+  font-weight: 600;
+}
+
+/* ---- States ---- */
+.modalLoading,
+.modalError,
+.modalEmpty {
+  padding: 16px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.modalError {
+  color: #dc2626;
+}
+
+/* ---- Images ---- */
+.itemThumb {
+  display: block;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #e5e7eb;
+  transition: transform 0.2s ease;
+}
+
+.itemThumb:hover {
+  transform: scale(1.1);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 1024px) {
+  .filterGrid {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .searchCluster {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .filterGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 640px) {
-  .header {
-    height: 64px;
-    padding: 0 16px;
+  .mainHome {
+    padding: 12px;
   }
 
-  .logoWrapper {
-    width: 60px;
-    height: 60px;
-    margin-right: 12px;
+  .tableGrid {
+    grid-template-columns: 40px 100px 60px 180px 120px 90px 120px;
   }
 
-  .logo {
-    width: 50px;
-    height: 50px;
-  }
-
-  .headerTitle {
-    font-size: 18px;
-  }
-
-  .iconGroup {
-    gap: 12px;
-  }
-
-  .profileWrapper {
-    padding: 6px 10px;
-  }
-
-  .profileName {
-    font-size: 0.875rem;
-  }
-
-  .profileRole {
-    font-size: 0.75rem;
-  }
-
-  .profileIcon {
-    width: 28px;
-    height: 28px;
+  .infoGrid {
+    grid-template-columns: 1fr;
   }
 }
