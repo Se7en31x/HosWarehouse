@@ -1,4 +1,11 @@
-require("dotenv").config(); 
+// ✅ โหลด env ให้ถูกต้อง (local vs prod)
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config({ path: `.env.development` });
+} else {
+  // Railway / Prod ใช้ environment variables ที่ inject มา
+  require("dotenv").config();
+}
+
 const express = require("express");
 const app = express();
 const port = process.env.PORT || 5000;
